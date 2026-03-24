@@ -1,0 +1,4 @@
+/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CadGoose.dir
+/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CadGooseTests.dir
+/Users/ztomer/Projects/CadGoose/build/CMakeFiles/edit_cache.dir
+/Users/ztomer/Projects/CadGoose/build/CMakeFiles/rebuild_cache.dir

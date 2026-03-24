@@ -1,0 +1,355 @@
+# CadGoose
+
+![alt text](Assets/Images/OtherGfx/CadGoose.png)
+
+CadGoose is the more polite, publicly health-insured cousin of the Desktop Goose.
+
+He's still an asshole though.
+
+Cross-platform (Canadian) goose that runs on macOS (AppKit) and Linux (GTK4).
+
+---
+
+## Platforms
+
+- **macOS**: Native AppKit implementation with Core Graphics rendering
+- **Linux**: GTK4 with Wayland (Hyprland, wlroots) and X11 support
+
+---
+
+## Table of Contents
+
+- [CadGoose](#cadgoose)
+  - [Platforms](#platforms)
+  - [Table of Contents](#table-of-contents)
+  - [Overview](#overview)
+  - [Features](#features)
+  - [Requirements](#requirements)
+    - [Build tools](#build-tools)
+    - [Runtime libraries](#runtime-libraries)
+    - [Optional compositor support](#optional-compositor-support)
+  - [Building from Source](#building-from-source)
+    - [1. Install dependencies](#1-install-dependencies)
+    - [2. Configure and build](#2-configure-and-build)
+    - [3. In-tree builds](#3-in-tree-builds)
+  - [Running](#running)
+    - [Wayland notes](#wayland-notes)
+    - [X11 notes](#x11-notes)
+  - [Configuration](#configuration)
+  - [Project Structure](#project-structure)
+  - [Cursor Backend Selection](#cursor-backend-selection)
+  - [State Machine](#state-machine)
+  - [Assets](#assets)
+    - [Meme images](#meme-images)
+    - [Notepad messages](#notepad-messages)
+    - [Sound effects](#sound-effects)
+  - [Known Limitations](#known-limitations)
+  - [Contributing](#contributing)
+  - [License](#license)
+
+---
+
+## Overview
+
+CadGoose is a cross-platform port (Linux/macOS) of the classic desktop goose concept. Each goose lives in a transparent, click-through overlay window that sits above your normal desktop content. The geese roam between monitors, pick up and drop meme images and notepad-style messages, leave footprints that fade over time, and can chase or snatch your cursor when the mood strikes.
+
+The application supports multiple simultaneous geese, each with its own name and independently running behavior state machine. Runtime control is CLI-only: start the daemon, inspect status, change config, spawn geese, clear them, or quit entirely from the command line.
+
+---
+
+## Features
+
+**Core behavior**
+
+- One or more geese rendered in transparent overlay windows covering all connected monitors
+- Smooth animation with directional sprite rigging
+- Wandering movement with collision-aware path selection
+- Footprint trails that age out over time
+
+**Interactivity**
+
+- Geese can chase the cursor across the screen
+- Cursor snatching: a goose can grab and drag the cursor briefly before releasing it
+- Dropped item system: geese pick up, carry, and drop meme images and text notes
+- Honking on a configurable timer
+
+**Multi-monitor support**
+
+- Monitors are discovered at startup
+- Overlay windows are created per monitor
+- Geese can roam across monitor boundaries
+
+**CLI control**
+
+- Start the goose daemon in the background
+- Spawn geese and clear them from the terminal
+- Quit, inspect status, or check RAM usage from the terminal
+
+**Configuration persistence**
+
+- Settings are read from and written to `~/.config/desktop-goose/config.ini`
+- All tunable values survive restarts
+
+---
+
+## Requirements
+
+### Build tools
+
+- CMake 3.17 or newer
+- A C++17-capable compiler (GCC 9+ or Clang 10+ recommended)
+- `pkg-config`
+
+### Runtime libraries
+
+| Library | Purpose |
+|---|---|
+| GTK4 | UI toolkit and rendering |
+| gtk4-layer-shell | Wayland layer-shell overlay windows |
+| SDL2 | Audio playback |
+| SDL2_mixer | Sound effect mixing |
+| gdk-pixbuf-2.0 | Image loading for meme assets |
+| wayland-client | Wayland protocol base |
+| libcurl | (retained in build; unused after AI backend removal) |
+| X11 | X11 cursor position queries |
+| Xtst | X11 cursor movement injection |
+
+### Optional compositor support
+
+- **Hyprland**: full cursor control via IPC socket
+- **wlroots-based compositors**: cursor movement via the `wlr-virtual-pointer-unstable-v1` Wayland protocol
+- **X11**: cursor queries and movement via XTest
+
+One of the above is required for cursor chase and snatch behavior. The application runs without cursor control but those features will be disabled.
+
+---
+
+## Building from Source
+
+### 1. Install dependencies
+
+On Arch Linux:
+
+```
+sudo pacman -S cmake gtk4 gtk4-layer-shell sdl2 sdl2_mixer gdk-pixbuf2 wayland libcurl xorg-server-devel libxtst
+```
+
+On Fedora:
+
+```
+sudo dnf install cmake gtk4-devel gtk4-layer-shell-devel SDL2-devel SDL2_mixer-devel gdk-pixbuf2-devel wayland-devel libcurl-devel libX11-devel libXtst-devel
+```
+
+On Ubuntu 24.04 or later:
+
+```
+sudo apt install cmake libgtk-4-dev libgtk4-layer-shell-dev libsdl2-dev libsdl2-mixer-dev libgdk-pixbuf-2.0-dev libwayland-dev libcurl4-openssl-dev libx11-dev libxtst-dev
+```
+
+> **Note:** `gtk4-layer-shell` may not be available in older Ubuntu/Debian repositories. Build it from source from [github.com/wmww/gtk4-layer-shell](https://github.com/wmww/gtk4-layer-shell) if your package manager does not provide it.
+
+### 2. Configure and build
+
+```bash
+git clone https://github.com/yourname/CadGoose.git
+cd CadGoose
+cmake -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build --parallel
+```
+
+The compiled binary will be at `build/CadGoose`.
+
+### 3. In-tree builds
+
+The repository ships with some pre-generated Wayland protocol binding files. CMake will regenerate these via `wayland-scanner` if the tool is available. If `wayland-scanner` is not installed, the pre-generated files under `protocols/` will be used as-is.
+
+---
+
+## Running
+
+Run the binary from the repository root so that the `Assets/` directory is resolved correctly.
+
+The default command starts Desktop Goose in the background so you can close your terminal afterward:
+
+```bash
+./build/CadGoose
+```
+
+You can also start it explicitly:
+
+```bash
+./build/CadGoose start
+```
+
+Or keep it attached to the current terminal for debugging:
+
+```bash
+./build/CadGoose start --foreground
+```
+
+Common CLI commands:
+
+```bash
+./build/CadGoose start
+./build/CadGoose spawn Pip
+./build/CadGoose clear
+./build/CadGoose ram
+./build/CadGoose status
+./build/CadGoose quit
+```
+
+### Wayland notes
+
+The application uses `gtk4-layer-shell` to create overlay windows. Your compositor must support the `wlr-layer-shell-unstable-v1` protocol. Most wlroots-based compositors (Sway, Hyprland, river, niri) and KDE Plasma 6 support this. GNOME does not expose this protocol by default.
+
+### X11 notes
+
+The application can run under X11 via XWayland or a native X11 session. Overlay transparency and always-on-top behaviour depend on a compositing window manager being active (e.g., Picom, Compton, or a compositor built into your desktop environment).
+
+---
+
+## Configuration
+
+Settings are persisted to `~/.config/desktop-goose/config.ini` by default. If an older working-directory `config.ini` exists, it is still read as a fallback for migration.
+
+Selected keys:
+
+| Key | Default | Description |
+|---|---|---|
+| `global_scale` | `1.0` | Base render scale for geese and dropped items |
+| `audio_enabled` | `1` | Enable or disable honks |
+| `cursor_chase_enabled` | `1` | Allow new geese to chase the cursor |
+| `cursor_chase_chance` | `3` | Default chance for cursor chase behavior |
+| `mud_lifetime` | `15` | Default footprint lifetime in seconds |
+| `debug_visuals` | `0` | Draw debug hitboxes and state labels |
+
+Settings are edited through `~/.config/desktop-goose/config.ini`. There is no settings UI and no CLI settings editor.
+
+---
+
+## Project Structure
+
+```
+CadGoose/
+  src/
+    common/                  # Shared game logic
+      goose.cpp              Goose class: movement, animation, behavior
+      goose_behaviors.cpp    Goose behavior implementations
+      goose_physics.cpp      Goose physics and movement
+      world.cpp              Global state containers (geese, items, footprints)
+      config.cpp             INI-based config registry
+      cursor_backend.cpp     Backend manager and selection
+      app_actions.cpp        Goose spawning, commands
+      items.cpp              Item data structures
+    platform/
+      macos/                 # macOS (AppKit)
+        main.mm              Entry point
+        window.mm            NSWindow overlay
+        renderer.mm          NSView rendering
+        cursor_backend.mm    CGEvent cursor control
+        audio.mm             AVFoundation audio
+        assets.mm            Asset loading
+        command_socket.cpp   Unix socket IPC
+      linux/                 # Linux (GTK4)
+        main.cpp             Entry point
+        ui.cpp               Overlay drawing and tick loop
+        hyprland.cpp         Hyprland IPC cursor backend
+        wlroots_backend.cpp  wlroots virtual-pointer cursor backend
+        x11_backend.cpp      X11/XTest cursor backend
+        assets.cpp           SDL/GTK asset loading
+        command_socket.cpp   GLib socket IPC
+        ram_tracker.cpp      Memory usage tracking
+  include/
+    goose_math.h             Shared vector and math helpers
+    goose.h                  Goose class definition
+    world.h                  Global state declarations
+    cursor_backend.h         Backend interface
+    ...
+  Assets/
+    Images/Memes/            PNG images geese can pick up and drop
+    Sound/NotEmbedded/       Sound effects loaded at runtime
+    Text/NotepadMessages/    Plain text files geese can carry as notes
+    Mods/                    Game modifications
+  protocols/
+    wlr-virtual-pointer-unstable-v1.xml
+  tests/                     Test suite
+  CMakeLists.txt
+  build.sh                   Build script
+  run.sh                     Run script
+```
+
+---
+
+## Cursor Backend Selection
+
+At startup, `cursor_backend.cpp` attempts to initialise backends in this order:
+
+1. **Hyprland** — detected via the `HYPRLAND_INSTANCE_SIGNATURE` environment variable. Communicates through the Hyprland IPC socket to read and set cursor position.
+2. **wlroots** — uses the `zwlr_virtual_pointer_manager_v1` Wayland global to inject pointer motion events. Available on most wlroots compositors that expose the protocol.
+3. **X11** — uses `XQueryPointer` to read position and `XTestFakeMotionEvent` to move the cursor. Works on native X11 sessions and XWayland.
+
+If none of these backends initialise successfully, the application continues without cursor interaction features. All other goose behaviors remain active.
+
+Only one goose can hold cursor control at a time, tracked globally via `g_cursorGrabberId`.
+
+---
+
+## State Machine
+
+Each goose runs an independent state machine with the following states:
+
+| State | Description |
+|---|---|
+| `WANDER` | Default state. The goose walks in a chosen direction, periodically picking new targets. |
+| `FETCHING` | The goose has selected a nearby item and is walking toward it to pick it up. |
+| `RETURNING` | The goose is carrying an item and walking toward a drop location. |
+| `CHASE_CURSOR` | The goose is actively pursuing the cursor position reported by the active backend. |
+| `SNATCH_CURSOR` | The goose has reached the cursor and is temporarily controlling pointer movement. |
+
+State transitions are evaluated each tick in `goose.cpp`. External events such as item spawning or cursor proximity trigger transitions out of `WANDER`. The goose always returns to `WANDER` after completing a fetch/return cycle or releasing cursor control.
+
+---
+
+## Assets
+
+### Meme images
+
+Place PNG files in `Assets/Images/Memes/`. The asset loader scans this directory at startup. Geese will randomly select from available images when entering the `FETCHING` state.
+
+### Notepad messages
+
+Place plain text files (`.txt`) in `Assets/Text/NotepadMessages/`. Each file represents one message a goose can carry and display as a floating note above its head.
+
+### Sound effects
+
+Sound files are loaded from `Assets/Sound/NotEmbedded/` via SDL2_mixer. Supported formats are WAV, OGG, and MP3 (depending on SDL2_mixer build options on your system). Honk sounds and other behavioral audio cues are resolved by filename convention defined in `assets.cpp`.
+
+---
+
+## Known Limitations
+
+- **GNOME / Mutter**: The `wlr-layer-shell` protocol is not supported on stock GNOME. The application will not display overlay windows on GNOME without a third-party shell extension that exposes the protocol.
+- **Multi-GPU / mixed DPI**: Monitor layout discovery relies on GTK4 monitor enumeration. Fractional scaling and mixed-DPI setups may produce minor positional drift in goose movement near monitor edges.
+- **Wayland cursor snatching**: The wlroots virtual-pointer backend can inject relative motion but cannot read absolute cursor position without a secondary input mechanism. Absolute position queries fall back to the compositor IPC (Hyprland) or X11 on mixed sessions.
+- **No Wayland screencopy**: Geese do not interact with window content. They walk over the top of windows without any awareness of what is underneath.
+
+---
+
+## Contributing
+
+Contributions are welcome. A few things to keep in mind:
+
+- The main orchestration file is `src/ui.cpp`. It is large and most feature additions will touch it. Try to keep new logic in dedicated source files where possible and call into them from `ui.cpp`.
+- `src/world.cpp` is the canonical home for any new global state. Avoid scattering new globals into other translation units.
+- The build currently has a mix of source files and pre-built artifacts in the tree. Do not commit build outputs or generated Wayland binding files that are already tracked under `protocols/`.
+- Run a `clang-format` pass (`.clang-format` style file to be added) before submitting patches.
+
+To open an issue or pull request, use the GitHub interface for this repository.
+
+---
+
+## License
+
+This project is released under the MIT License. See [LICENSE](LICENSE) for the full text.
+
+Third-party assets bundled under `Assets/` may carry their own licenses. Review individual files before redistribution.
