@@ -1,0 +1,4 @@
+build/CMakeFiles/CadGoose.dir
+build/CMakeFiles/CadGooseTests.dir
+build/CMakeFiles/edit_cache.dir
+build/CMakeFiles/rebuild_cache.dir
