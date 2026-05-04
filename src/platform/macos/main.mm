@@ -61,9 +61,66 @@ void LogWrite(const char* level, const char* fmt, ...) {
 } while(0)
 
 @interface AppDelegate : NSObject <NSApplicationDelegate>
+@property (nonatomic, strong) NSStatusItem* statusItem;
 @end
 
 @implementation AppDelegate
+
+- (void)setupMenubar {
+    self.statusItem = [[NSStatusBar systemStatusBar] statusItemWithLength:NSSquareStatusItemLength];
+    
+    self.statusItem.button.title = @"🪿";
+    
+    NSMenu* menu = [[NSMenu alloc] init];
+    
+    [menu addItemWithTitle:@"About CadGoose" action:@selector(showAbout:) keyEquivalent:@""];
+    [menu addItem:[NSMenuItem separatorItem]];
+    
+    NSMenuItem* spawnItem = [menu addItemWithTitle:@"Spawn Goose" action:@selector(spawnGoose:) keyEquivalent:@"g"];
+    spawnItem.keyEquivalentModifierMask = NSEventModifierFlagCommand;
+    
+    NSMenuItem* clearItem = [menu addItemWithTitle:@"Clear All Geese" action:@selector(clearGeese:) keyEquivalent:@""];
+    
+    [menu addItem:[NSMenuItem separatorItem]];
+    
+    NSMenuItem* honkItem = [menu addItemWithTitle:@"Test Honk" action:@selector(testHonk:) keyEquivalent:@"h"];
+    honkItem.keyEquivalentModifierMask = NSEventModifierFlagCommand;
+    
+    [menu addItem:[NSMenuItem separatorItem]];
+    
+    NSMenuItem* quitItem = [menu addItemWithTitle:@"Quit" action:@selector(quitApp:) keyEquivalent:@"q"];
+    quitItem.keyEquivalentModifierMask = NSEventModifierFlagCommand;
+    
+    self.statusItem.menu = menu;
+    DEBUG_LOG("Menubar created");
+}
+
+- (void)showAbout:(id)sender {
+    NSAlert* alert = [[NSAlert alloc] init];
+    alert.messageText = @"CadGoose";
+    alert.informativeText = @"Desktop Goose for macOS\nA playful desktop companion that honks, steals your cursor, and leaves muddy footprints.";
+    [alert runModal];
+}
+
+- (void)spawnGoose:(id)sender {
+    AppActions_SpawnGoose("");
+    DEBUG_LOG("Spawned goose from menubar");
+}
+
+- (void)clearGeese:(id)sender {
+    AppActions_ClearGeese();
+    DEBUG_LOG("Cleared geese from menubar");
+}
+
+- (void)testHonk:(id)sender {
+    Audio_Init();
+    Audio_PlayHonk();
+    DEBUG_LOG("Test honk from menubar");
+}
+
+- (void)quitApp:(id)sender {
+    [[NSApplication sharedApplication] terminate:nil];
+}
 
 - (void)applicationDidFinishLaunching:(NSNotification*)aNotification {
     DEBUG_LOG("App launching...");
@@ -128,6 +185,7 @@ void LogWrite(const char* level, const char* fmt, ...) {
     }
 
     [[NSApplication sharedApplication] setActivationPolicy:NSApplicationActivationPolicyRegular];
+    [self setupMenubar];
     DEBUG_LOG("App ready, entering run loop...");
 }
 
