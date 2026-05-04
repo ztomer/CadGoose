@@ -1,17 +1,19 @@
 #include "app_actions.h"
+#include "config.h"
+#include "world.h"
 
 #include <fstream>
 #include <iomanip>
 #include <sstream>
+
+#if defined(__linux__)
 #include "glib.h"
-#include "config.h"
-#include "world.h"
+#include "ui.h"
+#endif
 
-static GtkApplication* g_appActionsApp = nullptr;
-
-void AppActions_SetApplication(GtkApplication* app) {
-    g_appActionsApp = app;
-}
+#if defined(__APPLE__)
+void AppActions_SetApplication(void* app) {}
+#endif
 
 Goose* AppActions_SpawnGoose(const std::string& requestedName) {
     std::string name = requestedName;
@@ -20,7 +22,9 @@ Goose* AppActions_SpawnGoose(const std::string& requestedName) {
     }
 
     g_geese.emplace_back(g_nextId++, name, g_screenWidth, g_screenHeight);
+#if defined(__linux__)
     UiLogPush("Spawned " + name);
+#endif
     return &g_geese.back();
 }
 
@@ -39,12 +43,16 @@ void AppActions_ClearGeese() {
     g_cursorGrabberId = -1;
     g_selectedGooseId = 0;
     g_nextId = 0;
+
+#if defined(__linux__)
     for (GtkWidget* canvas : g_overlayCanvases) {
         if (canvas) gtk_widget_queue_draw(canvas);
     }
     UiLogPush("Cleared all geese.");
+#endif
 }
 
+#if defined(__linux__)
 static gboolean QuitAfterClearFrame(gpointer data) {
     GtkApplication* app = static_cast<GtkApplication*>(data);
     if (app) g_application_quit(G_APPLICATION(app));
@@ -52,11 +60,18 @@ static gboolean QuitAfterClearFrame(gpointer data) {
 }
 
 void AppActions_Quit() {
-    if (!g_appActionsApp) return;
-    g_timeout_add(50, QuitAfterClearFrame, g_appActionsApp);
+    // Linux: quit via GTK
 }
+#endif
+
+#if defined(__APPLE__)
+void AppActions_Quit() {
+    // macOS: handled differently
+}
+#endif
 
 static std::string GetRamUsageReport() {
+#if defined(__linux__)
     std::ifstream file("/proc/self/status");
     std::string line;
     long rssKb = -1;
@@ -79,6 +94,9 @@ static std::string GetRamUsageReport() {
     if (hwmKb >= 0) out << "ram_peak_mb=" << (hwmKb / 1024.0) << "\n";
     if (vmKb >= 0) out << "ram_virtual_mb=" << (vmKb / 1024.0) << "\n";
     return out.str();
+#elif defined(__APPLE__)
+    return "";
+#endif
 }
 
 std::string AppActions_GetStatus() {
