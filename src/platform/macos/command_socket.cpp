@@ -3,6 +3,7 @@
 #include <sys/un.h>
 #include <unistd.h>
 #include <cstring>
+#include <iostream>
 
 #if defined(__APPLE__)
 #define COMMAND_SOCKET_PATH "/tmp/desktop-goose.sock"
@@ -10,9 +11,16 @@
 
 static int g_socketFd = -1;
 
-bool CommandSocket_Init() {
+std::string CommandSocket_GetPath() {
+    return COMMAND_SOCKET_PATH;
+}
+
+bool CommandSocket_StartServer(CommandHandler handler, std::string* errorOut) {
     g_socketFd = socket(AF_UNIX, SOCK_STREAM, 0);
-    if (g_socketFd < 0) return false;
+    if (g_socketFd < 0) {
+        if (errorOut) *errorOut = "Failed to create socket";
+        return false;
+    }
 
     unlink(COMMAND_SOCKET_PATH);
 
@@ -24,6 +32,7 @@ bool CommandSocket_Init() {
     if (bind(g_socketFd, (struct sockaddr*)&addr, sizeof(addr)) < 0) {
         close(g_socketFd);
         g_socketFd = -1;
+        if (errorOut) *errorOut = "Failed to bind socket";
         return false;
     }
 
@@ -31,9 +40,20 @@ bool CommandSocket_Init() {
     return true;
 }
 
-int CommandSocket_Send(const std::vector<std::string>& args, std::string* response, int* statusCode) {
+void CommandSocket_StopServer() {
+    if (g_socketFd >= 0) {
+        close(g_socketFd);
+        g_socketFd = -1;
+    }
+    unlink(COMMAND_SOCKET_PATH);
+}
+
+bool CommandSocket_Send(const std::vector<std::string>& args, std::string* responseOut, std::string* errorOut) {
     int fd = socket(AF_UNIX, SOCK_STREAM, 0);
-    if (fd < 0) return -1;
+    if (fd < 0) {
+        if (errorOut) *errorOut = "Failed to create socket";
+        return false;
+    }
 
     struct sockaddr_un addr;
     memset(&addr, 0, sizeof(addr));
@@ -42,7 +62,8 @@ int CommandSocket_Send(const std::vector<std::string>& args, std::string* respon
 
     if (connect(fd, (struct sockaddr*)&addr, sizeof(addr)) < 0) {
         close(fd);
-        return -1;
+        if (errorOut) *errorOut = "Failed to connect to socket";
+        return false;
     }
 
     std::string msg;
@@ -56,11 +77,11 @@ int CommandSocket_Send(const std::vector<std::string>& args, std::string* respon
     int n = read(fd, buf, sizeof(buf) - 1);
     close(fd);
 
-    if (response && n > 0) {
-        response->assign(buf, n);
+    if (responseOut && n > 0) {
+        responseOut->assign(buf, n);
     }
 
-    return 0;
+    return true;
 }
 
 bool IsRunning() {

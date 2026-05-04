@@ -1,6 +1,8 @@
 #include "cursor_backend.h"
 
-#if defined(__linux__)
+#if defined(__APPLE__)
+#include "mac_cursor_backend.h"
+#elif defined(__linux__)
 #include "hyprland.h"
 #include "x11_backend.h"
 #include "wlroots_backend.h"

@@ -8,13 +8,21 @@
 #include <string>
 #include <deque>
 #include <vector>
+
+#ifdef __linux__
 #include <gtk/gtk.h>
+#endif
+
 #include "goose.h"
 #include "items.h"
 
 struct MonitorInfo {
     int x, y, width, height;
+#ifdef __APPLE__
+    void* monitor;
+#elif defined(__linux__)
     GdkMonitor* monitor;
+#endif
 };
 
 struct Footprint {
@@ -32,9 +40,13 @@ extern int g_nextId;
 extern int g_screenWidth;
 extern int g_screenHeight;
 extern int g_selectedGooseId;
+
+#ifdef __linux__
 extern GtkWidget* g_entryNote;
-extern std::deque<std::string> g_uiLog;
 extern std::vector<GtkWidget*> g_overlayCanvases;
+#endif
+
+extern std::deque<std::string> g_uiLog;
 extern int g_cursorGrabberId; // id of goose currently dragging the cursor, -1 = none
 
 void UiLogPush(const std::string& s);

@@ -1,12 +1,11 @@
-# Desktop Goose Linux Port (CppGoose)
+# CadGoose
 
-Version: 0.31
+A cross-platform desktop goose that runs on macOS (AppKit) and Linux (GTK4). The chaotic goose lives in a transparent overlay window, chases your cursor, picks up items, and leaves footprints.
 
-Just a Linux port of Desktop Goose — same chaotic goose, now on Linux.
+## Platforms
 
-This repository builds and runs as a standalone C++17 app using GTK4, with cursor control backends for Hyprland, wlroots-based compositors, and X11/XWayland.
-
-This codebase is the maintained Linux/Wayland/X11 port of the classic desktop goose behavior, including collectible meme items, note messages, footprints, and cursor chase/snatch mechanics.
+- **macOS**: Native AppKit implementation with Core Graphics rendering
+- **Linux**: GTK4 with Wayland (Hyprland, wlroots) and X11 support
 
 ---
 
@@ -30,7 +29,7 @@ This codebase is the maintained Linux/Wayland/X11 port of the classic desktop go
 
 ## Overview
 
-CppGoose is a Linux port of the classic desktop goose concept. Each goose lives in a transparent, click-through overlay window that sits above your normal desktop content. The geese roam between monitors, pick up and drop meme images and notepad-style messages, leave footprints that fade over time, and can chase or snatch your cursor when the mood strikes.
+CadGoose is a cross-platform port (Linux/macOS) of the classic desktop goose concept. Each goose lives in a transparent, click-through overlay window that sits above your normal desktop content. The geese roam between monitors, pick up and drop meme images and notepad-style messages, leave footprints that fade over time, and can chase or snatch your cursor when the mood strikes.
 
 The application supports multiple simultaneous geese, each with its own name and independently running behavior state machine. Runtime control is CLI-only: start the daemon, inspect status, change config, spawn geese, clear them, or quit entirely from the command line.
 
@@ -125,13 +124,13 @@ sudo apt install cmake libgtk-4-dev libgtk4-layer-shell-dev libsdl2-dev libsdl2-
 ### 2. Configure and build
 
 ```bash
-git clone https://github.com/yourname/CppGoose.git
-cd CppGoose
+git clone https://github.com/yourname/CadGoose.git
+cd CadGoose
 cmake -B build -DCMAKE_BUILD_TYPE=Release
 cmake --build build --parallel
 ```
 
-The compiled binary will be at `build/CppGoose`.
+The compiled binary will be at `build/CadGoose`.
 
 ### 3. In-tree builds
 
@@ -146,30 +145,30 @@ Run the binary from the repository root so that the `Assets/` directory is resol
 The default command starts Desktop Goose in the background so you can close your terminal afterward:
 
 ```bash
-./build/CppGoose
+./build/CadGoose
 ```
 
 You can also start it explicitly:
 
 ```bash
-./build/CppGoose start
+./build/CadGoose start
 ```
 
 Or keep it attached to the current terminal for debugging:
 
 ```bash
-./build/CppGoose start --foreground
+./build/CadGoose start --foreground
 ```
 
 Common CLI commands:
 
 ```bash
-./build/CppGoose start
-./build/CppGoose spawn Pip
-./build/CppGoose clear
-./build/CppGoose ram
-./build/CppGoose status
-./build/CppGoose quit
+./build/CadGoose start
+./build/CadGoose spawn Pip
+./build/CadGoose clear
+./build/CadGoose ram
+./build/CadGoose status
+./build/CadGoose quit
 ```
 
 ### Wayland notes
@@ -204,31 +203,45 @@ Settings are edited through `~/.config/desktop-goose/config.ini`. There is no se
 ## Project Structure
 
 ```
-CppGoose/
+CadGoose/
   src/
-    main.cpp                 GTK application entry point and daemon launch logic
-    goose.cpp                Goose class: movement, animation, drawing, behavior
-    world.cpp                Global state containers (geese, monitors, items, footprints)
-    ui.cpp                   Overlay drawing and tick loop
-    assets.cpp               Asset resolution, image/sound loading, item data construction
-    config.cpp               INI-based config registry
-    cursor_backend.cpp       Backend manager and selection logic
-    hyprland.cpp             Hyprland IPC cursor backend
-    wlroots_backend.cpp      wlroots virtual-pointer cursor backend
-    x11_backend.cpp          X11/XTest cursor backend
-    tool_manager.cpp         Intent-to-command bridge (calculator, browser launch)
+    common/                  # Shared game logic
+      goose.cpp              Goose class: movement, animation, behavior
+      world.cpp              Global state containers (geese, items, footprints)
+      config.cpp             INI-based config registry
+      cursor_backend.cpp     Backend manager and selection
+      app_actions.cpp        Goose spawning, commands
+      items.cpp              Item data structures
+    platform/
+      macos/                 # macOS (AppKit)
+        main.mm              Entry point
+        window.mm            NSWindow overlay
+        renderer.mm          NSView rendering
+        cursor_backend.mm    CGEvent cursor control
+        audio.mm             AVFoundation audio
+        assets.cpp           Asset loading
+        command_socket.cpp   Unix socket IPC
+      linux/                 # Linux (GTK4)
+        ui.cpp               Overlay drawing and tick loop
+        hyprland.cpp         Hyprland IPC cursor backend
+        wlroots_backend.cpp  wlroots virtual-pointer cursor backend
+        x11_backend.cpp      X11/XTest cursor backend
+        assets.cpp           SDL/GTK asset loading
+        command_socket.cpp   GLib socket IPC
   include/
     goose_math.h             Shared vector and math helpers
+    goose.h                  Goose class definition
+    world.h                  Global state declarations
+    cursor_backend.h         Backend interface
     ...
   Assets/
     Images/Memes/            PNG images geese can pick up and drop
-    Text/NotepadMessages/    Plain text files geese can carry as notes
-    Sound/NotEmbedded/       Sound effect files loaded at runtime
+    Text/NotepadMessages/     Plain text files geese can carry as notes
   protocols/
     wlr-virtual-pointer-unstable-v1.xml
-                             Wayland protocol definition
   CMakeLists.txt
-  config.ini                 Runtime configuration (auto-generated)
+  build.sh                   Build script
+  run.sh                     Run script
 ```
 
 ---

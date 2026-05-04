@@ -3,13 +3,25 @@
 
 #include <memory>
 #include <string>
+
+#ifdef __linux__
 #include <gdk-pixbuf/gdk-pixbuf.h>
+#elif defined(__APPLE__)
+#include <CoreGraphics/CoreGraphics.h>
+#endif
+
 #include "goose_math.h"
 
 struct ItemData {
     enum Type { MEME, TEXT } type;
-    GdkPixbuf* pixbuf = nullptr; // For Memes
-    std::shared_ptr<const std::string> textContent; // Shared note text to avoid duplicate copies
+
+#ifdef __linux__
+    GdkPixbuf* pixbuf = nullptr;
+#elif defined(__APPLE__)
+    CGImageRef image = nullptr;
+#endif
+
+    std::shared_ptr<const std::string> textContent;
     int w = 0, h = 0;
 
     ItemData();

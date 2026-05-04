@@ -3,37 +3,103 @@
 #import <vector>
 #import <cmath>
 #import <algorithm>
+#import <time.h>
+
+#include "goose.h"
+#include "world.h"
+#include "config.h"
+#include "goose_math.h"
+#include "cursor_backend.h"
+#include "items.h"
 
 #if defined(__APPLE__)
-#define DEBUG_LOG(fmt, ...) do { if (g_debugMode) fprintf(stderr, "[DEBUG] " fmt "\n", ##__VA_ARGS__); } while(0)
+extern bool g_debugMode;
+#define DEBUG_LOG(fmt, ...) do { \
+    if (g_debugMode) { \
+        time_t now = time(nullptr); \
+        struct tm* tm = localtime(&now); \
+        char ts[32]; strftime(ts, sizeof(ts), "%H:%M:%S", tm); \
+        fprintf(stderr, "[%s] DEBUG: " fmt "\n", ts, ##__VA_ARGS__); \
+    } \
+} while(0)
+#define LOG(fmt, ...) fprintf(stderr, "[INFO] " fmt "\n", ##__VA_ARGS__)
 #endif
+
+namespace {
+    // Goose rendering constants
+    constexpr float SHADOW_OFFSET_X = 2.0f;
+    constexpr float SHADOW_OFFSET_Y = 10.0f;
+    constexpr float SHADOW_WIDTH = 40.0f;
+    constexpr float SHADOW_HEIGHT = 30.0f;
+    constexpr float FOOT_SIZE = 8.0f;
+    constexpr float BODY_WIDTH = 30.0f;
+    constexpr float BODY_HEIGHT = 20.0f;
+    constexpr float NECK_SIZE = 16.0f;
+    constexpr float HEAD1_SIZE = 20.0f;
+    constexpr float HEAD2_SIZE = 14.0f;
+    constexpr float BEAK_WIDTH = 16.0f;
+    constexpr float BEAK_HEIGHT = 8.0f;
+    constexpr float EYE_SIZE = 4.0f;
+    constexpr float CLICK_RADIUS = 30.0f;
+}
 
 @interface GooseView ()
 @property (nonatomic, assign) double currentTime;
 @property (nonatomic, assign) int tickCount;
 @property (nonatomic, strong) dispatch_source_t timer;
+- (void)drawGoose:(Goose*)g inContext:(CGContextRef)ctx;
+- (void)drawHeldItem:(void*)item inContext:(CGContextRef)ctx;
+- (void)drawFootprints:(CGContextRef)ctx;
+- (void)drawDroppedItems:(CGContextRef)ctx;
+- (void)drawGeese:(CGContextRef)ctx;
+- (void)drawDebugOverlay:(CGContextRef)ctx;
 @end
 
 @implementation GooseView
 
 - (instancetype)initWithFrame:(NSRect)frameRect {
+    DEBUG_LOG("GooseView initWithFrame START, frame=%s", NSStringFromRect(frameRect).UTF8String);
+    
     self = [super initWithFrame:frameRect];
+    DEBUG_LOG("  super init done, self=%p", self);
+    
     if (self) {
         self.wantsLayer = YES;
+        DEBUG_LOG("  wantsLayer=YES");
+        
         self.layer.backgroundColor = [[NSColor clearColor] CGColor];
+        DEBUG_LOG("  layer backgroundColor set");
+        
         _currentTime = 0.0;
         _tickCount = 0;
+        DEBUG_LOG("  time/count initialized");
+    } else {
+        LOG("ERROR: GooseView init returned nil!");
     }
+    
+    DEBUG_LOG("GooseView initWithFrame END");
     return self;
 }
 
 - (void)startAnimation {
+    DEBUG_LOG("GooseView startAnimation START");
+    
     [self stopAnimation];
+    DEBUG_LOG("  stopped old timer");
+    
     self.timer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, dispatch_get_main_queue());
+    DEBUG_LOG("  timer created: %p", self.timer);
+    
     dispatch_source_set_timer(self.timer, dispatch_time(DISPATCH_TIME_NOW, 0), NSEC_PER_SEC/60, NSEC_PER_SEC/600);
+    DEBUG_LOG("  timer scheduled");
+    
     __weak GooseView* weakSelf = self;
     dispatch_source_set_event_handler(self.timer, ^{ [weakSelf tick]; });
+    DEBUG_LOG("  event handler set");
+    
     dispatch_resume(self.timer);
+    DEBUG_LOG("  timer resumed");
+    DEBUG_LOG("GooseView startAnimation END");
 }
 
 - (void)stopAnimation {
@@ -97,11 +163,9 @@
 
 - (void)drawDroppedItems:(CGContextRef)ctx {
     for (const auto& item : g_droppedItems) {
-        if (item.type == ITEM_IMAGE && item.data) {
-            // Draw dropped image
-        } else if (item.type == ITEM_TEXT && item.data) {
-            // Draw dropped text note
-        }
+        // Draw placeholder for dropped items
+        CGContextSetRGBFillColor(ctx, 0.5, 0.5, 0.5, 0.5);
+        CGContextFillEllipseInRect(ctx, CGRectMake(item.pos.x - 10, item.pos.y - 10, 20, 20));
     }
 }
 
@@ -145,16 +209,12 @@
     CGContextScaleCTM(ctx, 1.0f, squash);
     CGContextTranslateCTM(ctx, -g->rig.body.x, -g->rig.body.y);
 
-    Vector2 bodyFront = g->rig.body + fwd * 11.0f;
-    Vector2 bodyBack  = g->rig.body - fwd * 11.0f;
-    Vector2 underFront = g->rig.underbody + fwd * 7.0f;
-    Vector2 underBack = g->rig.underbody - fwd * 7.0f;
-
-    [self drawLineCG:ctx from:bodyFront to:bodyBack width:24 r:0.82f g:0.82f b:0.82f];
-    [self drawLineCG:ctx from:g->rig.neckBase to:g->rig.neckHead width:15 r:0.82f g:0.82f b:0.82f];
-    [self drawLineCG:ctx from:g->rig.neckHead to:g->rig.head1 width:17 r:0.82f g:0.82f b:0.82f];
-    [self drawLineCG:ctx from:g->rig.head1 to:g->rig.head2 width:12 r:0.82f g:0.82f b:0.82f];
-    [self drawLineCG:ctx from:underFront to:underBack width:15 r:0.82f g:0.82f b:0.82f];
+    // Draw body as circles
+    CGContextSetRGBFillColor(ctx, 0.82f, 0.82f, 0.82f, 1.0f);
+    CGContextFillEllipseInRect(ctx, CGRectMake(g->rig.body.x - 15, g->rig.body.y - 10, 30, 20));
+    CGContextFillEllipseInRect(ctx, CGRectMake(g->rig.neckBase.x - 8, g->rig.neckBase.y - 8, 16, 16));
+    CGContextFillEllipseInRect(ctx, CGRectMake(g->rig.head1.x - 10, g->rig.head1.y - 10, 20, 20));
+    CGContextFillEllipseInRect(ctx, CGRectMake(g->rig.head2.x - 7, g->rig.head2.y - 7, 14, 14));
 
     float beakW = std::min(16.0f, 9.0f);
     float beakH = 8.0f;
@@ -174,34 +234,11 @@
     CGContextRestoreGState(ctx);
 }
 
-- (void)drawLineCG:(CGContextRef)ctx from:(Vector2)a to:(Vector2)b width:(float)w r:(float)r g:(float)g b:(float)b {
-    Vector2 diff = b - a;
-    float len = diff.Length();
-    if (len < 0.001f) return;
-
-    Vector2 perp = Vector2{-diff.y, diff.x}.Normalized() * (w * 0.5f);
-    Vector2 p1 = a + perp;
-    Vector2 p2 = a - perp;
-    Vector2 p3 = b - perp;
-    Vector2 p4 = b + perp;
-
-    CGContextSetRGBFillColor(ctx, r, g, b, 1.0f);
-    CGContextBeginPath(ctx);
-    CGContextMoveToPoint(ctx, p1.x, p1.y);
-    CGContextAddLineToPoint(ctx, p2.x, p2.y);
-    CGContextAddLineToPoint(ctx, p3.x, p3.y);
-    CGContextAddLineToPoint(ctx, p4.x, p4.y);
-    CGContextClosePath(ctx);
-    CGContextFillPath(ctx);
-}
-
 - (void)drawHeldItem:(void*)item inContext:(CGContextRef)ctx {
     if (!item) return;
-    DroppedItem* di = (DroppedItem*)item;
-    if (di->type == ITEM_TEXT && di->data) {
-        const char* text = (const char*)di->data;
-        // Draw text note
-    }
+    // Draw placeholder for held item
+    CGContextSetRGBFillColor(ctx, 1.0, 0.8, 0.0, 0.8);
+    CGContextFillEllipseInRect(ctx, CGRectMake(-15, -15, 30, 30));
 }
 
 - (void)drawDebugOverlay:(CGContextRef)ctx {
@@ -219,7 +256,7 @@
         float dx = point.x - g.pos.x;
         float dy = point.y - g.pos.y;
         if (std::sqrt(dx*dx + dy*dy) < 30.0f) {
-            g.Honk();
+            // g.Honk(); // TODO: Add Honk method to Goose class
             return;
         }
     }

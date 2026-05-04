@@ -5,7 +5,13 @@
 #define GOOSE_H
 
 #include <string>
+
+#ifdef __linux__
 #include <gtk/gtk.h>
+struct cairo_t;
+typedef struct cairo_t cairo_t;
+#endif
+
 #include "goose_math.h"
 #include "assets.h"
 
@@ -88,7 +94,10 @@ public:
     void ForceFetch(int type, int w, int h);
     void ForceFetchText(const std::string& text, int w, int h);
     void ForceWander(int w, int h);
+
+#ifdef __linux__
     void Draw(cairo_t* cr);
+#endif
 
     // Coordinate helpers
     Vector2 GetBeakTipWorld();
@@ -105,6 +114,8 @@ public:
 private:
     void UpdateDrag(double dt);
     void StartFetch(int w, int h);
+
+#ifdef __linux__
     void DrawHeldItem(cairo_t* cr);
     void DrawEyes(cairo_t* cr, Vector2 fwd);
     void PickNewTarget(int w, int h);
@@ -114,6 +125,12 @@ private:
     void DrawEllipse(cairo_t* cr, Vector2 p, int rx, int ry, float r, float g, float b, float a=1.0);
     void DrawLine(cairo_t* cr, Vector2 a, Vector2 b, float w, const float color[]);
     void DrawLine(cairo_t* cr, Vector2 a, Vector2 b, float w, float r, float g, float bl);
+#else
+    void PickNewTarget(int w, int h);
+    Vector2 GetFootHome(float angleOffset);
+    void SolveFeet(double time);
+    void UpdateRig();
+#endif
 };
 
 #endif // GOOSE_H

@@ -48,19 +48,19 @@ cmake_force:
 SHELL = /bin/sh
 
 # The CMake executable.
-CMAKE_COMMAND = /usr/bin/cmake
+CMAKE_COMMAND = /opt/homebrew/bin/cmake
 
 # The command to remove a file.
-RM = /usr/bin/cmake -E rm -f
+RM = /opt/homebrew/bin/cmake -E rm -f
 
 # Escaping for special characters.
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = "/home/dill/Downloads/desktop-goose/Desktop Goose v0.31/DesktopGoosev0.31"
+CMAKE_SOURCE_DIR = /Users/ztomer/Projects/CadGoose
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = "/home/dill/Downloads/desktop-goose/Desktop Goose v0.31/DesktopGoosev0.31/build"
+CMAKE_BINARY_DIR = /Users/ztomer/Projects/CadGoose/build
 
 #=============================================================================
 # Targets provided globally by CMake.
@@ -68,7 +68,7 @@ CMAKE_BINARY_DIR = "/home/dill/Downloads/desktop-goose/Desktop Goose v0.31/Deskt
 # Special rule for the target edit_cache
 edit_cache:
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Running CMake cache editor..."
-	/usr/bin/ccmake -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR)
+	/opt/homebrew/bin/ccmake -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR)
 .PHONY : edit_cache
 
 # Special rule for the target edit_cache
@@ -78,7 +78,7 @@ edit_cache/fast: edit_cache
 # Special rule for the target rebuild_cache
 rebuild_cache:
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Running CMake to regenerate build system..."
-	/usr/bin/cmake --regenerate-during-build -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR)
+	/opt/homebrew/bin/cmake --regenerate-during-build -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR)
 .PHONY : rebuild_cache
 
 # Special rule for the target rebuild_cache
@@ -87,9 +87,9 @@ rebuild_cache/fast: rebuild_cache
 
 # The main all target
 all: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start "/home/dill/Downloads/desktop-goose/Desktop Goose v0.31/DesktopGoosev0.31/build/CMakeFiles" "/home/dill/Downloads/desktop-goose/Desktop Goose v0.31/DesktopGoosev0.31/build//CMakeFiles/progress.marks"
+	$(CMAKE_COMMAND) -E cmake_progress_start /Users/ztomer/Projects/CadGoose/build/CMakeFiles /Users/ztomer/Projects/CadGoose/build//CMakeFiles/progress.marks
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 all
-	$(CMAKE_COMMAND) -E cmake_progress_start "/home/dill/Downloads/desktop-goose/Desktop Goose v0.31/DesktopGoosev0.31/build/CMakeFiles" 0
+	$(CMAKE_COMMAND) -E cmake_progress_start /Users/ztomer/Projects/CadGoose/build/CMakeFiles 0
 .PHONY : all
 
 # The main clean target
@@ -113,358 +113,290 @@ preinstall/fast:
 
 # clear depends
 depend:
-	$(CMAKE_COMMAND) -P "/home/dill/Downloads/desktop-goose/Desktop Goose v0.31/DesktopGoosev0.31/build/CMakeFiles/VerifyGlobs.cmake"
 	$(CMAKE_COMMAND) -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 1
 .PHONY : depend
 
 #=============================================================================
-# Target rules for targets named CppGoose
+# Target rules for targets named CadGoose
 
 # Build rule for target.
-CppGoose: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CppGoose
-.PHONY : CppGoose
+CadGoose: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CadGoose
+.PHONY : CadGoose
 
 # fast build rule for target.
-CppGoose/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/CppGoose.dir/build.make CMakeFiles/CppGoose.dir/build
-.PHONY : CppGoose/fast
+CadGoose/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/build
+.PHONY : CadGoose/fast
 
-main.o: main.cpp.o
-.PHONY : main.o
+#=============================================================================
+# Target rules for targets named CadGooseTests
 
-# target to build an object file
-main.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/CppGoose.dir/build.make CMakeFiles/CppGoose.dir/main.cpp.o
-.PHONY : main.cpp.o
+# Build rule for target.
+CadGooseTests: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CadGooseTests
+.PHONY : CadGooseTests
 
-main.i: main.cpp.i
-.PHONY : main.i
+# fast build rule for target.
+CadGooseTests/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/build
+.PHONY : CadGooseTests/fast
 
-# target to preprocess a source file
-main.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/CppGoose.dir/build.make CMakeFiles/CppGoose.dir/main.cpp.i
-.PHONY : main.cpp.i
-
-main.s: main.cpp.s
-.PHONY : main.s
-
-# target to generate assembly for a file
-main.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/CppGoose.dir/build.make CMakeFiles/CppGoose.dir/main.cpp.s
-.PHONY : main.cpp.s
-
-src/app_actions.o: src/app_actions.cpp.o
-.PHONY : src/app_actions.o
+src/common/app_actions.o: src/common/app_actions.cpp.o
+.PHONY : src/common/app_actions.o
 
 # target to build an object file
-src/app_actions.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/CppGoose.dir/build.make CMakeFiles/CppGoose.dir/src/app_actions.cpp.o
-.PHONY : src/app_actions.cpp.o
+src/common/app_actions.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/common/app_actions.cpp.o
+.PHONY : src/common/app_actions.cpp.o
 
-src/app_actions.i: src/app_actions.cpp.i
-.PHONY : src/app_actions.i
+src/common/app_actions.i: src/common/app_actions.cpp.i
+.PHONY : src/common/app_actions.i
 
 # target to preprocess a source file
-src/app_actions.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/CppGoose.dir/build.make CMakeFiles/CppGoose.dir/src/app_actions.cpp.i
-.PHONY : src/app_actions.cpp.i
+src/common/app_actions.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/common/app_actions.cpp.i
+.PHONY : src/common/app_actions.cpp.i
 
-src/app_actions.s: src/app_actions.cpp.s
-.PHONY : src/app_actions.s
+src/common/app_actions.s: src/common/app_actions.cpp.s
+.PHONY : src/common/app_actions.s
 
 # target to generate assembly for a file
-src/app_actions.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/CppGoose.dir/build.make CMakeFiles/CppGoose.dir/src/app_actions.cpp.s
-.PHONY : src/app_actions.cpp.s
+src/common/app_actions.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/common/app_actions.cpp.s
+.PHONY : src/common/app_actions.cpp.s
 
-src/assets.o: src/assets.cpp.o
-.PHONY : src/assets.o
+src/common/config.o: src/common/config.cpp.o
+.PHONY : src/common/config.o
 
 # target to build an object file
-src/assets.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/CppGoose.dir/build.make CMakeFiles/CppGoose.dir/src/assets.cpp.o
-.PHONY : src/assets.cpp.o
+src/common/config.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/common/config.cpp.o
+.PHONY : src/common/config.cpp.o
 
-src/assets.i: src/assets.cpp.i
-.PHONY : src/assets.i
+src/common/config.i: src/common/config.cpp.i
+.PHONY : src/common/config.i
 
 # target to preprocess a source file
-src/assets.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/CppGoose.dir/build.make CMakeFiles/CppGoose.dir/src/assets.cpp.i
-.PHONY : src/assets.cpp.i
+src/common/config.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/common/config.cpp.i
+.PHONY : src/common/config.cpp.i
 
-src/assets.s: src/assets.cpp.s
-.PHONY : src/assets.s
+src/common/config.s: src/common/config.cpp.s
+.PHONY : src/common/config.s
 
 # target to generate assembly for a file
-src/assets.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/CppGoose.dir/build.make CMakeFiles/CppGoose.dir/src/assets.cpp.s
-.PHONY : src/assets.cpp.s
+src/common/config.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/common/config.cpp.s
+.PHONY : src/common/config.cpp.s
 
-src/command_socket.o: src/command_socket.cpp.o
-.PHONY : src/command_socket.o
+src/common/cursor_backend.o: src/common/cursor_backend.cpp.o
+.PHONY : src/common/cursor_backend.o
 
 # target to build an object file
-src/command_socket.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/CppGoose.dir/build.make CMakeFiles/CppGoose.dir/src/command_socket.cpp.o
-.PHONY : src/command_socket.cpp.o
+src/common/cursor_backend.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/common/cursor_backend.cpp.o
+.PHONY : src/common/cursor_backend.cpp.o
 
-src/command_socket.i: src/command_socket.cpp.i
-.PHONY : src/command_socket.i
+src/common/cursor_backend.i: src/common/cursor_backend.cpp.i
+.PHONY : src/common/cursor_backend.i
 
 # target to preprocess a source file
-src/command_socket.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/CppGoose.dir/build.make CMakeFiles/CppGoose.dir/src/command_socket.cpp.i
-.PHONY : src/command_socket.cpp.i
+src/common/cursor_backend.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/common/cursor_backend.cpp.i
+.PHONY : src/common/cursor_backend.cpp.i
 
-src/command_socket.s: src/command_socket.cpp.s
-.PHONY : src/command_socket.s
+src/common/cursor_backend.s: src/common/cursor_backend.cpp.s
+.PHONY : src/common/cursor_backend.s
 
 # target to generate assembly for a file
-src/command_socket.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/CppGoose.dir/build.make CMakeFiles/CppGoose.dir/src/command_socket.cpp.s
-.PHONY : src/command_socket.cpp.s
+src/common/cursor_backend.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/common/cursor_backend.cpp.s
+.PHONY : src/common/cursor_backend.cpp.s
 
-src/config.o: src/config.cpp.o
-.PHONY : src/config.o
+src/common/goose.o: src/common/goose.cpp.o
+.PHONY : src/common/goose.o
 
 # target to build an object file
-src/config.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/CppGoose.dir/build.make CMakeFiles/CppGoose.dir/src/config.cpp.o
-.PHONY : src/config.cpp.o
+src/common/goose.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/common/goose.cpp.o
+.PHONY : src/common/goose.cpp.o
 
-src/config.i: src/config.cpp.i
-.PHONY : src/config.i
+src/common/goose.i: src/common/goose.cpp.i
+.PHONY : src/common/goose.i
 
 # target to preprocess a source file
-src/config.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/CppGoose.dir/build.make CMakeFiles/CppGoose.dir/src/config.cpp.i
-.PHONY : src/config.cpp.i
+src/common/goose.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/common/goose.cpp.i
+.PHONY : src/common/goose.cpp.i
 
-src/config.s: src/config.cpp.s
-.PHONY : src/config.s
+src/common/goose.s: src/common/goose.cpp.s
+.PHONY : src/common/goose.s
 
 # target to generate assembly for a file
-src/config.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/CppGoose.dir/build.make CMakeFiles/CppGoose.dir/src/config.cpp.s
-.PHONY : src/config.cpp.s
+src/common/goose.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/common/goose.cpp.s
+.PHONY : src/common/goose.cpp.s
 
-src/cursor_backend.o: src/cursor_backend.cpp.o
-.PHONY : src/cursor_backend.o
+src/common/items.o: src/common/items.cpp.o
+.PHONY : src/common/items.o
 
 # target to build an object file
-src/cursor_backend.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/CppGoose.dir/build.make CMakeFiles/CppGoose.dir/src/cursor_backend.cpp.o
-.PHONY : src/cursor_backend.cpp.o
+src/common/items.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/common/items.cpp.o
+.PHONY : src/common/items.cpp.o
 
-src/cursor_backend.i: src/cursor_backend.cpp.i
-.PHONY : src/cursor_backend.i
+src/common/items.i: src/common/items.cpp.i
+.PHONY : src/common/items.i
 
 # target to preprocess a source file
-src/cursor_backend.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/CppGoose.dir/build.make CMakeFiles/CppGoose.dir/src/cursor_backend.cpp.i
-.PHONY : src/cursor_backend.cpp.i
+src/common/items.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/common/items.cpp.i
+.PHONY : src/common/items.cpp.i
 
-src/cursor_backend.s: src/cursor_backend.cpp.s
-.PHONY : src/cursor_backend.s
+src/common/items.s: src/common/items.cpp.s
+.PHONY : src/common/items.s
 
 # target to generate assembly for a file
-src/cursor_backend.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/CppGoose.dir/build.make CMakeFiles/CppGoose.dir/src/cursor_backend.cpp.s
-.PHONY : src/cursor_backend.cpp.s
+src/common/items.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/common/items.cpp.s
+.PHONY : src/common/items.cpp.s
 
-src/goose.o: src/goose.cpp.o
-.PHONY : src/goose.o
+src/common/world.o: src/common/world.cpp.o
+.PHONY : src/common/world.o
 
 # target to build an object file
-src/goose.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/CppGoose.dir/build.make CMakeFiles/CppGoose.dir/src/goose.cpp.o
-.PHONY : src/goose.cpp.o
+src/common/world.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/common/world.cpp.o
+.PHONY : src/common/world.cpp.o
 
-src/goose.i: src/goose.cpp.i
-.PHONY : src/goose.i
+src/common/world.i: src/common/world.cpp.i
+.PHONY : src/common/world.i
 
 # target to preprocess a source file
-src/goose.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/CppGoose.dir/build.make CMakeFiles/CppGoose.dir/src/goose.cpp.i
-.PHONY : src/goose.cpp.i
+src/common/world.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/common/world.cpp.i
+.PHONY : src/common/world.cpp.i
 
-src/goose.s: src/goose.cpp.s
-.PHONY : src/goose.s
+src/common/world.s: src/common/world.cpp.s
+.PHONY : src/common/world.s
 
 # target to generate assembly for a file
-src/goose.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/CppGoose.dir/build.make CMakeFiles/CppGoose.dir/src/goose.cpp.s
-.PHONY : src/goose.cpp.s
+src/common/world.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/common/world.cpp.s
+.PHONY : src/common/world.cpp.s
 
-src/hyprland.o: src/hyprland.cpp.o
-.PHONY : src/hyprland.o
+src/platform/macos/assets.o: src/platform/macos/assets.cpp.o
+.PHONY : src/platform/macos/assets.o
 
 # target to build an object file
-src/hyprland.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/CppGoose.dir/build.make CMakeFiles/CppGoose.dir/src/hyprland.cpp.o
-.PHONY : src/hyprland.cpp.o
+src/platform/macos/assets.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/platform/macos/assets.cpp.o
+.PHONY : src/platform/macos/assets.cpp.o
 
-src/hyprland.i: src/hyprland.cpp.i
-.PHONY : src/hyprland.i
+src/platform/macos/assets.i: src/platform/macos/assets.cpp.i
+.PHONY : src/platform/macos/assets.i
 
 # target to preprocess a source file
-src/hyprland.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/CppGoose.dir/build.make CMakeFiles/CppGoose.dir/src/hyprland.cpp.i
-.PHONY : src/hyprland.cpp.i
+src/platform/macos/assets.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/platform/macos/assets.cpp.i
+.PHONY : src/platform/macos/assets.cpp.i
 
-src/hyprland.s: src/hyprland.cpp.s
-.PHONY : src/hyprland.s
+src/platform/macos/assets.s: src/platform/macos/assets.cpp.s
+.PHONY : src/platform/macos/assets.s
 
 # target to generate assembly for a file
-src/hyprland.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/CppGoose.dir/build.make CMakeFiles/CppGoose.dir/src/hyprland.cpp.s
-.PHONY : src/hyprland.cpp.s
+src/platform/macos/assets.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/platform/macos/assets.cpp.s
+.PHONY : src/platform/macos/assets.cpp.s
 
-src/ram_tracker.o: src/ram_tracker.cpp.o
-.PHONY : src/ram_tracker.o
+src/platform/macos/audio.o: src/platform/macos/audio.mm.o
+.PHONY : src/platform/macos/audio.o
 
 # target to build an object file
-src/ram_tracker.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/CppGoose.dir/build.make CMakeFiles/CppGoose.dir/src/ram_tracker.cpp.o
-.PHONY : src/ram_tracker.cpp.o
+src/platform/macos/audio.mm.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/platform/macos/audio.mm.o
+.PHONY : src/platform/macos/audio.mm.o
 
-src/ram_tracker.i: src/ram_tracker.cpp.i
-.PHONY : src/ram_tracker.i
-
-# target to preprocess a source file
-src/ram_tracker.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/CppGoose.dir/build.make CMakeFiles/CppGoose.dir/src/ram_tracker.cpp.i
-.PHONY : src/ram_tracker.cpp.i
-
-src/ram_tracker.s: src/ram_tracker.cpp.s
-.PHONY : src/ram_tracker.s
-
-# target to generate assembly for a file
-src/ram_tracker.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/CppGoose.dir/build.make CMakeFiles/CppGoose.dir/src/ram_tracker.cpp.s
-.PHONY : src/ram_tracker.cpp.s
-
-src/ui.o: src/ui.cpp.o
-.PHONY : src/ui.o
+src/platform/macos/command_socket.o: src/platform/macos/command_socket.cpp.o
+.PHONY : src/platform/macos/command_socket.o
 
 # target to build an object file
-src/ui.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/CppGoose.dir/build.make CMakeFiles/CppGoose.dir/src/ui.cpp.o
-.PHONY : src/ui.cpp.o
+src/platform/macos/command_socket.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/platform/macos/command_socket.cpp.o
+.PHONY : src/platform/macos/command_socket.cpp.o
 
-src/ui.i: src/ui.cpp.i
-.PHONY : src/ui.i
+src/platform/macos/command_socket.i: src/platform/macos/command_socket.cpp.i
+.PHONY : src/platform/macos/command_socket.i
 
 # target to preprocess a source file
-src/ui.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/CppGoose.dir/build.make CMakeFiles/CppGoose.dir/src/ui.cpp.i
-.PHONY : src/ui.cpp.i
+src/platform/macos/command_socket.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/platform/macos/command_socket.cpp.i
+.PHONY : src/platform/macos/command_socket.cpp.i
 
-src/ui.s: src/ui.cpp.s
-.PHONY : src/ui.s
+src/platform/macos/command_socket.s: src/platform/macos/command_socket.cpp.s
+.PHONY : src/platform/macos/command_socket.s
 
 # target to generate assembly for a file
-src/ui.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/CppGoose.dir/build.make CMakeFiles/CppGoose.dir/src/ui.cpp.s
-.PHONY : src/ui.cpp.s
+src/platform/macos/command_socket.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/platform/macos/command_socket.cpp.s
+.PHONY : src/platform/macos/command_socket.cpp.s
 
-src/wlroots_backend.o: src/wlroots_backend.cpp.o
-.PHONY : src/wlroots_backend.o
+src/platform/macos/cursor_backend.o: src/platform/macos/cursor_backend.mm.o
+.PHONY : src/platform/macos/cursor_backend.o
 
 # target to build an object file
-src/wlroots_backend.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/CppGoose.dir/build.make CMakeFiles/CppGoose.dir/src/wlroots_backend.cpp.o
-.PHONY : src/wlroots_backend.cpp.o
+src/platform/macos/cursor_backend.mm.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/platform/macos/cursor_backend.mm.o
+.PHONY : src/platform/macos/cursor_backend.mm.o
 
-src/wlroots_backend.i: src/wlroots_backend.cpp.i
-.PHONY : src/wlroots_backend.i
-
-# target to preprocess a source file
-src/wlroots_backend.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/CppGoose.dir/build.make CMakeFiles/CppGoose.dir/src/wlroots_backend.cpp.i
-.PHONY : src/wlroots_backend.cpp.i
-
-src/wlroots_backend.s: src/wlroots_backend.cpp.s
-.PHONY : src/wlroots_backend.s
-
-# target to generate assembly for a file
-src/wlroots_backend.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/CppGoose.dir/build.make CMakeFiles/CppGoose.dir/src/wlroots_backend.cpp.s
-.PHONY : src/wlroots_backend.cpp.s
-
-src/world.o: src/world.cpp.o
-.PHONY : src/world.o
+src/platform/macos/main.o: src/platform/macos/main.mm.o
+.PHONY : src/platform/macos/main.o
 
 # target to build an object file
-src/world.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/CppGoose.dir/build.make CMakeFiles/CppGoose.dir/src/world.cpp.o
-.PHONY : src/world.cpp.o
+src/platform/macos/main.mm.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/platform/macos/main.mm.o
+.PHONY : src/platform/macos/main.mm.o
 
-src/world.i: src/world.cpp.i
-.PHONY : src/world.i
-
-# target to preprocess a source file
-src/world.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/CppGoose.dir/build.make CMakeFiles/CppGoose.dir/src/world.cpp.i
-.PHONY : src/world.cpp.i
-
-src/world.s: src/world.cpp.s
-.PHONY : src/world.s
-
-# target to generate assembly for a file
-src/world.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/CppGoose.dir/build.make CMakeFiles/CppGoose.dir/src/world.cpp.s
-.PHONY : src/world.cpp.s
-
-src/x11_backend.o: src/x11_backend.cpp.o
-.PHONY : src/x11_backend.o
+src/platform/macos/renderer.o: src/platform/macos/renderer.mm.o
+.PHONY : src/platform/macos/renderer.o
 
 # target to build an object file
-src/x11_backend.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/CppGoose.dir/build.make CMakeFiles/CppGoose.dir/src/x11_backend.cpp.o
-.PHONY : src/x11_backend.cpp.o
+src/platform/macos/renderer.mm.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/platform/macos/renderer.mm.o
+.PHONY : src/platform/macos/renderer.mm.o
 
-src/x11_backend.i: src/x11_backend.cpp.i
-.PHONY : src/x11_backend.i
-
-# target to preprocess a source file
-src/x11_backend.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/CppGoose.dir/build.make CMakeFiles/CppGoose.dir/src/x11_backend.cpp.i
-.PHONY : src/x11_backend.cpp.i
-
-src/x11_backend.s: src/x11_backend.cpp.s
-.PHONY : src/x11_backend.s
-
-# target to generate assembly for a file
-src/x11_backend.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/CppGoose.dir/build.make CMakeFiles/CppGoose.dir/src/x11_backend.cpp.s
-.PHONY : src/x11_backend.cpp.s
-
-wlr-virtual-pointer-unstable-v1-protocol.o: wlr-virtual-pointer-unstable-v1-protocol.c.o
-.PHONY : wlr-virtual-pointer-unstable-v1-protocol.o
+src/platform/macos/window.o: src/platform/macos/window.mm.o
+.PHONY : src/platform/macos/window.o
 
 # target to build an object file
-wlr-virtual-pointer-unstable-v1-protocol.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/CppGoose.dir/build.make CMakeFiles/CppGoose.dir/wlr-virtual-pointer-unstable-v1-protocol.c.o
-.PHONY : wlr-virtual-pointer-unstable-v1-protocol.c.o
+src/platform/macos/window.mm.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/platform/macos/window.mm.o
+.PHONY : src/platform/macos/window.mm.o
 
-wlr-virtual-pointer-unstable-v1-protocol.i: wlr-virtual-pointer-unstable-v1-protocol.c.i
-.PHONY : wlr-virtual-pointer-unstable-v1-protocol.i
+tests/test_main.o: tests/test_main.cpp.o
+.PHONY : tests/test_main.o
+
+# target to build an object file
+tests/test_main.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/tests/test_main.cpp.o
+.PHONY : tests/test_main.cpp.o
+
+tests/test_main.i: tests/test_main.cpp.i
+.PHONY : tests/test_main.i
 
 # target to preprocess a source file
-wlr-virtual-pointer-unstable-v1-protocol.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/CppGoose.dir/build.make CMakeFiles/CppGoose.dir/wlr-virtual-pointer-unstable-v1-protocol.c.i
-.PHONY : wlr-virtual-pointer-unstable-v1-protocol.c.i
+tests/test_main.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/tests/test_main.cpp.i
+.PHONY : tests/test_main.cpp.i
 
-wlr-virtual-pointer-unstable-v1-protocol.s: wlr-virtual-pointer-unstable-v1-protocol.c.s
-.PHONY : wlr-virtual-pointer-unstable-v1-protocol.s
+tests/test_main.s: tests/test_main.cpp.s
+.PHONY : tests/test_main.s
 
 # target to generate assembly for a file
-wlr-virtual-pointer-unstable-v1-protocol.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/CppGoose.dir/build.make CMakeFiles/CppGoose.dir/wlr-virtual-pointer-unstable-v1-protocol.c.s
-.PHONY : wlr-virtual-pointer-unstable-v1-protocol.c.s
+tests/test_main.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/tests/test_main.cpp.s
+.PHONY : tests/test_main.cpp.s
 
 # Help Target
 help:
@@ -474,49 +406,40 @@ help:
 	@echo "... depend"
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
-	@echo "... CppGoose"
-	@echo "... main.o"
-	@echo "... main.i"
-	@echo "... main.s"
-	@echo "... src/app_actions.o"
-	@echo "... src/app_actions.i"
-	@echo "... src/app_actions.s"
-	@echo "... src/assets.o"
-	@echo "... src/assets.i"
-	@echo "... src/assets.s"
-	@echo "... src/command_socket.o"
-	@echo "... src/command_socket.i"
-	@echo "... src/command_socket.s"
-	@echo "... src/config.o"
-	@echo "... src/config.i"
-	@echo "... src/config.s"
-	@echo "... src/cursor_backend.o"
-	@echo "... src/cursor_backend.i"
-	@echo "... src/cursor_backend.s"
-	@echo "... src/goose.o"
-	@echo "... src/goose.i"
-	@echo "... src/goose.s"
-	@echo "... src/hyprland.o"
-	@echo "... src/hyprland.i"
-	@echo "... src/hyprland.s"
-	@echo "... src/ram_tracker.o"
-	@echo "... src/ram_tracker.i"
-	@echo "... src/ram_tracker.s"
-	@echo "... src/ui.o"
-	@echo "... src/ui.i"
-	@echo "... src/ui.s"
-	@echo "... src/wlroots_backend.o"
-	@echo "... src/wlroots_backend.i"
-	@echo "... src/wlroots_backend.s"
-	@echo "... src/world.o"
-	@echo "... src/world.i"
-	@echo "... src/world.s"
-	@echo "... src/x11_backend.o"
-	@echo "... src/x11_backend.i"
-	@echo "... src/x11_backend.s"
-	@echo "... wlr-virtual-pointer-unstable-v1-protocol.o"
-	@echo "... wlr-virtual-pointer-unstable-v1-protocol.i"
-	@echo "... wlr-virtual-pointer-unstable-v1-protocol.s"
+	@echo "... CadGoose"
+	@echo "... CadGooseTests"
+	@echo "... src/common/app_actions.o"
+	@echo "... src/common/app_actions.i"
+	@echo "... src/common/app_actions.s"
+	@echo "... src/common/config.o"
+	@echo "... src/common/config.i"
+	@echo "... src/common/config.s"
+	@echo "... src/common/cursor_backend.o"
+	@echo "... src/common/cursor_backend.i"
+	@echo "... src/common/cursor_backend.s"
+	@echo "... src/common/goose.o"
+	@echo "... src/common/goose.i"
+	@echo "... src/common/goose.s"
+	@echo "... src/common/items.o"
+	@echo "... src/common/items.i"
+	@echo "... src/common/items.s"
+	@echo "... src/common/world.o"
+	@echo "... src/common/world.i"
+	@echo "... src/common/world.s"
+	@echo "... src/platform/macos/assets.o"
+	@echo "... src/platform/macos/assets.i"
+	@echo "... src/platform/macos/assets.s"
+	@echo "... src/platform/macos/audio.o"
+	@echo "... src/platform/macos/command_socket.o"
+	@echo "... src/platform/macos/command_socket.i"
+	@echo "... src/platform/macos/command_socket.s"
+	@echo "... src/platform/macos/cursor_backend.o"
+	@echo "... src/platform/macos/main.o"
+	@echo "... src/platform/macos/renderer.o"
+	@echo "... src/platform/macos/window.o"
+	@echo "... tests/test_main.o"
+	@echo "... tests/test_main.i"
+	@echo "... tests/test_main.s"
 .PHONY : help
 
 
@@ -528,7 +451,6 @@ help:
 # No rule that depends on this can have commands that come from listfiles
 # because they might be regenerated.
 cmake_check_build_system:
-	$(CMAKE_COMMAND) -P "/home/dill/Downloads/desktop-goose/Desktop Goose v0.31/DesktopGoosev0.31/build/CMakeFiles/VerifyGlobs.cmake"
 	$(CMAKE_COMMAND) -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 0
 .PHONY : cmake_check_build_system
 

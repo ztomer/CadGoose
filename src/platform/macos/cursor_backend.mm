@@ -1,12 +1,13 @@
-#import "cursor_backend.h"
+#import "mac_cursor_backend.h"
 #import "goose_math.h"
 #import <CoreGraphics/CoreGraphics.h>
+#include <string>
 
 MacCursorBackend::MacCursorBackend() : m_eventSource(nullptr) {}
 
 std::string MacCursorBackend::Name() const { return "MacCGEvent"; }
 
-uint32_t MacCursorBackend::Caps() const { return CAP_GET_POS | CAP_MOVE_ABS | CAP_MOVE_REL; }
+uint32_t MacCursorBackend::Caps() const { return 0x1 | 0x2 | 0x4; }
 
 bool MacCursorBackend::Init() {
     m_eventSource = CGEventSourceCreate(kCGEventSourceStateHIDSystemState);

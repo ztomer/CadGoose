@@ -3,17 +3,62 @@
 #include <string>
 #include <vector>
 #include <unistd.h>
+#include <time.h>
+#include <stdarg.h>
+#include <stdio.h>
 #include "config.h"
 #include "cursor_backend.h"
 #include "world.h"
 #include "command_socket.h"
 #include "app_actions.h"
-#include "src/macos/window.h"
-#include "src/macos/audio.h"
+#include "window.h"
+#include "renderer.h"
+#include "audio.h"
 
-static bool g_debugMode = false;
+bool g_debugMode = false;
+FILE* g_logFile = nullptr;
 
-#define DEBUG_LOG(fmt, ...) do { if (g_debugMode) fprintf(stderr, "[DEBUG] " fmt "\n", ##__VA_ARGS__); } while(0)
+void OpenLogFile() {
+    if (g_logFile) return;
+    time_t now = time(nullptr);
+    struct tm* tm = localtime(&now);
+    char path[256];
+    snprintf(path, sizeof(path), "/tmp/CadGoose_%04d%02d%02d_%02d%02d%02d.log",
+             tm->tm_year + 1900, tm->tm_mon + 1, tm->tm_mday,
+             tm->tm_hour, tm->tm_min, tm->tm_sec);
+    g_logFile = fopen(path, "w");
+    if (g_logFile) {
+        fprintf(stderr, "[LOG] Log file: %s\n", path);
+    }
+}
+
+void LogWrite(const char* level, const char* fmt, ...) {
+    time_t now = time(nullptr);
+    struct tm* tm = localtime(&now);
+    char timestamp[32];
+    strftime(timestamp, sizeof(timestamp), "%H:%M:%S", tm);
+    
+    va_list args;
+    va_start(args, fmt);
+    
+    if (g_logFile) {
+        fprintf(g_logFile, "[%s] %s: ", timestamp, level);
+        vfprintf(g_logFile, fmt, args);
+        fprintf(g_logFile, "\n");
+        fflush(g_logFile);
+    }
+    fprintf(stderr, "[%s] %s: ", timestamp, level);
+    vfprintf(stderr, fmt, args);
+    fprintf(stderr, "\n");
+    
+    va_end(args);
+}
+
+#define LOG(fmt, ...) LogWrite("INFO", fmt, ##__VA_ARGS__)
+
+#define DEBUG_LOG(fmt, ...) do { \
+    if (g_debugMode) LogWrite("DEBUG", fmt, ##__VA_ARGS__); \
+} while(0)
 
 @interface AppDelegate : NSObject <NSApplicationDelegate>
 @end
@@ -30,24 +75,50 @@ static bool g_debugMode = false;
     DEBUG_LOG("Backend: %s", g_backendManager.GetActiveBackend()->Name().c_str());
 
     DEBUG_LOG("Creating windows for %lu screens", (unsigned long)[NSScreen screens].count);
-    [[WindowManager shared] createWindowsForAllScreens];
     
-    NSArray* windows = [[WindowManager shared] allWindows];
+    WindowManager* wm = [WindowManager shared];
+    DEBUG_LOG("WindowManager instance: %p", wm);
+    
+    [wm createWindowsForAllScreens];
+    DEBUG_LOG("createWindowsForAllScreens completed");
+    
+    NSArray* windows = [wm windows];
     DEBUG_LOG("Windows created: %lu", (unsigned long)windows.count);
+    
+    if (windows.count == 0) {
+        LOG("ERROR: No windows created!");
+    }
 
     for (GooseWindow* window in windows) {
-        DEBUG_LOG("Window frame: %s", NSStringFromRect(window.frame).UTF8String);
-        DEBUG_LOG("Window level: %ld", (long)window.level);
+        DEBUG_LOG("Processing window: %p", window);
+        DEBUG_LOG("  frame: %s", NSStringFromRect(window.frame).UTF8String);
+        DEBUG_LOG("  level: %ld", (long)window.level);
+        DEBUG_LOG("  opaque: %d", window.opaque);
+        DEBUG_LOG("  ignoresMouseEvents: %d", window.ignoresMouseEvents);
         
-        [window.gooseView startAnimation];
+        GooseView* view = window.gooseView;
+        DEBUG_LOG("  gooseView: %p", view);
+        DEBUG_LOG("  gooseView.frame: %s", NSStringFromRect(view.frame).UTF8String);
+        
+        [view startAnimation];
+        DEBUG_LOG("  startAnimation done");
+        
         [window orderFront:nil];
-        DEBUG_LOG("Window ordered front");
+        DEBUG_LOG("  orderFront done");
+        
+        DEBUG_LOG("Window setup complete for window %p", window);
     }
+    
+    LOG("Window setup complete, count: %lu", (unsigned long)windows.count);
 
     std::string error;
     if (!CommandSocket_StartServer(AppActions_HandleCommand, &error) && !error.empty()) {
         DEBUG_LOG("Socket error: %s", error.c_str());
     }
+
+    g_screenWidth = (int)[[NSScreen mainScreen] frame].size.width;
+    g_screenHeight = (int)[[NSScreen mainScreen] frame].size.height;
+    DEBUG_LOG("Screen: %dx%d", g_screenWidth, g_screenHeight);
 
     AppActions_EnsureInitialGoose();
     DEBUG_LOG("Geese spawned: %zu", g_geese.size());
@@ -55,10 +126,6 @@ static bool g_debugMode = false;
     for (auto& g : g_geese) {
         DEBUG_LOG("Goose %d at %.1f,%.1f", g.id, g.pos.x, g.pos.y);
     }
-
-    g_screenWidth = (int)[[NSScreen mainScreen] frame].size.width;
-    g_screenHeight = (int)[[NSScreen mainScreen] frame].size.height;
-    DEBUG_LOG("Screen: %dx%d", g_screenWidth, g_screenHeight);
 
     [[NSApplication sharedApplication] setActivationPolicy:NSApplicationActivationPolicyRegular];
     DEBUG_LOG("App ready, entering run loop...");
@@ -137,15 +204,15 @@ static int HandleCliCommand(int argc, char** argv, int* appArgc) {
     if (command == "--help" || command == "help") {
         std::cout
             << "Desktop Goose commands:\n"
-            << "  CppGoose\n"
-            << "  CppGoose --debug\n"
-            << "  CppGoose start\n"
-            << "  CppGoose start --foreground\n"
-            << "  CppGoose spawn [name]\n"
-            << "  CppGoose clear\n"
-            << "  CppGoose ram\n"
-            << "  CppGoose status\n"
-            << "  CppGoose quit\n";
+            << "  CadGoose\n"
+            << "  CadGoose --debug\n"
+            << "  CadGoose start\n"
+            << "  CadGoose start --foreground\n"
+            << "  CadGoose spawn [name]\n"
+            << "  CadGoose clear\n"
+            << "  CadGoose ram\n"
+            << "  CadGoose status\n"
+            << "  CadGoose quit\n";
         return 0;
     }
 
@@ -180,6 +247,7 @@ static int HandleCliCommand(int argc, char** argv, int* appArgc) {
 }
 
 int main(int argc, char** argv) {
+    OpenLogFile();
     fprintf(stderr, "[DEBUG] main() starting, argc=%d\n", argc);
     fflush(stderr);
     for (int i = 0; i < argc; i++) {

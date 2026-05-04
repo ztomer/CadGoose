@@ -10,7 +10,7 @@ Makefile
 cmake_install.cmake
 compile_commands.json
 
-CppGoose
+CadGoose
 gemini_client_test
 wlr-virtual-pointer-unstable-v1-client-protocol.h
 wlr-virtual-pointer-unstable-v1-protocol.c
