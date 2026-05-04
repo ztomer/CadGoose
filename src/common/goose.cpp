@@ -831,6 +831,7 @@ void Goose::SolveFeet(double time) {
     UpdateFoot(rig.rFoot, rHome);
 }
 
+#ifdef __linux__
 // =========================================================
 // RENDERING
 // =========================================================
@@ -1017,6 +1018,8 @@ void Goose::DrawLine(cairo_t* cr, Vector2 a, Vector2 b, float w,
     cairo_line_to(cr, b.x, b.y);
     cairo_stroke(cr);
 }
+
+#endif // __linux__
 
 // =========================================================
 // AI HELPERS

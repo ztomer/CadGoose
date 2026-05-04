@@ -1,72 +1,65 @@
 #import "cursor_backend.h"
+#import "goose_math.h"
 #import <CoreGraphics/CoreGraphics.h>
 
-class MacCursorBackend : public CursorBackend {
-public:
-    MacCursorBackend() : m_eventSource(nullptr) {}
+MacCursorBackend::MacCursorBackend() : m_eventSource(nullptr) {}
 
-    std::string Name() const override { return "MacCGEvent"; }
+std::string MacCursorBackend::Name() const { return "MacCGEvent"; }
 
-    uint32_t Caps() const override {
-        return CAP_ABSOLUTE | CAP_RELATIVE;
-    }
+uint32_t MacCursorBackend::Caps() const { return CAP_GET_POS | CAP_MOVE_ABS | CAP_MOVE_REL; }
 
-    bool Init() override {
-        m_eventSource = CGEventSourceCreate(kCGEventSourceStateHIDSystemState);
-        return m_eventSource != nullptr;
-    }
+bool MacCursorBackend::Init() {
+    m_eventSource = CGEventSourceCreate(kCGEventSourceStateHIDSystemState);
+    return m_eventSource != nullptr;
+}
 
-    Vector2 GetCursorPos() override {
-        CGEventSourceRef source = CGEventSourceCreate(kCGEventSourceStateHIDSystemState);
-        if (!source) return {-1.0f, -1.0f};
+Vector2 MacCursorBackend::GetCursorPos() {
+    CGEventSourceRef source = CGEventSourceCreate(kCGEventSourceStateHIDSystemState);
+    if (!source) return {-1.0f, -1.0f};
 
-        CGEventRef event = CGEventCreate(source);
-        if (!event) {
-            CFRelease(source);
-            return {-1.0f, -1.0f};
-        }
-
-        CGPoint point = CGEventGetLocation(event);
-        CFRelease(event);
+    CGEventRef event = CGEventCreate(source);
+    if (!event) {
         CFRelease(source);
-
-        return {(float)point.x, (float)point.y};
+        return {-1.0f, -1.0f};
     }
 
-    void MoveCursorAbs(int x, int y) override {
-        CGEventSourceRef source = m_eventSource ? (CGEventSourceRef)m_eventSource :
-                                  CGEventSourceCreate(kCGEventSourceStateHIDSystemState);
+    CGPoint point = CGEventGetLocation(event);
+    CFRelease(event);
+    CFRelease(source);
 
-        CGEventRef event = CGEventCreateMouseEvent(source,
-                                                     kCGEventMouseMoved,
-                                                     CGPointMake(x, y),
-                                                     kCGMouseButtonLeft);
-        if (event) {
-            CGEventPost(kCGHIDEventTap, event);
-            CFRelease(event);
-        }
+    return {(float)point.x, (float)point.y};
+}
 
-        if (m_eventSource == nullptr && source) CFRelease(source);
+void MacCursorBackend::MoveCursorAbs(int x, int y) {
+    CGEventSourceRef source = m_eventSource ? (CGEventSourceRef)m_eventSource :
+                              CGEventSourceCreate(kCGEventSourceStateHIDSystemState);
+
+    CGEventRef event = CGEventCreateMouseEvent(source,
+                                                 kCGEventMouseMoved,
+                                                 CGPointMake(x, y),
+                                                 kCGMouseButtonLeft);
+    if (event) {
+        CGEventPost(kCGHIDEventTap, event);
+        CFRelease(event);
     }
 
-    void MoveCursorRel(int dx, int dy) override {
-        CGEventSourceRef source = m_eventSource ? (CGEventSourceRef)m_eventSource :
-                                  CGEventSourceCreate(kCGEventSourceStateHIDSystemState);
+    if (m_eventSource == nullptr && source) CFRelease(source);
+}
 
-        CGEventRef event = CGEventCreateMouseEvent(source,
-                                                     kCGEventMouseMoved,
-                                                     CGPointMake(0, 0),
-                                                     kCGMouseButtonLeft);
-        if (event) {
-            CGEventSetIntegerValueField(event, kCGMouseEventDeltaX, dx);
-            CGEventSetIntegerValueField(event, kCGMouseEventDeltaY, dy);
-            CGEventPost(kCGHIDEventTap, event);
-            CFRelease(event);
-        }
+void MacCursorBackend::MoveCursorRel(int dx, int dy) {
+    CGEventSourceRef source = m_eventSource ? (CGEventSourceRef)m_eventSource :
+                              CGEventSourceCreate(kCGEventSourceStateHIDSystemState);
 
-        if (m_eventSource == nullptr && source) CFRelease(source);
+    CGEventRef event = CGEventCreateMouseEvent(source,
+                                                 kCGEventMouseMoved,
+                                                 CGPointMake(0, 0),
+                                                 kCGMouseButtonLeft);
+    if (event) {
+        CGEventSetIntegerValueField(event, kCGMouseEventDeltaX, dx);
+        CGEventSetIntegerValueField(event, kCGMouseEventDeltaY, dy);
+        CGEventPost(kCGHIDEventTap, event);
+        CFRelease(event);
     }
 
-private:
-    CGEventSourceRef m_eventSource;
-};
+    if (m_eventSource == nullptr && source) CFRelease(source);
+}

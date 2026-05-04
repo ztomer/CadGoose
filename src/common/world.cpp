@@ -19,9 +19,13 @@ int g_nextId = 0;
 int g_screenWidth = 1920;
 int g_screenHeight = 1080;
 int g_selectedGooseId = 0;
+int g_cursorGrabberId = -1;
+
+#ifdef __linux__
+#include <gtk/gtk.h>
 GtkWidget* g_entryNote = nullptr;
 std::vector<GtkWidget*> g_overlayCanvases;
-int g_cursorGrabberId = -1;
+#endif
 
 Goose* GetGooseById(int id) {
     for (auto& g : g_geese) {

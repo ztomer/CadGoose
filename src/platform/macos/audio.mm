@@ -4,9 +4,8 @@
 static AVAudioPlayer* g_honkPlayer = nullptr;
 
 void Audio_Init() {
-    NSError* error = nil;
-    [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryPlayback error:&error];
-    [[AVAudioSession sharedInstance] setActive:YES error:&error];
+    // macOS doesn't use AVAudioSession like iOS
+    // Audio playback is handled automatically by the system
 }
 
 void Audio_PlayHonk() {
