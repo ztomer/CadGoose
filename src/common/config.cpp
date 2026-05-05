@@ -14,6 +14,12 @@ double g_time = 0.0;
 std::vector<ConfigOption> g_configRegistry;
 
 static fs::path ConfigDirPath() {
+#if defined(__APPLE__)
+    if (const char* home = std::getenv("HOME")) {
+        if (*home) return fs::path(home) / "Library" / "Application Support" / "CadGoose";
+    }
+    return fs::current_path();
+#else
     if (const char* xdgConfig = std::getenv("XDG_CONFIG_HOME")) {
         if (*xdgConfig) return fs::path(xdgConfig) / "desktop-goose";
     }
@@ -23,6 +29,7 @@ static fs::path ConfigDirPath() {
     }
 
     return fs::current_path();
+#endif
 }
 
 std::string Config_GetPath() {
@@ -189,29 +196,23 @@ bool Config_SetValueByKey(const std::string& key, const std::string& value, std:
 void Config_InitRegistry() {
     g_configRegistry.clear();
 
-    // SECTION: Movement & Scale
-    g_configRegistry.push_back({"Movement", "global_scale", "Global Scale", CFG_FLOAT, &g_config.globalScale, 0.5f, 3.0f, 0.05f, "", OnConfigChange});
-    g_configRegistry.push_back({"Movement", "walk_speed", "Walk Speed", CFG_FLOAT, &g_config.baseWalkSpeed, 20.0f, 300.0f, 5.0f, "px", OnConfigChange});
-    g_configRegistry.push_back({"Movement", "run_speed", "Run Speed", CFG_FLOAT, &g_config.baseRunSpeed, 100.0f, 800.0f, 10.0f, "px", OnConfigChange});
+    g_configRegistry.push_back({"Movement", "global_scale", "Global Scale", CFG_FLOAT, &g_config.general.globalScale, 0.5f, 3.0f, 0.05f, "", OnConfigChange});
+    g_configRegistry.push_back({"Movement", "walk_speed", "Walk Speed", CFG_FLOAT, &g_config.movement.baseWalkSpeed, 20.0f, 300.0f, 5.0f, "px", OnConfigChange});
+    g_configRegistry.push_back({"Movement", "run_speed", "Run Speed", CFG_FLOAT, &g_config.movement.baseRunSpeed, 100.0f, 800.0f, 10.0f, "px", OnConfigChange});
 
-    // SECTION: Behavior
-    g_configRegistry.push_back({"Behavior", "memes_enabled", "Allow Memes/Notes", CFG_BOOL, &g_config.memesEnabled, 0, 1, 1, "", OnConfigChange});
-    g_configRegistry.push_back({"Behavior", "multi_monitor_enabled", "Multi-Monitor Support", CFG_BOOL, &g_config.multiMonitorEnabled, 0, 1, 1, "", OnConfigChange});
-    g_configRegistry.push_back({"Behavior", "audio_enabled", "Audio (Honks)", CFG_BOOL, &g_config.audioEnabled, 0, 1, 1, "", OnConfigChange});
+    g_configRegistry.push_back({"Behavior", "memes_enabled", "Allow Memes/Notes", CFG_BOOL, &g_config.general.memesEnabled, 0, 1, 1, "", OnConfigChange});
+    g_configRegistry.push_back({"Behavior", "multi_monitor_enabled", "Multi-Monitor Support", CFG_BOOL, &g_config.cursor.multiMonitorEnabled, 0, 1, 1, "", OnConfigChange});
+    g_configRegistry.push_back({"Behavior", "audio_enabled", "Audio (Honks)", CFG_BOOL, &g_config.general.audioEnabled, 0, 1, 1, "", OnConfigChange});
 
-    // SECTION: Cursor
-    g_configRegistry.push_back({"Cursor", "cursor_chase_enabled", "Default: Cursor Chase", CFG_BOOL, &g_config.cursorChaseEnabled, 0, 1, 1, "", OnConfigChange});
-    g_configRegistry.push_back({"Cursor", "cursor_chase_chance", "Default: Chase Chance", CFG_INT, &g_config.cursorChaseChance, 0, 100, 1, "%", OnConfigChange});
-    g_configRegistry.push_back({"Cursor", "snatch_duration", "Default: Snatch Duration", CFG_FLOAT, &g_config.snatchDuration, 0.5f, 10.0f, 0.5f, "s", OnConfigChange});
+    g_configRegistry.push_back({"Cursor", "cursor_chase_enabled", "Default: Cursor Chase", CFG_BOOL, &g_config.cursor.chaseEnabled, 0, 1, 1, "", OnConfigChange});
+    g_configRegistry.push_back({"Cursor", "cursor_chase_chance", "Default: Chase Chance", CFG_INT, &g_config.cursor.chaseChance, 0, 100, 1, "%", OnConfigChange});
 
-    // SECTION: Mud
-    g_configRegistry.push_back({"Mud", "mud_enabled", "Default: Enable Mud", CFG_BOOL, &g_config.mudEnabled, 0, 1, 1, "", OnConfigChange});
-    g_configRegistry.push_back({"Mud", "mud_chance", "Default: Mud Chance", CFG_INT, &g_config.mudChance, 0, 100, 1, "%", OnConfigChange});
-    g_configRegistry.push_back({"Mud", "mud_lifetime", "Default: Footprint Life", CFG_FLOAT, &g_config.mudLifetime, 5.0f, 120.0f, 1.0f, "s", OnConfigChange});
+    g_configRegistry.push_back({"Mud", "mud_enabled", "Default: Enable Mud", CFG_BOOL, &g_config.mud.enabled, 0, 1, 1, "", OnConfigChange});
+    g_configRegistry.push_back({"Mud", "mud_chance", "Default: Mud Chance", CFG_INT, &g_config.mud.chance, 0, 100, 1, "%", OnConfigChange});
+    g_configRegistry.push_back({"Mud", "mud_lifetime", "Default: Footprint Life", CFG_FLOAT, &g_config.mud.lifetime, 5.0f, 120.0f, 1.0f, "s", OnConfigChange});
 
-    // SECTION: Debug
-    g_configRegistry.push_back({"Debug", "debug_visuals", "Show Overlays", CFG_BOOL, &g_config.debugVisuals, 0, 1, 1, "", OnConfigChange});
-    g_configRegistry.push_back({"Debug", "debug_terminal", "Log to Terminal", CFG_BOOL, &g_config.debugToTerminal, 0, 1, 1, "", OnConfigChange});
+    g_configRegistry.push_back({"Debug", "debug_visuals", "Show Overlays", CFG_BOOL, &g_config.debug.visuals, 0, 1, 1, "", OnConfigChange});
+    g_configRegistry.push_back({"Debug", "debug_terminal", "Log to Terminal", CFG_BOOL, &g_config.debug.toTerminal, 0, 1, 1, "", OnConfigChange});
 
     Config_Load();
     Config_SaveNow(nullptr);

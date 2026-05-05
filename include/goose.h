@@ -14,6 +14,7 @@ typedef struct cairo_t cairo_t;
 
 #include "goose_math.h"
 #include "assets.h"
+#include "cursor_io.h"
 
 enum GooseState { WANDER, FETCHING, RETURNING, CHASE_CURSOR, SNATCH_CURSOR };
 
@@ -33,6 +34,8 @@ struct Rig {
 
 class Goose {
 public:
+    void PickNewTarget(int w, int h);
+    
     int id;
     std::string name;
     Vector2 pos{200, 200};
@@ -53,7 +56,7 @@ public:
     float stepTime = 0.2f;
     Rig rig;
 
-    const Vector2 ISO_SCALE { 1.3f, 0.4f };
+    Vector2 ISO_SCALE;
 
     Vector2 dragPos{};
     Vector2 dragVel{};
@@ -84,13 +87,19 @@ public:
     int  mudChance = 15;
     float mudLifetime = 15.0f;
 
-    // Honk timing (legacy fields; current impl uses internal map state in goose.cpp)
-    double nextIdleHonkTime = 0.0;
-    double lastChaseHonkTime = 0.0;
+    // Honk timing state
+    struct HonkState {
+        bool init = false;
+        double lastAny = -1e9;
+        double lastChase = -1e9;
+        double lastFetch = -1e9;
+        double lastGeneric = -1e9;
+        double nextIdleHonk = 0.0;
+    } honkState;
 
     Goose(int _id, const std::string& _name, int screenW, int screenH);
 
-    void Update(double dt, double time, int scrW, int scrH);
+    CursorAction Update(double dt, double time, int scrW, int scrH, const CursorState& cursor);
     void ForceFetch(int type, int w, int h);
     void ForceFetchText(const std::string& text, int w, int h);
     void ForceWander(int w, int h);
@@ -108,17 +117,18 @@ public:
     Vector2 GetBeakTipDeviceRounded(); // device px, rounded to integers (stored as float)
     Vector2 GetBeakTipAttachWorld();   // world pos that maps exactly to those device px
 
-    // Tier 3 support
-    static Vector2 GetPredictedCursor(); // Returns s_predictedCursor
+    void StartSnatch(double time, const Vector2& cursorPos);
+    void EndSnatch(double time, int w, int h);
 
 private:
     void UpdateDrag(double dt);
     void StartFetch(int w, int h);
+    CursorAction UpdateBehaviors(double dt, double time, int w, int h, const CursorState& cursor);
+    void UpdateChaseCursor(double time, const Vector2& cursorPos);
 
 #ifdef __linux__
     void DrawHeldItem(cairo_t* cr);
     void DrawEyes(cairo_t* cr, Vector2 fwd);
-    void PickNewTarget(int w, int h);
     Vector2 GetFootHome(float angleOffset);
     void SolveFeet(double time);
     void UpdateRig();
@@ -126,7 +136,6 @@ private:
     void DrawLine(cairo_t* cr, Vector2 a, Vector2 b, float w, const float color[]);
     void DrawLine(cairo_t* cr, Vector2 a, Vector2 b, float w, float r, float g, float bl);
 #else
-    void PickNewTarget(int w, int h);
     Vector2 GetFootHome(float angleOffset);
     void SolveFeet(double time);
     void UpdateRig();

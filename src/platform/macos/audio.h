@@ -3,5 +3,7 @@
 
 void Audio_Init();
 void Audio_PlayHonk();
+void Audio_PlayBite();
+void Audio_PlayMudSquish();
 
 #endif

@@ -13,7 +13,7 @@
 #include <string>
 #include <pango/pangocairo.h>
 #include <chrono>
-#include "cursor_backend.h"
+#include "cursor_io.h"
 #include "ram_tracker.h"
 
 namespace fs = std::filesystem;
@@ -338,9 +338,8 @@ static void draw_debug_overlay(cairo_t* cr) {
 
     std::vector<std::string> lines;
     char buf[256];
-    CursorBackend* backend = g_backendManager.GetActiveBackend();
-    bool canGetPos = backend->Caps() & CAP_GET_POS;
-    Vector2 cursor = canGetPos ? backend->GetCursorPos() : Vector2{-1, -1};
+    CursorState curState = g_cursorProvider ? g_cursorProvider->Read() : CursorState{};
+    Vector2 cursorPos = (curState.caps & CAP_GET_POS) ? curState.position : Vector2{-1, -1};
 
     snprintf(buf, sizeof(buf), "Goose Debug | geese:%zu  items:%zu  t:%.2f", g_geese.size(), g_droppedItems.size(), g_time);
     lines.emplace_back(buf);
@@ -355,10 +354,9 @@ static void draw_debug_overlay(cairo_t* cr) {
              g_config.snatchDuration);
     lines.emplace_back(buf);
 
-    snprintf(buf, sizeof(buf), "Cursor | %s  pos:(%.0f,%.0f)  pred:(%.0f,%.0f)  grabber:%d  selected:%d",
-             backend->Name().c_str(),
-             cursor.x, cursor.y,
-             Goose::GetPredictedCursor().x, Goose::GetPredictedCursor().y,
+    snprintf(buf, sizeof(buf), "Cursor | %s  pos:(%.0f,%.0f)  grabber:%d  selected:%d",
+             g_cursorProvider ? "Active" : "None",
+             cursorPos.x, cursorPos.y,
              g_cursorGrabberId,
              g_selectedGooseId);
     lines.emplace_back(buf);
@@ -787,8 +785,20 @@ gboolean on_tick(gpointer data) {
     MaybeTriggerEscapeKill();
     UpdateEscapeHoldHud();
 
-    for (auto& g : g_geese)
-        g.Update(1.0 / 60.0, g_time, g_screenWidth, g_screenHeight);
+    CursorState cursor = {};
+    CursorAction action = {};
+    if (g_cursorProvider) {
+        cursor = g_cursorProvider->Read();
+    }
+
+    for (auto& g : g_geese) {
+        CursorAction a = g.Update(1.0 / 60.0, g_time, g_screenWidth, g_screenHeight, cursor);
+        if (!a.isNone()) action = a;
+    }
+
+    if (g_cursorProvider && !action.isNone()) {
+        g_cursorProvider->Execute(action);
+    }
 
     g_droppedItems.remove_if([](DroppedItem& i) {
         bool exp = i.isExpired(g_time);
@@ -1156,10 +1166,11 @@ void cb_attack_cursor(GtkButton*, gpointer) {
         g = &g_geese.front();
     }
     g->state = CHASE_CURSOR;
-    CursorBackend* backend = g_backendManager.GetActiveBackend();
-    if (backend->Caps() & CAP_GET_POS) {
-        Vector2 pos = backend->GetCursorPos();
-        if (pos.x >= 0) g->target = g->DeviceToWorld(pos);
+    if (g_cursorProvider) {
+        CursorState cs = g_cursorProvider->Read();
+        if (cs.caps & CAP_GET_POS && cs.position.x >= 0) {
+            g->target = g->DeviceToWorld(cs.position);
+        }
     }
 }
 

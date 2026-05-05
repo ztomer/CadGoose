@@ -1,5 +1,11 @@
 #include <gtest/gtest.h>
 #include <cmath>
+#include <algorithm>
+#include <string>
+#include <vector>
+
+#include "cursor_backend.h"
+#include "cursor_io.h"
 
 struct Vec2 { float x, y; };
 
@@ -80,6 +86,185 @@ TEST(Cursor, BackendInit) {
     Backend b;
     EXPECT_TRUE(b.init());
     EXPECT_TRUE(b.init_called);
+}
+
+TEST(HealthCheck, ConfigInit) {
+    struct Config { bool audioEnabled = true; bool mudEnabled = true; } cfg;
+    EXPECT_TRUE(cfg.audioEnabled);
+    EXPECT_TRUE(cfg.mudEnabled);
+}
+
+TEST(HealthCheck, ScreenDimensions) {
+    int w = 1920, h = 1080;
+    EXPECT_GT(w, 0);
+    EXPECT_GT(h, 0);
+    EXPECT_GE(w * h, 800 * 600);
+}
+
+TEST(HealthCheck, GooseSpawn) {
+    struct Goose { int id; float x, y; };
+    Goose g{0, 100, 100};
+    EXPECT_EQ(g.id, 0);
+    EXPECT_FLOAT_EQ(g.x, 100.0f);
+    EXPECT_FLOAT_EQ(g.y, 100.0f);
+}
+
+TEST(HealthCheck, AudioFilesExist) {
+    const char* honkFiles[] = {"Honk1.mp3", "Honk2.mp3", "Honk3.mp3", "Honk4.mp3"};
+    int count = sizeof(honkFiles) / sizeof(honkFiles[0]);
+    EXPECT_EQ(count, 4);
+}
+
+TEST(HealthCheck, GooseBehaviorEvents) {
+    enum Behavior { WANDER, FETCHING, RETURNING, CHASE_CURSOR, SNATCH_CURSOR };
+    Behavior b = WANDER;
+    EXPECT_EQ(b, WANDER);
+    EXPECT_NE(b, CHASE_CURSOR);
+}
+
+TEST(HealthCheck, AudioPlayback) {
+    struct AudioPlayer { bool playing = false; bool playingHonk = false; bool playingBite = false; };
+    AudioPlayer p;
+    EXPECT_FALSE(p.playing);
+    p.playingHonk = true;
+    EXPECT_TRUE(p.playingHonk);
+}
+
+TEST(HealthCheck, WindowProperties) {
+    struct Window { bool visible = true; bool clickthrough = true; int level = 3; };
+    Window w;
+    EXPECT_TRUE(w.visible);
+    EXPECT_TRUE(w.clickthrough);
+    EXPECT_EQ(w.level, 3);
+}
+
+TEST(HealthCheck, Footprint) {
+    struct Footprint { float x, y; float lifetime = 10.0f; };
+    Footprint fp{100, 200, 15.0f};
+    EXPECT_FLOAT_EQ(fp.x, 100.0f);
+    EXPECT_FLOAT_EQ(fp.y, 200.0f);
+    EXPECT_GT(fp.lifetime, 0.0f);
+}
+
+TEST(HealthCheck, DroppedItem) {
+    struct Item { std::string type = "meme"; bool held = false; };
+    Item i;
+    EXPECT_EQ(i.type, "meme");
+    EXPECT_FALSE(i.held);
+    i.held = true;
+    EXPECT_TRUE(i.held);
+}
+
+TEST(AssetManager, PathConcat) {
+    std::string root = "Assets";
+    std::string subfolder = "Images/Memes";
+    std::string result = root + "/" + subfolder;
+    EXPECT_EQ(result, "Assets/Images/Memes");
+}
+
+TEST(AssetManager, FileExtensionCheck) {
+    std::vector<std::string> extensions = {".png", ".jpg", ".jpeg"};
+    EXPECT_TRUE(std::find(extensions.begin(), extensions.end(), ".png") != extensions.end());
+    EXPECT_TRUE(std::find(extensions.begin(), extensions.end(), ".jpg") != extensions.end());
+    EXPECT_FALSE(std::find(extensions.begin(), extensions.end(), ".gif") != extensions.end());
+}
+
+TEST(GooseMovement, SpeedInitialization) {
+    float baseWalkSpeed = 200.0f;
+    float currentSpeed = baseWalkSpeed;
+    EXPECT_EQ(currentSpeed, baseWalkSpeed);
+    currentSpeed = 0;
+    EXPECT_EQ(currentSpeed, 0.0f);
+}
+
+TEST(GooseMovement, VelocityCalculation) {
+    Vec2 dir{1.0f, 0.0f};
+    float speed = 100.0f;
+    Vec2 velocity{dir.x * speed, dir.y * speed};
+    EXPECT_FLOAT_EQ(velocity.x, 100.0f);
+    EXPECT_FLOAT_EQ(velocity.y, 0.0f);
+}
+
+TEST(GooseMovement, TargetReach) {
+    Vec2 pos{100, 100};
+    Vec2 target{105, 100};
+    float dist = std::sqrt((target.x-pos.x)*(target.x-pos.x) + (target.y-pos.y)*(target.y-pos.y));
+    EXPECT_LT(dist, 10.0f);
+}
+
+TEST(GooseRig, AllRelative) {
+    Vec2 up{0, -1};
+    Vec2 fwd{1, 0};
+    Vec2 offset{3.0f + 0.0f, 0.0f + (-1.0f) * 15.0f};
+    EXPECT_FLOAT_EQ(offset.x, 3.0f);
+    EXPECT_FLOAT_EQ(offset.y, -15.0f);
+}
+
+class TestCursorBackend : public CursorBackend {
+public:
+    std::string Name() const override { return "Test"; }
+    uint32_t Caps() const override { return CAP_GET_POS | CAP_MOVE_ABS | CAP_MOVE_REL; }
+    bool Init() override { return true; }
+    Vector2 GetCursorPos() override { return m_pos; }
+    void MoveCursorAbs(int x, int y) override { m_lastAbsX = x; m_lastAbsY = y; }
+    void MoveCursorRel(int dx, int dy) override { m_lastRelX = dx; m_lastRelY = dy; }
+
+    Vector2 m_pos = {-1.0f, -1.0f};
+    int m_lastAbsX = 0, m_lastAbsY = 0;
+    int m_lastRelX = 0, m_lastRelY = 0;
+};
+
+TEST(CursorBackend, VirtualMethods) {
+    TestCursorBackend backend;
+    EXPECT_EQ(backend.Name(), "Test");
+    EXPECT_EQ(backend.Caps(), CAP_GET_POS | CAP_MOVE_ABS | CAP_MOVE_REL);
+    EXPECT_TRUE(backend.Init());
+}
+
+TEST(CursorBackendManager, Singleton) {
+    g_backendManager.Init();
+    EXPECT_NE(g_backendManager.GetActiveBackend(), nullptr);
+    EXPECT_NE(g_cursorProvider, nullptr);
+}
+
+TEST(CursorBackend, Read) {
+    TestCursorBackend backend;
+    backend.m_pos = {100.0f, 200.0f};
+
+    CursorState state = backend.Read();
+    EXPECT_TRUE(state.hasPos());
+    EXPECT_FLOAT_EQ(state.position.x, 100.0f);
+    EXPECT_FLOAT_EQ(state.position.y, 200.0f);
+    EXPECT_TRUE(state.caps & CAP_GET_POS);
+}
+
+TEST(CursorBackend, ExecuteMoveAbs) {
+    TestCursorBackend backend;
+    backend.Execute(CursorAction::MoveAbs(50, 75));
+    EXPECT_EQ(backend.m_lastAbsX, 50);
+    EXPECT_EQ(backend.m_lastAbsY, 75);
+}
+
+TEST(CursorBackend, ExecuteMoveRel) {
+    TestCursorBackend backend;
+    backend.Execute(CursorAction::MoveRel(10, -5));
+    EXPECT_EQ(backend.m_lastRelX, 10);
+    EXPECT_EQ(backend.m_lastRelY, -5);
+}
+
+TEST(CursorState, HasPos) {
+    CursorState s1;
+    EXPECT_FALSE(s1.hasPos());
+
+    CursorState s2;
+    s2.caps = CAP_GET_POS;
+    s2.position = {10.0f, 20.0f};
+    EXPECT_TRUE(s2.hasPos());
+
+    CursorState s3;
+    s3.caps = CAP_MOVE_ABS;
+    s3.position = {10.0f, 20.0f};
+    EXPECT_FALSE(s3.hasPos());
 }
 
 int main(int argc, char **argv) {

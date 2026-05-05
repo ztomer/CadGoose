@@ -88,6 +88,25 @@ void LogWrite(const char* level, const char* fmt, ...) {
     
     [menu addItem:[NSMenuItem separatorItem]];
     
+    NSMenu* settingsMenu = [[NSMenu alloc] initWithTitle:@"Settings"];
+    
+    NSMenuItem* mudItem = [settingsMenu addItemWithTitle:@"Enable Mud Footprints" action:@selector(toggleMud:) keyEquivalent:@""];
+    mudItem.target = self;
+    mudItem.state = g_config.mud.enabled ? NSControlStateValueOn : NSControlStateValueOff;
+
+    NSMenuItem* chaseItem = [settingsMenu addItemWithTitle:@"Enable Cursor Chase" action:@selector(toggleChase:) keyEquivalent:@""];
+    chaseItem.target = self;
+    chaseItem.state = g_config.cursor.chaseEnabled ? NSControlStateValueOn : NSControlStateValueOff;
+
+    NSMenuItem* memeItem = [settingsMenu addItemWithTitle:@"Enable Memes" action:@selector(toggleMemes:) keyEquivalent:@""];
+    memeItem.target = self;
+    memeItem.state = g_config.general.memesEnabled ? NSControlStateValueOn : NSControlStateValueOff;
+    
+    NSMenuItem* settingsItem = [menu addItemWithTitle:@"Settings" action:nil keyEquivalent:@""];
+    settingsItem.submenu = settingsMenu;
+    
+    [menu addItem:[NSMenuItem separatorItem]];
+    
     NSMenuItem* quitItem = [menu addItemWithTitle:@"Quit" action:@selector(quitApp:) keyEquivalent:@"q"];
     quitItem.keyEquivalentModifierMask = NSEventModifierFlagCommand;
     
@@ -118,6 +137,27 @@ void LogWrite(const char* level, const char* fmt, ...) {
     DEBUG_LOG("Test honk from menubar");
 }
 
+- (void)toggleMud:(id)sender {
+    g_config.mud.enabled = !g_config.mud.enabled;
+    NSMenuItem* item = (NSMenuItem*)sender;
+    item.state = g_config.mud.enabled ? NSControlStateValueOn : NSControlStateValueOff;
+    DEBUG_LOG("Mud enabled: %d", g_config.mud.enabled);
+}
+
+- (void)toggleChase:(id)sender {
+    g_config.cursor.chaseEnabled = !g_config.cursor.chaseEnabled;
+    NSMenuItem* item = (NSMenuItem*)sender;
+    item.state = g_config.cursor.chaseEnabled ? NSControlStateValueOn : NSControlStateValueOff;
+    DEBUG_LOG("Cursor chase enabled: %d", g_config.cursor.chaseEnabled);
+}
+
+- (void)toggleMemes:(id)sender {
+    g_config.general.memesEnabled = !g_config.general.memesEnabled;
+    NSMenuItem* item = (NSMenuItem*)sender;
+    item.state = g_config.general.memesEnabled ? NSControlStateValueOn : NSControlStateValueOff;
+    DEBUG_LOG("Memes enabled: %d", g_config.general.memesEnabled);
+}
+
 - (void)quitApp:(id)sender {
     [[NSApplication sharedApplication] terminate:nil];
 }
@@ -127,6 +167,9 @@ void LogWrite(const char* level, const char* fmt, ...) {
     
     Config_InitRegistry();
     DEBUG_LOG("Config init done");
+    
+    g_assets.Init();
+    DEBUG_LOG("Assets init done");
     
     g_backendManager.Init();
     DEBUG_LOG("Backend: %s", g_backendManager.GetActiveBackend()->Name().c_str());

@@ -11,7 +11,25 @@
 #include <algorithm>
 #include <iostream>
 
+ICursorProvider* g_cursorProvider = nullptr;
 CursorBackendManager g_backendManager;
+
+CursorState CursorBackend::Read() {
+    CursorState state{};
+    state.caps = Caps();
+    if (state.caps & CAP_GET_POS) {
+        state.position = GetCursorPos();
+    }
+    return state;
+}
+
+void CursorBackend::Execute(const CursorAction& action) {
+    if (action.type == CursorAction::MOVE_ABS && (Caps() & CAP_MOVE_ABS)) {
+        MoveCursorAbs(action.x, action.y);
+    } else if (action.type == CursorAction::MOVE_REL && (Caps() & CAP_MOVE_REL)) {
+        MoveCursorRel(action.x, action.y);
+    }
+}
 
 CursorBackendManager::CursorBackendManager() {
     class NullBackend : public CursorBackend {
@@ -19,6 +37,9 @@ CursorBackendManager::CursorBackendManager() {
         std::string Name() const override { return "None"; }
         uint32_t Caps() const override { return CAP_NONE; }
         bool Init() override { return true; }
+        Vector2 GetCursorPos() override { return {-1.0f, -1.0f}; }
+        void MoveCursorAbs(int x, int y) override {}
+        void MoveCursorRel(int dx, int dy) override {}
     };
     static auto nullBackend = std::make_shared<NullBackend>();
     m_activeBackend = nullBackend.get();
@@ -43,6 +64,7 @@ void CursorBackendManager::Init() {
         if (backend->Init()) {
             std::cout << "Selected Cursor Backend: " << backend->Name() << std::endl;
             m_activeBackend = backend.get();
+            g_cursorProvider = backend.get();
             return;
         }
     }

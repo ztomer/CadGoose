@@ -42,6 +42,8 @@ public:
     ItemData* CreateTextItem(const std::string& text);
     void Honk();
     void Pat();
+    void Bite();
+    void MudSquish();
 
 private:
 #ifdef __linux__

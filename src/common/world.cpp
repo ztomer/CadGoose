@@ -16,8 +16,8 @@ std::list<MonitorInfo> g_monitors;
 std::list<DroppedItem> g_droppedItems;
 std::list<Footprint> g_footprints;
 int g_nextId = 0;
-int g_screenWidth = 1920;
-int g_screenHeight = 1080;
+int g_screenWidth = 0;
+int g_screenHeight = 0;
 int g_selectedGooseId = 0;
 int g_cursorGrabberId = -1;
 

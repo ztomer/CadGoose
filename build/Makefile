@@ -196,6 +196,7 @@ src/common/cursor_backend.o: src/common/cursor_backend.cpp.o
 # target to build an object file
 src/common/cursor_backend.cpp.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/common/cursor_backend.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/src/common/cursor_backend.cpp.o
 .PHONY : src/common/cursor_backend.cpp.o
 
 src/common/cursor_backend.i: src/common/cursor_backend.cpp.i
@@ -204,6 +205,7 @@ src/common/cursor_backend.i: src/common/cursor_backend.cpp.i
 # target to preprocess a source file
 src/common/cursor_backend.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/common/cursor_backend.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/src/common/cursor_backend.cpp.i
 .PHONY : src/common/cursor_backend.cpp.i
 
 src/common/cursor_backend.s: src/common/cursor_backend.cpp.s
@@ -212,6 +214,7 @@ src/common/cursor_backend.s: src/common/cursor_backend.cpp.s
 # target to generate assembly for a file
 src/common/cursor_backend.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/common/cursor_backend.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/src/common/cursor_backend.cpp.s
 .PHONY : src/common/cursor_backend.cpp.s
 
 src/common/goose.o: src/common/goose.cpp.o
@@ -237,6 +240,54 @@ src/common/goose.s: src/common/goose.cpp.s
 src/common/goose.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/common/goose.cpp.s
 .PHONY : src/common/goose.cpp.s
+
+src/common/goose_behaviors.o: src/common/goose_behaviors.cpp.o
+.PHONY : src/common/goose_behaviors.o
+
+# target to build an object file
+src/common/goose_behaviors.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/common/goose_behaviors.cpp.o
+.PHONY : src/common/goose_behaviors.cpp.o
+
+src/common/goose_behaviors.i: src/common/goose_behaviors.cpp.i
+.PHONY : src/common/goose_behaviors.i
+
+# target to preprocess a source file
+src/common/goose_behaviors.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/common/goose_behaviors.cpp.i
+.PHONY : src/common/goose_behaviors.cpp.i
+
+src/common/goose_behaviors.s: src/common/goose_behaviors.cpp.s
+.PHONY : src/common/goose_behaviors.s
+
+# target to generate assembly for a file
+src/common/goose_behaviors.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/common/goose_behaviors.cpp.s
+.PHONY : src/common/goose_behaviors.cpp.s
+
+src/common/goose_physics.o: src/common/goose_physics.cpp.o
+.PHONY : src/common/goose_physics.o
+
+# target to build an object file
+src/common/goose_physics.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/common/goose_physics.cpp.o
+.PHONY : src/common/goose_physics.cpp.o
+
+src/common/goose_physics.i: src/common/goose_physics.cpp.i
+.PHONY : src/common/goose_physics.i
+
+# target to preprocess a source file
+src/common/goose_physics.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/common/goose_physics.cpp.i
+.PHONY : src/common/goose_physics.cpp.i
+
+src/common/goose_physics.s: src/common/goose_physics.cpp.s
+.PHONY : src/common/goose_physics.s
+
+# target to generate assembly for a file
+src/common/goose_physics.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/common/goose_physics.cpp.s
+.PHONY : src/common/goose_physics.cpp.s
 
 src/common/items.o: src/common/items.cpp.o
 .PHONY : src/common/items.o
@@ -348,6 +399,7 @@ src/platform/macos/cursor_backend.o: src/platform/macos/cursor_backend.mm.o
 # target to build an object file
 src/platform/macos/cursor_backend.mm.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/platform/macos/cursor_backend.mm.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/src/platform/macos/cursor_backend.mm.o
 .PHONY : src/platform/macos/cursor_backend.mm.o
 
 src/platform/macos/main.o: src/platform/macos/main.mm.o
@@ -420,6 +472,12 @@ help:
 	@echo "... src/common/goose.o"
 	@echo "... src/common/goose.i"
 	@echo "... src/common/goose.s"
+	@echo "... src/common/goose_behaviors.o"
+	@echo "... src/common/goose_behaviors.i"
+	@echo "... src/common/goose_behaviors.s"
+	@echo "... src/common/goose_physics.o"
+	@echo "... src/common/goose_physics.i"
+	@echo "... src/common/goose_physics.s"
 	@echo "... src/common/items.o"
 	@echo "... src/common/items.i"
 	@echo "... src/common/items.s"

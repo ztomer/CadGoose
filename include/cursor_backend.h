@@ -1,32 +1,26 @@
 #pragma once
 #include "goose_math.h"
+#include "cursor_io.h"
 #include <string>
 #include <vector>
 #include <memory>
 #include <cstdint>
 
-// Capabilities bitflags
-enum CursorCaps {
-    CAP_NONE        = 0,
-    CAP_GET_POS     = 1 << 0, // Can read global cursor position
-    CAP_MOVE_ABS    = 1 << 1, // Can move cursor to absolute position
-    CAP_MOVE_REL    = 1 << 2, // Can move cursor relatively
-    CAP_CLICK       = 1 << 3  // Can emit click events (future)
-};
-
 // Abstract base class for all backends
-class CursorBackend {
+class CursorBackend : public ICursorProvider {
 public:
     virtual ~CursorBackend() = default;
 
     virtual std::string Name() const = 0;
     virtual uint32_t Caps() const = 0;
-    virtual bool Init() = 0; // Return true if successfully initialized/detected
+    virtual bool Init() = 0;
 
-    // Core operations (no-op if cap missing)
-    virtual Vector2 GetCursorPos() { return {-1.0f, -1.0f}; }
-    virtual void MoveCursorAbs(int x, int y) {}
-    virtual void MoveCursorRel(int dx, int dy) {}
+    virtual Vector2 GetCursorPos() = 0;
+    virtual void MoveCursorAbs(int x, int y) = 0;
+    virtual void MoveCursorRel(int dx, int dy) = 0;
+
+    CursorState Read() override;
+    void Execute(const CursorAction& action) override;
 };
 
 // Manager to handle selection and global access

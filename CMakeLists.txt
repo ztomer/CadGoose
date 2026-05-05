@@ -1,8 +1,9 @@
 cmake_minimum_required(VERSION 3.17)
 project(CadGoose)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 if(APPLE)
@@ -156,17 +157,38 @@ if(APPLE OR LINUX)
     enable_language(CXX)
     find_package(GTest REQUIRED)
     
-    add_executable(CadGooseTests tests/test_main.cpp)
-    
-    target_link_libraries(CadGooseTests
-        GTest::GTest
-        GTest::Main
-        Threads::Threads
+    add_executable(CadGooseTests 
+        tests/test_main.cpp
     )
+    
+    if(APPLE)
+        target_sources(CadGooseTests PRIVATE src/common/cursor_backend.cpp src/platform/macos/cursor_backend.mm)
+        target_link_libraries(CadGooseTests
+            GTest::GTest
+            GTest::Main
+            Threads::Threads
+            ${COREGRAPHICS_LIBRARY}
+            ${APPLICATIONSERVICES_LIBRARY}
+        )
+    else()
+        target_link_libraries(CadGooseTests
+            GTest::GTest
+            GTest::Main
+            Threads::Threads
+        )
+    endif()
     
     target_include_directories(CadGooseTests PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/include
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/common
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/platform/macos
     )
+    
+    if(APPLE)
+        set_target_properties(CadGooseTests PROPERTIES
+            COMPILE_FLAGS "-fobjc-arc"
+        )
+    endif()
     
     add_test(NAME CadGooseTests COMMAND CadGooseTests)
 endif()

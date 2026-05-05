@@ -9,7 +9,7 @@
 #include "world.h"
 #include "config.h"
 #include "goose_math.h"
-#include "cursor_backend.h"
+#include "cursor_io.h"
 #include "items.h"
 
 #if defined(__APPLE__)
@@ -25,22 +25,18 @@ extern bool g_debugMode;
 #define LOG(fmt, ...) fprintf(stderr, "[INFO] " fmt "\n", ##__VA_ARGS__)
 #endif
 
-namespace {
-    // Goose rendering constants
-    constexpr float SHADOW_OFFSET_X = 2.0f;
-    constexpr float SHADOW_OFFSET_Y = 10.0f;
-    constexpr float SHADOW_WIDTH = 40.0f;
-    constexpr float SHADOW_HEIGHT = 30.0f;
-    constexpr float FOOT_SIZE = 8.0f;
-    constexpr float BODY_WIDTH = 30.0f;
-    constexpr float BODY_HEIGHT = 20.0f;
-    constexpr float NECK_SIZE = 16.0f;
-    constexpr float HEAD1_SIZE = 20.0f;
-    constexpr float HEAD2_SIZE = 14.0f;
-    constexpr float BEAK_WIDTH = 16.0f;
-    constexpr float BEAK_HEIGHT = 8.0f;
-    constexpr float EYE_SIZE = 4.0f;
-    constexpr float CLICK_RADIUS = 30.0f;
+static void DrawEllipse(CGContextRef ctx, Vector2 p, float rx, float ry, float r, float g, float b, float a) {
+    CGContextSetRGBFillColor(ctx, r, g, b, a);
+    CGContextFillEllipseInRect(ctx, CGRectMake(p.x - rx, p.y - ry, rx * 2, ry * 2));
+}
+
+static void DrawLine(CGContextRef ctx, Vector2 a, Vector2 b, float width, float r, float g, float bl, float al) {
+    CGContextSetRGBStrokeColor(ctx, r, g, bl, al);
+    CGContextSetLineWidth(ctx, width);
+    CGContextSetLineCap(ctx, kCGLineCapRound);
+    CGContextMoveToPoint(ctx, a.x, a.y);
+    CGContextAddLineToPoint(ctx, b.x, b.y);
+    CGContextStrokePath(ctx);
 }
 
 @interface GooseView ()
@@ -48,7 +44,7 @@ namespace {
 @property (nonatomic, assign) int tickCount;
 @property (nonatomic, strong) dispatch_source_t timer;
 - (void)drawGoose:(Goose*)g inContext:(CGContextRef)ctx;
-- (void)drawHeldItem:(void*)item inContext:(CGContextRef)ctx;
+- (void)drawHeldItem:(Goose*)g inContext:(CGContextRef)ctx;
 - (void)drawFootprints:(CGContextRef)ctx;
 - (void)drawDroppedItems:(CGContextRef)ctx;
 - (void)drawGeese:(CGContextRef)ctx;
@@ -59,44 +55,44 @@ namespace {
 
 - (instancetype)initWithFrame:(NSRect)frameRect {
     DEBUG_LOG("GooseView initWithFrame START, frame=%s", NSStringFromRect(frameRect).UTF8String);
-    
+
     self = [super initWithFrame:frameRect];
     DEBUG_LOG("  super init done, self=%p", self);
-    
+
     if (self) {
         self.wantsLayer = YES;
         DEBUG_LOG("  wantsLayer=YES");
-        
+
         self.layer.backgroundColor = [[NSColor clearColor] CGColor];
         DEBUG_LOG("  layer backgroundColor set");
-        
+
         _currentTime = 0.0;
         _tickCount = 0;
         DEBUG_LOG("  time/count initialized");
     } else {
         LOG("ERROR: GooseView init returned nil!");
     }
-    
+
     DEBUG_LOG("GooseView initWithFrame END");
     return self;
 }
 
 - (void)startAnimation {
     DEBUG_LOG("GooseView startAnimation START");
-    
+
     [self stopAnimation];
     DEBUG_LOG("  stopped old timer");
-    
+
     self.timer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, dispatch_get_main_queue());
     DEBUG_LOG("  timer created: %p", self.timer);
-    
+
     dispatch_source_set_timer(self.timer, dispatch_time(DISPATCH_TIME_NOW, 0), NSEC_PER_SEC/60, NSEC_PER_SEC/600);
     DEBUG_LOG("  timer scheduled");
-    
+
     __weak GooseView* weakSelf = self;
     dispatch_source_set_event_handler(self.timer, ^{ [weakSelf tick]; });
     DEBUG_LOG("  event handler set");
-    
+
     dispatch_resume(self.timer);
     DEBUG_LOG("  timer resumed");
     DEBUG_LOG("GooseView startAnimation END");
@@ -110,11 +106,25 @@ namespace {
 }
 
 - (void)tick {
-    self.currentTime += 1.0 / 60.0;
+    self.currentTime += g_config.render.frameDt;
     self.tickCount++;
 
+    CursorState cursor = {};
+    CursorAction action = {};
+    if (g_cursorProvider) {
+        cursor = g_cursorProvider->Read();
+    }
+
     for (auto& g : g_geese) {
-        g.Update(1.0 / 60.0, self.currentTime, (int)self.bounds.size.width, (int)self.bounds.size.height);
+        CursorAction a = g.Update(g_config.render.frameDt, self.currentTime, (int)self.bounds.size.width, (int)self.bounds.size.height, cursor);
+        if (!a.isNone()) action = a;
+        if (g_debugMode && self.tickCount % g_config.render.debugTickMod == 0) {
+            DEBUG_LOG("Goose %d pos: %.1f,%.1f speed: %.1f", g.id, g.pos.x, g.pos.y, g.currentSpeed);
+        }
+    }
+
+    if (g_cursorProvider && !action.isNone()) {
+        g_cursorProvider->Execute(action);
     }
 
     g_droppedItems.remove_if([&](DroppedItem& i) {
@@ -124,7 +134,7 @@ namespace {
     });
 
     g_footprints.remove_if([&](Footprint& fp) {
-        float life = (fp.lifetime > 0.0f) ? fp.lifetime : g_config.mudLifetime;
+        float life = (fp.lifetime > 0.0f) ? fp.lifetime : g_config.mud.lifetime;
         return (self.currentTime - fp.timeSpawned) > life;
     });
 
@@ -152,20 +162,19 @@ namespace {
 - (void)drawFootprints:(CGContextRef)ctx {
     for (const auto& fp : g_footprints) {
         float age = (float)(self.currentTime - fp.timeSpawned);
-        float life = (fp.lifetime > 0.0f) ? fp.lifetime : g_config.mudLifetime;
+        float life = (fp.lifetime > 0.0f) ? fp.lifetime : g_config.mud.lifetime;
         float alpha = std::max(0.0f, 1.0f - (age / life));
         if (alpha <= 0) continue;
 
-        CGContextSetRGBFillColor(ctx, 0.4, 0.25, 0.1, alpha * 0.6);
-        CGContextFillEllipseInRect(ctx, CGRectMake(fp.pos.x - 6, fp.pos.y - 4, 12, 8));
+        CGContextSetRGBFillColor(ctx, g_config.color.footprint.r, g_config.color.footprint.g, g_config.color.footprint.b, alpha * g_config.color.footprintAlphaMultiplier);
+        CGContextFillEllipseInRect(ctx, CGRectMake(fp.pos.x - g_config.render.footprintWidth/2, fp.pos.y - g_config.render.footprintHeight/2, g_config.render.footprintWidth, g_config.render.footprintHeight));
     }
 }
 
 - (void)drawDroppedItems:(CGContextRef)ctx {
     for (const auto& item : g_droppedItems) {
-        // Draw placeholder for dropped items
-        CGContextSetRGBFillColor(ctx, 0.5, 0.5, 0.5, 0.5);
-        CGContextFillEllipseInRect(ctx, CGRectMake(item.pos.x - 10, item.pos.y - 10, 20, 20));
+        CGContextSetRGBFillColor(ctx, g_config.color.droppedItem.r, g_config.color.droppedItem.g, g_config.color.droppedItem.b, 0.5);
+        CGContextFillEllipseInRect(ctx, CGRectMake(item.pos.x - g_config.render.droppedItemSize/2, item.pos.y - g_config.render.droppedItemSize/2, g_config.render.droppedItemSize, g_config.render.droppedItemSize));
     }
 }
 
@@ -180,69 +189,125 @@ namespace {
 
     CGContextSaveGState(ctx);
     CGContextTranslateCTM(ctx, g->pos.x, g->pos.y);
-    CGContextScaleCTM(ctx, g_config.globalScale, g_config.globalScale);
+    CGContextScaleCTM(ctx, g_config.general.globalScale, g_config.general.globalScale);
     CGContextTranslateCTM(ctx, -g->pos.x, -g->pos.y);
 
     Vector2 rawFwd = Vector2::FromAngleDegrees(g->dir);
-    float isoScaleX = 1.0f;
-    float isoScaleY = 0.7f;
-    Vector2 fwd{ rawFwd.x * isoScaleX, rawFwd.y * isoScaleY };
+    Vector2 fwd{ rawFwd.x * g->ISO_SCALE.x, rawFwd.y * g->ISO_SCALE.y };
 
     float facing = Dot(Vector2::Normalize(fwd), Vector2{0, 1});
-    float back = std::max(0.0f, std::min(1.0f, -facing));
-    bool facingBack = (back > 0.55f);
+    float back = Clamp(-facing, 0.0f, 1.0f);
+    bool facingBack = (back > g_config.render.facingBackThreshold);
 
     if (g->heldItem && facingBack) {
-        [self drawHeldItem:g->heldItem inContext:ctx];
+        [self drawHeldItem:g inContext:ctx];
     }
 
-    CGContextSetRGBFillColor(ctx, 0, 0, 0, 0.3f);
-    CGContextFillEllipseInRect(ctx, CGRectMake(g->pos.x + 2 - 20, g->pos.y + 10 - 15, 40, 30));
+    // shadow
+    DrawEllipse(ctx, g->pos + Vector2{g_config.render.shadowOffsetX, g_config.render.shadowOffsetY},
+                g_config.render.shadowWidth / 2, g_config.render.shadowHeight / 2,
+                g_config.color.shadow.r, g_config.color.shadow.g, g_config.color.shadow.b, 0.3f);
 
-    CGContextSetRGBFillColor(ctx, 1, 0.64, 0, 1);
-    CGContextFillEllipseInRect(ctx, CGRectMake(g->rig.lFoot.currentPos.x - 4, g->rig.lFoot.currentPos.y - 4, 8, 8));
-    CGContextFillEllipseInRect(ctx, CGRectMake(g->rig.rFoot.currentPos.x - 4, g->rig.rFoot.currentPos.y - 4, 8, 8));
+    // feet
+    DrawEllipse(ctx, g->rig.lFoot.currentPos, g_config.render.footSize / 2, g_config.render.footSize / 2,
+                g_config.color.beak.r, g_config.color.beak.g, g_config.color.beak.b, 1.0f);
+    DrawEllipse(ctx, g->rig.rFoot.currentPos, g_config.render.footSize / 2, g_config.render.footSize / 2,
+                g_config.color.beak.r, g_config.color.beak.g, g_config.color.beak.b, 1.0f);
 
+    // body segments - compute front/back points along fwd axis
+    Vector2 bodyFront = g->rig.body + fwd * 11.0f;
+    Vector2 bodyBack  = g->rig.body - fwd * 11.0f;
+    Vector2 underFront = g->rig.underbody + fwd * 7.0f;
+    Vector2 underBack  = g->rig.underbody - fwd * 7.0f;
+
+    const float OUTLINE[] = {0.82f, 0.82f, 0.82f};
+
+    // outlines
+    DrawLine(ctx, bodyFront, bodyBack, 24, OUTLINE[0], OUTLINE[1], OUTLINE[2], 1.0f);
+    DrawLine(ctx, g->rig.neckBase, g->rig.neckHead, 15, OUTLINE[0], OUTLINE[1], OUTLINE[2], 1.0f);
+    DrawLine(ctx, g->rig.neckHead, g->rig.head1, 17, OUTLINE[0], OUTLINE[1], OUTLINE[2], 1.0f);
+    DrawLine(ctx, g->rig.head1, g->rig.head2, 12, OUTLINE[0], OUTLINE[1], OUTLINE[2], 1.0f);
+    DrawLine(ctx, underFront, underBack, 15, OUTLINE[0], OUTLINE[1], OUTLINE[2], 1.0f);
+
+    // body squash when facing away
     CGContextSaveGState(ctx);
     CGContextTranslateCTM(ctx, g->rig.body.x, g->rig.body.y);
-    float squash = 1.0f + (back * (1.0f - 0.92f));
+    float squash = Lerp(1.0f, 0.92f, back);
     CGContextScaleCTM(ctx, 1.0f, squash);
     CGContextTranslateCTM(ctx, -g->rig.body.x, -g->rig.body.y);
 
-    // Draw body as circles
-    CGContextSetRGBFillColor(ctx, 0.82f, 0.82f, 0.82f, 1.0f);
-    CGContextFillEllipseInRect(ctx, CGRectMake(g->rig.body.x - 15, g->rig.body.y - 10, 30, 20));
-    CGContextFillEllipseInRect(ctx, CGRectMake(g->rig.neckBase.x - 8, g->rig.neckBase.y - 8, 16, 16));
-    CGContextFillEllipseInRect(ctx, CGRectMake(g->rig.head1.x - 10, g->rig.head1.y - 10, 20, 20));
-    CGContextFillEllipseInRect(ctx, CGRectMake(g->rig.head2.x - 7, g->rig.head2.y - 7, 14, 14));
+    // fill
+    DrawLine(ctx, bodyFront, bodyBack, 22, g_config.color.goose.r, g_config.color.goose.g, g_config.color.goose.b, 1.0f);
+    DrawLine(ctx, g->rig.neckBase, g->rig.neckHead, 13, g_config.color.goose.r, g_config.color.goose.g, g_config.color.goose.b, 1.0f);
+    DrawLine(ctx, g->rig.neckHead, g->rig.head1, 15, g_config.color.goose.r, g_config.color.goose.g, g_config.color.goose.b, 1.0f);
+    DrawLine(ctx, g->rig.head1, g->rig.head2, 10, g_config.color.goose.r, g_config.color.goose.g, g_config.color.goose.b, 1.0f);
 
-    float beakW = std::min(16.0f, 9.0f);
-    float beakH = 8.0f;
-    Vector2 beakBase = g->rig.head2;
-    Vector2 beakTip = beakBase + fwd * beakW;
-
-    CGContextSetRGBFillColor(ctx, 1.0f, 0.6f, 0.0f, 1.0f);
-    CGRect beakRect = CGRectMake(beakTip.x - beakW * 0.5f, beakTip.y - beakH * 0.5f, beakW, beakH);
-    CGContextFillEllipseInRect(ctx, beakRect);
-
-    float eyeOffset = back > 0.5f ? -3.0f : 3.0f;
-    Vector2 eyePos = g->rig.head2 + Vector2{eyeOffset, -4.0f};
-    CGContextSetRGBFillColor(ctx, 0.1f, 0.1f, 0.1f, 1.0f);
-    CGContextFillEllipseInRect(ctx, CGRectMake(eyePos.x - 2, eyePos.y - 2, 4, 4));
+    // beak
+    float beakW = std::min(g_config.render.beakWidth, g_config.render.beakMaxWidth);
+    Vector2 beakBase = g->rig.neckHead + fwd * g_config.rig.beakBaseOffset;
+    Vector2 beakTip = beakBase + fwd * g_config.rig.beakLen;
+    DrawLine(ctx, beakBase, beakTip, beakW, g_config.color.beak.r, g_config.color.beak.g, g_config.color.beak.b, 1.0f);
 
     CGContextRestoreGState(ctx);
+
+    // eyes
+    Vector2 rawSide = Vector2::FromAngleDegrees(g->dir + 90.0f);
+    Vector2 side{ rawSide.x * g->ISO_SCALE.x, rawSide.y * g->ISO_SCALE.y };
+    Vector2 up{ 0, -1 };
+
+    float eyeSep = Lerp(5.0f, 2.8f, back);
+    float eyeLift = Lerp(0.0f, 1.5f, back);
+    Vector2 eyeCenter = g->rig.neckHead + up * (3.0f + eyeLift);
+
+    if (back > 0.82f) {
+        DrawEllipse(ctx, eyeCenter, 2, 2, 0, 0, 0, 1.0f);
+    } else {
+        DrawEllipse(ctx, eyeCenter - side * eyeSep, 2, 2, 0, 0, 0, 1.0f);
+        DrawEllipse(ctx, eyeCenter + side * eyeSep, 2, 2, 0, 0, 0, 1.0f);
+    }
+
+    if (g->heldItem && !facingBack) {
+        [self drawHeldItem:g inContext:ctx];
+    }
+
     CGContextRestoreGState(ctx);
 }
 
-- (void)drawHeldItem:(void*)item inContext:(CGContextRef)ctx {
-    if (!item) return;
-    // Draw placeholder for held item
-    CGContextSetRGBFillColor(ctx, 1.0, 0.8, 0.0, 0.8);
-    CGContextFillEllipseInRect(ctx, CGRectMake(-15, -15, 30, 30));
+- (void)drawHeldItem:(Goose*)g inContext:(CGContextRef)ctx {
+    if (!g->heldItem) return;
+    CGContextSaveGState(ctx);
+
+    CGContextTranslateCTM(ctx, g->dragPos.x, g->dragPos.y);
+    float dragRad = g->dragRot;
+    CGContextRotateCTM(ctx, -dragRad);
+    CGContextTranslateCTM(ctx, -g->heldItem->w / 2, 0);
+
+    if (g->heldItem->type == ItemData::MEME && g->heldItem->image) {
+        CGContextDrawImage(ctx, CGRectMake(0, 0, g->heldItem->w, g->heldItem->h), g->heldItem->image);
+    } else if (g->heldItem->type == ItemData::MEME) {
+        CGContextSetRGBFillColor(ctx, 0.8f, 0.8f, 0.8f, 1.0f);
+        CGContextFillRect(ctx, CGRectMake(0, 0, g->heldItem->w, g->heldItem->h));
+    } else if (g->heldItem->type == ItemData::TEXT) {
+        CGContextSetRGBFillColor(ctx, 1, 1, 0.9f, 1.0f);
+        CGContextFillRect(ctx, CGRectMake(0, 0, g->heldItem->w, g->heldItem->h));
+        CGContextSetRGBStrokeColor(ctx, 0, 0, 0, 1.0f);
+        CGContextSetLineWidth(ctx, 2);
+        CGContextStrokeRect(ctx, CGRectMake(0, 0, g->heldItem->w, g->heldItem->h));
+
+        if (g->heldItem->textContent) {
+            NSString* text = [NSString stringWithUTF8String:g->heldItem->textContent->c_str()];
+            NSDictionary* attrs = @{NSFontAttributeName: [NSFont systemFontOfSize:10.0],
+                                    NSForegroundColorAttributeName: [NSColor blackColor]};
+            NSRect textRect = NSMakeRect(5, 5, g->heldItem->w - 10, g->heldItem->h - 10);
+            [text drawInRect:textRect withAttributes:attrs];
+        }
+    }
+
+    CGContextRestoreGState(ctx);
 }
 
 - (void)drawDebugOverlay:(CGContextRef)ctx {
-    if (!g_config.debugVisuals) return;
+    if (!g_config.debug.visuals) return;
 
     CGContextSetRGBStrokeColor(ctx, 1, 0, 0, 1);
     CGContextSetLineWidth(ctx, 1);
@@ -255,8 +320,7 @@ namespace {
     for (auto& g : g_geese) {
         float dx = point.x - g.pos.x;
         float dy = point.y - g.pos.y;
-        if (std::sqrt(dx*dx + dy*dy) < 30.0f) {
-            // g.Honk(); // TODO: Add Honk method to Goose class
+        if (std::sqrt(dx*dx + dy*dy) < g_config.render.clickRadius) {
             return;
         }
     }

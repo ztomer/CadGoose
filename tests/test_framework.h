@@ -45,12 +45,11 @@ private:
     std::vector<TestCase> tests;
 };
 
-#define TEST(name) namespace test_##name { \
-    void run(); \
-    static bool reg = ([](){ \
-        TestRunner::get().add(#name, run); return true; }()); \
-    } \
-    void run()
+#define TEST(name) \
+    static void test_##name##_impl(); \
+    static bool test_##name##_reg = ([](){ \
+        TestRunner::get().add(#name, test_##name##_impl); return true; }()); \
+    static void test_##name##_impl()
 
 #define ASSERT_EQ(a, b) do { if ((a) != (b)) throw std::runtime_error(#a " != " #b); } while(0)
 #define ASSERT_TRUE(x) do { if (!(x)) throw std::runtime_error(#x); } while(0)
