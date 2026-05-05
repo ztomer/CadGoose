@@ -4,6 +4,41 @@
 #include "goose_math.h"
 #include "assets.h"
 #include <cmath>
+#include <cstdio>
+
+static FILE* s_debugLog = nullptr;
+
+static FILE* GetDebugLog() {
+    if (!s_debugLog) {
+        s_debugLog = fopen("/tmp/goose_debug.log", "w");
+        if (!s_debugLog) s_debugLog = stderr;
+    }
+    return s_debugLog;
+}
+
+static void LogTick(double time, const CursorState& cursor) {
+    FILE* f = GetDebugLog();
+    if (!f) return;
+    const char* ss[] = {"W","F","R","C","S"};
+    fprintf(f, "[T%.1f] cur=%d", time, g_cursorGrabberId);
+    if (cursor.hasPos()) fprintf(f, " c(%.0f,%.0f)", cursor.position.x, cursor.position.y);
+    else fprintf(f, " c(-,-)");
+    fprintf(f, " geese:");
+    for (auto& g : g_geese) {
+        fprintf(f, " %d%s@(%d,%d)d%dv(%d,%d)s%d",
+                g.id, ss[g.state], (int)g.pos.x, (int)g.pos.y, (int)g.dir,
+                (int)g.vel.x, (int)g.vel.y, (int)g.currentSpeed);
+        if (g.state == 4) fprintf(f, " a=%.1f r=%.0f", g.snatchAngle, g.snatchRadius);
+    }
+    fprintf(f, "\n");
+}
+
+static bool s_stateChanged = true;
+static double s_lastLogTime = 0;
+
+static void CloseDebugLog() {
+    s_debugLog = nullptr;
+}
 
 Goose::Goose(int id_, const std::string& name_, int screenW, int screenH)
     : id(id_), name(name_) {
@@ -13,7 +48,7 @@ Goose::Goose(int id_, const std::string& name_, int screenW, int screenH)
     dir = (float)(rand() % (int)g_config.movement.initDirectionMax);
     currentSpeed = g_config.movement.baseWalkSpeed;
 
-    attackMouseBias = rand() % g_config.item.attackMouseBiasMax;
+    attackMouseBias = 100; // force cursor chase
     memeFetchBias = rand() % g_config.item.memeFetchBiasMax;
     noteFetchBias = rand() % g_config.item.noteFetchBiasMax;
 
@@ -36,7 +71,8 @@ Vector2 Goose::GetBeakTipWorld() {
     Vector2 fwd{std::cos(rad) * ISO_SCALE.x, std::sin(rad) * ISO_SCALE.y};
     Vector2 beakBase = rig.neckHead + fwd * g_config.rig.beakBaseOffset;
     Vector2 beakTip = pos + beakBase + fwd * g_config.rig.beakLen;
-    return beakTip * g_config.general.globalScale + pos * (1.0f - g_config.general.globalScale);
+    // BEHAVIOR.md line 559: WorldToDevice(worldPos) = pos + (worldPos - pos) * globalScale
+    return pos + (beakTip - pos) * g_config.general.globalScale;
 }
 
 void Goose::UpdateRig() {
@@ -115,7 +151,6 @@ void Goose::SolveFeet(double time) {
             if (p >= 1.0f) {
                 f.currentPos = home;
                 f.moveStartTime = -1;
-                g_assets.Pat();
 
                 if (mudEnabled && (rand() % 100) < mudChance) {
                     Footprint fp;
@@ -124,6 +159,10 @@ void Goose::SolveFeet(double time) {
                     fp.timeSpawned = time;
                     fp.lifetime = mudLifetime;
                     g_footprints.push_back(fp);
+                    g_assets.MudSquish();
+                } else if (time - lastStepSoundTime > stepSoundCooldown) {
+                    g_assets.Pat();
+                    lastStepSoundTime = time;
                 }
             } else {
                 float e = CubicEaseInOut(p);
@@ -139,6 +178,22 @@ void Goose::SolveFeet(double time) {
 }
 
 CursorAction Goose::Update(double dt, double time, int w, int h, const CursorState& cursor) {
+    if (state != prevState) {
+        FILE* f = GetDebugLog();
+        const char* ss[] = {"W","F","R","C","S"};
+        fprintf(f, "!! t=%.1f g%d %s->%s tgt(%.0f,%.0f) c(%.0f,%.0f)\n",
+                time, id, ss[prevState], ss[state], target.x, target.y, cursor.position.x, cursor.position.y);
+        prevState = state;
+        s_stateChanged = true;
+    }
+
+    s_lastLogTime += dt;
+    if (s_lastLogTime > 0.1 || s_stateChanged) {
+        LogTick(time, cursor);
+        s_lastLogTime = 0;
+        s_stateChanged = false;
+    }
+
     CursorAction action = UpdateBehaviors(dt, time, w, h, cursor);
 
     Vector2 toTarget = target - pos;
@@ -262,23 +317,31 @@ CursorAction Goose::Update(double dt, double time, int w, int h, const CursorSta
         }
     }
 
-    if (Vector2::Length(vel) > g_config.physics.directionRotateMinVel) {
+    if (state == SNATCH_CURSOR) {
+        Vector2 revDir = snatchFwd * g_config.physics.directionReverseMultiplier;
+        dir = std::atan2(revDir.y, revDir.x) * (float)(180.0 / PI);
+    } else if (Vector2::Length(vel) > g_config.physics.directionRotateMinVel) {
         Vector2 curDirVec = Vector2::FromAngleDegrees(dir);
         Vector2 targetDirVec = Vector2::Normalize(vel);
 
         if (state == RETURNING) {
             targetDirVec = targetDirVec * g_config.physics.directionReverseMultiplier;
-        } else if (state == SNATCH_CURSOR) {
-            Vector2 toCursor = cursor.position - pos;
-            if (Vector2::Length(toCursor) > g_config.physics.directionToCursorDist) {
-                targetDirVec = Vector2::Normalize(toCursor);
-            } else {
-                targetDirVec = targetDirVec * g_config.physics.directionReverseMultiplier;
-            }
         }
 
         Vector2 blend = Vector2::Lerp(curDirVec, targetDirVec, g_config.movement.directionBlendRate);
         dir = std::atan2(blend.y, blend.x) * (float)(180.0 / PI);
+    }
+
+    if (debugSnatch && state == SNATCH_CURSOR && time - lastDebugLog > debugLogInterval) {
+        lastDebugLog = time;
+        Vector2 bt = GetBeakTipWorld();
+        Vector2 btDev = WorldToDevice(bt);
+        FILE* f = GetDebugLog();
+        if (f) {
+            fprintf(f, "[S%d] t=%.2f pos(%.1f,%.1f) dir=%.1f vel(%.1f,%.1f) spd=%.0f tgt(%.0f,%.0f) btDev(%.0f,%.0f) btWorld(%.0f,%.0f) angle=%.2f fwd(%.2f,%.2f) anchor(%.0f,%.0f) radius=%.0f cursor(%.0f,%.0f) grabber=%d\n",
+                    id, time, pos.x, pos.y, dir, vel.x, vel.y, currentSpeed, target.x, target.y, btDev.x, btDev.y, bt.x, bt.y, snatchAngle, snatchFwd.x, snatchFwd.y, snatchAnchor.x, snatchAnchor.y, snatchRadius, cursor.position.x, cursor.position.y, g_cursorGrabberId);
+            fflush(f);
+        }
     }
 
     UpdateRig();

@@ -235,6 +235,19 @@ static void MaybeTriggerEscapeKill() {
 static gboolean cb_window_key_pressed(GtkEventControllerKey*, guint keyval, guint, GdkModifierType, gpointer) {
     if (keyval != GDK_KEY_Escape) return FALSE;
 
+    // ISSUE B: End snatch immediately on ESC press, not just on 1-second hold
+    if (g_cursorGrabberId != -1) {
+        for (auto& g : g_geese) {
+            if (g.id == g_cursorGrabberId && g.state == SNATCH_CURSOR) {
+                UiLogPush("ESC pressed: ending snatch");
+                g.state = WANDER;
+                g.PickNewTarget(g_config.screen.width, g_config.screen.height);
+                g.stepTime = g_config.step.timeWander;
+                g_cursorGrabberId = -1;
+            }
+        }
+    }
+
     if (!g_escapeHeld) {
         g_escapeHeld = true;
         g_escapeHeldSinceUs = g_get_monotonic_time();

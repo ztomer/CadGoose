@@ -4,9 +4,19 @@
 #include "goose_math.h"
 #include "assets.h"
 #include <cmath>
+#include <cstdio>
 #include <algorithm>
 
 static inline double Rand01() { return static_cast<double>(rand() % 1000) / 1000.0; }
+
+static FILE* GetDebugLog() {
+    static FILE* f = nullptr;
+    if (!f) {
+        f = fopen("/tmp/goose_debug.log", "a");
+        if (!f) f = stderr;
+    }
+    return f;
+}
 
 Vector2 GetSnatchForward(float dir, const Vector2& isoScale) {
     float rad = dir * static_cast<float>(PI) / 180.0f;
@@ -41,11 +51,12 @@ void Goose::StartSnatch(double time, const Vector2& cursorPos) {
     g_cursorGrabberId = id;
     state = SNATCH_CURSOR;
     snatchStartTime = time;
+    snatchAnchor = pos;
+    snatchFwd = GetSnatchForward(dir, ISO_SCALE);
 
-    Vector2 catchFwd = GetSnatchForward(dir, ISO_SCALE);
-    Vector2 catchRight{-catchFwd.y, catchFwd.x};
+    Vector2 catchRight{-snatchFwd.y, snatchFwd.x};
     Vector2 cursorDelta = cursorPos - pos;
-    snatchOffset.x = Clamp(Dot(cursorDelta, catchFwd), -g_config.snatch.offsetMax, g_config.snatch.offsetMax);
+    snatchOffset.x = Clamp(Dot(cursorDelta, snatchFwd), -g_config.snatch.offsetMax, g_config.snatch.offsetMax);
     snatchOffset.y = Clamp(Dot(cursorDelta, catchRight), -g_config.snatch.offsetMax, g_config.snatch.offsetMax);
 
     snatchAngle = 0.0f;
@@ -56,6 +67,20 @@ void Goose::StartSnatch(double time, const Vector2& cursorPos) {
 
     g_assets.Bite();
     triggerHonk(honkState, time, g_config.honk.chaseCooldown, honkState.lastChase);
+}
+
+void Goose::EndSnatch(double time, int w, int h) {
+    FILE* f = GetDebugLog();
+    fprintf(f, "[ENDSNATCH] t=%.1f g%d: was state=%d grabId=%d\n", time, id, state, g_cursorGrabberId);
+    stepTime = g_config.step.timeWander;
+    if (g_cursorGrabberId == id) {
+        fprintf(f, "[ENDSNATCH] g%d: releasing cursor grab (was %d)\n", id, g_cursorGrabberId);
+        g_cursorGrabberId = -1;
+    }
+    state = WANDER;
+    fprintf(f, "[ENDSNATCH] g%d: now state=%d\n", id, state);
+    PickNewTarget(w, h);
+    triggerHonk(honkState, time, g_config.honk.genericCooldown, honkState.lastGeneric);
 }
 
 static CursorAction handleChaseCursor(Goose& g, double time, const CursorState& cursor, int w, int h) {
@@ -74,8 +99,13 @@ static CursorAction handleChaseCursor(Goose& g, double time, const CursorState& 
     g.target = cursor.position;
 
     Vector2 btPoint = g.WorldToDevice(g.GetBeakTipWorld());
-    float catchThreshold = std::max(g_config.spawn.catchThresholdBase * g_config.general.globalScale, g_config.spawn.catchThresholdMin);
-    if (Vector2::Distance(btPoint, g.target) < catchThreshold) {
+    // BEHAVIOR.md line 224: catchThreshold = max(22 * globalScale, 15)
+float catchThreshold = std::max(22.0f * g_config.general.globalScale, 15.0f);
+    float dist = Vector2::Distance(btPoint, g.target);
+    FILE* f = GetDebugLog();
+    fprintf(f, "[CHASE] t=%.1f g%d: bt(%.0f,%.0f) tgt(%.0f,%.0f) dist=%.1f thr=%.1f grab=%d\n",
+            time, g.id, btPoint.x, btPoint.y, g.target.x, g.target.y, dist, catchThreshold, g_cursorGrabberId);
+    if (dist < catchThreshold) {
         if (g_cursorGrabberId == -1) {
             g.StartSnatch(time, g.target);
         } else {
@@ -121,11 +151,17 @@ static void tryPickupItem(Goose& g, double time, int w, int h) {
 static void handleWander(Goose& g, double time, const CursorState& cursor, int w, int h) {
     bool chased = false;
 
-    if (g_cursorGrabberId == -1 && g.cursorChaseEnabled && cursor.hasPos()) {
+    bool canChase = (g_cursorGrabberId == -1);
+    bool chaseEnabled = g.cursorChaseEnabled;
+    bool cursorValid = cursor.hasPos();
+    if (canChase && chaseEnabled && cursorValid) {
         int totalChance = g_config.cursor.chaseChance + g.attackMouseBias;
-        if (totalChance < 0) totalChance = 0;
+        int roll = rand() % 100;
+        FILE* f = GetDebugLog();
+        fprintf(f, "[WALKER] t=%.1f g%d: grab=-%d ena=%d valid=%d chance=%d roll=%d\n",
+                time, g.id, g_cursorGrabberId, chaseEnabled, cursorValid, totalChance, roll);
         if (totalChance > 100) totalChance = 100;
-        if ((rand() % 100) < totalChance) {
+        if (roll < totalChance) {
             g.state = CHASE_CURSOR;
             g.target = cursor.position;
             triggerHonk(g.honkState, time, g_config.honk.chaseCooldown, g.honkState.lastChase);
@@ -247,16 +283,18 @@ static void handleReturning(Goose& g, double time, int w, int h) {
 }
 
 static bool isTargetReached(Goose& g, float threshold) {
-    Vector2 btPoint = g.WorldToDevice(g.GetBeakTipWorld());
-    return Vector2::Distance(btPoint, g.target) < threshold;
-}
+    // Use goose body position (device space), not beak tip
+    // Beak tip extends ahead, causing goose to overshoot target
+    Vector2 bodyDevice = g.WorldToDevice(g.pos);
+    float dist = Vector2::Distance(bodyDevice, g.target);
 
-void Goose::EndSnatch(double time, int w, int h) {
-    stepTime = g_config.step.timeWander;
-    if (g_cursorGrabberId == id) g_cursorGrabberId = -1;
-    state = WANDER;
-    PickNewTarget(w, h);
-    triggerHonk(honkState, time, g_config.honk.genericCooldown, honkState.lastGeneric);
+    // Also check if goose has passed/overshot target (velocity pointing away from target)
+    Vector2 toTarget = g.target - bodyDevice;
+    float dot = Vector2::Length(toTarget) > 0.001f ? Dot(Vector2::Normalize(toTarget), Vector2::Normalize(g.vel)) : 0.0f;
+
+    // If dot < 0, goose is moving away from target (overshot)
+    // Use body distance + check for overshoot
+    return dist < threshold || (dist < threshold * 3.0f && dot < 0.0f);
 }
 
 CursorAction Goose::UpdateBehaviors(double dt, double time, int w, int h, const CursorState& cursor) {
@@ -271,12 +309,43 @@ CursorAction Goose::UpdateBehaviors(double dt, double time, int w, int h, const 
     }
 
     if (state == SNATCH_CURSOR) {
+        snatchAngle += snatchAngularSpeed * (float)dt;
+        FILE* f = GetDebugLog();
+
+        // ISSUE D: Debug circular motion
+        fprintf(f, "[SNATCH] t=%.1f g%d: angle=%.2f rad=%.0f speed=%.0f angularSpeed=%.2f\n",
+                time, id, snatchAngle, snatchRadius, currentSpeed, snatchAngularSpeed);
+
+        // ISSUE A: Debug cursor vs beak tip distance
         Vector2 bt = GetBeakTipWorld();
         Vector2 btDevice = WorldToDevice(bt);
         btDevice.x = std::clamp(btDevice.x, 0.0f, (float)std::max(0, w - 1));
         btDevice.y = std::clamp(btDevice.y, 0.0f, (float)std::max(0, h - 1));
+        fprintf(f, "[SNATCH] g%d: cursor(%.0f,%.0f) btDevice(%.0f,%.0f) dist=%.1f\n",
+                id, cursor.position.x, cursor.position.y, btDevice.x, btDevice.y,
+                Vector2::Distance(cursor.position, btDevice));
+
+        // BEHAVIOR.md line 228-235: Cursor moved to beak tip (NOT endpoint!)
+        // This is the bug - we're moving to beak tip, not to endpoint!
+        // Endpoint should be the target where goose PULLS cursor to
+        Vector2 right{-snatchFwd.y, snatchFwd.x};
+        float pullDist = 140.0f; // BEHAVIOR.md line 239
+        float lateralBias = Clamp(snatchOffset.y, -pullDist * 0.75f, pullDist * 0.75f);
+        float forwardBias = Clamp(snatchOffset.x * 0.25f, -pullDist * 0.35f, pullDist * 0.15f);
+        Vector2 baseEndpoint = pos - snatchFwd * pullDist + right * lateralBias + snatchFwd * forwardBias;
+        Vector2 orbitOffset = right * std::cos(snatchAngle) * snatchRadius + snatchFwd * std::sin(snatchAngle) * snatchRadius;
+        Vector2 endpoint = baseEndpoint + orbitOffset;
+        fprintf(f, "[SNATCH] g%d: endpoint(%.0f,%.0f) vs cursor(%.0f,%.0f) diff=(%.0f,%.0f)\n",
+                id, endpoint.x, endpoint.y, cursor.position.x, cursor.position.y,
+                endpoint.x - cursor.position.x, endpoint.y - cursor.position.y);
+
+        // ISSUE C: Debug speed - should be running in SNATCH
+        fprintf(f, "[SNATCH] g%d: state=%d targetSpeed=%.0f currentSpeed=%.0f vel=(%.0f,%.0f)\n",
+                id, state, g_config.movement.baseRunSpeed * 1.25f, currentSpeed, vel.x, vel.y);
 
         if (cursor.caps & CAP_MOVE_ABS) {
+            // BEHAVIOR.md line 229: Move cursor to BEAK TIP, not endpoint
+            fprintf(f, "[SNATCH] g%d: MoveAbs to bt(%.0f,%.0f)\n", id, btDevice.x, btDevice.y);
             return CursorAction::MoveAbs(std::lround(btDevice.x), std::lround(btDevice.y));
         } else if (cursor.caps & CAP_MOVE_REL) {
             Vector2 delta = btDevice - cursor.position;
@@ -289,12 +358,11 @@ CursorAction Goose::UpdateBehaviors(double dt, double time, int w, int h, const 
             }
         }
 
-        Vector2 fwd = GetSnatchForward(dir, ISO_SCALE);
-        Vector2 right{-fwd.y, fwd.x};
-
+        Vector2 right{-snatchFwd.y, snatchFwd.x};
         float lateralBias = Clamp(snatchOffset.y, -snatchPullDistance * g_config.snatch.lateralBiasLimit, snatchPullDistance * g_config.snatch.lateralBiasLimit);
         float forwardBias = Clamp(snatchOffset.x * g_config.snatch.forwardBiasScale, snatchPullDistance * g_config.snatch.forwardBiasMin, snatchPullDistance * g_config.snatch.forwardBiasMax);
-        Vector2 endpoint = pos - fwd * snatchPullDistance + right * lateralBias + fwd * forwardBias;
+        Vector2 endpoint = pos - snatchFwd * snatchPullDistance + right * lateralBias + snatchFwd * forwardBias;
+        endpoint += right * std::cos(snatchAngle) * snatchRadius + snatchFwd * std::sin(snatchAngle) * snatchRadius;
         endpoint.x = std::clamp(endpoint.x, 0.0f, (float)std::max(0, w - 1));
         endpoint.y = std::clamp(endpoint.y, 0.0f, (float)std::max(0, h - 1));
         target = endpoint;
@@ -320,7 +388,16 @@ CursorAction Goose::UpdateBehaviors(double dt, double time, int w, int h, const 
     float threshold = (state == RETURNING) ? std::max(g_config.spawn.targetReachedThresholdReturn * g_config.general.globalScale, g_config.spawn.targetReachedMinReturn)
                                            : std::max(g_config.spawn.targetReachedThresholdNormal * g_config.general.globalScale, g_config.spawn.targetReachedMinNormal);
 
-    if (isTargetReached(*this, threshold)) {
+    bool reached = isTargetReached(*this, threshold);
+    FILE* f = GetDebugLog();
+    if (state == WANDER) {
+        Vector2 btPoint = WorldToDevice(GetBeakTipWorld());
+        fprintf(f, "[TARGET] t=%.1f g%d: state=%d bt(%.0f,%.0f) tgt(%.0f,%.0f) dist=%.1f thr=%.1f reached=%d\n",
+                time, id, state, btPoint.x, btPoint.y, target.x, target.y,
+                Vector2::Distance(btPoint, target), threshold, reached);
+    }
+
+    if (reached) {
         if (state == WANDER) handleWander(*this, time, cursor, w, h);
         else if (state == FETCHING) handleFetching(*this, time, w, h);
         else if (state == RETURNING) handleReturning(*this, time, w, h);

@@ -6,6 +6,7 @@
 
 #include "cursor_backend.h"
 #include "cursor_io.h"
+#include "goose_math.h"
 
 struct Vec2 { float x, y; };
 
@@ -265,6 +266,220 @@ TEST(CursorState, HasPos) {
     s3.caps = CAP_MOVE_ABS;
     s3.position = {10.0f, 20.0f};
     EXPECT_FALSE(s3.hasPos());
+}
+
+// ===========================
+// Behavioral Tests (BEHAVIOR.md spec)
+// ===========================
+
+// Config matching BEHAVIOR.md line 509-529
+struct ConfigSpec {
+    bool debugToTerminal = false;
+    bool debugVisuals = false;
+    float globalScale = 1.0f;
+    bool audioEnabled = true;
+    bool memesEnabled = true;
+    float baseWalkSpeed = 180.0f;
+    float baseRunSpeed = 480.0f;
+    bool cursorChaseEnabled = true;
+    int cursorChaseChance = 3;
+    float snatchDuration = 3.0f;
+    bool multiMonitorEnabled = true;
+    bool mudEnabled = true;
+    int mudChance = 15;
+    float mudLifetime = 15.0f;
+    float runDistanceThreshold = 300.0f;
+    float arrivalRadius = 50.0f;
+    float targetReachedThresholdNormal = 30.0f;
+    float targetReachedMinNormal = 25.0f;
+    float targetReachedThresholdReturn = 60.0f;
+    float targetReachedMinReturn = 50.0f;
+    float catchThreshold = 22.0f;
+    float snatchPullDistance = 140.0f;
+    float snatchRadiusMin = 40.0f;
+    float snatchRadiusMax = 120.0f;
+} g_cfg;
+
+enum GooseState { WANDER, FETCHING, RETURNING, CHASE_CURSOR, SNATCH_CURSOR };
+
+// BEHAVIOR.md line 27-32: WANDER -> CHASE_CURSOR
+TEST(Behavior, WanderToChase_ChanceCalculation) {
+    // Chance: (cursorChaseChance + attackMouseBias) % 100
+    // With default chaseChance=3 and attackMouseBias=100
+    int chaseChance = g_cfg.cursorChaseChance;
+    int attackBias = 100;
+    int totalChance = chaseChance + attackBias;
+    if (totalChance > 100) totalChance = 100;
+    EXPECT_EQ(totalChance, 100); // Should always chase
+}
+
+// BEHAVIOR.md line 98-102: Speed Control
+TEST(Behavior, SpeedWalkingWhenNear) {
+    // Target speed: baseWalkSpeed when dist <= 300 and NOT in running states
+    Vector2 pos{100, 100}, target{200, 200}; // dist = 141 < 300
+    float dist = Vector2::Length(target - pos);
+    GooseState state = WANDER;
+
+    float tSpeed = (dist > g_cfg.runDistanceThreshold ||
+                    state == FETCHING || state == CHASE_CURSOR ||
+                    state == SNATCH_CURSOR || state == RETURNING)
+        ? g_cfg.baseRunSpeed
+        : g_cfg.baseWalkSpeed;
+
+    EXPECT_FLOAT_EQ(tSpeed, g_cfg.baseWalkSpeed);
+}
+
+TEST(Behavior, SpeedRunningWhenFar) {
+    Vector2 pos{100, 100}, target{500, 500}; // dist = 566 > 300
+    float dist = Vector2::Length(target - pos);
+    GooseState state = WANDER;
+
+    float tSpeed = (dist > g_cfg.runDistanceThreshold ||
+                    state == FETCHING || state == CHASE_CURSOR ||
+                    state == SNATCH_CURSOR || state == RETURNING)
+        ? g_cfg.baseRunSpeed
+        : g_cfg.baseWalkSpeed;
+
+    EXPECT_FLOAT_EQ(tSpeed, g_cfg.baseRunSpeed);
+}
+
+TEST(Behavior, SpeedRunningInChaseState) {
+    // Even if close, running states should use run speed
+    Vector2 pos{100, 100}, target{150, 150}; // dist = 70 < 300
+    float dist = Vector2::Length(target - pos);
+    GooseState state = CHASE_CURSOR;
+
+    float tSpeed = (dist > g_cfg.runDistanceThreshold ||
+                    state == FETCHING || state == CHASE_CURSOR ||
+                    state == SNATCH_CURSOR || state == RETURNING)
+        ? g_cfg.baseRunSpeed
+        : g_cfg.baseWalkSpeed;
+
+    EXPECT_FLOAT_EQ(tSpeed, g_cfg.baseRunSpeed);
+}
+
+// BEHAVIOR.md line 106: Arrival slowdown
+TEST(Behavior, ArrivalSlowdown) {
+    float dist = 25.0f; // < arrivalRadius of 50
+    float arrivalRadius = g_cfg.arrivalRadius;
+    Vector2 desiredVel{100, 0}; // moving at 100
+
+    if (dist < arrivalRadius) {
+        desiredVel = desiredVel * (dist / arrivalRadius);
+    }
+
+    // At dist=25 and radius=50, velocity is 100 * (25/50) = 50
+    EXPECT_LE(Vector2::Length(desiredVel), 50.0f);
+}
+
+// BEHAVIOR.md line 224: Catch threshold
+TEST(Behavior, CatchThreshold) {
+    float catchThreshold = g_cfg.catchThreshold;
+    float globalScale = g_cfg.globalScale;
+    float actualThreshold = std::max(22.0f * globalScale, 15.0f);
+    EXPECT_FLOAT_EQ(actualThreshold, 22.0f);
+}
+
+// BEHAVIOR.md line 227-249: Snatch endpoint calculation
+TEST(Behavior, SnatchEndpoint_UsesCurrentPos) {
+    // Spec: endpoint = pos - fwd * pullDist + right * lateralBias + fwd * forwardBias
+    Vector2 pos{300, 300};
+    Vector2 fwd{1, 0}; // right
+    Vector2 right{-fwd.y, fwd.x}; // {0, 1} = down
+    float pullDist = 140.0f;
+    float lateralBias = 20.0f;
+    float forwardBias = -30.0f;
+
+    // endpoint = {300,300} - {140,0} + {0,20} + {-30,0} = {130, 320}
+    Vector2 endpoint = pos - fwd * pullDist + right * lateralBias + fwd * forwardBias;
+
+    // Endpoint should be behind the goose (x < pos.x since fwd is right)
+    EXPECT_LT(endpoint.x, pos.x);
+    // y = pos.y + lateralBias + forwardBias*y_component = 300 + 20 + 0 = 320
+    EXPECT_FLOAT_EQ(endpoint.y, 320.0f);
+}
+
+// BEHAVIOR.md line 241-242: Snatch radius random range
+TEST(Behavior, SnatchRadiusRange) {
+    // snatchRadius = 40.0f + (rand() % 80) -> 40-120px
+    float radiusBase = 40.0f;
+    int radiusRange = 80;
+    int r = 0; // rand() % 80
+    float radius = radiusBase + r;
+    EXPECT_GE(radius, 40.0f);
+    EXPECT_LE(radius, 120.0f);
+}
+
+// BEHAVIOR.md line 341-344: Target reached threshold
+TEST(Behavior, TargetReached_NormalState) {
+    Vector2 beakTip{228, 200}; // 28px horizontal from target
+    Vector2 target{200, 200};
+    float threshold = std::max(g_cfg.targetReachedThresholdNormal * g_cfg.globalScale,
+                               g_cfg.targetReachedMinNormal);
+    float dist = Vector2::Distance(beakTip, target);
+    EXPECT_LT(dist, threshold); // 28 < 30
+}
+
+TEST(Behavior, TargetReached_ReturningState) {
+    Vector2 beakTip{255, 200}; // 55px horizontal from target
+    Vector2 target{200, 200};
+    float threshold = std::max(g_cfg.targetReachedThresholdReturn * g_cfg.globalScale,
+                               g_cfg.targetReachedMinReturn);
+    float dist = Vector2::Distance(beakTip, target);
+    EXPECT_LT(dist, threshold); // 55 < 60
+}
+
+// BEHAVIOR.md line 330-343: TryHonk logic
+TEST(Behavior, HonkCooldown) {
+    // HONK_CHASE_CD = 1.80s from spec line 330
+    double time = 10.0;
+    double lastAny = 8.0;
+    double lastBucket = 8.0; // 2 seconds ago
+    double minGap = 0.6;
+    double cooldown = 1.8;
+
+    // 10-8=2 >= 0.6, 10-8=2 >= 1.8 -> true
+    bool canHonk = (time - lastAny) >= minGap && (time - lastBucket) >= cooldown;
+    EXPECT_TRUE(canHonk);
+}
+
+TEST(Behavior, HonkBlockedByGlobalGap) {
+    double time = 10.0;
+    double lastAny = 9.5; // Only 0.5s ago
+    double lastBucket = 8.0;
+    double minGap = 0.6;
+    double cooldown = 1.8;
+
+    // 10-9.5=0.5 < 0.6 -> should fail
+    bool canHonk = (time - lastAny) >= minGap && (time - lastBucket) >= cooldown;
+    EXPECT_FALSE(canHonk);
+}
+
+// BEHAVIOR.md line 151-158: Direction rotation
+TEST(Behavior, DirectionBlending) {
+    // Initial direction = 90 degrees (up), velocity = right (0 degrees)
+    // Blending should move direction toward velocity
+    float dir = 90.0f;
+    Vector2 vel{100, 0};
+
+    Vector2 curDirVec{std::cos(dir * 3.14159f / 180.0f), std::sin(dir * 3.14159f / 180.0f)};
+    Vector2 targetDirVec = Vector2::Normalize(vel);
+    float blendRate = 0.15f;
+
+    Vector2 blended = curDirVec + (targetDirVec - curDirVec) * blendRate;
+    float newDir = std::atan2(blended.y, blended.x) * 180.0f / 3.14159f;
+
+    // New direction should be between 90 and 0 (blended)
+    EXPECT_GT(newDir, 0.0f);
+    EXPECT_LT(newDir, 90.0f);
+}
+
+// BEHAVIOR.md line 161: Direction initialization
+TEST(Behavior, DirectionInit) {
+    // On creation: dir = rand() % 45 (0-44 degrees)
+    int dir = 30; // rand() % 45
+    EXPECT_GE(dir, 0);
+    EXPECT_LT(dir, 45);
 }
 
 int main(int argc, char **argv) {

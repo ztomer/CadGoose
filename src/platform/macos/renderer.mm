@@ -138,6 +138,12 @@ static void DrawLine(CGContextRef ctx, Vector2 a, Vector2 b, float width, float 
         return (self.currentTime - fp.timeSpawned) > life;
     });
 
+    if (self.currentTime > 120.0) {
+        [self stopAnimation];
+        exit(0);
+        return;
+    }
+
     [self setNeedsDisplay:YES];
 }
 

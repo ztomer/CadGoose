@@ -67,6 +67,8 @@ public:
     // Cursor chase/snatch state
     double snatchStartTime = 0.0;
     Vector2 snatchOffset{};  // Cursor anchor stored in goose-local forward/right space during snatch
+    Vector2 snatchAnchor{};  // Goose position at snatch start (fixed reference point)
+    Vector2 snatchFwd{};     // Fixed forward direction at snatch start
     // How far the goose pulls the cursor behind it when snatching
     float snatchPullDistance = 140.0f;
     // Circular snatch motion parameters
@@ -96,6 +98,16 @@ public:
         double lastGeneric = -1e9;
         double nextIdleHonk = 0.0;
     } honkState;
+
+    // Step sound cooldown
+    double lastStepSoundTime = -1e9;
+    static constexpr double stepSoundCooldown = 0.08; // minimum time between step sounds
+
+    // Debug logging
+    bool debugSnatch = true;
+    GooseState prevState = WANDER;
+    double lastDebugLog = -1e9;
+    static constexpr double debugLogInterval = 0.1;
 
     Goose(int _id, const std::string& _name, int screenW, int screenH);
 
