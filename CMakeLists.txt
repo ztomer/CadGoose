@@ -159,15 +159,31 @@ if(APPLE OR LINUX)
     
     add_executable(CadGooseTests 
         tests/test_main.cpp
+        src/common/app_actions.cpp
+        src/common/config.cpp
+        src/common/cursor_backend.cpp
+        src/common/goose.cpp
+        src/common/goose_behaviors.cpp
+        src/common/goose_physics.cpp
+        src/common/items.cpp
+        src/common/world.cpp
     )
     
     if(APPLE)
-        target_sources(CadGooseTests PRIVATE src/common/cursor_backend.cpp src/platform/macos/cursor_backend.mm)
+        target_sources(CadGooseTests PRIVATE 
+            src/common/cursor_backend.cpp 
+            src/platform/macos/cursor_backend.mm 
+            src/platform/macos/renderer.mm
+            tests/platform/macos/test_renderer.mm
+        )
         target_link_libraries(CadGooseTests
             GTest::GTest
             GTest::Main
             Threads::Threads
+            ${COCOA_LIBRARY}
+            ${AVFOUNDATION_LIBRARY}
             ${COREGRAPHICS_LIBRARY}
+            ${COREAUDIO_LIBRARY}
             ${APPLICATIONSERVICES_LIBRARY}
         )
     else()

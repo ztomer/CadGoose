@@ -74,7 +74,15 @@ ItemData* AssetManager::GetRandomMeme() {
 
     ItemData* data = new ItemData();
     data->type = ItemData::MEME;
-    
+
+    auto it = memeCache.find(path);
+    if (it != memeCache.end()) {
+        data->image = CGImageRetain(it->second);
+        data->w = CGImageGetWidth(data->image);
+        data->h = CGImageGetHeight(data->image);
+        return data;
+    }
+
     NSString* nsPath = [NSString stringWithUTF8String:path.c_str()];
     NSImage* img = [[NSImage alloc] initWithContentsOfFile:nsPath];
     if (img) {
@@ -84,6 +92,7 @@ ItemData* AssetManager::GetRandomMeme() {
         CGImageRef cgImage = [img CGImageForProposedRect:NULL context:nil hints:nil];
         if (cgImage) {
             data->image = CGImageRetain(cgImage);
+            memeCache[path] = CGImageRetain(cgImage);
         } else {
             data->w = g_config.asset.memePlaceholderW;
             data->h = g_config.asset.memePlaceholderH;
@@ -92,10 +101,9 @@ ItemData* AssetManager::GetRandomMeme() {
         data->w = g_config.asset.memePlaceholderW;
         data->h = g_config.asset.memePlaceholderH;
     }
-    
+
     return data;
 }
-
 ItemData* AssetManager::GetRandomText() {
     if (textPaths.empty()) return nullptr;
     static std::random_device rd;

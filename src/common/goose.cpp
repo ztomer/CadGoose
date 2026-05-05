@@ -111,9 +111,9 @@ void Goose::UpdateRig() {
       (state == WANDER)
           ? 0
           : ((currentSpeed >= g_config.rig.runSpeedThreshold) ? 1 : 0);
-  fprintf(stderr, "Goose %d state %d currentSpeed %.1f targetState %d\n", id,
-          (int)state, currentSpeed, targetState);
-  fflush(stderr);
+  // fprintf(stderr, "Goose %d state %d currentSpeed %.1f targetState %d\n", id,
+  //         (int)state, currentSpeed, targetState);
+  // fflush(stderr);
   rig.neckLerp =
       Lerp(rig.neckLerp, (float)targetState, g_config.rig.neckLerpRate);
 
@@ -203,13 +203,14 @@ void Goose::SolveFeet(double time) {
                                              : g_config.step.rightFootAngle);
           fp.timeSpawned = time;
           fp.lifetime = mudLifetime;
-          fprintf(stderr,
-                  "Footprint created at device (%.1f, %.1f), foot home world "
-                  "(%.1f, "
-                  "%.1f), goose pos (%.1f, %.1f), globalScale %.3f\n",
-                  fp.pos.x, fp.pos.y, home.x, home.y, pos.x, pos.y,
-                  g_config.general.globalScale);
-          fflush(stderr);
+          // fprintf(stderr,
+          //         "Footprint created at device (%.1f, %.1f), foot home world
+          //         "
+          //         "(%.1f, "
+          //         "%.1f), goose pos (%.1f, %.1f), globalScale %.3f\n",
+          //         fp.pos.x, fp.pos.y, home.x, home.y, pos.x, pos.y,
+          //         g_config.general.globalScale);
+          // fflush(stderr);
           g_footprints.push_back(fp);
           g_assets.MudSquish();
         } else if (time - lastStepSoundTime > stepSoundCooldown) {

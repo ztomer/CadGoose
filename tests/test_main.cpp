@@ -7,6 +7,9 @@
 #include "cursor_backend.h"
 #include "cursor_io.h"
 #include "goose_math.h"
+#include "goose.h"
+#include "assets.h"
+#include "world.h"
 
 struct Vec2 { float x, y; };
 
@@ -300,7 +303,7 @@ struct ConfigSpec {
     float snatchRadiusMax = 120.0f;
 } g_cfg;
 
-enum GooseState { WANDER, FETCHING, RETURNING, CHASE_CURSOR, SNATCH_CURSOR };
+// Removed GooseState enum to prevent redefinition
 
 // BEHAVIOR.md line 27-32: WANDER -> CHASE_CURSOR
 TEST(Behavior, WanderToChase_ChanceCalculation) {
@@ -482,7 +485,158 @@ TEST(Behavior, DirectionInit) {
     EXPECT_LT(dir, 45);
 }
 
+TEST(Integration, Goose_WanderToChase) {
+    Goose g(1, "Test", 1920, 1080);
+    g.state = WANDER;
+    g.pos = {100, 100};
+    g.target = {100, 100}; // Already at target
+    g.cursorChaseChance = 100;
+    g.attackMouseBias = 100;
+    
+    CursorState c;
+    c.caps = CAP_GET_POS;
+    c.position = {500, 500};
+    
+    g_cursorGrabberId = -1; // No one grabbing
+
+    g.Update(0.1, 0.0, 1920, 1080, c);
+    
+    EXPECT_EQ(g.state, CHASE_CURSOR);
+    EXPECT_EQ(g.target.x, 500.0f);
+    EXPECT_EQ(g.target.y, 500.0f);
+}
+
+TEST(Integration, Goose_SnatchCursor) {
+    Goose g(2, "Test", 1920, 1080);
+    g.state = CHASE_CURSOR;
+    g.pos = {500, 500};
+    g.target = {500, 500}; 
+    
+    CursorState c;
+    c.caps = CAP_GET_POS | CAP_MOVE_ABS;
+    c.position = {0, 0};
+    
+    g_cursorGrabberId = -1;
+    // First update populates rig
+    g.Update(0.1, 0.0, 1920, 1080, c);
+    
+    // Set cursor to exactly beak tip
+    c.position = g.GetBeakTipDevice();
+    
+    // Second update should trigger snatch
+    g.Update(0.1, 0.1, 1920, 1080, c);
+    
+    EXPECT_EQ(g.state, SNATCH_CURSOR);
+    EXPECT_EQ(g_cursorGrabberId, 2);
+}
+
+TEST(Integration, Goose_SnatchRelease) {
+    Goose g(3, "Test", 1920, 1080);
+    g.state = SNATCH_CURSOR;
+    g.snatchStartTime = 0.0;
+    g.snatchDuration = 3.0f; // 3 seconds
+    g_cursorGrabberId = 3;
+
+    CursorState c;
+    c.caps = CAP_GET_POS | CAP_MOVE_ABS;
+    c.position = {500, 500};
+    
+    // Not enough time passed
+    g.Update(0.1, 1.0, 1920, 1080, c);
+    EXPECT_EQ(g.state, SNATCH_CURSOR);
+    EXPECT_EQ(g_cursorGrabberId, 3);
+
+    // Enough time passed (3.5 > 3.0)
+    g.Update(0.1, 3.5, 1920, 1080, c);
+    EXPECT_EQ(g.state, WANDER);
+    EXPECT_EQ(g_cursorGrabberId, -1);
+}
+
+TEST(Integration, Goose_FetchItem) {
+    Goose g(4, "Test", 1920, 1080);
+    g.state = WANDER;
+    g.pos = {100, 100};
+    g.target = {100, 100}; // Reached
+    
+    // Disable chase to ensure fetch/wander
+    g.cursorChaseChance = 0;
+    g.attackMouseBias = 0;
+    
+    // Force fetch chance
+    g.memeFetchBias = 100;
+    g.noteFetchBias = 100;
+    
+    CursorState c; // empty
+    
+    g.Update(0.1, 0.0, 1920, 1080, c);
+    EXPECT_EQ(g.state, FETCHING);
+}
+
+TEST(Integration, Goose_ReturningItem) {
+    Goose g(5, "Test", 1920, 1080);
+    g.state = FETCHING;
+    g.pos = {100, 100};
+    g.target = {100, 100}; // Reached
+    g.forceItemFetch = 0; // Meme
+    
+    CursorState c;
+    
+    g.Update(0.1, 0.0, 1920, 1080, c);
+    
+    EXPECT_EQ(g.state, RETURNING);
+    EXPECT_NE(g.heldItem, nullptr);
+}
+
+TEST(Integration, Goose_DropItem) {
+    Goose g(6, "Test", 1920, 1080);
+    g.state = RETURNING;
+    g.pos = {100, 100};
+    g.target = {100, 100}; // Reached
+    g.heldItem = g_assets.GetRandomMeme();
+    
+    int initialDrops = g_droppedItems.size();
+    
+    CursorState c;
+    g.Update(0.1, 0.0, 1920, 1080, c);
+    
+    EXPECT_EQ(g.state, WANDER);
+    EXPECT_EQ(g.heldItem, nullptr);
+    EXPECT_EQ(g_droppedItems.size(), initialDrops + 1);
+}
+
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
 }
+
+// Mock dependencies for unit tests
+const std::string ASSET_ROOT_NAME = "Assets";
+std::filesystem::path ASSET_ROOT = "Assets";
+bool g_debugMode = false;
+
+AssetManager g_assets;
+
+void AssetManager::Init() {}
+AssetManager::~AssetManager() {}
+ItemData* AssetManager::GetRandomMeme() { 
+    ItemData* i = new ItemData();
+    i->type = ItemData::MEME;
+    i->w = 100; i->h = 100;
+    return i; 
+}
+ItemData* AssetManager::GetRandomText() { 
+    ItemData* i = new ItemData();
+    i->type = ItemData::TEXT;
+    i->w = 100; i->h = 100;
+    return i; 
+}
+ItemData* AssetManager::CreateTextItem(const std::string& text) {
+    ItemData* i = new ItemData();
+    i->type = ItemData::TEXT;
+    i->w = 100; i->h = 100;
+    return i;
+}
+void AssetManager::Honk() {}
+void AssetManager::Pat() {}
+void AssetManager::Bite() {}
+void AssetManager::MudSquish() {}
