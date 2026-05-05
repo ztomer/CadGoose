@@ -105,6 +105,14 @@ void LogWrite(const char* level, const char* fmt, ...) {
     NSMenuItem* canadaItem = [settingsMenu addItemWithTitle:@"Canada Goose Colors" action:@selector(toggleCanadaGoose:) keyEquivalent:@""];
     canadaItem.target = self;
     canadaItem.state = g_config.general.canadaGooseMode ? NSControlStateValueOn : NSControlStateValueOff;
+
+    [settingsMenu addItem:[NSMenuItem separatorItem]];
+
+    NSMenuItem* openConfigItem = [settingsMenu addItemWithTitle:@"Open Configuration" action:@selector(openConfiguration:) keyEquivalent:@""];
+    openConfigItem.target = self;
+
+    NSMenuItem* reloadConfigItem = [settingsMenu addItemWithTitle:@"Reload Configuration" action:@selector(reloadConfiguration:) keyEquivalent:@""];
+    reloadConfigItem.target = self;
     
     NSMenuItem* settingsItem = [menu addItemWithTitle:@"Settings" action:nil keyEquivalent:@""];
     settingsItem.submenu = settingsMenu;
@@ -116,6 +124,27 @@ void LogWrite(const char* level, const char* fmt, ...) {
     
     self.statusItem.menu = menu;
     DEBUG_LOG("Menubar created");
+}
+
+- (void)openConfiguration:(id)sender {
+    NSString* configPath = [NSString stringWithUTF8String:Config_GetPath().c_str()];
+    [[NSWorkspace sharedWorkspace] openURL:[NSURL fileURLWithPath:configPath]];
+    DEBUG_LOG("Opened configuration file: %s", Config_GetPath().c_str());
+}
+
+- (void)reloadConfiguration:(id)sender {
+    Config_InitRegistry();
+    DEBUG_LOG("Configuration reloaded from menubar");
+    // Update menu items states based on reloaded config
+    NSMenu* menu = self.statusItem.menu;
+    NSMenuItem* settingsItem = [menu itemWithTitle:@"Settings"];
+    if (settingsItem && settingsItem.submenu) {
+        NSMenu* settingsMenu = settingsItem.submenu;
+        [[settingsMenu itemWithTitle:@"Enable Mud Footprints"] setState:(g_config.mud.enabled ? NSControlStateValueOn : NSControlStateValueOff)];
+        [[settingsMenu itemWithTitle:@"Enable Cursor Chase"] setState:(g_config.cursor.chaseEnabled ? NSControlStateValueOn : NSControlStateValueOff)];
+        [[settingsMenu itemWithTitle:@"Enable Memes"] setState:(g_config.general.memesEnabled ? NSControlStateValueOn : NSControlStateValueOff)];
+        [[settingsMenu itemWithTitle:@"Canada Goose Colors"] setState:(g_config.general.canadaGooseMode ? NSControlStateValueOn : NSControlStateValueOff)];
+    }
 }
 
 - (void)showAbout:(id)sender {

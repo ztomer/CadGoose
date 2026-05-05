@@ -133,8 +133,40 @@ bool Config_SaveNow(std::string* errorOut) {
         return false;
     }
 
+    file << "# ==========================================\n";
+    file << "# CadGoose Configuration File\n";
+    file << "# ==========================================\n\n";
+
+    std::string currentSection = "";
     for (const auto& opt : g_configRegistry) {
-        file << opt.key << "=" << OptionValueToString(opt) << "\n";
+        if (currentSection != opt.section) {
+            currentSection = opt.section;
+            file << "\n[" << currentSection << "]\n";
+            if (currentSection == "Debug") {
+                file << "# Debugging options for developers.\n";
+            } else if (currentSection == "General") {
+                file << "# General settings like audio, memes, and visual scales.\n";
+            } else if (currentSection == "Movement") {
+                file << "# Behavior tuning for goose movement speed, friction, and distances.\n";
+            } else if (currentSection == "Physics") {
+                file << "# Physics and boundary settings for the goose dragging objects.\n";
+            } else if (currentSection == "Asset") {
+                file << "# Asset paths and placeholder dimensions.\n";
+            } else if (currentSection == "Render") {
+                file << "# Rendering options, sizes, and opacities.\n";
+            } else if (currentSection == "Color") {
+                file << "# Color settings (RGB values from 0.0 to 1.0).\n";
+            }
+        }
+        
+        file << "# Label: " << opt.label << "\n";
+        if (opt.type == CFG_INT || opt.type == CFG_FLOAT) {
+            file << "# Valid range: [" << opt.min << ", " << opt.max << "]\n";
+        } else if (opt.type == CFG_BOOL) {
+            file << "# Valid range: [0 (false), 1 (true)]\n";
+        }
+        
+        file << opt.key << "=" << OptionValueToString(opt) << "\n\n";
     }
 
     return true;
