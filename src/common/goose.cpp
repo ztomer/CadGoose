@@ -73,21 +73,15 @@ Vector2 Goose::GetBeakTipDevice() {
     Vector2 rawFwd = Vector2::FromAngleDegrees(dir);
     Vector2 fwd{ rawFwd.x * ISO_SCALE.x, rawFwd.y * ISO_SCALE.y };
 
-    // rig.neckHead is in WORLD coordinates (computed from pos in UpdateRig)
-    // We need DEVICE coordinates (with globalScale applied) for cursor movement
-    // Transform: WorldToDevice = pos + (worldPos - pos) * globalScale
-    Vector2 neckHeadDevice = WorldToDevice(pos, rig.neckHead, g_config.general.globalScale);
-
-    // Total beak offset in device space = (beakBaseOffset + beakLen) * globalScale
-    float totalBeakOffset = (g_config.rig.beakBaseOffset + g_config.rig.beakLen) * g_config.general.globalScale;
-    Vector2 beakTipDevice = neckHeadDevice + fwd * totalBeakOffset;
+    Vector2 neckHeadDev = WorldCoord::RigNeckHead(*this);
+    float totalBeakOffset = WorldCoord::Scale(g_config.rig.beakBaseOffset + g_config.rig.beakLen);
+    Vector2 beakTipDevice = neckHeadDev + fwd * totalBeakOffset;
 
     FILE* f = GetDebugLog();
     if (f && state == SNATCH_CURSOR) {
-        fprintf(f, "[BTDEV] g%d: dir=%.0f pos(%.0f,%.0f) neckWorld(%.0f,%.0f) neckDev(%.0f,%.0f) totalOff=%.1f btDev(%.0f,%.0f) gs=%.2f\n",
-                id, dir, pos.x, pos.y, rig.neckHead.x, rig.neckHead.y,
-                neckHeadDevice.x, neckHeadDevice.y, totalBeakOffset,
-                beakTipDevice.x, beakTipDevice.y, g_config.general.globalScale);
+        fprintf(f, "[BTDEV] g%d: dir=%.0f neck(%.0f,%.0f) btDev(%.0f,%.0f)\n",
+                id, dir, neckHeadDev.x, neckHeadDev.y,
+                beakTipDevice.x, beakTipDevice.y);
         fflush(f);
     }
 
@@ -95,6 +89,8 @@ Vector2 Goose::GetBeakTipDevice() {
 }
 
 void Goose::UpdateRig() {
+    // All rig positions are in WORLD coordinates (relative to pos)
+    // Consumers requiring DEVICE coordinates apply WorldToDevice() transform
     Vector2 rawFwd = Vector2::FromAngleDegrees(dir);
     Vector2 fwd{ rawFwd.x * ISO_SCALE.x, rawFwd.y * ISO_SCALE.y };
     Vector2 up{ 0, -1 };

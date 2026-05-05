@@ -100,11 +100,13 @@ static CursorAction handleChaseCursor(Goose& g, double time, const CursorState& 
 
     // BEHAVIOR.md line 228: Catch when beak tip reaches cursor
     Vector2 btPoint = g.GetBeakTipDevice();
-    float catchThreshold = std::max(22.0f * g_config.general.globalScale, 15.0f);
+    float catchThreshold = std::max(WorldCoord::Scale(22.0f), 15.0f);
     float dist = Vector2::Distance(btPoint, g.target);
     FILE* f = GetDebugLog();
+    Vector2 bodyDev = WorldCoord::RigBody(g);
+    Vector2 neckDev = WorldCoord::RigNeckHead(g);
     fprintf(f, "[CHASE] t=%.1f g%d: dir=%.0f body=(%.0f,%.0f) neck=(%.0f,%.0f) beak=(%.0f,%.0f) cursor=(%.0f,%.0f) dist=%.1f thr=%.1f grab=%d\n",
-            time, g.id, g.dir, g.pos.x, g.pos.y, g.rig.neckHead.x, g.rig.neckHead.y,
+            time, g.id, g.dir, bodyDev.x, bodyDev.y, neckDev.x, neckDev.y,
             btPoint.x, btPoint.y, g.target.x, g.target.y, dist, catchThreshold, g_cursorGrabberId);
     if (dist < catchThreshold) {
         if (g_cursorGrabberId == -1) {
@@ -132,9 +134,8 @@ static void tryPickupItem(Goose& g, double time, int w, int h) {
     Vector2 btPoint = g.GetBeakTipDevice();
 
     for (auto it = g_droppedItems.begin(); it != g_droppedItems.end(); ++it) {
-        Vector2 itemCenter = it->pos + Vector2{static_cast<float>(it->data->w * 0.5f) * g_config.general.globalScale,
-                                               static_cast<float>(it->data->h * 0.5f) * g_config.general.globalScale};
-        if (Vector2::Distance(btPoint, itemCenter) < g_config.spawn.itemPickupDistance * g_config.general.globalScale) {
+        Vector2 itemCenter = WorldCoord::ItemCenter(*it);
+        if (Vector2::Distance(btPoint, itemCenter) < WorldCoord::Scale(g_config.spawn.itemPickupDistance)) {
             if (!canPickupItem(time - it->timeDropped)) continue;
 
             g.heldItem = it->data;
@@ -194,14 +195,13 @@ static void handleWander(Goose& g, double time, const CursorState& cursor, int w
             if (g_config.general.memesEnabled && (rand() % 100) < g_config.item.heistChancePercent && !g_droppedItems.empty()) {
                 auto it = g_droppedItems.begin();
                 std::advance(it, rand() % g_droppedItems.size());
-                Vector2 centerDevice = it->pos + Vector2{static_cast<float>(it->data->w) * 0.5f * g_config.general.globalScale,
-                                                         static_cast<float>(it->data->h) * 0.5f * g_config.general.globalScale};
-                Vector2 gooseScreen = WorldToDevice(g.pos, g.pos, g_config.general.globalScale);
+                Vector2 centerDevice = WorldCoord::ItemCenter(*it);
+                Vector2 gooseScreen = WorldCoord::GoosePos(g);
                 Vector2 toCenter = centerDevice - gooseScreen;
                 float len = Vector2::Length(toCenter);
                 Vector2 approachDir = (len < 1e-4f) ? Vector2{0.0f, -1.0f} : Vector2{toCenter.x / len, toCenter.y / len};
-                float halfDim = std::max(it->data->w, it->data->h) * 0.5f * g_config.general.globalScale;
-                float margin = (float)g_config.item.heistApproachMargin * g_config.general.globalScale;
+                float halfDim = std::max(WorldCoord::DeviceSize(it->data->w).x, WorldCoord::DeviceSize(it->data->h).y) * 0.5f;
+                float margin = WorldCoord::Scale((float)g_config.item.heistApproachMargin);
                 Vector2 approachDevice = centerDevice - approachDir * (halfDim + margin);
                 g.target = approachDevice;
             }
@@ -249,15 +249,15 @@ static void handleReturning(Goose& g, double time, int w, int h) {
         drop.data = g.heldItem;
 
         Vector2 btPoint = g.GetBeakTipDevice();
-        drop.pos = btPoint - Vector2{static_cast<float>(g.heldItem->w * 0.5f) * g_config.general.globalScale,
-                                     static_cast<float>(g.heldItem->h * 0.5f) * g_config.general.globalScale};
+        drop.pos = btPoint - WorldCoord::ItemHalfSize(g.heldItem);
         drop.rotation = g.dragRot;
         drop.timeDropped = time;
 
         if (std::isfinite(drop.pos.x) && std::isfinite(drop.pos.y) && std::isfinite(drop.rotation)) {
             float minX = 0.0f, minY = 0.0f;
-            float maxX = static_cast<float>(w) - g.heldItem->w * g_config.general.globalScale;
-            float maxY = static_cast<float>(h) - g.heldItem->h * g_config.general.globalScale;
+            Vector2 itemHalf = WorldCoord::ItemHalfSize(g.heldItem);
+            float maxX = static_cast<float>(w) - itemHalf.x * 2.0f;
+            float maxY = static_cast<float>(h) - itemHalf.y * 2.0f;
 
             if (!g_config.cursor.multiMonitorEnabled) {
             }
@@ -319,8 +319,10 @@ CursorAction Goose::UpdateBehaviors(double dt, double time, int w, int h, const 
         int moveY = std::lround(btDevice.y);
 
         FILE* f = GetDebugLog();
+        Vector2 bodyDev = WorldCoord::RigBody(*this);
+        Vector2 neckDev = WorldCoord::RigNeckHead(*this);
         fprintf(f, "[SNATCH] t=%.1f g%d: dir=%.0f body=(%.0f,%.0f) neck=(%.0f,%.0f) beak=(%.0f,%.0f) moveTo=(%d,%d) cursor=(%.0f,%.0f)\n",
-                time, id, dir, pos.x, pos.y, rig.neckHead.x, rig.neckHead.y,
+                time, id, dir, bodyDev.x, bodyDev.y, neckDev.x, neckDev.y,
                 btDevice.x, btDevice.y, moveX, moveY, cursor.position.x, cursor.position.y);
 
         if (cursor.caps & CAP_MOVE_ABS) {
@@ -363,8 +365,8 @@ CursorAction Goose::UpdateBehaviors(double dt, double time, int w, int h, const 
         }
     }
 
-    float threshold = (state == RETURNING) ? std::max(g_config.spawn.targetReachedThresholdReturn * g_config.general.globalScale, g_config.spawn.targetReachedMinReturn)
-                                           : std::max(g_config.spawn.targetReachedThresholdNormal * g_config.general.globalScale, g_config.spawn.targetReachedMinNormal);
+    float threshold = (state == RETURNING) ? std::max(WorldCoord::Scale(g_config.spawn.targetReachedThresholdReturn), g_config.spawn.targetReachedMinReturn)
+                                           : std::max(WorldCoord::Scale(g_config.spawn.targetReachedThresholdNormal), g_config.spawn.targetReachedMinNormal);
 
     bool reached = isTargetReached(*this, threshold);
     FILE* f = GetDebugLog();
