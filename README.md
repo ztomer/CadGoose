@@ -4,7 +4,7 @@
 
 CadGoose is the more polite, publicly health-insured cousin of the Desktop Goose.
 
-He's still an asshole though.
+He's still a little bit belligerent.
 
 Cross-platform (Canadian) goose that runs on macOS (AppKit) and Linux (GTK4).
 
