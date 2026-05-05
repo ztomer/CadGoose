@@ -8,6 +8,8 @@ He's still a little bit belligerent.
 
 Cross-platform (Canadian) goose that runs on macOS (AppKit) and Linux (GTK4).
 
+Highly modified port of [CppGoose](https://github.com/jeffthepineapple/desktop-goose-linux-port)
+
 ---
 
 ## Platforms
