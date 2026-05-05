@@ -180,8 +180,14 @@ static void handleWander(Goose& g, double time, const CursorState& cursor, int w
         int fetchCount = 0;
         for (auto& other : g_geese) if (other.state == FETCHING) fetchCount++;
 
-        if (fetchCount < g_config.item.maxFetchGeese && (rand() % 100) < trigger) {
+        FILE* f = GetDebugLog();
+        int fetchRoll = rand() % 100;
+        fprintf(f, "[FETCH] t=%.1f g%d: trigger=%d roll=%d\n",
+                time, g.id, memeProb, noteProb, trigger, fetchCount, g_config.item.maxFetchGeese, fetchRoll);
+
+        if (fetchCount < g_config.item.maxFetchGeese && fetchRoll < trigger) {
             int total = memeProb + noteProb;
+            fprintf(f, "  -> FETCH\n", total);
             if (total <= 0) {
                 g.ForceFetch(rand() % 2, w, h);
             } else {
@@ -284,12 +290,13 @@ static void handleReturning(Goose& g, double time, int w, int h) {
 }
 
 static bool isTargetReached(Goose& g, float threshold) {
-    // goose.pos is already in device coordinates
-    float dist = Vector2::Distance(g.pos, g.target);
+    Vector2 posDev = WorldCoord::GoosePos(g);
+    float dist = Vector2::Distance(posDev, g.target);
 
     // Also check if goose has passed/overshot target (velocity pointing away from target)
-    Vector2 toTarget = g.target - g.pos;
-    float dot = Vector2::Length(toTarget) > 0.001f ? Dot(Vector2::Normalize(toTarget), Vector2::Normalize(g.vel)) : 0.0f;
+    Vector2 toTarget = g.target - posDev;
+    Vector2 velDev = g.vel * g_config.general.globalScale;
+    float dot = Vector2::Length(toTarget) > 0.001f ? Dot(Vector2::Normalize(toTarget), Vector2::Normalize(velDev)) : 0.0f;
 
     // If dot < 0, goose is moving away from target (overshot)
     // Use body distance + check for overshoot
@@ -310,7 +317,7 @@ CursorAction Goose::UpdateBehaviors(double dt, double time, int w, int h, const 
     if (state == SNATCH_CURSOR) {
         snatchAngle += snatchAngularSpeed * (float)dt;
 
-        // BEHAVIOR.md line 228: Cursor moved to beak tip every frame
+        Vector2 goosePosDev = WorldCoord::GoosePos(*this);
         Vector2 btDevice = GetBeakTipDevice();
         btDevice.x = std::clamp(btDevice.x, 0.0f, (float)std::max(0, w - 1));
         btDevice.y = std::clamp(btDevice.y, 0.0f, (float)std::max(0, h - 1));
@@ -319,14 +326,20 @@ CursorAction Goose::UpdateBehaviors(double dt, double time, int w, int h, const 
         int moveY = std::lround(btDevice.y);
 
         FILE* f = GetDebugLog();
-        Vector2 bodyDev = WorldCoord::RigBody(*this);
-        Vector2 neckDev = WorldCoord::RigNeckHead(*this);
-        fprintf(f, "[SNATCH] t=%.1f g%d: dir=%.0f body=(%.0f,%.0f) neck=(%.0f,%.0f) beak=(%.0f,%.0f) moveTo=(%d,%d) cursor=(%.0f,%.0f)\n",
-                time, id, dir, bodyDev.x, bodyDev.y, neckDev.x, neckDev.y,
-                btDevice.x, btDevice.y, moveX, moveY, cursor.position.x, cursor.position.y);
+        fprintf(f, "[SNATCH] t=%.1f g%d: posDev(%.0f,%.0f) vel(%.0f,%.0f) dir=%.0f snt=%.1f dur=%.1f\n",
+                time, id, goosePosDev.x, goosePosDev.y, vel.x, vel.y, dir,
+                time - snatchStartTime, snatchDuration);
+        fprintf(f, "  btDev(%.0f,%.0f) cursor(%.0f,%.0f) caps=%d\n",
+                btDevice.x, btDevice.y, cursor.position.x, cursor.position.y, cursor.caps);
+        fprintf(f, "  sfwd(%.2f,%.2f) radius=%.0f angle=%.2f angular=%.2f\n",
+                snatchFwd.x, snatchFwd.y, snatchRadius, snatchAngle, snatchAngularSpeed);
+        fprintf(f, "  offset(%.0f,%.0f) pull=%.0f\n",
+                snatchOffset.x, snatchOffset.y, snatchPullDistance);
 
+        Vector2 cursorAction{0, 0};
         if (cursor.caps & CAP_MOVE_ABS) {
-            return CursorAction::MoveAbs(moveX, moveY);
+            cursorAction = Vector2{(float)moveX, (float)moveY};
+            fprintf(f, "  -> MOVEABS to (%d,%d)\n", moveX, moveY);
         } else if (cursor.caps & CAP_MOVE_REL) {
             Vector2 delta = btDevice - cursor.position;
             float maxStep = g_config.snatch.tier3MaxStep * (float)dt;
@@ -334,21 +347,38 @@ CursorAction Goose::UpdateBehaviors(double dt, double time, int w, int h, const 
                 delta = Vector2::Normalize(delta) * maxStep;
             }
             if (std::abs(delta.x) >= g_config.snatch.tier3MinDelta || std::abs(delta.y) >= g_config.snatch.tier3MinDelta) {
-                return CursorAction::MoveRel((int)delta.x, (int)delta.y);
+                cursorAction = Vector2{delta.x, delta.y};
+                fprintf(f, "  -> MOVEREL delta(%.0f,%.0f)\n", delta.x, delta.y);
+            } else {
+                fprintf(f, "  -> MOVEREL skipped (delta too small)\n");
             }
         }
 
         Vector2 right{-snatchFwd.y, snatchFwd.x};
         float lateralBias = Clamp(snatchOffset.y, -snatchPullDistance * g_config.snatch.lateralBiasLimit, snatchPullDistance * g_config.snatch.lateralBiasLimit);
         float forwardBias = Clamp(snatchOffset.x * g_config.snatch.forwardBiasScale, snatchPullDistance * g_config.snatch.forwardBiasMin, snatchPullDistance * g_config.snatch.forwardBiasMax);
-        Vector2 endpoint = pos - snatchFwd * snatchPullDistance + right * lateralBias + snatchFwd * forwardBias;
-        endpoint += right * std::cos(snatchAngle) * snatchRadius + snatchFwd * std::sin(snatchAngle) * snatchRadius;
-        endpoint.x = std::clamp(endpoint.x, 0.0f, (float)std::max(0, w - 1));
-        endpoint.y = std::clamp(endpoint.y, 0.0f, (float)std::max(0, h - 1));
-        target = endpoint;
+        // Compute target in device space relative to ANCHOR (not current position)
+        Vector2 anchorDev = WorldCoord::ToDevice(snatchAnchor, *this);
+        Vector2 endpointDev = anchorDev - snatchFwd * WorldCoord::Scale(snatchPullDistance) + right * WorldCoord::Scale(lateralBias) + snatchFwd * WorldCoord::Scale(forwardBias);
+        endpointDev += right * WorldCoord::Scale(std::cos(snatchAngle) * snatchRadius) + snatchFwd * WorldCoord::Scale(std::sin(snatchAngle) * snatchRadius);
+        endpointDev.x = std::clamp(endpointDev.x, 0.0f, (float)std::max(0, w - 1));
+        endpointDev.y = std::clamp(endpointDev.y, 0.0f, (float)std::max(0, h - 1));
+        // Convert device offset to world offset using ANCHOR
+        target = snatchAnchor + (endpointDev - anchorDev);
+
+        fprintf(f, "  target=(%.0f,%.0f) distToTarget=%.1f\n", target.x, target.y, Vector2::Distance(pos, target));
 
         if (time - snatchStartTime > snatchDuration) {
+            fprintf(f, "  -> END SNATCH (timeout)\n");
             EndSnatch(time, w, h);
+        }
+        fflush(f);
+
+        // Return cursor action if any
+        if (cursor.caps & CAP_MOVE_ABS) {
+            return CursorAction::MoveAbs(moveX, moveY);
+        } else if (cursor.caps & CAP_MOVE_REL && Vector2::Length(cursorAction) > 0) {
+            return CursorAction::MoveRel((int)cursorAction.x, (int)cursorAction.y);
         }
         return {};
     }

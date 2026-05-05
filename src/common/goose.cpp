@@ -48,7 +48,7 @@ Goose::Goose(int id_, const std::string& name_, int screenW, int screenH)
     dir = (float)(rand() % (int)g_config.movement.initDirectionMax);
     currentSpeed = g_config.movement.baseWalkSpeed;
 
-    attackMouseBias = 100; // force cursor chase
+    attackMouseBias = 0; // start with no attack bias
     memeFetchBias = rand() % g_config.item.memeFetchBiasMax;
     noteFetchBias = rand() % g_config.item.noteFetchBiasMax;
 
@@ -214,6 +214,7 @@ CursorAction Goose::Update(double dt, double time, int w, int h, const CursorSta
 
     CursorAction action = UpdateBehaviors(dt, time, w, h, cursor);
 
+    // Physics uses world coordinates - target is now in world coordinates
     Vector2 toTarget = target - pos;
     float dist = Vector2::Length(toTarget);
 
