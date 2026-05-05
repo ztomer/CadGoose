@@ -234,6 +234,8 @@ CadGoose/
   src/
     common/                  # Shared game logic
       goose.cpp              Goose class: movement, animation, behavior
+      goose_behaviors.cpp    Goose behavior implementations
+      goose_physics.cpp      Goose physics and movement
       world.cpp              Global state containers (geese, items, footprints)
       config.cpp             INI-based config registry
       cursor_backend.cpp     Backend manager and selection
@@ -246,15 +248,17 @@ CadGoose/
         renderer.mm          NSView rendering
         cursor_backend.mm    CGEvent cursor control
         audio.mm             AVFoundation audio
-        assets.cpp           Asset loading
+        assets.mm            Asset loading
         command_socket.cpp   Unix socket IPC
       linux/                 # Linux (GTK4)
+        main.cpp             Entry point
         ui.cpp               Overlay drawing and tick loop
         hyprland.cpp         Hyprland IPC cursor backend
         wlroots_backend.cpp  wlroots virtual-pointer cursor backend
         x11_backend.cpp      X11/XTest cursor backend
         assets.cpp           SDL/GTK asset loading
         command_socket.cpp   GLib socket IPC
+        ram_tracker.cpp      Memory usage tracking
   include/
     goose_math.h             Shared vector and math helpers
     goose.h                  Goose class definition
@@ -263,9 +267,12 @@ CadGoose/
     ...
   Assets/
     Images/Memes/            PNG images geese can pick up and drop
-    Text/NotepadMessages/     Plain text files geese can carry as notes
+    Sound/NotEmbedded/       Sound effects loaded at runtime
+    Text/NotepadMessages/    Plain text files geese can carry as notes
+    Mods/                    Game modifications
   protocols/
     wlr-virtual-pointer-unstable-v1.xml
+  tests/                     Test suite
   CMakeLists.txt
   build.sh                   Build script
   run.sh                     Run script
