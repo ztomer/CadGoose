@@ -337,29 +337,13 @@ src/common/world.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/common/world.cpp.s
 .PHONY : src/common/world.cpp.s
 
-src/platform/macos/assets.o: src/platform/macos/assets.cpp.o
+src/platform/macos/assets.o: src/platform/macos/assets.mm.o
 .PHONY : src/platform/macos/assets.o
 
 # target to build an object file
-src/platform/macos/assets.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/platform/macos/assets.cpp.o
-.PHONY : src/platform/macos/assets.cpp.o
-
-src/platform/macos/assets.i: src/platform/macos/assets.cpp.i
-.PHONY : src/platform/macos/assets.i
-
-# target to preprocess a source file
-src/platform/macos/assets.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/platform/macos/assets.cpp.i
-.PHONY : src/platform/macos/assets.cpp.i
-
-src/platform/macos/assets.s: src/platform/macos/assets.cpp.s
-.PHONY : src/platform/macos/assets.s
-
-# target to generate assembly for a file
-src/platform/macos/assets.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/platform/macos/assets.cpp.s
-.PHONY : src/platform/macos/assets.cpp.s
+src/platform/macos/assets.mm.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/platform/macos/assets.mm.o
+.PHONY : src/platform/macos/assets.mm.o
 
 src/platform/macos/audio.o: src/platform/macos/audio.mm.o
 .PHONY : src/platform/macos/audio.o
@@ -485,8 +469,6 @@ help:
 	@echo "... src/common/world.i"
 	@echo "... src/common/world.s"
 	@echo "... src/platform/macos/assets.o"
-	@echo "... src/platform/macos/assets.i"
-	@echo "... src/platform/macos/assets.s"
 	@echo "... src/platform/macos/audio.o"
 	@echo "... src/platform/macos/command_socket.o"
 	@echo "... src/platform/macos/command_socket.i"

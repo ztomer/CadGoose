@@ -183,17 +183,14 @@ static void handleWander(Goose& g, double time, const CursorState& cursor, int w
         FILE* f = GetDebugLog();
         int fetchRoll = rand() % 100;
         fprintf(f, "[FETCH] t=%.1f g%d: trigger=%d roll=%d\n",
-                time, g.id, memeProb, noteProb, trigger, fetchCount, g_config.item.maxFetchGeese, fetchRoll);
+                time, g.id, trigger, fetchRoll);
 
         if (fetchCount < g_config.item.maxFetchGeese && fetchRoll < trigger) {
-            int total = memeProb + noteProb;
-            fprintf(f, "  -> FETCH\n", total);
-            if (total <= 0) {
-                g.ForceFetch(rand() % 2, w, h);
+            // 70% meme, 30% text when memes enabled
+            if (g_config.general.memesEnabled && rand() % 100 < 70) {
+                g.ForceFetch(0, w, h); // meme
             } else {
-                int pick = rand() % total;
-                if (pick < memeProb) g.ForceFetch(0, w, h);
-                else g.ForceFetch(1, w, h);
+                g.ForceFetch(1, w, h); // text
             }
         } else {
             g.PickNewTarget(w, h);

@@ -192,9 +192,13 @@ static void DrawLine(CGContextRef ctx, Vector2 a, Vector2 b, float width, float 
                 NSForegroundColorAttributeName: [NSColor blackColor]
             };
             [text drawInRect:NSMakeRect(x + 5, y + 5, item.data->w - 10, item.data->h - 10) withAttributes:attrs];
-        } else {
-            CGContextSetRGBFillColor(ctx, 0.8, 0.6, 0.8, 1.0);
-            CGContextFillRect(ctx, CGRectMake(x, y, item.data->w, item.data->h));
+        } else if (item.data->type == ItemData::MEME) {
+            if (item.data->image) {
+                CGContextDrawImage(ctx, CGRectMake(x, y, item.data->w, item.data->h), item.data->image);
+            } else {
+                CGContextSetRGBFillColor(ctx, 0.9, 0.7, 0.9, 1.0);
+                CGContextFillRect(ctx, CGRectMake(x, y, item.data->w, item.data->h));
+            }
         }
     }
 }

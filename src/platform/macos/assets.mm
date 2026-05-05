@@ -9,7 +9,7 @@
 #include <sstream>
 
 #if defined(__APPLE__)
-#include <CoreFoundation/CoreFoundation.h>
+#import <AppKit/AppKit.h>
 #endif
 
 namespace fs = std::filesystem;
@@ -70,11 +70,29 @@ ItemData* AssetManager::GetRandomMeme() {
     static std::random_device rd;
     static std::mt19937 gen(rd());
     std::uniform_int_distribution<> dis(0, (int)memePaths.size() - 1);
+    std::string path = memePaths[dis(gen)];
 
     ItemData* data = new ItemData();
     data->type = ItemData::MEME;
-    data->w = g_config.asset.memePlaceholderW;
-    data->h = g_config.asset.memePlaceholderH;
+    
+    NSString* nsPath = [NSString stringWithUTF8String:path.c_str()];
+    NSImage* img = [[NSImage alloc] initWithContentsOfFile:nsPath];
+    if (img) {
+        NSSize size = img.size;
+        data->w = (int)size.width;
+        data->h = (int)size.height;
+        CGImageRef cgImage = [img CGImageForProposedRect:NULL context:nil hints:nil];
+        if (cgImage) {
+            data->image = CGImageRetain(cgImage);
+        } else {
+            data->w = g_config.asset.memePlaceholderW;
+            data->h = g_config.asset.memePlaceholderH;
+        }
+    } else {
+        data->w = g_config.asset.memePlaceholderW;
+        data->h = g_config.asset.memePlaceholderH;
+    }
+    
     return data;
 }
 
