@@ -233,6 +233,11 @@ static void DrawLine(CGContextRef ctx, Vector2 a, Vector2 b, float width, float 
     float beakG = g_config.general.canadaGooseMode ? g_config.color.canadaBeak.g : g_config.color.beak.g;
     float beakB = g_config.general.canadaGooseMode ? g_config.color.canadaBeak.b : g_config.color.beak.b;
 
+    // Eye color - use Canada eye if enabled
+    float eyeR = g_config.general.canadaGooseMode ? g_config.color.canadaEye.r : g_config.color.eye.r;
+    float eyeG = g_config.general.canadaGooseMode ? g_config.color.canadaEye.g : g_config.color.eye.g;
+    float eyeB = g_config.general.canadaGooseMode ? g_config.color.canadaEye.b : g_config.color.eye.b;
+
     // shadow
     DrawEllipse(ctx, g->pos + Vector2{g_config.render.shadowOffsetX, g_config.render.shadowOffsetY},
                 g_config.render.shadowWidth / 2, g_config.render.shadowHeight / 2,
@@ -309,10 +314,10 @@ static void DrawLine(CGContextRef ctx, Vector2 a, Vector2 b, float width, float 
     Vector2 eyeCenter = g->rig.neckHead + up * (3.0f + eyeLift);
 
     if (back > 0.82f) {
-        DrawEllipse(ctx, eyeCenter, 2, 2, 0, 0, 0, 1.0f);
+        DrawEllipse(ctx, eyeCenter, 2, 2, eyeR, eyeG, eyeB, 1.0f);
     } else {
-        DrawEllipse(ctx, eyeCenter - side * eyeSep, 2, 2, 0, 0, 0, 1.0f);
-        DrawEllipse(ctx, eyeCenter + side * eyeSep, 2, 2, 0, 0, 0, 1.0f);
+        DrawEllipse(ctx, eyeCenter - side * eyeSep, 2, 2, eyeR, eyeG, eyeB, 1.0f);
+        DrawEllipse(ctx, eyeCenter + side * eyeSep, 2, 2, eyeR, eyeG, eyeB, 1.0f);
     }
 
     if (g->heldItem && !facingBack) {
