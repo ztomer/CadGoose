@@ -127,16 +127,18 @@ static void DrawLine(CGContextRef ctx, Vector2 a, Vector2 b, float width, float 
         g_cursorProvider->Execute(action);
     }
 
-    g_droppedItems.remove_if([&](DroppedItem& i) {
-        bool exp = i.isExpired(self.currentTime);
-        if (exp) delete i.data;
-        return exp;
-    });
+    if (self.tickCount % 60 == 0) {
+        g_droppedItems.remove_if([&](DroppedItem& i) {
+            bool exp = i.isExpired(self.currentTime);
+            if (exp) delete i.data;
+            return exp;
+        });
 
-    g_footprints.remove_if([&](Footprint& fp) {
-        float life = (fp.lifetime > 0.0f) ? fp.lifetime : g_config.mud.lifetime;
-        return (self.currentTime - fp.timeSpawned) > life;
-    });
+        g_footprints.remove_if([&](Footprint& fp) {
+            float life = (fp.lifetime > 0.0f) ? fp.lifetime : g_config.mud.lifetime;
+            return (self.currentTime - fp.timeSpawned) > life;
+        });
+    }
 
     if (self.currentTime > 120.0) {
         [self stopAnimation];

@@ -37,10 +37,10 @@ void LogWrite(const char* level, const char* fmt, ...) {
     struct tm* tm = localtime(&now);
     char timestamp[32];
     strftime(timestamp, sizeof(timestamp), "%H:%M:%S", tm);
-    
+
     va_list args;
     va_start(args, fmt);
-    
+
     if (g_logFile) {
         fprintf(g_logFile, "[%s] %s: ", timestamp, level);
         vfprintf(g_logFile, fmt, args);
@@ -50,7 +50,7 @@ void LogWrite(const char* level, const char* fmt, ...) {
     fprintf(stderr, "[%s] %s: ", timestamp, level);
     vfprintf(stderr, fmt, args);
     fprintf(stderr, "\n");
-    
+
     va_end(args);
 }
 
@@ -68,28 +68,28 @@ void LogWrite(const char* level, const char* fmt, ...) {
 
 - (void)setupMenubar {
     self.statusItem = [[NSStatusBar systemStatusBar] statusItemWithLength:NSSquareStatusItemLength];
-    
+
     self.statusItem.button.title = g_config.general.canadaGooseMode ? @"\U0001F341" : @"\U0001FABF";
-    
+
     NSMenu* menu = [[NSMenu alloc] init];
-    
+
     [menu addItemWithTitle:@"About CadGoose" action:@selector(showAbout:) keyEquivalent:@""];
     [menu addItem:[NSMenuItem separatorItem]];
-    
+
     NSMenuItem* spawnItem = [menu addItemWithTitle:@"Spawn Goose" action:@selector(spawnGoose:) keyEquivalent:@"g"];
     spawnItem.keyEquivalentModifierMask = NSEventModifierFlagCommand;
-    
+
     NSMenuItem* clearItem = [menu addItemWithTitle:@"Clear All Geese" action:@selector(clearGeese:) keyEquivalent:@""];
-    
+
     [menu addItem:[NSMenuItem separatorItem]];
-    
+
     NSMenuItem* honkItem = [menu addItemWithTitle:@"Test Honk" action:@selector(testHonk:) keyEquivalent:@"h"];
     honkItem.keyEquivalentModifierMask = NSEventModifierFlagCommand;
-    
+
     [menu addItem:[NSMenuItem separatorItem]];
-    
+
     NSMenu* settingsMenu = [[NSMenu alloc] initWithTitle:@"Settings"];
-    
+
     NSMenuItem* mudItem = [settingsMenu addItemWithTitle:@"Enable Mud Footprints" action:@selector(toggleMud:) keyEquivalent:@""];
     mudItem.target = self;
     mudItem.state = g_config.mud.enabled ? NSControlStateValueOn : NSControlStateValueOff;
@@ -101,7 +101,7 @@ void LogWrite(const char* level, const char* fmt, ...) {
     NSMenuItem* memeItem = [settingsMenu addItemWithTitle:@"Enable Memes" action:@selector(toggleMemes:) keyEquivalent:@""];
     memeItem.target = self;
     memeItem.state = g_config.general.memesEnabled ? NSControlStateValueOn : NSControlStateValueOff;
-    
+
     NSMenuItem* canadaItem = [settingsMenu addItemWithTitle:@"Canada Goose Colors" action:@selector(toggleCanadaGoose:) keyEquivalent:@""];
     canadaItem.target = self;
     canadaItem.state = g_config.general.canadaGooseMode ? NSControlStateValueOn : NSControlStateValueOff;
@@ -113,15 +113,15 @@ void LogWrite(const char* level, const char* fmt, ...) {
 
     NSMenuItem* reloadConfigItem = [settingsMenu addItemWithTitle:@"Reload Configuration" action:@selector(reloadConfiguration:) keyEquivalent:@""];
     reloadConfigItem.target = self;
-    
+
     NSMenuItem* settingsItem = [menu addItemWithTitle:@"Settings" action:nil keyEquivalent:@""];
     settingsItem.submenu = settingsMenu;
-    
+
     [menu addItem:[NSMenuItem separatorItem]];
-    
+
     NSMenuItem* quitItem = [menu addItemWithTitle:@"Quit" action:@selector(quitApp:) keyEquivalent:@"q"];
     quitItem.keyEquivalentModifierMask = NSEventModifierFlagCommand;
-    
+
     self.statusItem.menu = menu;
     DEBUG_LOG("Menubar created");
 }
@@ -205,27 +205,27 @@ void LogWrite(const char* level, const char* fmt, ...) {
 
 - (void)applicationDidFinishLaunching:(NSNotification*)aNotification {
     DEBUG_LOG("App launching...");
-    
+
     Config_InitRegistry();
     DEBUG_LOG("Config init done");
-    
+
     g_assets.Init();
     DEBUG_LOG("Assets init done");
-    
+
     g_backendManager.Init();
     DEBUG_LOG("Backend: %s", g_backendManager.GetActiveBackend()->Name().c_str());
 
     DEBUG_LOG("Creating windows for %lu screens", (unsigned long)[NSScreen screens].count);
-    
+
     WindowManager* wm = [WindowManager shared];
     DEBUG_LOG("WindowManager instance: %p", wm);
-    
+
     [wm createWindowsForAllScreens];
     DEBUG_LOG("createWindowsForAllScreens completed");
-    
+
     NSArray* windows = [wm windows];
     DEBUG_LOG("Windows created: %lu", (unsigned long)windows.count);
-    
+
     if (windows.count == 0) {
         LOG("ERROR: No windows created!");
     }
@@ -236,20 +236,20 @@ void LogWrite(const char* level, const char* fmt, ...) {
         DEBUG_LOG("  level: %ld", (long)window.level);
         DEBUG_LOG("  opaque: %d", window.opaque);
         DEBUG_LOG("  ignoresMouseEvents: %d", window.ignoresMouseEvents);
-        
+
         GooseView* view = window.gooseView;
         DEBUG_LOG("  gooseView: %p", view);
         DEBUG_LOG("  gooseView.frame: %s", NSStringFromRect(view.frame).UTF8String);
-        
+
         [view startAnimation];
         DEBUG_LOG("  startAnimation done");
-        
+
         [window orderFront:nil];
         DEBUG_LOG("  orderFront done");
-        
+
         DEBUG_LOG("Window setup complete for window %p", window);
     }
-    
+
     LOG("Window setup complete, count: %lu", (unsigned long)windows.count);
 
     std::string error;
@@ -263,7 +263,7 @@ void LogWrite(const char* level, const char* fmt, ...) {
 
     AppActions_EnsureInitialGoose();
     DEBUG_LOG("Geese spawned: %zu", g_geese.size());
-    
+
     for (auto& g : g_geese) {
         DEBUG_LOG("Goose %d at %.1f,%.1f", g.id, g.pos.x, g.pos.y);
     }
@@ -396,7 +396,7 @@ int main(int argc, char** argv) {
         fprintf(stderr, "[DEBUG] argv[%d]=%s\n", i, argv[i]);
     }
     fflush(stderr);
-    
+
     char* runArgv[] = { argv[0], nullptr };
     int runArgc = 1;
 
@@ -406,21 +406,21 @@ int main(int argc, char** argv) {
 
     @autoreleasepool {
         NSApplication* app = [NSApplication sharedApplication];
-        
+
         // Create menu bar so app is considered "active"
         [NSApp setMainMenu:[[NSMenu alloc] init]];
-        
+
         fprintf(stderr, "[DEBUG] Got NSApplication: %p, running=%d\n", (__bridge void*)app, [app isRunning]);
-        
+
         AppDelegate* delegate = [[AppDelegate alloc] init];
         app.delegate = delegate;
-        
+
         [app finishLaunching];
         fprintf(stderr, "[DEBUG] finishLaunching done, running=%d\n", [app isRunning]);
-        
+
         [[NSRunningApplication currentApplication] activateWithOptions:0];
         fprintf(stderr, "[DEBUG] activated, running=%d\n", [app isRunning]);
-        
+
         DEBUG_LOG("Starting run loop...");
         [app run];
         DEBUG_LOG("Run loop exited");

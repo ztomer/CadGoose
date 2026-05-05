@@ -148,6 +148,7 @@ src/common/app_actions.o: src/common/app_actions.cpp.o
 # target to build an object file
 src/common/app_actions.cpp.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/common/app_actions.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/src/common/app_actions.cpp.o
 .PHONY : src/common/app_actions.cpp.o
 
 src/common/app_actions.i: src/common/app_actions.cpp.i
@@ -156,6 +157,7 @@ src/common/app_actions.i: src/common/app_actions.cpp.i
 # target to preprocess a source file
 src/common/app_actions.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/common/app_actions.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/src/common/app_actions.cpp.i
 .PHONY : src/common/app_actions.cpp.i
 
 src/common/app_actions.s: src/common/app_actions.cpp.s
@@ -164,6 +166,7 @@ src/common/app_actions.s: src/common/app_actions.cpp.s
 # target to generate assembly for a file
 src/common/app_actions.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/common/app_actions.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/src/common/app_actions.cpp.s
 .PHONY : src/common/app_actions.cpp.s
 
 src/common/config.o: src/common/config.cpp.o
@@ -172,6 +175,7 @@ src/common/config.o: src/common/config.cpp.o
 # target to build an object file
 src/common/config.cpp.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/common/config.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/src/common/config.cpp.o
 .PHONY : src/common/config.cpp.o
 
 src/common/config.i: src/common/config.cpp.i
@@ -180,6 +184,7 @@ src/common/config.i: src/common/config.cpp.i
 # target to preprocess a source file
 src/common/config.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/common/config.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/src/common/config.cpp.i
 .PHONY : src/common/config.cpp.i
 
 src/common/config.s: src/common/config.cpp.s
@@ -188,6 +193,7 @@ src/common/config.s: src/common/config.cpp.s
 # target to generate assembly for a file
 src/common/config.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/common/config.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/src/common/config.cpp.s
 .PHONY : src/common/config.cpp.s
 
 src/common/cursor_backend.o: src/common/cursor_backend.cpp.o
@@ -223,6 +229,7 @@ src/common/goose.o: src/common/goose.cpp.o
 # target to build an object file
 src/common/goose.cpp.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/common/goose.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/src/common/goose.cpp.o
 .PHONY : src/common/goose.cpp.o
 
 src/common/goose.i: src/common/goose.cpp.i
@@ -231,6 +238,7 @@ src/common/goose.i: src/common/goose.cpp.i
 # target to preprocess a source file
 src/common/goose.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/common/goose.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/src/common/goose.cpp.i
 .PHONY : src/common/goose.cpp.i
 
 src/common/goose.s: src/common/goose.cpp.s
@@ -239,6 +247,7 @@ src/common/goose.s: src/common/goose.cpp.s
 # target to generate assembly for a file
 src/common/goose.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/common/goose.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/src/common/goose.cpp.s
 .PHONY : src/common/goose.cpp.s
 
 src/common/goose_behaviors.o: src/common/goose_behaviors.cpp.o
@@ -247,6 +256,7 @@ src/common/goose_behaviors.o: src/common/goose_behaviors.cpp.o
 # target to build an object file
 src/common/goose_behaviors.cpp.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/common/goose_behaviors.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/src/common/goose_behaviors.cpp.o
 .PHONY : src/common/goose_behaviors.cpp.o
 
 src/common/goose_behaviors.i: src/common/goose_behaviors.cpp.i
@@ -255,6 +265,7 @@ src/common/goose_behaviors.i: src/common/goose_behaviors.cpp.i
 # target to preprocess a source file
 src/common/goose_behaviors.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/common/goose_behaviors.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/src/common/goose_behaviors.cpp.i
 .PHONY : src/common/goose_behaviors.cpp.i
 
 src/common/goose_behaviors.s: src/common/goose_behaviors.cpp.s
@@ -263,6 +274,7 @@ src/common/goose_behaviors.s: src/common/goose_behaviors.cpp.s
 # target to generate assembly for a file
 src/common/goose_behaviors.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/common/goose_behaviors.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/src/common/goose_behaviors.cpp.s
 .PHONY : src/common/goose_behaviors.cpp.s
 
 src/common/goose_physics.o: src/common/goose_physics.cpp.o
@@ -271,6 +283,7 @@ src/common/goose_physics.o: src/common/goose_physics.cpp.o
 # target to build an object file
 src/common/goose_physics.cpp.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/common/goose_physics.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/src/common/goose_physics.cpp.o
 .PHONY : src/common/goose_physics.cpp.o
 
 src/common/goose_physics.i: src/common/goose_physics.cpp.i
@@ -279,6 +292,7 @@ src/common/goose_physics.i: src/common/goose_physics.cpp.i
 # target to preprocess a source file
 src/common/goose_physics.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/common/goose_physics.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/src/common/goose_physics.cpp.i
 .PHONY : src/common/goose_physics.cpp.i
 
 src/common/goose_physics.s: src/common/goose_physics.cpp.s
@@ -287,6 +301,7 @@ src/common/goose_physics.s: src/common/goose_physics.cpp.s
 # target to generate assembly for a file
 src/common/goose_physics.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/common/goose_physics.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/src/common/goose_physics.cpp.s
 .PHONY : src/common/goose_physics.cpp.s
 
 src/common/items.o: src/common/items.cpp.o
@@ -295,6 +310,7 @@ src/common/items.o: src/common/items.cpp.o
 # target to build an object file
 src/common/items.cpp.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/common/items.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/src/common/items.cpp.o
 .PHONY : src/common/items.cpp.o
 
 src/common/items.i: src/common/items.cpp.i
@@ -303,6 +319,7 @@ src/common/items.i: src/common/items.cpp.i
 # target to preprocess a source file
 src/common/items.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/common/items.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/src/common/items.cpp.i
 .PHONY : src/common/items.cpp.i
 
 src/common/items.s: src/common/items.cpp.s
@@ -311,6 +328,7 @@ src/common/items.s: src/common/items.cpp.s
 # target to generate assembly for a file
 src/common/items.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/common/items.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/src/common/items.cpp.s
 .PHONY : src/common/items.cpp.s
 
 src/common/world.o: src/common/world.cpp.o
@@ -319,6 +337,7 @@ src/common/world.o: src/common/world.cpp.o
 # target to build an object file
 src/common/world.cpp.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/common/world.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/src/common/world.cpp.o
 .PHONY : src/common/world.cpp.o
 
 src/common/world.i: src/common/world.cpp.i
@@ -327,6 +346,7 @@ src/common/world.i: src/common/world.cpp.i
 # target to preprocess a source file
 src/common/world.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/common/world.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/src/common/world.cpp.i
 .PHONY : src/common/world.cpp.i
 
 src/common/world.s: src/common/world.cpp.s
@@ -335,6 +355,7 @@ src/common/world.s: src/common/world.cpp.s
 # target to generate assembly for a file
 src/common/world.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/common/world.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/src/common/world.cpp.s
 .PHONY : src/common/world.cpp.s
 
 src/platform/macos/assets.o: src/platform/macos/assets.mm.o
@@ -400,6 +421,7 @@ src/platform/macos/renderer.o: src/platform/macos/renderer.mm.o
 # target to build an object file
 src/platform/macos/renderer.mm.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/platform/macos/renderer.mm.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/src/platform/macos/renderer.mm.o
 .PHONY : src/platform/macos/renderer.mm.o
 
 src/platform/macos/window.o: src/platform/macos/window.mm.o
@@ -409,6 +431,14 @@ src/platform/macos/window.o: src/platform/macos/window.mm.o
 src/platform/macos/window.mm.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/platform/macos/window.mm.o
 .PHONY : src/platform/macos/window.mm.o
+
+tests/platform/macos/test_renderer.o: tests/platform/macos/test_renderer.mm.o
+.PHONY : tests/platform/macos/test_renderer.o
+
+# target to build an object file
+tests/platform/macos/test_renderer.mm.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/tests/platform/macos/test_renderer.mm.o
+.PHONY : tests/platform/macos/test_renderer.mm.o
 
 tests/test_main.o: tests/test_main.cpp.o
 .PHONY : tests/test_main.o
@@ -477,6 +507,7 @@ help:
 	@echo "... src/platform/macos/main.o"
 	@echo "... src/platform/macos/renderer.o"
 	@echo "... src/platform/macos/window.o"
+	@echo "... tests/platform/macos/test_renderer.o"
 	@echo "... tests/test_main.o"
 	@echo "... tests/test_main.i"
 	@echo "... tests/test_main.s"
