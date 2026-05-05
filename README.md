@@ -1,6 +1,6 @@
 # CadGoose
 
-![alt text](image-2.png)
+![alt text](assets/Images/OtherGfx/CadGoose.png)
 
 CadGoose is the more polite, publicly health-insured cousin of the Desktop Goose.
 
