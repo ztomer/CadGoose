@@ -28,6 +28,7 @@ struct GeneralConfig {
     float globalScale = 1.0f;
     bool audioEnabled = true;
     bool memesEnabled = true;
+    bool canadaGooseMode = false;
 };
 
 struct ScreenConfig {
@@ -265,6 +266,12 @@ struct ColorConfig {
     ColorRGB footprint = {0.3f, 0.3f, 0.3f};
     float footprintAlphaMultiplier = 0.6f;
     ColorRGB droppedItem = {0.5f, 0.5f, 0.5f};
+    // Canada Goose colors
+    ColorRGB canadaHead = {0.05f, 0.05f, 0.05f};
+    ColorRGB canadaNeck = {0.05f, 0.05f, 0.05f};
+    ColorRGB canadaBody = {0.35f, 0.28f, 0.22f};
+    ColorRGB canadaOutline = {0.15f, 0.12f, 0.1f};
+    ColorRGB canadaBeak = {0.0f, 0.0f, 0.0f};
 };
 
 struct Config {

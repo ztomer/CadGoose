@@ -102,6 +102,10 @@ void LogWrite(const char* level, const char* fmt, ...) {
     memeItem.target = self;
     memeItem.state = g_config.general.memesEnabled ? NSControlStateValueOn : NSControlStateValueOff;
     
+    NSMenuItem* canadaItem = [settingsMenu addItemWithTitle:@"Canada Goose Colors" action:@selector(toggleCanadaGoose:) keyEquivalent:@""];
+    canadaItem.target = self;
+    canadaItem.state = g_config.general.canadaGooseMode ? NSControlStateValueOn : NSControlStateValueOff;
+    
     NSMenuItem* settingsItem = [menu addItemWithTitle:@"Settings" action:nil keyEquivalent:@""];
     settingsItem.submenu = settingsMenu;
     
@@ -156,6 +160,13 @@ void LogWrite(const char* level, const char* fmt, ...) {
     NSMenuItem* item = (NSMenuItem*)sender;
     item.state = g_config.general.memesEnabled ? NSControlStateValueOn : NSControlStateValueOff;
     DEBUG_LOG("Memes enabled: %d", g_config.general.memesEnabled);
+}
+
+- (void)toggleCanadaGoose:(id)sender {
+    g_config.general.canadaGooseMode = !g_config.general.canadaGooseMode;
+    NSMenuItem* item = (NSMenuItem*)sender;
+    item.state = g_config.general.canadaGooseMode ? NSControlStateValueOn : NSControlStateValueOff;
+    DEBUG_LOG("Canada Goose mode: %d", g_config.general.canadaGooseMode);
 }
 
 - (void)quitApp:(id)sender {

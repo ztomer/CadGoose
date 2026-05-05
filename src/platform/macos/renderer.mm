@@ -228,6 +228,11 @@ static void DrawLine(CGContextRef ctx, Vector2 a, Vector2 b, float width, float 
         [self drawHeldItem:g inContext:ctx];
     }
 
+    // Beak color - use Canada beak if enabled
+    float beakR = g_config.general.canadaGooseMode ? g_config.color.canadaBeak.r : g_config.color.beak.r;
+    float beakG = g_config.general.canadaGooseMode ? g_config.color.canadaBeak.g : g_config.color.beak.g;
+    float beakB = g_config.general.canadaGooseMode ? g_config.color.canadaBeak.b : g_config.color.beak.b;
+
     // shadow
     DrawEllipse(ctx, g->pos + Vector2{g_config.render.shadowOffsetX, g_config.render.shadowOffsetY},
                 g_config.render.shadowWidth / 2, g_config.render.shadowHeight / 2,
@@ -235,9 +240,9 @@ static void DrawLine(CGContextRef ctx, Vector2 a, Vector2 b, float width, float 
 
     // feet
     DrawEllipse(ctx, g->rig.lFoot.currentPos, g_config.render.footSize / 2, g_config.render.footSize / 2,
-                g_config.color.beak.r, g_config.color.beak.g, g_config.color.beak.b, 1.0f);
+                beakR, beakG, beakB, 1.0f);
     DrawEllipse(ctx, g->rig.rFoot.currentPos, g_config.render.footSize / 2, g_config.render.footSize / 2,
-                g_config.color.beak.r, g_config.color.beak.g, g_config.color.beak.b, 1.0f);
+                beakR, beakG, beakB, 1.0f);
 
     // body segments - compute front/back points along fwd axis
     Vector2 bodyFront = g->rig.body + fwd * 11.0f;
@@ -245,14 +250,33 @@ static void DrawLine(CGContextRef ctx, Vector2 a, Vector2 b, float width, float 
     Vector2 underFront = g->rig.underbody + fwd * 7.0f;
     Vector2 underBack  = g->rig.underbody - fwd * 7.0f;
 
-    const float OUTLINE[] = {0.82f, 0.82f, 0.82f};
+    // Colors - use Canada Goose colors if enabled
+    float bodyR, bodyG, bodyB;
+    float neckR, neckG, neckB;
+    float headR, headG, headB;
+    float outlineR, outlineG, outlineB;
+    if (g_config.general.canadaGooseMode) {
+        // Canada Goose: black head/neck, brownish body, tan breast
+        headR = g_config.color.canadaHead.r; headG = g_config.color.canadaHead.g; headB = g_config.color.canadaHead.b; // Black head
+        neckR = g_config.color.canadaNeck.r; neckG = g_config.color.canadaNeck.g; neckB = g_config.color.canadaNeck.b; // Solid black neck
+        bodyR = g_config.color.canadaBody.r; bodyG = g_config.color.canadaBody.g; bodyB = g_config.color.canadaBody.b; // Brownish-grey body
+        outlineR = g_config.color.canadaOutline.r; outlineG = g_config.color.canadaOutline.g; outlineB = g_config.color.canadaOutline.b; // Dark outline
+    } else {
+        // Default: white/light gray
+        bodyR = g_config.color.goose.r;
+        bodyG = g_config.color.goose.g;
+        bodyB = g_config.color.goose.b;
+        neckR = bodyR; neckG = bodyG; neckB = bodyB;
+        headR = bodyR; headG = bodyG; headB = bodyB;
+        outlineR = 0.82f; outlineG = 0.82f; outlineB = 0.82f;
+    }
 
     // outlines
-    DrawLine(ctx, bodyFront, bodyBack, 24, OUTLINE[0], OUTLINE[1], OUTLINE[2], 1.0f);
-    DrawLine(ctx, g->rig.neckBase, g->rig.neckHead, 15, OUTLINE[0], OUTLINE[1], OUTLINE[2], 1.0f);
-    DrawLine(ctx, g->rig.neckHead, g->rig.head1, 17, OUTLINE[0], OUTLINE[1], OUTLINE[2], 1.0f);
-    DrawLine(ctx, g->rig.head1, g->rig.head2, 12, OUTLINE[0], OUTLINE[1], OUTLINE[2], 1.0f);
-    DrawLine(ctx, underFront, underBack, 15, OUTLINE[0], OUTLINE[1], OUTLINE[2], 1.0f);
+    DrawLine(ctx, bodyFront, bodyBack, 24, outlineR, outlineG, outlineB, 1.0f);
+    DrawLine(ctx, g->rig.neckBase, g->rig.neckHead, 15, outlineR, outlineG, outlineB, 1.0f);
+    DrawLine(ctx, g->rig.neckHead, g->rig.head1, 17, outlineR, outlineG, outlineB, 1.0f);
+    DrawLine(ctx, g->rig.head1, g->rig.head2, 12, outlineR, outlineG, outlineB, 1.0f);
+    DrawLine(ctx, underFront, underBack, 15, outlineR, outlineG, outlineB, 1.0f);
 
     // body squash when facing away
     CGContextSaveGState(ctx);
@@ -261,17 +285,17 @@ static void DrawLine(CGContextRef ctx, Vector2 a, Vector2 b, float width, float 
     CGContextScaleCTM(ctx, 1.0f, squash);
     CGContextTranslateCTM(ctx, -g->rig.body.x, -g->rig.body.y);
 
-    // fill
-    DrawLine(ctx, bodyFront, bodyBack, 22, g_config.color.goose.r, g_config.color.goose.g, g_config.color.goose.b, 1.0f);
-    DrawLine(ctx, g->rig.neckBase, g->rig.neckHead, 13, g_config.color.goose.r, g_config.color.goose.g, g_config.color.goose.b, 1.0f);
-    DrawLine(ctx, g->rig.neckHead, g->rig.head1, 15, g_config.color.goose.r, g_config.color.goose.g, g_config.color.goose.b, 1.0f);
-    DrawLine(ctx, g->rig.head1, g->rig.head2, 10, g_config.color.goose.r, g_config.color.goose.g, g_config.color.goose.b, 1.0f);
+    // fill - body, neck, head1, head2
+    DrawLine(ctx, bodyFront, bodyBack, 22, bodyR, bodyG, bodyB, 1.0f);
+    DrawLine(ctx, g->rig.neckBase, g->rig.neckHead, 13, neckR, neckG, neckB, 1.0f);
+    DrawLine(ctx, g->rig.neckHead, g->rig.head1, 15, headR, headG, headB, 1.0f);
+    DrawLine(ctx, g->rig.head1, g->rig.head2, 10, headR, headG, headB, 1.0f);
 
     // beak
     float beakW = std::min(g_config.render.beakWidth, g_config.render.beakMaxWidth);
     Vector2 beakBase = g->rig.neckHead + fwd * g_config.rig.beakBaseOffset;
     Vector2 beakTip = beakBase + fwd * g_config.rig.beakLen;
-    DrawLine(ctx, beakBase, beakTip, beakW, g_config.color.beak.r, g_config.color.beak.g, g_config.color.beak.b, 1.0f);
+    DrawLine(ctx, beakBase, beakTip, beakW, beakR, beakG, beakB, 1.0f);
 
     CGContextRestoreGState(ctx);
 
