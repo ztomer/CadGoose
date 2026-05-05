@@ -69,7 +69,7 @@ void LogWrite(const char* level, const char* fmt, ...) {
 - (void)setupMenubar {
     self.statusItem = [[NSStatusBar systemStatusBar] statusItemWithLength:NSSquareStatusItemLength];
     
-    self.statusItem.button.title = @"🪿";
+    self.statusItem.button.title = g_config.general.canadaGooseMode ? @"\U0001F341" : @"\U0001FABF";
     
     NSMenu* menu = [[NSMenu alloc] init];
     
@@ -166,6 +166,7 @@ void LogWrite(const char* level, const char* fmt, ...) {
     g_config.general.canadaGooseMode = !g_config.general.canadaGooseMode;
     NSMenuItem* item = (NSMenuItem*)sender;
     item.state = g_config.general.canadaGooseMode ? NSControlStateValueOn : NSControlStateValueOff;
+    self.statusItem.button.title = g_config.general.canadaGooseMode ? @"\U0001F341" : @"\U0001FABF";
     DEBUG_LOG("Canada Goose mode: %d", g_config.general.canadaGooseMode);
 }
 
