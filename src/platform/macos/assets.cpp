@@ -5,6 +5,8 @@
 #include <iostream>
 #include <random>
 #include <filesystem>
+#include <fstream>
+#include <sstream>
 
 #if defined(__APPLE__)
 #include <CoreFoundation/CoreFoundation.h>
@@ -81,12 +83,22 @@ ItemData* AssetManager::GetRandomText() {
     static std::random_device rd;
     static std::mt19937 gen(rd());
     std::uniform_int_distribution<> dis(0, (int)textPaths.size() - 1);
+    std::string path = textPaths[dis(gen)];
 
     ItemData* data = new ItemData();
     data->type = ItemData::TEXT;
     data->w = g_config.asset.textPlaceholderW;
     data->h = g_config.asset.textPlaceholderH;
-    data->textContent = std::make_shared<std::string>("Sample text");
+    
+    std::ifstream file(path);
+    if (file.is_open()) {
+        std::stringstream buffer;
+        buffer << file.rdbuf();
+        data->textContent = std::make_shared<std::string>(buffer.str());
+    } else {
+        data->textContent = std::make_shared<std::string>("Note");
+    }
+    
     return data;
 }
 

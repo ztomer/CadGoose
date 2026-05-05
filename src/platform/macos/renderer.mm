@@ -153,15 +153,15 @@ static void DrawLine(CGContextRef ctx, Vector2 a, Vector2 b, float width, float 
 
     CGContextClearRect(ctx, self.bounds);
 
+    [self drawFootprints:ctx];
+    [self drawDroppedItems:ctx];
+    
+    // Flip Y for goose only
     CGContextSaveGState(ctx);
     CGContextTranslateCTM(ctx, 0, self.bounds.size.height);
     CGContextScaleCTM(ctx, 1.0, -1.0);
-
-    [self drawFootprints:ctx];
-    [self drawDroppedItems:ctx];
     [self drawGeese:ctx];
     [self drawDebugOverlay:ctx];
-
     CGContextRestoreGState(ctx);
 }
 
@@ -179,8 +179,23 @@ static void DrawLine(CGContextRef ctx, Vector2 a, Vector2 b, float width, float 
 
 - (void)drawDroppedItems:(CGContextRef)ctx {
     for (const auto& item : g_droppedItems) {
-        CGContextSetRGBFillColor(ctx, g_config.color.droppedItem.r, g_config.color.droppedItem.g, g_config.color.droppedItem.b, 0.5);
-        CGContextFillEllipseInRect(ctx, CGRectMake(item.pos.x - g_config.render.droppedItemSize/2, item.pos.y - g_config.render.droppedItemSize/2, g_config.render.droppedItemSize, g_config.render.droppedItemSize));
+        float x = item.pos.x - item.data->w / 2.0f;
+        float y = item.pos.y - item.data->h / 2.0f;
+        
+        if (item.data->type == ItemData::TEXT) {
+            CGContextSetRGBFillColor(ctx, 1.0, 1.0, 0.8, 1.0);
+            CGContextFillRect(ctx, CGRectMake(x, y, item.data->w, item.data->h));
+            
+            NSString* text = [NSString stringWithUTF8String:item.data->Text().c_str()];
+            NSDictionary* attrs = @{
+                NSFontAttributeName: [NSFont systemFontOfSize:14],
+                NSForegroundColorAttributeName: [NSColor blackColor]
+            };
+            [text drawInRect:NSMakeRect(x + 5, y + 5, item.data->w - 10, item.data->h - 10) withAttributes:attrs];
+        } else {
+            CGContextSetRGBFillColor(ctx, 0.8, 0.6, 0.8, 1.0);
+            CGContextFillRect(ctx, CGRectMake(x, y, item.data->w, item.data->h));
+        }
     }
 }
 

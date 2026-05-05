@@ -36,12 +36,12 @@ struct ScreenConfig {
 };
 
 struct AssetConfig {
-    int memePlaceholderW = 64;
-    int memePlaceholderH = 64;
-    int textPlaceholderW = 100;
-    int textPlaceholderH = 60;
-    int notePlaceholderW = 100;
-    int notePlaceholderH = 60;
+    int memePlaceholderW = 200;
+    int memePlaceholderH = 200;
+    int textPlaceholderW = 300;
+    int textPlaceholderH = 150;
+    int notePlaceholderW = 300;
+    int notePlaceholderH = 150;
 };
 
 struct MovementConfig {
