@@ -689,7 +689,7 @@ void draw_overlay(GtkDrawingArea* area, cairo_t* cr, int width, int height, gpoi
             // Note: Use btPoint if we're in a beak-targeting state, otherwise pos
             Vector2 origin = g.pos;
             if (g.state == FETCHING || g.state == RETURNING || g.state == CHASE_CURSOR) {
-                origin = g.WorldToDevice(g.GetBeakTipWorld());
+                origin = g.GetBeakTipDevice();
             }
 
             // Draw line to target (dashed)
@@ -741,7 +741,7 @@ void draw_overlay(GtkDrawingArea* area, cairo_t* cr, int width, int height, gpoi
             g_object_unref(infoLayout);
 
             // 6. Draw Beak Tip (btPoint) clearly
-            Vector2 bt = g.WorldToDevice(g.GetBeakTipWorld());
+            Vector2 bt = g.GetBeakTipDevice();
             cairo_set_source_rgba(cr, 1, 0.5, 0, 0.8);
             cairo_arc(cr, bt.x, bt.y, 4, 0, G_PI * 2);
             cairo_fill(cr);

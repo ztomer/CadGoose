@@ -120,14 +120,10 @@ public:
     void Draw(cairo_t* cr);
 #endif
 
-    // Coordinate helpers
-    Vector2 GetBeakTipWorld();
-    Vector2 WorldToDevice(Vector2 worldPos);
-    Vector2 DeviceToWorld(Vector2 devicePos);
-
-    // NEW: pixel-perfect beak tip helpers (max-accuracy drag/snatch)
-    Vector2 GetBeakTipDeviceRounded(); // device px, rounded to integers (stored as float)
-    Vector2 GetBeakTipAttachWorld();   // world pos that maps exactly to those device px
+    // Coordinate helpers (using common utilities from goose_math.h)
+    // GetBeakTipDevice returns beak tip in DEVICE coordinates (screen space)
+    // Per BEHAVIOR.md line 228-229: cursor moved to beak tip every frame
+    Vector2 GetBeakTipDevice();
 
     void StartSnatch(double time, const Vector2& cursorPos);
     void EndSnatch(double time, int w, int h);

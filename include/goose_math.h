@@ -87,4 +87,22 @@ inline float Dot(const Vector2& a, const Vector2& b) {
     return a.x * b.x + a.y * b.y;
 }
 
+// ======================================================
+// Coordinate Systems (BEHAVIOR.md line 553-565)
+// ======================================================
+// World: unscaled goose-local space
+// Device: screen space with globalScale applied
+// Transform: WorldToDevice = pos + (worldPos - pos) * globalScale
+// Transform: DeviceToWorld = pos + (devicePos - pos) / globalScale
+// Note: pos is in DEVICE coordinates
+
+inline Vector2 WorldToDevice(const Vector2& goosePos, const Vector2& worldPos, float globalScale) {
+    return goosePos + (worldPos - goosePos) * globalScale;
+}
+
+inline Vector2 DeviceToWorld(const Vector2& goosePos, const Vector2& devicePos, float globalScale) {
+    if (globalScale < 0.001f) return devicePos;
+    return goosePos + (devicePos - goosePos) / globalScale;
+}
+
 #endif // MATH_H

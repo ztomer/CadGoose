@@ -9,7 +9,7 @@
 void Goose::UpdateDrag(double dt) {
     if (!heldItem) return;
 
-    Vector2 beakTip = GetBeakTipWorld();
+    Vector2 beakTip = GetBeakTipDevice();
 
     if (!dragInit) {
         dragPos = beakTip;

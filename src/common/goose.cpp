@@ -66,13 +66,32 @@ Goose::Goose(int id_, const std::string& name_, int screenW, int screenH)
     PickNewTarget(screenW, screenH);
 }
 
-Vector2 Goose::GetBeakTipWorld() {
-    float rad = dir * (float)PI / 180.0f;
-    Vector2 fwd{std::cos(rad) * ISO_SCALE.x, std::sin(rad) * ISO_SCALE.y};
-    Vector2 beakBase = rig.neckHead + fwd * g_config.rig.beakBaseOffset;
-    Vector2 beakTip = pos + beakBase + fwd * g_config.rig.beakLen;
-    // BEHAVIOR.md line 559: WorldToDevice(worldPos) = pos + (worldPos - pos) * globalScale
-    return pos + (beakTip - pos) * g_config.general.globalScale;
+// BEHAVIOR.md line 387-392: Beak calculation
+// beakBase = neckHead + fwd * BEAK_BASE_OFFSET (4.0f)
+// beakTip = beakBase + fwd * BEAK_LEN (12.0f)
+Vector2 Goose::GetBeakTipDevice() {
+    Vector2 rawFwd = Vector2::FromAngleDegrees(dir);
+    Vector2 fwd{ rawFwd.x * ISO_SCALE.x, rawFwd.y * ISO_SCALE.y };
+
+    // rig.neckHead is in WORLD coordinates (computed from pos in UpdateRig)
+    // We need DEVICE coordinates (with globalScale applied) for cursor movement
+    // Transform: WorldToDevice = pos + (worldPos - pos) * globalScale
+    Vector2 neckHeadDevice = WorldToDevice(pos, rig.neckHead, g_config.general.globalScale);
+
+    // Total beak offset in device space = (beakBaseOffset + beakLen) * globalScale
+    float totalBeakOffset = (g_config.rig.beakBaseOffset + g_config.rig.beakLen) * g_config.general.globalScale;
+    Vector2 beakTipDevice = neckHeadDevice + fwd * totalBeakOffset;
+
+    FILE* f = GetDebugLog();
+    if (f && state == SNATCH_CURSOR) {
+        fprintf(f, "[BTDEV] g%d: dir=%.0f pos(%.0f,%.0f) neckWorld(%.0f,%.0f) neckDev(%.0f,%.0f) totalOff=%.1f btDev(%.0f,%.0f) gs=%.2f\n",
+                id, dir, pos.x, pos.y, rig.neckHead.x, rig.neckHead.y,
+                neckHeadDevice.x, neckHeadDevice.y, totalBeakOffset,
+                beakTipDevice.x, beakTipDevice.y, g_config.general.globalScale);
+        fflush(f);
+    }
+
+    return beakTipDevice;
 }
 
 void Goose::UpdateRig() {
@@ -193,6 +212,9 @@ CursorAction Goose::Update(double dt, double time, int w, int h, const CursorSta
         s_lastLogTime = 0;
         s_stateChanged = false;
     }
+
+    // Update rig BEFORE behaviors so beak tip calculation is correct
+    UpdateRig();
 
     CursorAction action = UpdateBehaviors(dt, time, w, h, cursor);
 
@@ -334,40 +356,19 @@ CursorAction Goose::Update(double dt, double time, int w, int h, const CursorSta
 
     if (debugSnatch && state == SNATCH_CURSOR && time - lastDebugLog > debugLogInterval) {
         lastDebugLog = time;
-        Vector2 bt = GetBeakTipWorld();
-        Vector2 btDev = WorldToDevice(bt);
+        Vector2 btDev = GetBeakTipDevice();
         FILE* f = GetDebugLog();
         if (f) {
-            fprintf(f, "[S%d] t=%.2f pos(%.1f,%.1f) dir=%.1f vel(%.1f,%.1f) spd=%.0f tgt(%.0f,%.0f) btDev(%.0f,%.0f) btWorld(%.0f,%.0f) angle=%.2f fwd(%.2f,%.2f) anchor(%.0f,%.0f) radius=%.0f cursor(%.0f,%.0f) grabber=%d\n",
-                    id, time, pos.x, pos.y, dir, vel.x, vel.y, currentSpeed, target.x, target.y, btDev.x, btDev.y, bt.x, bt.y, snatchAngle, snatchFwd.x, snatchFwd.y, snatchAnchor.x, snatchAnchor.y, snatchRadius, cursor.position.x, cursor.position.y, g_cursorGrabberId);
+            fprintf(f, "[S%d] t=%.2f pos(%.1f,%.1f) dir=%.1f vel(%.1f,%.1f) spd=%.0f tgt(%.0f,%.0f) btDev(%.0f,%.0f) angle=%.2f fwd(%.2f,%.2f) anchor(%.0f,%.0f) radius=%.0f cursor(%.0f,%.0f) grabber=%d\n",
+                    id, time, pos.x, pos.y, dir, vel.x, vel.y, currentSpeed, target.x, target.y, btDev.x, btDev.y, snatchAngle, snatchFwd.x, snatchFwd.y, snatchAnchor.x, snatchAnchor.y, snatchRadius, cursor.position.x, cursor.position.y, g_cursorGrabberId);
             fflush(f);
         }
     }
 
-    UpdateRig();
     SolveFeet(time);
     UpdateDrag(dt);
 
     return action;
-}
-
-Vector2 Goose::WorldToDevice(Vector2 worldPos) {
-    return pos + (worldPos - pos) * g_config.general.globalScale;
-}
-
-Vector2 Goose::DeviceToWorld(Vector2 devicePos) {
-    if (g_config.general.globalScale < g_config.physics.minValidScale) return devicePos;
-    return pos + (devicePos - pos) / g_config.general.globalScale;
-}
-
-Vector2 Goose::GetBeakTipDeviceRounded() {
-    Vector2 bt = GetBeakTipWorld();
-    return WorldToDevice(bt);
-}
-
-Vector2 Goose::GetBeakTipAttachWorld() {
-    Vector2 bt = GetBeakTipWorld();
-    return bt;
 }
 
 void Goose::ForceFetch(int type, int w, int h) {
