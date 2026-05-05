@@ -1,6 +1,14 @@
 # CadGoose
 
-A cross-platform desktop goose that runs on macOS (AppKit) and Linux (GTK4). The chaotic goose lives in a transparent overlay window, chases your cursor, picks up items, and leaves footprints.
+![alt text](image-2.png)
+
+CadGoose is the more polite, publicly health-insured cousin of the Desktop Goose.
+
+He's still an asshole though.
+
+Cross-platform (Canadian) goose that runs on macOS (AppKit) and Linux (GTK4).
+
+---
 
 ## Platforms
 
@@ -11,19 +19,33 @@ A cross-platform desktop goose that runs on macOS (AppKit) and Linux (GTK4). The
 
 ## Table of Contents
 
-- [Overview](#overview)
-- [Features](#features)
-- [Requirements](#requirements)
-- [Building from Source](#building-from-source)
-- [Running](#running)
-- [Configuration](#configuration)
-- [Project Structure](#project-structure)
-- [Cursor Backend Selection](#cursor-backend-selection)
-- [State Machine](#state-machine)
-- [Assets](#assets)
-- [Known Limitations](#known-limitations)
-- [Contributing](#contributing)
-- [License](#license)
+- [CadGoose](#cadgoose)
+  - [Platforms](#platforms)
+  - [Table of Contents](#table-of-contents)
+  - [Overview](#overview)
+  - [Features](#features)
+  - [Requirements](#requirements)
+    - [Build tools](#build-tools)
+    - [Runtime libraries](#runtime-libraries)
+    - [Optional compositor support](#optional-compositor-support)
+  - [Building from Source](#building-from-source)
+    - [1. Install dependencies](#1-install-dependencies)
+    - [2. Configure and build](#2-configure-and-build)
+    - [3. In-tree builds](#3-in-tree-builds)
+  - [Running](#running)
+    - [Wayland notes](#wayland-notes)
+    - [X11 notes](#x11-notes)
+  - [Configuration](#configuration)
+  - [Project Structure](#project-structure)
+  - [Cursor Backend Selection](#cursor-backend-selection)
+  - [State Machine](#state-machine)
+  - [Assets](#assets)
+    - [Meme images](#meme-images)
+    - [Notepad messages](#notepad-messages)
+    - [Sound effects](#sound-effects)
+  - [Known Limitations](#known-limitations)
+  - [Contributing](#contributing)
+  - [License](#license)
 
 ---
 
@@ -38,28 +60,33 @@ The application supports multiple simultaneous geese, each with its own name and
 ## Features
 
 **Core behavior**
+
 - One or more geese rendered in transparent overlay windows covering all connected monitors
 - Smooth animation with directional sprite rigging
 - Wandering movement with collision-aware path selection
 - Footprint trails that age out over time
 
 **Interactivity**
+
 - Geese can chase the cursor across the screen
 - Cursor snatching: a goose can grab and drag the cursor briefly before releasing it
 - Dropped item system: geese pick up, carry, and drop meme images and text notes
 - Honking on a configurable timer
 
 **Multi-monitor support**
+
 - Monitors are discovered at startup
 - Overlay windows are created per monitor
 - Geese can roam across monitor boundaries
 
 **CLI control**
+
 - Start the goose daemon in the background
 - Spawn geese and clear them from the terminal
 - Quit, inspect status, or check RAM usage from the terminal
 
 **Configuration persistence**
+
 - Settings are read from and written to `~/.config/desktop-goose/config.ini`
 - All tunable values survive restarts
 
