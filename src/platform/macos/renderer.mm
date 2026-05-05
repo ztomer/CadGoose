@@ -184,19 +184,27 @@ static void DrawLine(CGContextRef ctx, Vector2 a, Vector2 b, float width, float 
 
 - (void)drawDroppedItems:(CGContextRef)ctx {
     for (const auto& item : g_droppedItems) {
-        float x = item.pos.x - item.data->w / 2.0f;
-        float y = item.pos.y - item.data->h / 2.0f;
-        
+        CGContextSaveGState(ctx);
+        CGContextTranslateCTM(ctx, item.pos.x, self.bounds.size.height - item.pos.y);
+        CGContextRotateCTM(ctx, -item.rotation);
+
+        float x = -item.data->w / 2.0f;
+        float y = -item.data->h / 2.0f;
+
         if (item.data->type == ItemData::TEXT) {
             CGContextSetRGBFillColor(ctx, 1.0, 1.0, 0.8, 1.0);
             CGContextFillRect(ctx, CGRectMake(x, y, item.data->w, item.data->h));
-            
+
+            static NSDictionary* textAttrs = nil;
+            if (!textAttrs) {
+                textAttrs = @{
+                    NSFontAttributeName: [NSFont systemFontOfSize:14],
+                    NSForegroundColorAttributeName: [NSColor blackColor]
+                };
+            }
+
             NSString* text = [NSString stringWithUTF8String:item.data->Text().c_str()];
-            NSDictionary* attrs = @{
-                NSFontAttributeName: [NSFont systemFontOfSize:14],
-                NSForegroundColorAttributeName: [NSColor blackColor]
-            };
-            [text drawInRect:NSMakeRect(x + 5, y + 5, item.data->w - 10, item.data->h - 10) withAttributes:attrs];
+            [text drawInRect:NSMakeRect(x + 5, y + 5, item.data->w - 10, item.data->h - 10) withAttributes:textAttrs];
         } else if (item.data->type == ItemData::MEME) {
             if (item.data->image) {
                 CGContextDrawImage(ctx, CGRectMake(x, y, item.data->w, item.data->h), item.data->image);
@@ -205,9 +213,10 @@ static void DrawLine(CGContextRef ctx, Vector2 a, Vector2 b, float width, float 
                 CGContextFillRect(ctx, CGRectMake(x, y, item.data->w, item.data->h));
             }
         }
+
+        CGContextRestoreGState(ctx);
     }
 }
-
 - (void)drawGeese:(CGContextRef)ctx {
     for (auto& g : g_geese) {
         [self drawGoose:&g inContext:ctx];
