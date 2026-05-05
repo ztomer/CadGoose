@@ -1,0 +1,633 @@
+[LOG] Log file: /tmp/CadGoose_20260505_084310.log
+[DEBUG] main() starting, argc=2
+[DEBUG] argv[0]=./build/CadGoose
+[DEBUG] argv[1]=--debug
+[08:43:10] DEBUG: Debug mode enabled
+[DEBUG] HandleCliCommand returned -1
+[DEBUG] Got NSApplication: 0x10528e670, running=0
+[DEBUG] finishLaunching done, running=0
+[DEBUG] activated, running=0
+[08:43:10] DEBUG: Starting run loop...
+[08:43:10] DEBUG: App launching...
+[08:43:10] DEBUG: Config init done
+Assets: 84 memes, 53 texts
+[08:43:10] DEBUG: Assets init done
+Initializing Cursor Backends...
+Selected Cursor Backend: MacCGEvent
+[08:43:10] DEBUG: Backend: MacCGEvent
+[08:43:10] DEBUG: Creating windows for 1 screens
+[08:43:10] DEBUG: WindowManager instance: 0x995548470
+[08:43:10] DEBUG: GooseWindow initWithScreen START, rect={{0, 0}, {1800, 1169}}
+[08:43:10] DEBUG: GooseWindow super init done, self=0x9955a8280
+[08:43:10] DEBUG:   level=3
+[08:43:10] DEBUG:   collectionBehavior set
+[08:43:10] DEBUG:   window props set: opaque=0, ignoresMouse=1
+[08:43:10] DEBUG:   creating GooseView with frame {{0, 0}, {1800, 1169}}
+[08:43:10] DEBUG: GooseView initWithFrame START, frame={{0, 0}, {1800, 1169}}
+[08:43:10] DEBUG:   super init done, self=0x9955a8c80
+[08:43:10] DEBUG:   wantsLayer=YES
+[08:43:10] DEBUG:   layer backgroundColor set
+[08:43:10] DEBUG:   time/count initialized
+[08:43:10] DEBUG: GooseView initWithFrame END
+[08:43:10] DEBUG:   gooseView created: 0x9955a8c80
+[08:43:10] DEBUG:   contentView set
+[08:43:10] DEBUG: GooseWindow initWithScreen END
+[08:43:10] DEBUG: createWindowsForAllScreens completed
+[08:43:10] DEBUG: Windows created: 1
+[08:43:10] DEBUG: Processing window: 0x9955a8280
+[08:43:10] DEBUG:   frame: {{0, 0}, {1800, 1169}}
+[08:43:10] DEBUG:   level: 3
+[08:43:10] DEBUG:   opaque: 0
+[08:43:10] DEBUG:   ignoresMouseEvents: 1
+[08:43:10] DEBUG:   gooseView: 0x9955a8c80
+[08:43:10] DEBUG:   gooseView.frame: {{0, 0}, {1800, 1169}}
+[08:43:10] DEBUG: GooseView startAnimation START
+[08:43:10] DEBUG:   stopped old timer
+[08:43:10] DEBUG:   timer created: 0x9955fa580
+[08:43:10] DEBUG:   timer scheduled
+[08:43:10] DEBUG:   event handler set
+[08:43:10] DEBUG:   timer resumed
+[08:43:10] DEBUG: GooseView startAnimation END
+[08:43:10] DEBUG:   startAnimation done
+[08:43:10] DEBUG:   orderFront done
+[08:43:10] DEBUG: Window setup complete for window 0x9955a8280
+[08:43:10] INFO: Window setup complete, count: 1
+[08:43:10] DEBUG: Screen: 1800x1169
+[08:43:10] DEBUG: Geese spawned: 1
+[08:43:10] DEBUG: Goose 0 at 207.0,221.0
+[08:43:10] DEBUG: Menubar created
+[08:43:10] DEBUG: App ready, entering run loop...
+Goose 0 state 0 currentSpeed 180.0 targetState 0
+Goose 0 state 0 currentSpeed 195.0 targetState 0
+Goose 0 state 0 currentSpeed 209.2 targetState 0
+Goose 0 state 0 currentSpeed 222.8 targetState 0
+Goose 0 state 0 currentSpeed 235.6 targetState 0
+Goose 0 state 0 currentSpeed 247.9 targetState 0
+Goose 0 state 0 currentSpeed 259.5 targetState 0
+Goose 0 state 0 currentSpeed 270.5 targetState 0
+Goose 0 state 0 currentSpeed 281.0 targetState 0
+Goose 0 state 0 currentSpeed 290.9 targetState 0
+Goose 0 state 0 currentSpeed 300.4 targetState 0
+Goose 0 state 0 currentSpeed 309.4 targetState 0
+Goose 0 state 0 currentSpeed 317.9 targetState 0
+Goose 0 state 0 currentSpeed 326.0 targetState 0
+Goose 0 state 0 currentSpeed 333.7 targetState 0
+Goose 0 state 0 currentSpeed 341.0 targetState 0
+[DEBUG] Assets path: /Users/ztomer/Projects/CadGoose/Assets
+[DEBUG] Loaded honk 1: /Users/ztomer/Projects/CadGoose/Assets/Sound/NotEmbedded/Honk1.mp3
+[DEBUG] Loaded honk 2: /Users/ztomer/Projects/CadGoose/Assets/Sound/NotEmbedded/Honk2.mp3
+[DEBUG] Loaded honk 3: /Users/ztomer/Projects/CadGoose/Assets/Sound/NotEmbedded/Honk3.mp3
+[DEBUG] Loaded honk 4: /Users/ztomer/Projects/CadGoose/Assets/Sound/NotEmbedded/Honk4.mp3
+[DEBUG] Audio initialized
+Goose 0 state 0 currentSpeed 348.0 targetState 0
+Goose 0 state 0 currentSpeed 354.6 targetState 0
+Goose 0 state 0 currentSpeed 360.8 targetState 0
+Goose 0 state 0 currentSpeed 366.8 targetState 0
+Goose 0 state 0 currentSpeed 372.5 targetState 0
+Goose 0 state 0 currentSpeed 377.8 targetState 0
+Goose 0 state 0 currentSpeed 382.9 targetState 0
+Footprint created at (235.8, 230.9), foot home (235.8, 230.9), goose pos (232.5, 229.3)
+Goose 0 state 0 currentSpeed 387.8 targetState 0
+Goose 0 state 0 currentSpeed 392.4 targetState 0
+Goose 0 state 0 currentSpeed 396.8 targetState 0
+Goose 0 state 0 currentSpeed 400.9 targetState 0
+Goose 0 state 0 currentSpeed 404.9 targetState 0
+Goose 0 state 0 currentSpeed 408.7 targetState 0
+Goose 0 state 0 currentSpeed 412.2 targetState 0
+Goose 0 state 0 currentSpeed 415.6 targetState 0
+Goose 0 state 0 currentSpeed 418.8 targetState 0
+Goose 0 state 0 currentSpeed 421.9 targetState 0
+Goose 0 state 0 currentSpeed 424.8 targetState 0
+Goose 0 state 0 currentSpeed 427.6 targetState 0
+Goose 0 state 0 currentSpeed 430.2 targetState 0
+Goose 0 state 0 currentSpeed 432.7 targetState 0
+Goose 0 state 0 currentSpeed 435.0 targetState 0
+Goose 0 state 0 currentSpeed 437.3 targetState 0
+Goose 0 state 0 currentSpeed 439.4 targetState 0
+Goose 0 state 0 currentSpeed 441.4 targetState 0
+Goose 0 state 0 currentSpeed 443.4 targetState 0
+Goose 0 state 0 currentSpeed 445.2 targetState 0
+Goose 0 state 0 currentSpeed 446.9 targetState 0
+Goose 0 state 0 currentSpeed 448.6 targetState 0
+Goose 0 state 0 currentSpeed 450.2 targetState 0
+Goose 0 state 0 currentSpeed 451.7 targetState 0
+Goose 0 state 0 currentSpeed 453.1 targetState 0
+Goose 0 state 0 currentSpeed 454.4 targetState 0
+Goose 0 state 0 currentSpeed 455.7 targetState 0
+Goose 0 state 0 currentSpeed 456.9 targetState 0
+Goose 0 state 0 currentSpeed 458.1 targetState 0
+Goose 0 state 0 currentSpeed 459.2 targetState 0
+Goose 0 state 0 currentSpeed 460.2 targetState 0
+Goose 0 state 0 currentSpeed 461.2 targetState 0
+Goose 0 state 0 currentSpeed 462.1 targetState 0
+Goose 0 state 0 currentSpeed 463.0 targetState 0
+Goose 0 state 0 currentSpeed 463.9 targetState 0
+Goose 0 state 0 currentSpeed 464.7 targetState 0
+Goose 0 state 0 currentSpeed 465.5 targetState 0
+[08:43:12] DEBUG: Goose 0 pos: 375.7,275.5 speed: 466.2
+Goose 0 state 0 currentSpeed 466.2 targetState 0
+Goose 0 state 0 currentSpeed 466.9 targetState 0
+Goose 0 state 0 currentSpeed 467.5 targetState 0
+Goose 0 state 0 currentSpeed 468.2 targetState 0
+Goose 0 state 0 currentSpeed 468.7 targetState 0
+Goose 0 state 0 currentSpeed 469.3 targetState 0
+Goose 0 state 0 currentSpeed 469.8 targetState 0
+Goose 0 state 0 currentSpeed 470.3 targetState 0
+Goose 0 state 0 currentSpeed 470.8 targetState 0
+Footprint created at (430.4, 293.7), foot home (430.4, 293.7), goose pos (427.1, 292.2)
+Goose 0 state 0 currentSpeed 471.3 targetState 0
+Goose 0 state 0 currentSpeed 471.7 targetState 0
+Goose 0 state 0 currentSpeed 472.1 targetState 0
+Goose 0 state 0 currentSpeed 472.5 targetState 0
+Goose 0 state 0 currentSpeed 472.9 targetState 0
+Goose 0 state 0 currentSpeed 473.3 targetState 0
+Goose 0 state 0 currentSpeed 473.6 targetState 0
+Goose 0 state 0 currentSpeed 473.9 targetState 0
+Goose 0 state 0 currentSpeed 474.2 targetState 0
+Goose 0 state 0 currentSpeed 474.5 targetState 0
+Goose 0 state 0 currentSpeed 474.8 targetState 0
+Goose 0 state 0 currentSpeed 475.0 targetState 0
+Goose 0 state 0 currentSpeed 475.3 targetState 0
+Goose 0 state 0 currentSpeed 475.5 targetState 0
+Goose 0 state 0 currentSpeed 475.8 targetState 0
+Goose 0 state 0 currentSpeed 476.0 targetState 0
+Goose 0 state 0 currentSpeed 476.2 targetState 0
+Goose 0 state 0 currentSpeed 476.4 targetState 0
+Goose 0 state 0 currentSpeed 476.5 targetState 0
+Goose 0 state 0 currentSpeed 476.7 targetState 0
+Goose 0 state 0 currentSpeed 476.9 targetState 0
+Goose 0 state 0 currentSpeed 477.0 targetState 0
+Goose 0 state 0 currentSpeed 477.2 targetState 0
+Goose 0 state 0 currentSpeed 477.3 targetState 0
+Goose 0 state 0 currentSpeed 477.5 targetState 0
+Goose 0 state 0 currentSpeed 477.6 targetState 0
+Goose 0 state 0 currentSpeed 477.7 targetState 0
+Goose 0 state 0 currentSpeed 477.8 targetState 0
+Goose 0 state 0 currentSpeed 477.9 targetState 0
+Goose 0 state 0 currentSpeed 478.0 targetState 0
+Goose 0 state 0 currentSpeed 478.1 targetState 0
+Goose 0 state 0 currentSpeed 478.2 targetState 0
+Goose 0 state 0 currentSpeed 478.3 targetState 0
+Goose 0 state 0 currentSpeed 478.4 targetState 0
+Footprint created at (655.0, 366.3), foot home (655.0, 366.3), goose pos (651.6, 364.8)
+Goose 0 state 0 currentSpeed 478.5 targetState 0
+Goose 0 state 0 currentSpeed 478.6 targetState 0
+Goose 0 state 0 currentSpeed 478.6 targetState 0
+Goose 0 state 0 currentSpeed 478.7 targetState 0
+Goose 0 state 0 currentSpeed 478.8 targetState 0
+Goose 0 state 0 currentSpeed 478.8 targetState 0
+Goose 0 state 0 currentSpeed 478.9 targetState 0
+Goose 0 state 0 currentSpeed 478.9 targetState 0
+Goose 0 state 0 currentSpeed 479.0 targetState 0
+Footprint created at (719.8, 385.6), foot home (719.8, 385.6), goose pos (715.8, 385.5)
+Goose 0 state 0 currentSpeed 479.0 targetState 0
+Goose 0 state 0 currentSpeed 479.1 targetState 0
+Goose 0 state 0 currentSpeed 479.1 targetState 0
+Goose 0 state 0 currentSpeed 479.2 targetState 0
+Goose 0 state 0 currentSpeed 479.2 targetState 0
+Goose 0 state 0 currentSpeed 479.3 targetState 0
+Goose 0 state 0 currentSpeed 479.3 targetState 0
+Goose 0 state 0 currentSpeed 479.3 targetState 0
+[08:43:13] DEBUG: Goose 0 pos: 773.8,404.2 speed: 479.4
+Goose 0 state 0 currentSpeed 479.4 targetState 0
+Goose 0 state 0 currentSpeed 479.4 targetState 0
+Goose 0 state 0 currentSpeed 479.4 targetState 0
+Goose 0 state 0 currentSpeed 479.5 targetState 0
+Goose 0 state 0 currentSpeed 479.5 targetState 0
+Goose 0 state 0 currentSpeed 479.5 targetState 0
+Goose 0 state 0 currentSpeed 479.5 targetState 0
+Goose 0 state 0 currentSpeed 479.6 targetState 0
+Goose 0 state 0 currentSpeed 479.6 targetState 0
+Footprint created at (843.8, 425.7), foot home (843.8, 425.7), goose pos (839.8, 425.6)
+Goose 0 state 0 currentSpeed 479.6 targetState 0
+Goose 0 state 0 currentSpeed 479.6 targetState 0
+Goose 0 state 0 currentSpeed 479.6 targetState 0
+Goose 0 state 0 currentSpeed 479.7 targetState 0
+Goose 0 state 0 currentSpeed 479.7 targetState 0
+Goose 0 state 0 currentSpeed 479.7 targetState 0
+Goose 0 state 0 currentSpeed 479.7 targetState 0
+Goose 0 state 0 currentSpeed 479.7 targetState 0
+Goose 0 state 0 currentSpeed 479.7 targetState 0
+Goose 0 state 0 currentSpeed 479.7 targetState 0
+Goose 0 state 0 currentSpeed 479.8 targetState 0
+Goose 0 state 0 currentSpeed 479.8 targetState 0
+Goose 0 state 0 currentSpeed 479.8 targetState 0
+Goose 0 state 0 currentSpeed 479.8 targetState 0
+Goose 0 state 0 currentSpeed 479.8 targetState 0
+Goose 0 state 0 currentSpeed 479.8 targetState 0
+Goose 0 state 0 currentSpeed 479.8 targetState 0
+Goose 0 state 0 currentSpeed 479.8 targetState 0
+Goose 0 state 0 currentSpeed 479.8 targetState 0
+Goose 0 state 0 currentSpeed 479.8 targetState 0
+Goose 0 state 0 currentSpeed 479.9 targetState 0
+Goose 0 state 0 currentSpeed 479.9 targetState 0
+Goose 0 state 0 currentSpeed 479.9 targetState 0
+Goose 0 state 0 currentSpeed 479.9 targetState 0
+Goose 0 state 0 currentSpeed 479.9 targetState 0
+Goose 0 state 0 currentSpeed 479.9 targetState 0
+Goose 0 state 0 currentSpeed 479.9 targetState 0
+Goose 0 state 0 currentSpeed 479.9 targetState 0
+Goose 0 state 0 currentSpeed 479.9 targetState 0
+Goose 0 state 0 currentSpeed 479.9 targetState 0
+Goose 0 state 0 currentSpeed 479.9 targetState 0
+Goose 0 state 0 currentSpeed 479.9 targetState 0
+Goose 0 state 0 currentSpeed 479.9 targetState 0
+Goose 0 state 0 currentSpeed 479.9 targetState 0
+Goose 0 state 0 currentSpeed 479.9 targetState 0
+Goose 0 state 0 currentSpeed 479.9 targetState 0
+Goose 0 state 0 currentSpeed 479.9 targetState 0
+Goose 0 state 0 currentSpeed 479.9 targetState 0
+Goose 0 state 0 currentSpeed 479.9 targetState 0
+Goose 0 state 0 currentSpeed 479.9 targetState 0
+Goose 0 state 0 currentSpeed 479.9 targetState 0
+Goose 0 state 0 currentSpeed 480.0 targetState 0
+Goose 0 state 0 currentSpeed 480.0 targetState 0
+Goose 0 state 0 currentSpeed 480.0 targetState 0
+Goose 0 state 0 currentSpeed 480.0 targetState 0
+Goose 0 state 0 currentSpeed 480.0 targetState 0
+Goose 0 state 0 currentSpeed 480.0 targetState 0
+Goose 0 state 0 currentSpeed 480.0 targetState 0
+Goose 0 state 0 currentSpeed 465.0 targetState 0
+Goose 0 state 0 currentSpeed 450.7 targetState 0
+Goose 0 state 0 currentSpeed 437.2 targetState 0
+[08:43:14] DEBUG: Goose 0 pos: 1220.1,548.6 speed: 424.3
+Goose 0 state 0 currentSpeed 424.3 targetState 0
+Goose 0 state 0 currentSpeed 412.1 targetState 0
+Goose 0 state 0 currentSpeed 400.5 targetState 0
+Goose 0 state 0 currentSpeed 389.5 targetState 0
+Goose 0 state 0 currentSpeed 379.0 targetState 0
+Goose 0 state 0 currentSpeed 369.1 targetState 0
+Goose 0 state 0 currentSpeed 359.6 targetState 0
+Goose 0 state 0 currentSpeed 350.6 targetState 0
+Goose 0 state 0 currentSpeed 342.1 targetState 0
+Goose 0 state 0 currentSpeed 334.0 targetState 0
+Goose 0 state 0 currentSpeed 326.3 targetState 0
+Goose 0 state 0 currentSpeed 319.0 targetState 0
+Goose 0 state 0 currentSpeed 312.0 targetState 0
+Goose 0 state 0 currentSpeed 305.4 targetState 0
+Goose 0 state 0 currentSpeed 299.1 targetState 0
+Goose 0 state 0 currentSpeed 293.2 targetState 0
+Goose 0 state 0 currentSpeed 287.5 targetState 0
+Goose 0 state 0 currentSpeed 282.2 targetState 0
+Goose 0 state 0 currentSpeed 277.0 targetState 0
+Goose 0 state 0 currentSpeed 272.2 targetState 0
+Goose 0 state 0 currentSpeed 267.6 targetState 0
+Goose 0 state 0 currentSpeed 263.2 targetState 0
+Goose 0 state 0 currentSpeed 259.0 targetState 0
+Goose 0 state 0 currentSpeed 255.1 targetState 0
+Goose 0 state 0 currentSpeed 251.3 targetState 0
+Goose 0 state 0 currentSpeed 247.8 targetState 0
+Goose 0 state 0 currentSpeed 244.4 targetState 0
+Goose 0 state 0 currentSpeed 241.2 targetState 0
+Goose 0 state 0 currentSpeed 238.1 targetState 0
+Goose 0 state 0 currentSpeed 235.2 targetState 0
+Goose 0 state 0 currentSpeed 232.4 targetState 0
+Goose 0 state 0 currentSpeed 229.8 targetState 0
+Goose 0 state 0 currentSpeed 227.3 targetState 0
+Goose 0 state 0 currentSpeed 225.0 targetState 0
+Goose 0 state 0 currentSpeed 222.7 targetState 0
+Goose 0 state 0 currentSpeed 220.6 targetState 0
+Goose 0 state 0 currentSpeed 218.5 targetState 0
+Goose 0 state 0 currentSpeed 216.6 targetState 0
+Goose 0 state 0 currentSpeed 214.8 targetState 0
+Goose 0 state 0 currentSpeed 213.1 targetState 0
+Goose 0 state 0 currentSpeed 211.4 targetState 0
+Goose 0 state 0 currentSpeed 209.8 targetState 0
+Goose 0 state 0 currentSpeed 208.3 targetState 0
+Goose 0 state 0 currentSpeed 206.9 targetState 0
+Footprint created at (1415.6, 610.6), foot home (1415.6, 610.6), goose pos (1411.6, 610.5)
+Goose 0 state 0 currentSpeed 205.6 targetState 0
+Goose 0 state 0 currentSpeed 204.3 targetState 0
+Goose 0 state 0 currentSpeed 203.1 targetState 0
+Goose 0 state 0 currentSpeed 201.9 targetState 0
+Goose 0 state 0 currentSpeed 200.8 targetState 0
+Goose 0 state 0 currentSpeed 199.8 targetState 0
+Goose 0 state 0 currentSpeed 198.8 targetState 0
+Goose 0 state 0 currentSpeed 197.9 targetState 0
+Goose 0 state 0 currentSpeed 197.0 targetState 0
+Goose 0 state 0 currentSpeed 196.1 targetState 0
+Goose 0 state 0 currentSpeed 195.3 targetState 0
+Goose 0 state 0 currentSpeed 194.5 targetState 0
+Goose 0 state 0 currentSpeed 193.8 targetState 0
+Goose 0 state 1 currentSpeed 208.1 targetState 1
+Goose 0 state 1 currentSpeed 221.7 targetState 1
+Goose 0 state 1 currentSpeed 234.6 targetState 1
+[08:43:15] DEBUG: Goose 0 pos: 1461.3,626.2 speed: 246.9
+Goose 0 state 1 currentSpeed 246.9 targetState 1
+Goose 0 state 1 currentSpeed 258.6 targetState 1
+Goose 0 state 1 currentSpeed 269.6 targetState 1
+Goose 0 state 1 currentSpeed 280.1 targetState 1
+Goose 0 state 1 currentSpeed 290.1 targetState 1
+Goose 0 state 1 currentSpeed 299.6 targetState 1
+Goose 0 state 1 currentSpeed 308.7 targetState 1
+Goose 0 state 1 currentSpeed 317.2 targetState 1
+Goose 0 state 1 currentSpeed 325.4 targetState 1
+Goose 0 state 1 currentSpeed 333.1 targetState 1
+Goose 0 state 1 currentSpeed 340.4 targetState 1
+Goose 0 state 1 currentSpeed 347.4 targetState 1
+Goose 0 state 1 currentSpeed 354.0 targetState 1
+Goose 0 state 1 currentSpeed 360.3 targetState 1
+Goose 0 state 1 currentSpeed 366.3 targetState 1
+Goose 0 state 1 currentSpeed 372.0 targetState 1
+Goose 0 state 1 currentSpeed 377.4 targetState 1
+Goose 0 state 1 currentSpeed 382.5 targetState 1
+Goose 0 state 1 currentSpeed 387.4 targetState 1
+Goose 0 state 1 currentSpeed 392.0 targetState 1
+Goose 0 state 1 currentSpeed 396.4 targetState 1
+Goose 0 state 1 currentSpeed 400.6 targetState 1
+Goose 0 state 1 currentSpeed 404.6 targetState 1
+Goose 0 state 1 currentSpeed 408.4 targetState 1
+Goose 0 state 1 currentSpeed 411.9 targetState 1
+Goose 0 state 1 currentSpeed 415.3 targetState 1
+Goose 0 state 1 currentSpeed 418.6 targetState 1
+Goose 0 state 1 currentSpeed 421.6 targetState 1
+Goose 0 state 1 currentSpeed 424.6 targetState 1
+Goose 0 state 1 currentSpeed 427.3 targetState 1
+Goose 0 state 1 currentSpeed 430.0 targetState 1
+Goose 0 state 1 currentSpeed 432.5 targetState 1
+Goose 0 state 1 currentSpeed 434.8 targetState 1
+Goose 0 state 1 currentSpeed 437.1 targetState 1
+Goose 0 state 1 currentSpeed 439.2 targetState 1
+Goose 0 state 1 currentSpeed 441.3 targetState 1
+Goose 0 state 1 currentSpeed 443.2 targetState 1
+Goose 0 state 1 currentSpeed 445.1 targetState 1
+Goose 0 state 1 currentSpeed 446.8 targetState 1
+Goose 0 state 1 currentSpeed 448.5 targetState 1
+Goose 0 state 1 currentSpeed 450.0 targetState 1
+Goose 0 state 1 currentSpeed 451.5 targetState 1
+Goose 0 state 1 currentSpeed 453.0 targetState 1
+Goose 0 state 1 currentSpeed 454.3 targetState 1
+Goose 0 state 1 currentSpeed 455.6 targetState 1
+Goose 0 state 1 currentSpeed 456.8 targetState 1
+Goose 0 state 1 currentSpeed 458.0 targetState 1
+Goose 0 state 1 currentSpeed 459.1 targetState 1
+Goose 0 state 1 currentSpeed 460.1 targetState 1
+Goose 0 state 1 currentSpeed 461.1 targetState 1
+Goose 0 state 1 currentSpeed 462.1 targetState 1
+Goose 0 state 1 currentSpeed 463.0 targetState 1
+Goose 0 state 1 currentSpeed 463.8 targetState 1
+Goose 0 state 1 currentSpeed 464.6 targetState 1
+Goose 0 state 1 currentSpeed 465.4 targetState 1
+Goose 0 state 1 currentSpeed 466.1 targetState 1
+Goose 0 state 1 currentSpeed 466.8 targetState 1
+Goose 0 state 1 currentSpeed 467.5 targetState 1
+Goose 0 state 1 currentSpeed 468.1 targetState 1
+Goose 0 state 1 currentSpeed 468.7 targetState 1
+[08:43:16] DEBUG: Goose 0 pos: 1753.5,676.0 speed: 469.3
+Goose 0 state 1 currentSpeed 469.3 targetState 1
+Goose 0 state 1 currentSpeed 469.8 targetState 1
+Goose 0 state 1 currentSpeed 470.3 targetState 1
+Goose 0 state 1 currentSpeed 470.8 targetState 1
+Goose 0 state 1 currentSpeed 471.3 targetState 1
+Goose 0 state 1 currentSpeed 471.7 targetState 1
+Goose 0 state 1 currentSpeed 472.1 targetState 1
+Goose 0 state 1 currentSpeed 472.5 targetState 1
+Goose 0 state 1 currentSpeed 472.9 targetState 1
+Goose 0 state 1 currentSpeed 473.2 targetState 1
+Goose 0 state 1 currentSpeed 473.6 targetState 1
+Goose 0 state 1 currentSpeed 473.9 targetState 1
+Goose 0 state 1 currentSpeed 474.2 targetState 1
+Goose 0 state 1 currentSpeed 474.5 targetState 1
+Goose 0 state 1 currentSpeed 474.8 targetState 1
+Goose 0 state 1 currentSpeed 475.0 targetState 1
+Goose 0 state 1 currentSpeed 475.3 targetState 1
+Goose 0 state 1 currentSpeed 475.5 targetState 1
+Goose 0 state 1 currentSpeed 475.7 targetState 1
+Goose 0 state 1 currentSpeed 475.9 targetState 1
+Goose 0 state 1 currentSpeed 476.2 targetState 1
+Goose 0 state 1 currentSpeed 476.3 targetState 1
+Goose 0 state 1 currentSpeed 476.5 targetState 1
+Goose 0 state 1 currentSpeed 476.7 targetState 1
+Goose 0 state 1 currentSpeed 476.9 targetState 1
+Goose 0 state 1 currentSpeed 477.0 targetState 1
+Goose 0 state 1 currentSpeed 477.2 targetState 1
+Goose 0 state 1 currentSpeed 477.3 targetState 1
+Goose 0 state 1 currentSpeed 477.4 targetState 1
+Goose 0 state 1 currentSpeed 477.6 targetState 1
+Goose 0 state 1 currentSpeed 477.7 targetState 1
+Goose 0 state 1 currentSpeed 477.8 targetState 1
+Goose 0 state 1 currentSpeed 477.9 targetState 1
+Goose 0 state 1 currentSpeed 478.0 targetState 1
+Goose 0 state 1 currentSpeed 478.1 targetState 1
+Goose 0 state 1 currentSpeed 478.2 targetState 1
+Footprint created at (1660.5, 779.6), foot home (1660.5, 779.6), goose pos (1662.7, 777.2)
+Goose 0 state 1 currentSpeed 478.3 targetState 1
+Goose 0 state 1 currentSpeed 478.4 targetState 1
+Goose 0 state 1 currentSpeed 478.5 targetState 1
+Goose 0 state 1 currentSpeed 478.5 targetState 1
+Goose 0 state 1 currentSpeed 478.6 targetState 1
+Goose 0 state 1 currentSpeed 478.7 targetState 1
+Goose 0 state 1 currentSpeed 478.8 targetState 1
+Goose 0 state 1 currentSpeed 478.8 targetState 1
+Goose 0 state 1 currentSpeed 478.9 targetState 1
+Goose 0 state 1 currentSpeed 478.9 targetState 1
+Goose 0 state 1 currentSpeed 479.0 targetState 1
+Goose 0 state 1 currentSpeed 479.0 targetState 1
+Goose 0 state 1 currentSpeed 479.1 targetState 1
+Goose 0 state 1 currentSpeed 479.1 targetState 1
+Goose 0 state 1 currentSpeed 479.2 targetState 1
+Goose 0 state 1 currentSpeed 479.2 targetState 1
+Goose 0 state 1 currentSpeed 479.3 targetState 1
+Footprint created at (1603.1, 829.6), foot home (1603.1, 829.6), goose pos (1605.2, 827.2)
+Goose 0 state 1 currentSpeed 479.3 targetState 1
+Goose 0 state 1 currentSpeed 479.3 targetState 1
+Goose 0 state 1 currentSpeed 479.4 targetState 1
+Goose 0 state 1 currentSpeed 479.4 targetState 1
+Goose 0 state 1 currentSpeed 479.4 targetState 1
+Goose 0 state 1 currentSpeed 479.5 targetState 1
+Goose 0 state 1 currentSpeed 479.5 targetState 1
+[08:43:17] DEBUG: Goose 0 pos: 1589.5,846.1 speed: 479.5
+Goose 0 state 1 currentSpeed 479.5 targetState 1
+Goose 0 state 1 currentSpeed 479.5 targetState 1
+Goose 0 state 1 currentSpeed 479.6 targetState 1
+Goose 0 state 1 currentSpeed 479.6 targetState 1
+Goose 0 state 1 currentSpeed 479.6 targetState 1
+Goose 0 state 1 currentSpeed 479.6 targetState 1
+Goose 0 state 1 currentSpeed 479.6 targetState 1
+Goose 0 state 1 currentSpeed 479.7 targetState 1
+Goose 0 state 1 currentSpeed 479.7 targetState 1
+Goose 0 state 1 currentSpeed 479.7 targetState 1
+Goose 0 state 1 currentSpeed 479.7 targetState 1
+Goose 0 state 1 currentSpeed 479.7 targetState 1
+Goose 0 state 1 currentSpeed 479.7 targetState 1
+Goose 0 state 1 currentSpeed 479.7 targetState 1
+Goose 0 state 1 currentSpeed 479.8 targetState 1
+Goose 0 state 1 currentSpeed 479.8 targetState 1
+Goose 0 state 1 currentSpeed 479.8 targetState 1
+Goose 0 state 1 currentSpeed 479.8 targetState 1
+Goose 0 state 1 currentSpeed 479.8 targetState 1
+Goose 0 state 1 currentSpeed 479.8 targetState 1
+Goose 0 state 1 currentSpeed 479.8 targetState 1
+Goose 0 state 1 currentSpeed 479.8 targetState 1
+Goose 0 state 1 currentSpeed 479.8 targetState 1
+Goose 0 state 1 currentSpeed 479.8 targetState 1
+Goose 0 state 1 currentSpeed 479.9 targetState 1
+Goose 0 state 1 currentSpeed 479.9 targetState 1
+Goose 0 state 1 currentSpeed 479.9 targetState 1
+Goose 0 state 1 currentSpeed 479.9 targetState 1
+Goose 0 state 1 currentSpeed 479.9 targetState 1
+Goose 0 state 1 currentSpeed 479.9 targetState 1
+Goose 0 state 1 currentSpeed 479.9 targetState 1
+Goose 0 state 1 currentSpeed 479.9 targetState 1
+Goose 0 state 1 currentSpeed 479.9 targetState 1
+Goose 0 state 1 currentSpeed 479.9 targetState 1
+Goose 0 state 1 currentSpeed 479.9 targetState 1
+Goose 0 state 1 currentSpeed 479.9 targetState 1
+Goose 0 state 1 currentSpeed 479.9 targetState 1
+Goose 0 state 1 currentSpeed 479.9 targetState 1
+Footprint created at (1582.3, 920.4), foot home (1582.3, 920.4), goose pos (1581.0, 917.8)
+Goose 0 state 1 currentSpeed 479.9 targetState 1
+Goose 0 state 1 currentSpeed 479.9 targetState 1
+Goose 0 state 1 currentSpeed 479.9 targetState 1
+Goose 0 state 1 currentSpeed 479.9 targetState 1
+Goose 0 state 1 currentSpeed 479.9 targetState 1
+Goose 0 state 1 currentSpeed 479.9 targetState 1
+Goose 0 state 1 currentSpeed 479.9 targetState 1
+Goose 0 state 1 currentSpeed 480.0 targetState 1
+Goose 0 state 1 currentSpeed 480.0 targetState 1
+Goose 0 state 1 currentSpeed 480.0 targetState 1
+Goose 0 state 1 currentSpeed 480.0 targetState 1
+Goose 0 state 1 currentSpeed 480.0 targetState 1
+Goose 0 state 1 currentSpeed 480.0 targetState 1
+Goose 0 state 1 currentSpeed 480.0 targetState 1
+Goose 0 state 1 currentSpeed 480.0 targetState 1
+Goose 0 state 1 currentSpeed 480.0 targetState 1
+Goose 0 state 1 currentSpeed 480.0 targetState 1
+Goose 0 state 1 currentSpeed 480.0 targetState 1
+Goose 0 state 1 currentSpeed 480.0 targetState 1
+Goose 0 state 1 currentSpeed 480.0 targetState 1
+Goose 0 state 1 currentSpeed 480.0 targetState 1
+Goose 0 state 1 currentSpeed 480.0 targetState 1
+[08:43:18] DEBUG: Goose 0 pos: 1624.9,919.6 speed: 480.0
+Goose 0 state 1 currentSpeed 480.0 targetState 1
+Goose 0 state 1 currentSpeed 480.0 targetState 1
+Goose 0 state 1 currentSpeed 480.0 targetState 1
+Goose 0 state 1 currentSpeed 480.0 targetState 1
+Goose 0 state 1 currentSpeed 480.0 targetState 1
+Goose 0 state 1 currentSpeed 480.0 targetState 1
+Footprint created at (1644.5, 911.7), foot home (1644.5, 911.7), goose pos (1641.1, 913.1)
+Goose 0 state 1 currentSpeed 480.0 targetState 1
+Goose 0 state 1 currentSpeed 480.0 targetState 1
+Goose 0 state 1 currentSpeed 480.0 targetState 1
+Goose 0 state 1 currentSpeed 480.0 targetState 1
+Goose 0 state 1 currentSpeed 480.0 targetState 1
+Goose 0 state 1 currentSpeed 480.0 targetState 1
+Goose 0 state 1 currentSpeed 480.0 targetState 1
+Goose 0 state 1 currentSpeed 480.0 targetState 1
+Goose 0 state 1 currentSpeed 480.0 targetState 1
+Goose 0 state 1 currentSpeed 480.0 targetState 1
+Goose 0 state 1 currentSpeed 480.0 targetState 1
+Goose 0 state 1 currentSpeed 480.0 targetState 1
+Goose 0 state 1 currentSpeed 480.0 targetState 1
+Goose 0 state 1 currentSpeed 480.0 targetState 1
+Goose 0 state 1 currentSpeed 480.0 targetState 1
+Goose 0 state 1 currentSpeed 480.0 targetState 1
+Goose 0 state 1 currentSpeed 480.0 targetState 1
+Footprint created at (1698.4, 876.4), foot home (1698.4, 876.4), goose pos (1694.6, 877.4)
+Goose 0 state 1 currentSpeed 480.0 targetState 1
+Goose 0 state 1 currentSpeed 480.0 targetState 1
+Goose 0 state 1 currentSpeed 480.0 targetState 1
+Goose 0 state 1 currentSpeed 480.0 targetState 1
+Goose 0 state 1 currentSpeed 480.0 targetState 1
+Goose 0 state 1 currentSpeed 480.0 targetState 1
+Goose 0 state 1 currentSpeed 480.0 targetState 1
+Goose 0 state 1 currentSpeed 480.0 targetState 1
+Goose 0 state 1 currentSpeed 480.0 targetState 1
+Goose 0 state 1 currentSpeed 480.0 targetState 1
+Goose 0 state 1 currentSpeed 480.0 targetState 1
+Goose 0 state 1 currentSpeed 480.0 targetState 1
+Goose 0 state 1 currentSpeed 480.0 targetState 1
+Goose 0 state 1 currentSpeed 480.0 targetState 1
+Goose 0 state 1 currentSpeed 480.0 targetState 1
+Goose 0 state 1 currentSpeed 480.0 targetState 1
+Goose 0 state 1 currentSpeed 480.0 targetState 1
+Goose 0 state 1 currentSpeed 480.0 targetState 1
+Goose 0 state 1 currentSpeed 480.0 targetState 1
+Goose 0 state 1 currentSpeed 480.0 targetState 1
+Goose 0 state 1 currentSpeed 480.0 targetState 1
+Goose 0 state 1 currentSpeed 480.0 targetState 1
+Goose 0 state 1 currentSpeed 480.0 targetState 1
+Goose 0 state 1 currentSpeed 480.0 targetState 1
+Goose 0 state 1 currentSpeed 480.0 targetState 1
+Goose 0 state 1 currentSpeed 480.0 targetState 1
+Goose 0 state 1 currentSpeed 480.0 targetState 1
+Goose 0 state 1 currentSpeed 480.0 targetState 1
+Goose 0 state 1 currentSpeed 480.0 targetState 1
+Goose 0 state 1 currentSpeed 480.0 targetState 1
+[DEBUG] Playing honk 2
+Goose 0 state 2 currentSpeed 480.0 targetState 1
+Goose 0 state 2 currentSpeed 480.0 targetState 1
+Goose 0 state 2 currentSpeed 480.0 targetState 1
+Footprint created at (1676.7, 754.3), foot home (1676.7, 754.3), goose pos (1672.7, 754.0)
+Goose 0 state 2 currentSpeed 480.0 targetState 1
+Goose 0 state 2 currentSpeed 480.0 targetState 1
+Goose 0 state 2 currentSpeed 480.0 targetState 1
+Goose 0 state 2 currentSpeed 480.0 targetState 1
+[08:43:19] DEBUG: Goose 0 pos: 1648.8,740.6 speed: 480.0
+Goose 0 state 2 currentSpeed 480.0 targetState 1
+Goose 0 state 2 currentSpeed 480.0 targetState 1
+Goose 0 state 2 currentSpeed 480.0 targetState 1
+Goose 0 state 2 currentSpeed 480.0 targetState 1
+Goose 0 state 2 currentSpeed 480.0 targetState 1
+Goose 0 state 2 currentSpeed 480.0 targetState 1
+Goose 0 state 2 currentSpeed 480.0 targetState 1
+Goose 0 state 2 currentSpeed 480.0 targetState 1
+Goose 0 state 2 currentSpeed 480.0 targetState 1
+Goose 0 state 2 currentSpeed 480.0 targetState 1
+Goose 0 state 2 currentSpeed 480.0 targetState 1
+Footprint created at (1581.5, 711.8), foot home (1581.5, 711.8), goose pos (1578.3, 710.2)
+Goose 0 state 2 currentSpeed 480.0 targetState 1
+Goose 0 state 2 currentSpeed 480.0 targetState 1
+Goose 0 state 2 currentSpeed 480.0 targetState 1
+Goose 0 state 2 currentSpeed 480.0 targetState 1
+Goose 0 state 2 currentSpeed 480.0 targetState 1
+Goose 0 state 2 currentSpeed 480.0 targetState 1
+Goose 0 state 2 currentSpeed 480.0 targetState 1
+Goose 0 state 2 currentSpeed 480.0 targetState 1
+Goose 0 state 2 currentSpeed 480.0 targetState 1
+Goose 0 state 2 currentSpeed 480.0 targetState 1
+Goose 0 state 2 currentSpeed 480.0 targetState 1
+Goose 0 state 2 currentSpeed 480.0 targetState 1
+Goose 0 state 2 currentSpeed 480.0 targetState 1
+Goose 0 state 2 currentSpeed 480.0 targetState 1
+Goose 0 state 2 currentSpeed 480.0 targetState 1
+Goose 0 state 2 currentSpeed 480.0 targetState 1
+Goose 0 state 2 currentSpeed 480.0 targetState 1
+Goose 0 state 2 currentSpeed 480.0 targetState 1
+Goose 0 state 2 currentSpeed 480.0 targetState 1
+Goose 0 state 2 currentSpeed 480.0 targetState 1
+Goose 0 state 2 currentSpeed 480.0 targetState 1
+Goose 0 state 2 currentSpeed 480.0 targetState 1
+Goose 0 state 2 currentSpeed 480.0 targetState 1
+Goose 0 state 2 currentSpeed 480.0 targetState 1
+Goose 0 state 2 currentSpeed 480.0 targetState 1
+Goose 0 state 2 currentSpeed 480.0 targetState 1
+Goose 0 state 2 currentSpeed 480.0 targetState 1
+Goose 0 state 2 currentSpeed 480.0 targetState 1
+Goose 0 state 2 currentSpeed 480.0 targetState 1
+Goose 0 state 2 currentSpeed 480.0 targetState 1
+Goose 0 state 2 currentSpeed 480.0 targetState 1
+Goose 0 state 2 currentSpeed 480.0 targetState 1
+Goose 0 state 2 currentSpeed 480.0 targetState 1
+Goose 0 state 2 currentSpeed 480.0 targetState 1
+Goose 0 state 2 currentSpeed 480.0 targetState 1
+Goose 0 state 2 currentSpeed 480.0 targetState 1
+Goose 0 state 2 currentSpeed 480.0 targetState 1
+Goose 0 state 2 currentSpeed 480.0 targetState 1
+Goose 0 state 2 currentSpeed 480.0 targetState 1
+Goose 0 state 2 currentSpeed 480.0 targetState 1
+Goose 0 state 2 currentSpeed 480.0 targetState 1
+Goose 0 state 2 currentSpeed 480.0 targetState 1
+Goose 0 state 2 currentSpeed 480.0 targetState 1
+Goose 0 state 2 currentSpeed 480.0 targetState 1
+Goose 0 state 2 currentSpeed 480.0 targetState 1
+Goose 0 state 2 currentSpeed 480.0 targetState 1
+Goose 0 state 2 currentSpeed 480.0 targetState 1
+Goose 0 state 2 currentSpeed 480.0 targetState 1
+Goose 0 state 2 currentSpeed 480.0 targetState 1
+[08:43:20] DEBUG: Goose 0 pos: 1213.3,675.5 speed: 480.0
+Goose 0 state 2 currentSpeed 480.0 targetState 1
+Goose 0 state 2 currentSpeed 480.0 targetState 1
+Goose 0 state 2 currentSpeed 480.0 targetState 1
+Goose 0 state 2 currentSpeed 480.0 targetState 1
+Goose 0 state 2 currentSpeed 480.0 targetState 1

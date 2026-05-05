@@ -56,7 +56,7 @@ struct MovementConfig {
   float initDirectionMax = 360.0f;
   float speedLerpRate = 0.05f;
   float arrivalRadius = 50.0f;
-  float runDistanceThreshold = 300.0f;
+  float runDistanceThreshold = 600.0f;
   float directionBlendRate = 0.15f;
 };
 
