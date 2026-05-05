@@ -153,13 +153,13 @@ static void DrawLine(CGContextRef ctx, Vector2 a, Vector2 b, float width, float 
 
     CGContextClearRect(ctx, self.bounds);
 
-    [self drawFootprints:ctx];
     [self drawDroppedItems:ctx];
     
-    // Flip Y for goose only
+    // Flip Y for goose and footprints
     CGContextSaveGState(ctx);
     CGContextTranslateCTM(ctx, 0, self.bounds.size.height);
     CGContextScaleCTM(ctx, 1.0, -1.0);
+    [self drawFootprints:ctx];
     [self drawGeese:ctx];
     [self drawDebugOverlay:ctx];
     CGContextRestoreGState(ctx);
@@ -173,7 +173,12 @@ static void DrawLine(CGContextRef ctx, Vector2 a, Vector2 b, float width, float 
         if (alpha <= 0) continue;
 
         CGContextSetRGBFillColor(ctx, g_config.color.footprint.r, g_config.color.footprint.g, g_config.color.footprint.b, alpha * g_config.color.footprintAlphaMultiplier);
-        CGContextFillEllipseInRect(ctx, CGRectMake(fp.pos.x - g_config.render.footprintWidth/2, fp.pos.y - g_config.render.footprintHeight/2, g_config.render.footprintWidth, g_config.render.footprintHeight));
+        
+        CGContextSaveGState(ctx);
+        CGContextTranslateCTM(ctx, fp.pos.x, fp.pos.y);
+        CGContextRotateCTM(ctx, fp.dir);
+        CGContextFillEllipseInRect(ctx, CGRectMake(-g_config.render.footprintWidth/2, -g_config.render.footprintHeight/2, g_config.render.footprintWidth, g_config.render.footprintHeight));
+        CGContextRestoreGState(ctx);
     }
 }
 
