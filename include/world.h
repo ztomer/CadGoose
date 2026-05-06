@@ -33,10 +33,35 @@ struct Footprint {
     float lifetime;
 };
 
+struct Leaf {
+    Vector2 curPosPlanar;
+    float curPosZ;
+    Vector2 velPlanar;
+    float velZ;
+    int colorIndex;
+    
+    Vector2 GetScreenOffset(float zScale = 1.0f) const {
+        return curPosPlanar + Vector2{0.0f, -curPosZ * zScale * 0.6f};
+    }
+};
+
+struct LeafPile {
+    Vector2 pos;
+    float rad;
+    float timeSinceKicked = -1.0f;
+    float timeCreated = 0.0f;
+    std::vector<Leaf> leaves;
+    
+    void Init(Vector2 position, float radius, float height, double currentTime);
+    void Kick(Vector2 kickVelocity, double currentTime, float gooseSpeedPercentage);
+    void Tick(Goose* g, double currentTime, float dt);
+};
+
 extern std::list<Goose> g_geese;
 extern std::list<MonitorInfo> g_monitors;
 extern std::list<DroppedItem> g_droppedItems;
 extern std::list<Footprint> g_footprints;
+extern std::list<LeafPile> g_leafPiles;
 extern int g_nextId;
 extern int g_screenWidth;
 extern int g_screenHeight;

@@ -83,7 +83,7 @@ void LogWrite(const char* level, const char* fmt, ...) {
 
     [menu addItem:[NSMenuItem separatorItem]];
 
-    NSMenuItem* honkItem = [menu addItemWithTitle:@"Test Honk" action:@selector(testHonk:) keyEquivalent:@"h"];
+    NSMenuItem* honkItem = [menu addItemWithTitle:@"Honk!" action:@selector(testHonk:) keyEquivalent:@"h"];
     honkItem.keyEquivalentModifierMask = NSEventModifierFlagCommand;
 
     [menu addItem:[NSMenuItem separatorItem]];
@@ -389,6 +389,7 @@ static int HandleCliCommand(int argc, char** argv, int* appArgc) {
 }
 
 int main(int argc, char** argv) {
+    srand((unsigned int)time(NULL));
     OpenLogFile();
     fprintf(stderr, "[DEBUG] main() starting, argc=%d\n", argc);
     fflush(stderr);

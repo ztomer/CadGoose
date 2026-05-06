@@ -134,6 +134,7 @@ static void tryPickupItem(Goose& g, double time, int w, int h) {
     Vector2 btPoint = g.GetBeakTipDevice();
 
     for (auto it = g_droppedItems.begin(); it != g_droppedItems.end(); ++it) {
+        if (it->pinned) continue;
         Vector2 itemCenter = WorldCoord::ItemCenter(*it);
         if (Vector2::Distance(btPoint, itemCenter) < WorldCoord::Scale(g_config.spawn.itemPickupDistance)) {
             if (!canPickupItem(time - it->timeDropped)) continue;
@@ -196,17 +197,22 @@ static void handleWander(Goose& g, double time, const CursorState& cursor, int w
             g.PickNewTarget(w, h);
 
             if (g_config.general.memesEnabled && (rand() % 100) < g_config.item.heistChancePercent && !g_droppedItems.empty()) {
-                auto it = g_droppedItems.begin();
-                std::advance(it, rand() % g_droppedItems.size());
-                Vector2 centerDevice = WorldCoord::ItemCenter(*it);
-                Vector2 gooseScreen = WorldCoord::GoosePos(g);
-                Vector2 toCenter = centerDevice - gooseScreen;
-                float len = Vector2::Length(toCenter);
-                Vector2 approachDir = (len < 1e-4f) ? Vector2{0.0f, -1.0f} : Vector2{toCenter.x / len, toCenter.y / len};
-                float halfDim = std::max(WorldCoord::DeviceSize(it->data->w).x, WorldCoord::DeviceSize(it->data->h).y) * 0.5f;
-                float margin = WorldCoord::Scale((float)g_config.item.heistApproachMargin);
-                Vector2 approachDevice = centerDevice - approachDir * (halfDim + margin);
-                g.target = approachDevice;
+                std::vector<std::list<DroppedItem>::iterator> validItems;
+                for (auto it = g_droppedItems.begin(); it != g_droppedItems.end(); ++it) {
+                    if (!it->pinned) validItems.push_back(it);
+                }
+                if (!validItems.empty()) {
+                    auto it = validItems[rand() % validItems.size()];
+                    Vector2 centerDevice = WorldCoord::ItemCenter(*it);
+                    Vector2 gooseScreen = WorldCoord::GoosePos(g);
+                    Vector2 toCenter = centerDevice - gooseScreen;
+                    float len = Vector2::Length(toCenter);
+                    Vector2 approachDir = (len < 1e-4f) ? Vector2{0.0f, -1.0f} : Vector2{toCenter.x / len, toCenter.y / len};
+                    float halfDim = std::max(WorldCoord::DeviceSize(it->data->w).x, WorldCoord::DeviceSize(it->data->h).y) * 0.5f;
+                    float margin = WorldCoord::Scale((float)g_config.item.heistApproachMargin);
+                    Vector2 approachDevice = centerDevice - approachDir * (halfDim + margin);
+                    g.target = approachDevice;
+                }
             }
 
             if ((rand() % g_config.honk.wanderHonkDivisor) == 0) {

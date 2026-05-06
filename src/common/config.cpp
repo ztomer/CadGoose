@@ -375,7 +375,8 @@ void Config_InitRegistry() {
     g_configRegistry.push_back({"Step", "zero_velocity_threshold", "Zero Velocity Threshold", CFG_FLOAT, &g_config.step.zeroVelocityThreshold, 0.0f, 1000.0f, 0.1f, "", OnConfigChange});
     g_configRegistry.push_back({"Step", "min_duration", "Min Duration", CFG_FLOAT, &g_config.step.minDuration, 0.0f, 1000.0f, 0.1f, "", OnConfigChange});
     g_configRegistry.push_back({"Item", "pickup_cooldown", "Pickup Cooldown", CFG_FLOAT, &g_config.item.pickupCooldown, 0.0f, 1000.0f, 0.1f, "", OnConfigChange});
-    g_configRegistry.push_back({"Item", "meme_pickup_chance", "Meme Pickup Chance", CFG_INT, &g_config.item.memePickupChance, 0, 1000, 1, "", OnConfigChange});
+    g_configRegistry.push_back({"Item", "item_lifetime", "Item Lifetime", CFG_FLOAT, &g_config.item.itemLifetime, 0.0f, 3600.0f, 1.0f, "", OnConfigChange});
+    g_configRegistry.push_back({"Item", "meme_pickup_chance", "Meme Pickup Chance", CFG_INT, &g_config.item.memePickupChance, 0, 100, 1, "", OnConfigChange});
     g_configRegistry.push_back({"Item", "fetch_base_chance", "Fetch Base Chance", CFG_INT, &g_config.item.fetchBaseChance, 0, 1000, 1, "", OnConfigChange});
     g_configRegistry.push_back({"Item", "max_fetch_bias", "Max Fetch Bias", CFG_INT, &g_config.item.maxFetchBias, 0, 1000, 1, "", OnConfigChange});
     g_configRegistry.push_back({"Item", "max_fetch_geese", "Max Fetch Geese", CFG_INT, &g_config.item.maxFetchGeese, 0, 1000, 1, "", OnConfigChange});

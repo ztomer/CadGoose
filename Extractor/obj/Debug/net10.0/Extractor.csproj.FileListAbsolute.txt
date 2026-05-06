@@ -1,0 +1,15 @@
+/Users/ztomer/Projects/CadGoose/Extractor/bin/Debug/net10.0/Extractor
+/Users/ztomer/Projects/CadGoose/Extractor/bin/Debug/net10.0/Extractor.deps.json
+/Users/ztomer/Projects/CadGoose/Extractor/bin/Debug/net10.0/Extractor.runtimeconfig.json
+/Users/ztomer/Projects/CadGoose/Extractor/bin/Debug/net10.0/Extractor.dll
+/Users/ztomer/Projects/CadGoose/Extractor/bin/Debug/net10.0/Extractor.pdb
+/Users/ztomer/Projects/CadGoose/Extractor/obj/Debug/net10.0/Extractor.GeneratedMSBuildEditorConfig.editorconfig
+/Users/ztomer/Projects/CadGoose/Extractor/obj/Debug/net10.0/Extractor.AssemblyInfoInputs.cache
+/Users/ztomer/Projects/CadGoose/Extractor/obj/Debug/net10.0/Extractor.AssemblyInfo.cs
+/Users/ztomer/Projects/CadGoose/Extractor/obj/Debug/net10.0/Extractor.csproj.CoreCompileInputs.cache
+/Users/ztomer/Projects/CadGoose/Extractor/obj/Debug/net10.0/Extractor.sourcelink.json
+/Users/ztomer/Projects/CadGoose/Extractor/obj/Debug/net10.0/Extractor.dll
+/Users/ztomer/Projects/CadGoose/Extractor/obj/Debug/net10.0/refint/Extractor.dll
+/Users/ztomer/Projects/CadGoose/Extractor/obj/Debug/net10.0/Extractor.pdb
+/Users/ztomer/Projects/CadGoose/Extractor/obj/Debug/net10.0/Extractor.genruntimeconfig.cache
+/Users/ztomer/Projects/CadGoose/Extractor/obj/Debug/net10.0/ref/Extractor.dll

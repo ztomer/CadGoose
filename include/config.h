@@ -56,7 +56,7 @@ struct MovementConfig {
   float initDirectionMax = 360.0f;
   float speedLerpRate = 0.05f;
   float arrivalRadius = 50.0f;
-  float runDistanceThreshold = 600.0f;
+  float runDistanceThreshold = 1200.0f;
   float directionBlendRate = 0.15f;
 };
 
@@ -140,7 +140,7 @@ struct RigConfig {
 
 struct CursorConfig {
   bool chaseEnabled = true;
-  int chaseChance = 3;
+  int chaseChance = 1;
   bool multiMonitorEnabled = true;
 };
 
@@ -206,14 +206,15 @@ struct StepConfig {
 
 struct ItemConfig {
   float pickupCooldown = 2.0f;
-  int memePickupChance = 20;
-  int fetchBaseChance = 5;
+  float itemLifetime = 15.0f;
+  int memePickupChance = 10;
+  int fetchBaseChance = 2;
   int maxFetchBias = 100;
   int maxFetchGeese = 3;
-  int memeFetchBiasMax = 61;
-  int noteFetchBiasMax = 41;
-  int attackMouseBiasMax = 51;
-  int heistChancePercent = 20;
+  int memeFetchBiasMax = 30;
+  int noteFetchBiasMax = 20;
+  int attackMouseBiasMax = 25;
+  int heistChancePercent = 10;
   int heistApproachMargin = 8;
 };
 
@@ -223,11 +224,11 @@ struct RenderConfig {
   float shadowWidth = 40.0f;
   float shadowHeight = 30.0f;
   float footSize = 8.0f;
-  float bodyWidth = 30.0f;
-  float bodyHeight = 20.0f;
-  float neckSize = 16.0f;
-  float head1Size = 20.0f;
-  float head2Size = 14.0f;
+  float bodyWidth = 22.0f;
+  float bodyHeight = 22.0f;
+  float neckSize = 13.0f;
+  float head1Size = 15.0f;
+  float head2Size = 10.0f;
   float beakWidth = 16.0f;
   float beakHeight = 8.0f;
   float beakMaxWidth = 9.0f;

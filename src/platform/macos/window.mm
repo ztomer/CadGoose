@@ -39,7 +39,7 @@ extern bool g_debugMode;
         self.backgroundColor = [NSColor clearColor];
         self.opaque = NO;
         self.hasShadow = NO;
-        self.ignoresMouseEvents = YES;
+        self.ignoresMouseEvents = NO;
         self.acceptsMouseMovedEvents = YES;
         self.collectionBehavior |= NSWindowCollectionBehaviorIgnoresCycle;
         
