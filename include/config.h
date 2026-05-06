@@ -293,6 +293,7 @@ struct Config {
   ItemConfig item;
   RenderConfig render;
   ColorConfig color;
+  ModConfig mods;
 };
 
 extern Config g_config;
