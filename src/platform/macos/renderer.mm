@@ -43,9 +43,12 @@ static void DrawLine(CGContextRef ctx, Vector2 a, Vector2 b, float width, float 
 @property (nonatomic, assign) double currentTime;
 @property (nonatomic, assign) int tickCount;
 @property (nonatomic, strong) dispatch_source_t timer;
+@property (nonatomic, assign) DroppedItem* draggedItem;
+@property (nonatomic, assign) NSPoint dragOffset;
 - (void)drawGoose:(Goose*)g inContext:(CGContextRef)ctx;
 - (void)drawHeldItem:(Goose*)g inContext:(CGContextRef)ctx;
 - (void)drawFootprints:(CGContextRef)ctx;
+- (void)drawLeaves:(CGContextRef)ctx;
 - (void)drawDroppedItems:(CGContextRef)ctx;
 - (void)drawGeese:(CGContextRef)ctx;
 - (void)drawDebugOverlay:(CGContextRef)ctx;
@@ -138,15 +141,122 @@ static void DrawLine(CGContextRef ctx, Vector2 a, Vector2 b, float width, float 
             float life = (fp.lifetime > 0.0f) ? fp.lifetime : g_config.mud.lifetime;
             return (self.currentTime - fp.timeSpawned) > life;
         });
+        
+        g_leafPiles.remove_if([&](const LeafPile& p) {
+            return (p.timeSinceKicked > 0.0f && self.currentTime - p.timeSinceKicked > 10.0f);
+        });
     }
 
-    if (self.currentTime > 120.0) {
-        [self stopAnimation];
-        exit(0);
-        return;
+    if (rand() % 600 == 0 && g_leafPiles.size() < 10) {
+        LeafPile pile;
+        pile.Init(Vector2{(float)(rand() % (int)std::max(1.0, self.bounds.size.width)), (float)(rand() % (int)std::max(1.0, self.bounds.size.height))}, 50.0f, 100.0f, self.currentTime);
+        g_leafPiles.push_back(pile);
+    }
+    
+    for (auto& pile : g_leafPiles) {
+        pile.Tick(g_geese.empty() ? nullptr : &g_geese.front(), self.currentTime, g_config.render.frameDt);
+    }
+    
+    bool shouldAcceptMouse = (self.draggedItem != nullptr);
+    if (!shouldAcceptMouse && !g_droppedItems.empty()) {
+        NSPoint mouseLoc = [NSEvent mouseLocation];
+        NSRect windowRect = [self.window convertRectFromScreen:NSMakeRect(mouseLoc.x, mouseLoc.y, 0, 0)];
+        NSPoint p = [self convertPoint:windowRect.origin fromView:nil];
+        
+        for (auto it = g_droppedItems.rbegin(); it != g_droppedItems.rend(); ++it) {
+            DroppedItem& item = *it;
+            float cx = item.pos.x;
+            float cy = self.bounds.size.height - item.pos.y;
+            float dx = p.x - cx;
+            float dy = p.y - cy;
+            float cosA = cos(item.rotation);
+            float sinA = sin(item.rotation);
+            float lx = dx * cosA - dy * sinA;
+            float ly = dx * sinA + dy * cosA;
+            if (lx >= -item.data->w/2.0f && lx <= item.data->w/2.0f &&
+                ly >= -item.data->h/2.0f && ly <= item.data->h/2.0f) {
+                shouldAcceptMouse = true;
+                break;
+            }
+        }
+    }
+    if (self.window.ignoresMouseEvents == shouldAcceptMouse) {
+        self.window.ignoresMouseEvents = !shouldAcceptMouse;
     }
 
     [self setNeedsDisplay:YES];
+}
+
+- (NSView *)hitTest:(NSPoint)point {
+    NSPoint p = [self convertPoint:point fromView:self.superview];
+    for (auto it = g_droppedItems.rbegin(); it != g_droppedItems.rend(); ++it) {
+        DroppedItem& item = *it;
+        float cx = item.pos.x;
+        float cy = self.bounds.size.height - item.pos.y;
+        float dx = p.x - cx;
+        float dy = p.y - cy;
+        float cosA = cos(item.rotation);
+        float sinA = sin(item.rotation);
+        float lx = dx * cosA - dy * sinA;
+        float ly = dx * sinA + dy * cosA;
+        if (lx >= -item.data->w/2.0f && lx <= item.data->w/2.0f &&
+            ly >= -item.data->h/2.0f && ly <= item.data->h/2.0f) {
+            return self;
+        }
+    }
+    return nil;
+}
+
+- (void)mouseDown:(NSEvent *)event {
+    NSPoint p = [self convertPoint:[event locationInWindow] fromView:nil];
+    for (auto it = g_droppedItems.rbegin(); it != g_droppedItems.rend(); ++it) {
+        DroppedItem& item = *it;
+        float cx = item.pos.x;
+        float cy = self.bounds.size.height - item.pos.y;
+        float dx = p.x - cx;
+        float dy = p.y - cy;
+        float cosA = cos(item.rotation);
+        float sinA = sin(item.rotation);
+        float lx = dx * cosA - dy * sinA;
+        float ly = dx * sinA + dy * cosA;
+        
+        if (lx >= -item.data->w/2.0f && lx <= item.data->w/2.0f &&
+            ly >= -item.data->h/2.0f && ly <= item.data->h/2.0f) {
+            
+            if (lx >= item.data->w/2.0f - 20 && lx <= item.data->w/2.0f &&
+                ly >= item.data->h/2.0f - 20 && ly <= item.data->h/2.0f) {
+                delete item.data;
+                auto forward_it = std::prev(it.base());
+                g_droppedItems.erase(forward_it);
+                [self setNeedsDisplay:YES];
+                return;
+            }
+            
+            self.draggedItem = &item;
+            self.draggedItem->pinned = true;
+            self.dragOffset = NSMakePoint(cx - p.x, cy - p.y);
+            auto forward_it = std::prev(it.base());
+            g_droppedItems.splice(g_droppedItems.end(), g_droppedItems, forward_it);
+            return;
+        }
+    }
+}
+
+- (void)mouseDragged:(NSEvent *)event {
+    if (self.draggedItem) {
+        NSPoint p = [self convertPoint:[event locationInWindow] fromView:nil];
+        float newCx = p.x + self.dragOffset.x;
+        float newCy = p.y + self.dragOffset.y;
+        self.draggedItem->pos.x = newCx;
+        self.draggedItem->pos.y = self.bounds.size.height - newCy;
+        [self setNeedsDisplay:YES];
+    }
+}
+
+- (void)mouseUp:(NSEvent *)event {
+    if (self.draggedItem) {
+        self.draggedItem = nullptr;
+    }
 }
 
 - (void)drawRect:(NSRect)dirtyRect {
@@ -162,9 +272,42 @@ static void DrawLine(CGContextRef ctx, Vector2 a, Vector2 b, float width, float 
     CGContextTranslateCTM(ctx, 0, self.bounds.size.height);
     CGContextScaleCTM(ctx, 1.0, -1.0);
     [self drawFootprints:ctx];
+    [self drawLeaves:ctx];
     [self drawGeese:ctx];
     [self drawDebugOverlay:ctx];
     CGContextRestoreGState(ctx);
+}
+
+- (void)drawLeaves:(CGContextRef)ctx {
+    struct ColorRGB { float r, g, b; };
+    ColorRGB colors[4] = {
+        {208/255.0f, 122/255.0f, 45/255.0f},
+        {234/255.0f, 198/255.0f, 54/255.0f},
+        {172/255.0f, 193/255.0f, 79/255.0f},
+        {208/255.0f, 87/255.0f,  64/255.0f}
+    };
+    
+    for (const auto& pile : g_leafPiles) {
+        float tKicked = pile.timeSinceKicked;
+        float alpha = 1.0f;
+        if (tKicked > 0.0f) {
+            float age = self.currentTime - tKicked;
+            if (age > 8.0f) {
+                alpha = std::max(0.0f, 1.0f - (age - 8.0f) / 2.0f);
+            }
+        }
+        if (alpha <= 0.0f) continue;
+        
+        for (int i = 0; i < pile.leaves.size(); i++) {
+            const Leaf& leaf = pile.leaves[i];
+            Vector2 p = leaf.GetScreenOffset(1.0f) + pile.pos;
+            float sz = 5.0f + 5.0f * (leaf.curPosZ / 900.0f);
+            sz *= 2.0f;
+            ColorRGB c = colors[leaf.colorIndex % 4];
+            CGContextSetRGBFillColor(ctx, c.r, c.g, c.b, alpha);
+            CGContextFillEllipseInRect(ctx, CGRectMake(p.x - sz/2.0f, p.y - (sz*0.6f)/2.0f, sz, sz*0.6f));
+        }
+    }
 }
 
 - (void)drawFootprints:(CGContextRef)ctx {
@@ -216,6 +359,17 @@ static void DrawLine(CGContextRef ctx, Vector2 a, Vector2 b, float width, float 
             }
         }
 
+        // Draw close button 'X' inside a square
+        CGContextSetRGBFillColor(ctx, 0.9, 0.1, 0.1, 0.8);
+        CGContextFillRect(ctx, CGRectMake(item.data->w / 2.0f - 20, item.data->h / 2.0f - 20, 20, 20));
+        CGContextSetRGBStrokeColor(ctx, 1.0, 1.0, 1.0, 1.0);
+        CGContextSetLineWidth(ctx, 2.0);
+        CGContextMoveToPoint(ctx, item.data->w / 2.0f - 16, item.data->h / 2.0f - 16);
+        CGContextAddLineToPoint(ctx, item.data->w / 2.0f - 4, item.data->h / 2.0f - 4);
+        CGContextMoveToPoint(ctx, item.data->w / 2.0f - 4, item.data->h / 2.0f - 16);
+        CGContextAddLineToPoint(ctx, item.data->w / 2.0f - 16, item.data->h / 2.0f - 4);
+        CGContextStrokePath(ctx);
+
         CGContextRestoreGState(ctx);
     }
 }
@@ -266,10 +420,10 @@ static void DrawLine(CGContextRef ctx, Vector2 a, Vector2 b, float width, float 
                 beakR, beakG, beakB, 1.0f);
 
     // body segments - compute front/back points along fwd axis
-    Vector2 bodyFront = g->rig.body + fwd * 11.0f;
-    Vector2 bodyBack  = g->rig.body - fwd * 11.0f;
-    Vector2 underFront = g->rig.underbody + fwd * 7.0f;
-    Vector2 underBack  = g->rig.underbody - fwd * 7.0f;
+    Vector2 bodyFront = g->rig.body + fwd * (g_config.render.bodyHeight / 2.0f);
+    Vector2 bodyBack  = g->rig.body - fwd * (g_config.render.bodyHeight / 2.0f);
+    Vector2 underFront = g->rig.underbody + fwd * (g_config.render.bodyHeight * 0.3f);
+    Vector2 underBack  = g->rig.underbody - fwd * (g_config.render.bodyHeight * 0.3f);
 
     // Colors - use Canada Goose colors if enabled
     float bodyR, bodyG, bodyB;
@@ -293,24 +447,24 @@ static void DrawLine(CGContextRef ctx, Vector2 a, Vector2 b, float width, float 
     }
 
     // outlines
-    DrawLine(ctx, bodyFront, bodyBack, 24, outlineR, outlineG, outlineB, 1.0f);
-    DrawLine(ctx, g->rig.neckBase, g->rig.neckHead, 15, outlineR, outlineG, outlineB, 1.0f);
-    DrawLine(ctx, g->rig.neckHead, g->rig.head1, 17, outlineR, outlineG, outlineB, 1.0f);
-    DrawLine(ctx, g->rig.head1, g->rig.head2, 12, outlineR, outlineG, outlineB, 1.0f);
-    DrawLine(ctx, underFront, underBack, 15, outlineR, outlineG, outlineB, 1.0f);
+    DrawLine(ctx, bodyFront, bodyBack, g_config.render.bodyWidth + 2.0f, outlineR, outlineG, outlineB, 1.0f);
+    DrawLine(ctx, g->rig.neckBase, g->rig.neckHead, g_config.render.neckSize + 2.0f, outlineR, outlineG, outlineB, 1.0f);
+    DrawLine(ctx, g->rig.neckHead, g->rig.head1, g_config.render.head1Size + 2.0f, outlineR, outlineG, outlineB, 1.0f);
+    DrawLine(ctx, g->rig.head1, g->rig.head2, g_config.render.head2Size + 2.0f, outlineR, outlineG, outlineB, 1.0f);
+    DrawLine(ctx, underFront, underBack, g_config.render.bodyWidth - 7.0f, outlineR, outlineG, outlineB, 1.0f);
 
     // body squash when facing away
     CGContextSaveGState(ctx);
     CGContextTranslateCTM(ctx, g->rig.body.x, g->rig.body.y);
-    float squash = Lerp(1.0f, 0.92f, back);
+    float squash = Lerp(1.0f, g_config.render.squashFactor, back);
     CGContextScaleCTM(ctx, 1.0f, squash);
     CGContextTranslateCTM(ctx, -g->rig.body.x, -g->rig.body.y);
 
     // fill - body, neck, head1, head2
-    DrawLine(ctx, bodyFront, bodyBack, 22, bodyR, bodyG, bodyB, 1.0f);
-    DrawLine(ctx, g->rig.neckBase, g->rig.neckHead, 13, neckR, neckG, neckB, 1.0f);
-    DrawLine(ctx, g->rig.neckHead, g->rig.head1, 15, headR, headG, headB, 1.0f);
-    DrawLine(ctx, g->rig.head1, g->rig.head2, 10, headR, headG, headB, 1.0f);
+    DrawLine(ctx, bodyFront, bodyBack, g_config.render.bodyWidth, bodyR, bodyG, bodyB, 1.0f);
+    DrawLine(ctx, g->rig.neckBase, g->rig.neckHead, g_config.render.neckSize, neckR, neckG, neckB, 1.0f);
+    DrawLine(ctx, g->rig.neckHead, g->rig.head1, g_config.render.head1Size, headR, headG, headB, 1.0f);
+    DrawLine(ctx, g->rig.head1, g->rig.head2, g_config.render.head2Size, headR, headG, headB, 1.0f);
 
     // beak
     float beakW = std::min(g_config.render.beakWidth, g_config.render.beakMaxWidth);
@@ -325,15 +479,15 @@ static void DrawLine(CGContextRef ctx, Vector2 a, Vector2 b, float width, float 
     Vector2 side{ rawSide.x * g->ISO_SCALE.x, rawSide.y * g->ISO_SCALE.y };
     Vector2 up{ 0, -1 };
 
-    float eyeSep = Lerp(5.0f, 2.8f, back);
+    float eyeSep = Lerp(5.0f, g_config.render.eyeOffsetXFront, back);
     float eyeLift = Lerp(0.0f, 1.5f, back);
-    Vector2 eyeCenter = g->rig.neckHead + up * (3.0f + eyeLift);
+    Vector2 eyeCenter = g->rig.neckHead + up * (-g_config.render.eyeOffsetY + eyeLift);
 
-    if (back > 0.82f) {
-        DrawEllipse(ctx, eyeCenter, 2, 2, eyeR, eyeG, eyeB, 1.0f);
+    if (back > g_config.render.eyeFacingThreshold) {
+        DrawEllipse(ctx, eyeCenter, g_config.render.eyeSize / 2.0f, g_config.render.eyeSize / 2.0f, eyeR, eyeG, eyeB, 1.0f);
     } else {
-        DrawEllipse(ctx, eyeCenter - side * eyeSep, 2, 2, eyeR, eyeG, eyeB, 1.0f);
-        DrawEllipse(ctx, eyeCenter + side * eyeSep, 2, 2, eyeR, eyeG, eyeB, 1.0f);
+        DrawEllipse(ctx, eyeCenter - side * eyeSep, g_config.render.eyeSize / 2.0f, g_config.render.eyeSize / 2.0f, eyeR, eyeG, eyeB, 1.0f);
+        DrawEllipse(ctx, eyeCenter + side * eyeSep, g_config.render.eyeSize / 2.0f, g_config.render.eyeSize / 2.0f, eyeR, eyeG, eyeB, 1.0f);
     }
 
     if (g->heldItem && !facingBack) {

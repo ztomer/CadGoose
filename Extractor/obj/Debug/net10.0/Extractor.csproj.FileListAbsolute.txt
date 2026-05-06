@@ -1,0 +1,15 @@
+Extractor/bin/Debug/net10.0/Extractor
+Extractor/bin/Debug/net10.0/Extractor.deps.json
+Extractor/bin/Debug/net10.0/Extractor.runtimeconfig.json
+Extractor/bin/Debug/net10.0/Extractor.dll
+Extractor/bin/Debug/net10.0/Extractor.pdb
+Extractor/obj/Debug/net10.0/Extractor.GeneratedMSBuildEditorConfig.editorconfig
+Extractor/obj/Debug/net10.0/Extractor.AssemblyInfoInputs.cache
+Extractor/obj/Debug/net10.0/Extractor.AssemblyInfo.cs
+Extractor/obj/Debug/net10.0/Extractor.csproj.CoreCompileInputs.cache
+Extractor/obj/Debug/net10.0/Extractor.sourcelink.json
+Extractor/obj/Debug/net10.0/Extractor.dll
+Extractor/obj/Debug/net10.0/refint/Extractor.dll
+Extractor/obj/Debug/net10.0/Extractor.pdb
+Extractor/obj/Debug/net10.0/Extractor.genruntimeconfig.cache
+Extractor/obj/Debug/net10.0/ref/Extractor.dll

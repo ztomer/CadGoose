@@ -38,12 +38,11 @@ public:
     
     int id;
     std::string name;
-    Vector2 pos{200, 200};
-    Vector2 target{500, 500};
+    Vector2 pos{};
+    Vector2 target{};
     Vector2 vel{};
     Vector2 acceleration{};
-    float dir = 90.0f;
-    float maxForce = 350.0f;
+    float dir = 0.0f;
     float parabolicCurvature = 0.0f; // Multiplier for tangential curve force
 
     // State

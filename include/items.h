@@ -11,6 +11,7 @@
 #endif
 
 #include "goose_math.h"
+#include "config.h"
 
 struct ItemData {
     enum Type { MEME, TEXT } type;
@@ -37,7 +38,8 @@ struct DroppedItem {
     Vector2 pos;
     float rotation;
     double timeDropped;
-    bool isExpired(double time) { return (time - timeDropped) > 15.0; } // Disappear after 15s
+    bool pinned = false;
+    bool isExpired(double time) { return !pinned && ((time - timeDropped) > g_config.item.itemLifetime); } // Disappear after itemLifetime unless pinned
 };
 
 #endif // ITEMS_H
