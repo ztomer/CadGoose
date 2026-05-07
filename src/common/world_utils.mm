@@ -43,12 +43,15 @@ void World_SpawnRandomLeafPile(float screenWidth, float screenHeight, double cur
 }
 
 bool ItemHitTest(NSPoint p, float viewHeight, DroppedItem** hitItem, float closeButtonSize) {
+    float worldX = p.x;
+    float worldY = viewHeight - p.y;
+
     for (auto it = g_droppedItems.rbegin(); it != g_droppedItems.rend(); ++it) {
         DroppedItem& item = *it;
         float cx = item.pos.x;
-        float cy = viewHeight - item.pos.y;
-        float dx = p.x - cx;
-        float dy = p.y - cy;
+        float cy = item.pos.y;
+        float dx = worldX - cx;
+        float dy = worldY - cy;
         float cosA = cos(item.rotation);
         float sinA = sin(item.rotation);
         float lx = dx * cosA - dy * sinA;

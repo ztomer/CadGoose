@@ -116,6 +116,14 @@ public:
     static Vector2 ItemHalfSize(const ItemData* item) {
         return DeviceSize(item->w) * 0.5f;
     }
+
+    static Vector2 FromScreen(const Vector2& screenPos, float viewHeight) {
+        return Vector2{screenPos.x, viewHeight - screenPos.y};
+    }
+
+    static Vector2 ToScreen(const Vector2& worldPos, float viewHeight) {
+        return Vector2{worldPos.x, viewHeight - worldPos.y};
+    }
 };
 
 void UiLogPush(const std::string& s);

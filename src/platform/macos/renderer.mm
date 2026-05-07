@@ -59,13 +59,6 @@ static void DrawLine(CGContextRef ctx, Vector2 a, Vector2 b, float width, float 
 @property (nonatomic, strong) dispatch_source_t timer;
 @property (nonatomic, assign) DroppedItem* draggedItem;
 @property (nonatomic, assign) NSPoint dragOffset;
-- (void)drawGoose:(Goose*)g inContext:(CGContextRef)ctx;
-- (void)drawHeldItem:(Goose*)g inContext:(CGContextRef)ctx;
-- (void)drawFootprints:(CGContextRef)ctx;
-- (void)drawLeaves:(CGContextRef)ctx;
-- (void)drawDroppedItems:(CGContextRef)ctx;
-- (void)drawGeese:(CGContextRef)ctx;
-- (void)drawDebugOverlay:(CGContextRef)ctx;
 - (void)handleKeyDown:(NSEvent*)event;
 @end
 
@@ -134,9 +127,8 @@ static void DrawLine(CGContextRef ctx, Vector2 a, Vector2 b, float width, float 
     return YES;
 }
 
-- (BOOL)keyDown:(NSEvent*)event {
+- (void)keyDown:(NSEvent*)event {
     [self handleKeyDown:event];
-    return YES;
 }
 
 - (void)stopAnimation {
@@ -144,6 +136,9 @@ static void DrawLine(CGContextRef ctx, Vector2 a, Vector2 b, float width, float 
         dispatch_source_cancel(self.timer);
         self.timer = nil;
     }
+}
+
+- (void)handleClickAtPoint:(NSPoint)point {
 }
 
 - (void)tick {
@@ -193,10 +188,8 @@ static void DrawLine(CGContextRef ctx, Vector2 a, Vector2 b, float width, float 
         
         for (auto it = g_droppedItems.rbegin(); it != g_droppedItems.rend(); ++it) {
             DroppedItem& item = *it;
-            float cx = item.pos.x;
-            float cy = self.bounds.size.height - item.pos.y;
-            float dx = p.x - cx;
-            float dy = p.y - cy;
+            float dx = p.x - item.pos.x;
+            float dy = (self.bounds.size.height - p.y) - item.pos.y;
             float cosA = cos(item.rotation);
             float sinA = sin(item.rotation);
             float lx = dx * cosA - dy * sinA;
@@ -217,12 +210,13 @@ static void DrawLine(CGContextRef ctx, Vector2 a, Vector2 b, float width, float 
 
 - (NSView *)hitTest:(NSPoint)point {
     NSPoint p = [self convertPoint:point fromView:self.superview];
+    float worldX = p.x;
+    float worldY = self.bounds.size.height - p.y;
+
     for (auto it = g_droppedItems.rbegin(); it != g_droppedItems.rend(); ++it) {
         DroppedItem& item = *it;
-        float cx = item.pos.x;
-        float cy = self.bounds.size.height - item.pos.y;
-        float dx = p.x - cx;
-        float dy = p.y - cy;
+        float dx = worldX - item.pos.x;
+        float dy = worldY - item.pos.y;
         float cosA = cos(item.rotation);
         float sinA = sin(item.rotation);
         float lx = dx * cosA - dy * sinA;
@@ -237,20 +231,21 @@ static void DrawLine(CGContextRef ctx, Vector2 a, Vector2 b, float width, float 
 
 - (void)mouseDown:(NSEvent *)event {
     NSPoint p = [self convertPoint:[event locationInWindow] fromView:nil];
+    float worldX = p.x;
+    float worldY = self.bounds.size.height - p.y;
+
     for (auto it = g_droppedItems.rbegin(); it != g_droppedItems.rend(); ++it) {
         DroppedItem& item = *it;
-        float cx = item.pos.x;
-        float cy = self.bounds.size.height - item.pos.y;
-        float dx = p.x - cx;
-        float dy = p.y - cy;
+        float dx = worldX - item.pos.x;
+        float dy = worldY - item.pos.y;
         float cosA = cos(item.rotation);
         float sinA = sin(item.rotation);
         float lx = dx * cosA - dy * sinA;
         float ly = dx * sinA + dy * cosA;
-        
+
         if (lx >= -item.data->w/2.0f && lx <= item.data->w/2.0f &&
             ly >= -item.data->h/2.0f && ly <= item.data->h/2.0f) {
-            
+
             float closeX = item.data->w/2.0f - g_config.render.closeButtonSize;
             float closeY = item.data->h/2.0f - g_config.render.closeButtonSize;
             if (lx >= closeX && lx <= item.data->w/2.0f &&
@@ -261,10 +256,10 @@ static void DrawLine(CGContextRef ctx, Vector2 a, Vector2 b, float width, float 
                 [self setNeedsDisplay:YES];
                 return;
             }
-            
+
             self.draggedItem = &item;
             self.draggedItem->pinned = true;
-            self.dragOffset = NSMakePoint(cx - p.x, cy - p.y);
+            self.dragOffset = NSMakePoint(item.pos.x - worldX, item.pos.y - worldY);
             auto forward_it = std::prev(it.base());
             g_droppedItems.splice(g_droppedItems.end(), g_droppedItems, forward_it);
             return;
@@ -275,10 +270,11 @@ static void DrawLine(CGContextRef ctx, Vector2 a, Vector2 b, float width, float 
 - (void)mouseDragged:(NSEvent *)event {
     if (self.draggedItem) {
         NSPoint p = [self convertPoint:[event locationInWindow] fromView:nil];
-        float newCx = p.x + self.dragOffset.x;
-        float newCy = p.y + self.dragOffset.y;
-        self.draggedItem->pos.x = newCx;
-        self.draggedItem->pos.y = self.bounds.size.height - newCy;
+        float worldX = p.x;
+        float worldY = self.bounds.size.height - p.y;
+
+        self.draggedItem->pos.x = worldX + self.dragOffset.x;
+        self.draggedItem->pos.y = worldY + self.dragOffset.y;
         [self setNeedsDisplay:YES];
     }
 }
@@ -299,13 +295,14 @@ static void DrawLine(CGContextRef ctx, Vector2 a, Vector2 b, float width, float 
 
     CGContextClearRect(ctx, self.bounds);
 
+    CGContextSaveGState(ctx);
+    CGContextTranslateCTM(ctx, 0, self.bounds.size.height);
+    CGContextScaleCTM(ctx, 1.0, -1.0);
+
     for (const auto& item : g_droppedItems) {
         DrawDroppedItem(ctx, item, self.bounds.size.height);
     }
 
-    CGContextSaveGState(ctx);
-    CGContextTranslateCTM(ctx, 0, self.bounds.size.height);
-    CGContextScaleCTM(ctx, 1.0, -1.0);
     DrawFootprints(ctx, g_footprints, self.currentTime);
     DrawLeaves(ctx, g_leafPiles, self.currentTime);
 

@@ -132,7 +132,7 @@
   - Rewrote `config.cpp` with `Config_Load()` and `Config_SaveNow()` using toml11 library
   - Updated CMakeLists.txt to include toml11 paths for both CadGoose and CadGooseTests
   - Updated README.md paths from `.ini` to `.toml`
-- **Status**: Completed. Build succeeds with 114 tests passing.
+- **Status**: Completed. Build succeeds with 129 tests passing.
 
 ---
 
@@ -151,7 +151,7 @@ Integrate ResourceHub behaviors directly into the main binary. All behaviors are
 - [x] macOS AccessibilityManager with AXIsProcessTrusted() checks
 - [x] FailsafeHotkeyMonitor (Cmd+Shift+Escape global hotkey)
 - [x] Cursor hijack protection with 2s timeout
-- [x] Unit tests (114 tests passing)
+- [x] Unit tests (129 tests passing)
 - [x] All behaviors use per-behavior config structs (no hardcoded magic numbers)
 
 **Implemented Behaviors:**

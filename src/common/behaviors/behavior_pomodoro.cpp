@@ -67,11 +67,18 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
             state->lastHonkTime = time;
         }
 
-        goose->currentSpeed = goose->currentSpeed * cfg.aggressiveSpeedMultiplier;
+        if (!state->speedMultiplierApplied) {
+            goose->currentSpeed = g_config.movement.baseRunSpeed * cfg.aggressiveSpeedMultiplier;
+            state->speedMultiplierApplied = true;
+        }
     } else {
         if (state->accumulatedRotation > 0) {
             goose->dir -= state->accumulatedRotation;
             state->accumulatedRotation = 0;
+        }
+        if (state->speedMultiplierApplied) {
+            goose->currentSpeed = g_config.movement.baseWalkSpeed;
+            state->speedMultiplierApplied = false;
         }
     }
 }

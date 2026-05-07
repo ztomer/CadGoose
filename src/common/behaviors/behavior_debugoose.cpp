@@ -1,40 +1,36 @@
 // ===========================
 // behavior_debugoose.cpp
-// Debugoose Behavior - Debug overlay with log entries
+// Debugoose Behavior - Debug overlay
 // ===========================
 #include "behavior.h"
 #include "goose.h"
 #include "config.h"
 #include "world.h"
 #include <CoreGraphics/CoreGraphics.h>
+#include <CoreText/CoreText.h>
+#include <cstring>
 #include <vector>
 #include <string>
-#include <deque>
 
 static bool s_enabled = true;
-static std::deque<std::string> s_recentLogs;
-static constexpr size_t MAX_LOGS = 10;
-
-void Debugoose_Log(const char* message) {
-    s_recentLogs.push_back(message);
-    if (s_recentLogs.size() > MAX_LOGS) {
-        s_recentLogs.pop_front();
-    }
-}
+static const int MAX_LOGS = 10;
+static std::vector<std::string> s_recentLogs;
 
 static void init(BehaviorContext& ctx) {
-    s_recentLogs.clear();
+    auto* state = BehaviorStateManager::Instance().GetOrCreate<BehaviorState>(ctx.goose->id, "debugoose");
+    state->Reset();
 }
 
 static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
-    if (!g_config.behaviors.info.debugoose) {
-        s_recentLogs.clear();
-        return;
-    }
+    if (!g_config.behaviors.info.debugoose) return;
 
     char buf[256];
-    snprintf(buf, sizeof(buf), "State: %d, Speed: %.0f", (int)goose->state, goose->currentSpeed);
-    Debugoose_Log(buf);
+    snprintf(buf, sizeof(buf), "T=%.1f S=%d P=(%.0f,%.0f) V=%.0f",
+             time, (int)goose->state, goose->pos.x, goose->pos.y, goose->currentSpeed);
+    s_recentLogs.push_back(buf);
+    if ((int)s_recentLogs.size() > MAX_LOGS) {
+        s_recentLogs.erase(s_recentLogs.begin());
+    }
 }
 
 static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
@@ -46,17 +42,27 @@ static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
 
     CGContextSaveGState(cg);
 
+    int logCount = (int)s_recentLogs.size();
     CGContextSetRGBFillColor(cg, 0.1f, 0.1f, 0.1f, 0.8f);
-    CGContextFillRect(cg, CGRectMake(10, 10, 300, (float)(s_recentLogs.size() * 20 + 30)));
+    CGContextFillRect(cg, CGRectMake(10, 10, 300, (float)(logCount * 20 + 30)));
 
-    CGContextSetRGBFillColor(cg, 0.0f, 1.0f, 0.0f, 1.0f);
-    CGContextSelectFont(cg, "Courier", 12.0f, kCGEncodingMacRoman);
-    CGContextSetTextDrawingMode(cg, kCGTextFill);
+    CTFontRef font = CTFontCreateWithName(CFSTR("Courier"), 12.0f, NULL);
+    if (font) {
+        CGContextSetRGBFillColor(cg, 0.0f, 1.0f, 0.0f, 1.0f);
 
-    int i = 0;
-    for (const auto& log : s_recentLogs) {
-        CGContextShowTextAtPoint(cg, 20, 25 + i * 20, log.c_str(), log.length());
-        i++;
+        for (int i = 0; i < logCount; i++) {
+            const std::string& log = s_recentLogs[i];
+            CFStringRef string = CFStringCreateWithBytes(NULL, (const UInt8*)log.c_str(), log.length(), kCFStringEncodingUTF8, false);
+            CTLineRef line = CTLineCreateWithAttributedString(CFAttributedStringCreate(NULL, string, NULL));
+
+            if (line) {
+                CGContextSetTextPosition(cg, 20, 25 + i * 20);
+                CTLineDraw(line, cg);
+                CFRelease(line);
+            }
+            CFRelease(string);
+        }
+        CFRelease(font);
     }
 
     CGContextRestoreGState(cg);

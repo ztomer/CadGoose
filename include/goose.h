@@ -16,7 +16,7 @@ typedef struct cairo_t cairo_t;
 #include "assets.h"
 #include "cursor_io.h"
 
-enum GooseState { WANDER, FETCHING, RETURNING, CHASE_CURSOR, SNATCH_CURSOR };
+enum class GooseState { WANDER, FETCHING, RETURNING, CHASE_CURSOR, SNATCH_CURSOR };
 
 struct FootState {
     Vector2 currentPos{};
@@ -46,7 +46,7 @@ public:
     float parabolicCurvature = 0.0f; // Multiplier for tangential curve force
 
     // State
-    GooseState state = WANDER;
+    GooseState state = GooseState::WANDER;
     ItemData* heldItem = nullptr;
     int forceItemFetch = -1; // -1: Random, 0: Meme, 1: Text
     std::string forcedText;
@@ -104,7 +104,7 @@ public:
 
     // Debug logging
     bool debugSnatch = true;
-    GooseState prevState = WANDER;
+    GooseState prevState = GooseState::WANDER;
     double lastDebugLog = -1e9;
     static constexpr double debugLogInterval = 0.1;
 
@@ -122,15 +122,18 @@ public:
     void Draw(cairo_t* cr);
 #endif
 
-    // Coordinate helpers (using common utilities from goose_math.h)
-    // GetBeakTipDevice returns beak tip in DEVICE coordinates (screen space)
-    // Per BEHAVIOR.md line 228-229: cursor moved to beak tip every frame
     Vector2 GetBeakTipDevice();
 
     void StartSnatch(double time, const Vector2& cursorPos);
     void EndSnatch(double time, int w, int h);
 
 private:
+    void UpdateDirection();
+    void ClampToScreen(int w, int h);
+    Vector2 CalculateSeekForce();
+    Vector2 CalculateCurveForce(float dist);
+    Vector2 CalculateSeparationForce();
+    Vector2 CalculateEdgeAvoidance(int w, int h);
     void UpdateDrag(double dt);
     void StartFetch(int w, int h);
     CursorAction UpdateBehaviors(double dt, double time, int w, int h, const CursorState& cursor);

@@ -39,10 +39,10 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
     state->speedsEnabled[0] = g_config.gooseManager.speedWalk;
     state->speedsEnabled[1] = g_config.gooseManager.speedRun;
 
-    if (!state->tasksEnabled[0] && goose->state == WANDER) {
-        if (state->tasksEnabled[1]) goose->state = FETCHING;
-        else if (state->tasksEnabled[2]) goose->state = CHASE_CURSOR;
-        else if (state->tasksEnabled[3]) goose->state = SNATCH_CURSOR;
+    if (!state->tasksEnabled[0] && goose->state == GooseState::WANDER) {
+        if (state->tasksEnabled[1]) goose->state = GooseState::FETCHING;
+        else if (state->tasksEnabled[2]) goose->state = GooseState::CHASE_CURSOR;
+        else if (state->tasksEnabled[3]) goose->state = GooseState::SNATCH_CURSOR;
     }
 
     if (!state->speedsEnabled[0] && goose->currentSpeed < 100.0f) {

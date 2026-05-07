@@ -62,6 +62,7 @@ void LogWrite(const char* level, const char* fmt, ...) {
 
 @interface AppDelegate : NSObject <NSApplicationDelegate>
 @property (nonatomic, strong) NSStatusItem* statusItem;
+- (void)setupMenubar;
 - (void)addBehaviorItem:(NSString*)title configKey:(NSString*)key toMenu:(NSMenu*)menu;
 - (void)toggleBehavior:(NSMenuItem*)sender;
 - (bool*)getBehaviorFlag:(NSString*)key;
@@ -385,11 +386,11 @@ void LogWrite(const char* level, const char* fmt, ...) {
         auto& goose = g_geese.front();
         const char* stateStr = "?";
         switch (goose.state) {
-            case WANDER: stateStr = "W"; break;
-            case FETCHING: stateStr = "F"; break;
-            case RETURNING: stateStr = "R"; break;
-            case CHASE_CURSOR: stateStr = "C"; break;
-            case SNATCH_CURSOR: stateStr = "S"; break;
+            case GooseState::WANDER: stateStr = "W"; break;
+            case GooseState::FETCHING: stateStr = "F"; break;
+            case GooseState::RETURNING: stateStr = "R"; break;
+            case GooseState::CHASE_CURSOR: stateStr = "C"; break;
+            case GooseState::SNATCH_CURSOR: stateStr = "S"; break;
             default: stateStr = "?"; break;
         }
         self.statusItem.button.title = [NSString stringWithUTF8String:stateStr];

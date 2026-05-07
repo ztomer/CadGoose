@@ -3,8 +3,21 @@
 
 #include <string>
 #include <vector>
+#include <functional>
 
 enum ConfigType { CFG_BOOL, CFG_INT, CFG_FLOAT, CFG_STRING };
+
+#define CONFIG_OPTION(section, key, label, type, memberPtr, onChangeCb) \
+    { section, key, label, type, memberPtr, 0.0f, 1000.0f, 0.1f, "", onChangeCb }
+
+#define CONFIG_BOOL(section, key, label, memberPtr, onChangeCb) \
+    { section, key, label, CFG_BOOL, memberPtr, 0, 1, 1, "", onChangeCb }
+
+#define CONFIG_INT(section, key, label, memberPtr, minVal, maxVal, onChangeCb) \
+    { section, key, label, CFG_INT, memberPtr, minVal, maxVal, 1, "", onChangeCb }
+
+#define CONFIG_FLOAT(section, key, label, memberPtr, minVal, maxVal, stepVal, onChangeCb) \
+    { section, key, label, CFG_FLOAT, memberPtr, minVal, maxVal, stepVal, "", onChangeCb }
 
 struct ConfigOption {
   const char *section;
@@ -16,7 +29,7 @@ struct ConfigOption {
   float max;
   float step;
   const char *suffix;
-  void (*onChange)() = nullptr;
+  std::function<void()> onChange = nullptr;
 };
 
 struct DebugConfig {

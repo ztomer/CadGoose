@@ -120,10 +120,9 @@ TEST(HealthCheck, AudioFilesExist) {
 }
 
 TEST(HealthCheck, GooseBehaviorEvents) {
-    enum Behavior { WANDER, FETCHING, RETURNING, CHASE_CURSOR, SNATCH_CURSOR };
-    Behavior b = WANDER;
-    EXPECT_EQ(b, WANDER);
-    EXPECT_NE(b, CHASE_CURSOR);
+    GooseState b = GooseState::WANDER;
+    EXPECT_EQ(b, GooseState::WANDER);
+    EXPECT_NE(b, GooseState::CHASE_CURSOR);
 }
 
 TEST(HealthCheck, AudioPlayback) {
@@ -321,11 +320,11 @@ TEST(Behavior, SpeedWalkingWhenNear) {
     // Target speed: baseWalkSpeed when dist <= 300 and NOT in running states
     Vector2 pos{100, 100}, target{200, 200}; // dist = 141 < 300
     float dist = Vector2::Length(target - pos);
-    GooseState state = WANDER;
+    GooseState state = GooseState::WANDER;
 
     float tSpeed = (dist > g_cfg.runDistanceThreshold ||
-                    state == FETCHING || state == CHASE_CURSOR ||
-                    state == SNATCH_CURSOR || state == RETURNING)
+                    state == GooseState::FETCHING || state == GooseState::CHASE_CURSOR ||
+                    state == GooseState::SNATCH_CURSOR || state == GooseState::RETURNING)
         ? g_cfg.baseRunSpeed
         : g_cfg.baseWalkSpeed;
 
@@ -335,11 +334,11 @@ TEST(Behavior, SpeedWalkingWhenNear) {
 TEST(Behavior, SpeedRunningWhenFar) {
     Vector2 pos{100, 100}, target{500, 500}; // dist = 566 > 300
     float dist = Vector2::Length(target - pos);
-    GooseState state = WANDER;
+    GooseState state = GooseState::WANDER;
 
     float tSpeed = (dist > g_cfg.runDistanceThreshold ||
-                    state == FETCHING || state == CHASE_CURSOR ||
-                    state == SNATCH_CURSOR || state == RETURNING)
+                    state == GooseState::FETCHING || state == GooseState::CHASE_CURSOR ||
+                    state == GooseState::SNATCH_CURSOR || state == GooseState::RETURNING)
         ? g_cfg.baseRunSpeed
         : g_cfg.baseWalkSpeed;
 
@@ -350,11 +349,11 @@ TEST(Behavior, SpeedRunningInChaseState) {
     // Even if close, running states should use run speed
     Vector2 pos{100, 100}, target{150, 150}; // dist = 70 < 300
     float dist = Vector2::Length(target - pos);
-    GooseState state = CHASE_CURSOR;
+    GooseState state = GooseState::CHASE_CURSOR;
 
     float tSpeed = (dist > g_cfg.runDistanceThreshold ||
-                    state == FETCHING || state == CHASE_CURSOR ||
-                    state == SNATCH_CURSOR || state == RETURNING)
+                    state == GooseState::FETCHING || state == GooseState::CHASE_CURSOR ||
+                    state == GooseState::SNATCH_CURSOR || state == GooseState::RETURNING)
         ? g_cfg.baseRunSpeed
         : g_cfg.baseWalkSpeed;
 
@@ -487,7 +486,7 @@ TEST(Behavior, DirectionInit) {
 
 TEST(Integration, Goose_WanderToChase) {
     Goose g(1, "Test", 1920, 1080);
-    g.state = WANDER;
+    g.state = GooseState::WANDER;
     g.pos = {100, 100};
     g.target = {100, 100}; // Already at target
     g.cursorChaseChance = 100;
@@ -501,14 +500,14 @@ TEST(Integration, Goose_WanderToChase) {
 
     g.Update(0.1, 0.0, 1920, 1080, c);
     
-    EXPECT_EQ(g.state, CHASE_CURSOR);
+    EXPECT_EQ(g.state, GooseState::CHASE_CURSOR);
     EXPECT_EQ(g.target.x, 500.0f);
     EXPECT_EQ(g.target.y, 500.0f);
 }
 
 TEST(Integration, Goose_SnatchCursor) {
     Goose g(2, "Test", 1920, 1080);
-    g.state = CHASE_CURSOR;
+    g.state = GooseState::CHASE_CURSOR;
     g.pos = {500, 500};
     g.target = {500, 500}; 
     
@@ -526,13 +525,13 @@ TEST(Integration, Goose_SnatchCursor) {
     // Second update should trigger snatch
     g.Update(0.1, 0.1, 1920, 1080, c);
     
-    EXPECT_EQ(g.state, SNATCH_CURSOR);
+    EXPECT_EQ(g.state, GooseState::SNATCH_CURSOR);
     EXPECT_EQ(g_cursorGrabberId, 2);
 }
 
 TEST(Integration, Goose_SnatchRelease) {
     Goose g(3, "Test", 1920, 1080);
-    g.state = SNATCH_CURSOR;
+    g.state = GooseState::SNATCH_CURSOR;
     g.snatchStartTime = 0.0;
     g.snatchDuration = 3.0f; // 3 seconds
     g_cursorGrabberId = 3;
@@ -543,18 +542,18 @@ TEST(Integration, Goose_SnatchRelease) {
     
     // Not enough time passed
     g.Update(0.1, 1.0, 1920, 1080, c);
-    EXPECT_EQ(g.state, SNATCH_CURSOR);
+    EXPECT_EQ(g.state, GooseState::SNATCH_CURSOR);
     EXPECT_EQ(g_cursorGrabberId, 3);
 
     // Enough time passed (3.5 > 3.0)
     g.Update(0.1, 3.5, 1920, 1080, c);
-    EXPECT_EQ(g.state, WANDER);
+    EXPECT_EQ(g.state, GooseState::WANDER);
     EXPECT_EQ(g_cursorGrabberId, -1);
 }
 
 TEST(Integration, Goose_FetchItem) {
     Goose g(4, "Test", 1920, 1080);
-    g.state = WANDER;
+    g.state = GooseState::WANDER;
     g.pos = {100, 100};
     g.target = {100, 100}; // Reached
     
@@ -569,12 +568,12 @@ TEST(Integration, Goose_FetchItem) {
     CursorState c; // empty
     
     g.Update(0.1, 0.0, 1920, 1080, c);
-    EXPECT_EQ(g.state, FETCHING);
+    EXPECT_EQ(g.state, GooseState::FETCHING);
 }
 
 TEST(Integration, Goose_ReturningItem) {
     Goose g(5, "Test", 1920, 1080);
-    g.state = FETCHING;
+    g.state = GooseState::FETCHING;
     g.pos = {100, 100};
     g.target = {100, 100}; // Reached
     g.forceItemFetch = 0; // Meme
@@ -583,13 +582,13 @@ TEST(Integration, Goose_ReturningItem) {
     
     g.Update(0.1, 0.0, 1920, 1080, c);
     
-    EXPECT_EQ(g.state, RETURNING);
+    EXPECT_EQ(g.state, GooseState::RETURNING);
     EXPECT_NE(g.heldItem, nullptr);
 }
 
 TEST(Integration, Goose_DropItem) {
     Goose g(6, "Test", 1920, 1080);
-    g.state = RETURNING;
+    g.state = GooseState::RETURNING;
     g.pos = {100, 100};
     g.target = {100, 100}; // Reached
     g.heldItem = g_assets.GetRandomMeme();
@@ -599,7 +598,7 @@ TEST(Integration, Goose_DropItem) {
     CursorState c;
     g.Update(0.1, 0.0, 1920, 1080, c);
     
-    EXPECT_EQ(g.state, WANDER);
+    EXPECT_EQ(g.state, GooseState::WANDER);
     EXPECT_EQ(g.heldItem, nullptr);
     EXPECT_EQ(g_droppedItems.size(), initialDrops + 1);
 }

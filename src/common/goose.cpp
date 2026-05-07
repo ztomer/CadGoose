@@ -29,10 +29,11 @@ static void LogTick(double time, const CursorState &cursor) {
     fprintf(f, " c(-,-)");
   fprintf(f, " geese:");
   for (auto &g : g_geese) {
-    fprintf(f, " %d%s@(%d,%d)d%dv(%d,%d)s%d", g.id, ss[g.state], (int)g.pos.x,
+    const char* stateNames[] = {"W", "F", "R", "C", "S"};
+    fprintf(f, " %d%s@(%d,%d)d%dv(%d,%d)s%d", g.id, stateNames[static_cast<int>(g.state)], (int)g.pos.x,
             (int)g.pos.y, (int)g.dir, (int)g.vel.x, (int)g.vel.y,
             (int)g.currentSpeed);
-    if (g.state == 4)
+    if (g.state == GooseState::SNATCH_CURSOR)
       fprintf(f, " a=%.1f r=%.0f", g.snatchAngle, g.snatchRadius);
   }
   fprintf(f, "\n");
@@ -84,7 +85,7 @@ Vector2 Goose::GetBeakTipDevice() {
   Vector2 beakTipDevice = neckHeadDev + fwd * totalBeakOffset;
 
   FILE *f = GetDebugLog();
-  if (f && state == SNATCH_CURSOR) {
+  if (f && state == GooseState::SNATCH_CURSOR) {
     fprintf(f, "[BTDEV] g%d: dir=%.0f neck(%.0f,%.0f) btDev(%.0f,%.0f)\n", id,
             dir, neckHeadDev.x, neckHeadDev.y, beakTipDevice.x,
             beakTipDevice.y);
@@ -108,7 +109,7 @@ void Goose::UpdateRig() {
   rig.body = pos + up * g_config.rig.bodyY;
 
   int targetState =
-      (state == WANDER)
+      (state == GooseState::WANDER)
           ? 0
           : ((currentSpeed >= g_config.rig.runSpeedThreshold) ? 1 : 0);
   // fprintf(stderr, "Goose %d state %d currentSpeed %.1f targetState %d\n", id,
@@ -230,59 +231,32 @@ void Goose::SolveFeet(double time) {
   UpdateFoot(rig.rFoot, rHome);
 }
 
-CursorAction Goose::Update(double dt, double time, int w, int h,
-                           const CursorState &cursor) {
-  if (state != prevState) {
-    FILE *f = GetDebugLog();
-    const char *ss[] = {"W", "F", "R", "C", "S"};
-    fprintf(f, "!! t=%.1f g%d %s->%s tgt(%.0f,%.0f) c(%.0f,%.0f)\n", time, id,
-            ss[prevState], ss[state], target.x, target.y, cursor.position.x,
-            cursor.position.y);
-    prevState = state;
-    s_stateChanged = true;
-  }
-
-  s_lastLogTime += dt;
-  if (s_lastLogTime > 0.1 || s_stateChanged) {
-    LogTick(time, cursor);
-    s_lastLogTime = 0;
-    s_stateChanged = false;
-  }
-
-  // Update rig BEFORE behaviors so beak tip calculation is correct
-  UpdateRig();
-
-  CursorAction action = UpdateBehaviors(dt, time, w, h, cursor);
-
-  // Physics uses world coordinates - target is now in world coordinates
+Vector2 Goose::CalculateSeekForce() {
   Vector2 toTarget = target - pos;
   float dist = Vector2::Length(toTarget);
-
-  float tSpeed =
-      (dist > g_config.movement.runDistanceThreshold || state == FETCHING ||
-       state == CHASE_CURSOR || state == SNATCH_CURSOR || state == RETURNING)
-          ? g_config.movement.baseRunSpeed
-          : g_config.movement.baseWalkSpeed;
-  currentSpeed = Lerp(currentSpeed, tSpeed, g_config.movement.speedLerpRate);
-
   float arrivalRadius = g_config.movement.arrivalRadius;
   Vector2 moveDir = (dist > 0.01f) ? toTarget / dist : Vector2{0, 1};
   Vector2 desiredVel = moveDir * currentSpeed;
   if (dist < arrivalRadius) {
     desiredVel = desiredVel * (dist / arrivalRadius);
   }
+  return (desiredVel - vel) * g_config.physics.steerSeekForce;
+}
 
-  Vector2 steerForce = (desiredVel - vel) * g_config.physics.steerSeekForce;
-
+Vector2 Goose::CalculateCurveForce(float dist) {
   float curveFade = std::min(1.0f, dist / g_config.physics.curveFadeDistance);
   if (Vector2::Length(vel) > g_config.physics.curveFadeMinVel) {
     Vector2 normVel = Vector2::Normalize(vel);
     Vector2 tangent = {-normVel.y, normVel.x};
-    steerForce += tangent * (parabolicCurvature * currentSpeed *
-                             g_config.physics.curveTangentForce * curveFade);
+    return tangent * (parabolicCurvature * currentSpeed *
+                       g_config.physics.curveTangentForce * curveFade);
   }
+  return Vector2{0, 0};
+}
 
-  if (state == WANDER || state == FETCHING) {
+Vector2 Goose::CalculateSeparationForce() {
+  Vector2 force{0, 0};
+  if (state == GooseState::WANDER || state == GooseState::FETCHING) {
     for (auto &other : g_geese) {
       if (other.id == id)
         continue;
@@ -290,22 +264,24 @@ CursorAction Goose::Update(double dt, double time, int w, int h,
       if (d > g_config.spawn.separationMinDistance &&
           d < g_config.spawn.separationMaxDistance) {
         float strength = (g_config.spawn.separationMaxDistance - d) /
-                         g_config.spawn.separationMaxDistance;
+                        g_config.spawn.separationMaxDistance;
         Vector2 away = Vector2::Normalize(pos - other.pos);
-        steerForce += away * (strength * g_config.movement.maxForce *
-                              g_config.spawn.separationForceMultiplier);
+        force += away * (strength * g_config.movement.maxForce *
+                        g_config.spawn.separationForceMultiplier);
       }
     }
   }
+  return force;
+}
 
-  if (state != FETCHING) {
+Vector2 Goose::CalculateEdgeAvoidance(int w, int h) {
+  Vector2 avoidance{0, 0};
+  if (state != GooseState::FETCHING) {
     float lookAhead = currentSpeed * g_config.physics.edgeLookAheadSpeed +
-                      g_config.physics.edgeLookAheadBase;
+                       g_config.physics.edgeLookAheadBase;
     Vector2 probePos = pos + Vector2::Normalize(vel) * lookAhead;
 
     float margin = g_config.physics.edgeAvoidMargin;
-    Vector2 avoidance{0, 0};
-
     float bMinX = 0, bMinY = 0, bMaxX = (float)w, bMaxY = (float)h;
     if (!g_config.cursor.multiMonitorEnabled && !g_monitors.empty()) {
       for (auto &m : g_monitors) {
@@ -325,10 +301,111 @@ CursorAction Goose::Update(double dt, double time, int w, int h,
       avoidance.y = currentSpeed;
     else if (probePos.y > bMaxY - margin)
       avoidance.y = -currentSpeed;
+  }
+  return avoidance;
+}
 
-    if (Vector2::Length(avoidance) > 0.1f) {
-      steerForce += (avoidance - vel) * g_config.physics.edgeAvoidForce;
+void Goose::ClampToScreen(int w, int h) {
+  float minX = 0.0f, minY = 0.0f, maxX = (float)w, maxY = (float)h;
+  if (!g_config.cursor.multiMonitorEnabled && !g_monitors.empty()) {
+    for (auto &m : g_monitors) {
+      if (m.x == 0 && m.y == 0) {
+        maxX = (float)m.width;
+        maxY = (float)m.height;
+        break;
+      }
     }
+  }
+
+  if (state == GooseState::FETCHING) {
+    minX -= g_config.physics.screenClampExpanded;
+    maxX += g_config.physics.screenClampExpanded;
+    minY -= g_config.physics.screenClampExpanded;
+    maxY += g_config.physics.screenClampExpanded;
+  } else {
+    minX += g_config.physics.screenClampTight;
+    maxX -= g_config.physics.screenClampTight;
+    minY += g_config.physics.screenClampTight;
+    maxY -= g_config.physics.screenClampTight;
+  }
+
+  if (pos.x < minX) {
+    pos.x = minX + g_config.physics.snapDistance;
+    if ((state == GooseState::SNATCH_CURSOR || state == GooseState::RETURNING || state == GooseState::FETCHING) &&
+        vel.x < 0) {
+      vel.x = std::abs(vel.x) + g_config.physics.screenClampBounce;
+    }
+  } else if (pos.x > maxX) {
+    pos.x = maxX - g_config.physics.snapDistance;
+    if ((state == GooseState::SNATCH_CURSOR || state == GooseState::RETURNING || state == GooseState::FETCHING) &&
+        vel.x > 0) {
+      vel.x = -std::abs(vel.x) - g_config.physics.screenClampBounce;
+    }
+  }
+
+  if (pos.y < minY) {
+    pos.y = minY + g_config.physics.snapDistance;
+    if ((state == GooseState::SNATCH_CURSOR || state == GooseState::RETURNING || state == GooseState::FETCHING) &&
+        vel.y < 0) {
+      vel.y = std::abs(vel.y) + g_config.physics.screenClampBounce;
+    }
+  } else if (pos.y > maxY) {
+    pos.y = maxY - g_config.physics.screenClampBounce;
+    if ((state == GooseState::SNATCH_CURSOR || state == GooseState::RETURNING || state == GooseState::FETCHING) &&
+        vel.y > 0) {
+      vel.y = -std::abs(vel.y) - g_config.physics.screenClampBounce;
+    }
+  }
+}
+
+void Goose::UpdateDirection() {
+  if (state == GooseState::SNATCH_CURSOR) {
+    Vector2 revDir = snatchFwd * g_config.physics.directionReverseMultiplier;
+    dir = std::atan2(revDir.y, revDir.x) * (float)(180.0 / PI);
+  } else if (Vector2::Length(vel) > g_config.physics.directionRotateMinVel) {
+    Vector2 curDirVec = Vector2::FromAngleDegrees(dir);
+    Vector2 targetDirVec = Vector2::Normalize(vel);
+
+    if (state == GooseState::RETURNING) {
+      targetDirVec = targetDirVec * g_config.physics.directionReverseMultiplier;
+    }
+
+    Vector2 blend = Vector2::Lerp(curDirVec, targetDirVec,
+                                   g_config.movement.directionBlendRate);
+    dir = std::atan2(blend.y, blend.x) * (float)(180.0 / PI);
+  }
+}
+
+CursorAction Goose::Update(double dt, double time, int w, int h,
+                           const CursorState &cursor) {
+  if (state != prevState) {
+    FILE *f = GetDebugLog();
+    const char *stateNames[] = {"W", "F", "R", "C", "S"};
+    fprintf(f, "!! t=%.1f g%d %s->%s tgt(%.0f,%.0f) c(%.0f,%.0f)\n", time, id,
+            stateNames[static_cast<int>(prevState)], stateNames[static_cast<int>(state)], target.x, target.y, cursor.position.x,
+            cursor.position.y);
+    prevState = state;
+    s_stateChanged = true;
+  }
+
+  s_lastLogTime += dt;
+  if (s_lastLogTime > 0.1 || s_stateChanged) {
+    LogTick(time, cursor);
+    s_lastLogTime = 0;
+    s_stateChanged = false;
+  }
+
+  UpdateRig();
+  CursorAction action = UpdateBehaviors(dt, time, w, h, cursor);
+
+  Vector2 steerForce = CalculateSeekForce();
+  float dist = Vector2::Length(target - pos);
+  steerForce += CalculateCurveForce(dist);
+  steerForce += CalculateSeparationForce();
+
+  Vector2 avoidance = CalculateEdgeAvoidance(w, h);
+  if (Vector2::Length(avoidance) > 0.1f) {
+    steerForce += (avoidance - vel) * g_config.physics.edgeAvoidForce;
   }
 
   float steerMag = Vector2::Length(steerForce);
@@ -344,75 +421,10 @@ CursorAction Goose::Update(double dt, double time, int w, int h,
   }
 
   pos = pos + vel * (float)dt;
+  ClampToScreen(w, h);
+  UpdateDirection();
 
-  float minX = 0.0f, minY = 0.0f, maxX = (float)w, maxY = (float)h;
-  if (!g_config.cursor.multiMonitorEnabled && !g_monitors.empty()) {
-    for (auto &m : g_monitors) {
-      if (m.x == 0 && m.y == 0) {
-        maxX = (float)m.width;
-        maxY = (float)m.height;
-        break;
-      }
-    }
-  }
-
-  if (state == FETCHING) {
-    minX -= g_config.physics.screenClampExpanded;
-    maxX += g_config.physics.screenClampExpanded;
-    minY -= g_config.physics.screenClampExpanded;
-    maxY += g_config.physics.screenClampExpanded;
-  } else {
-    minX += g_config.physics.screenClampTight;
-    maxX -= g_config.physics.screenClampTight;
-    minY += g_config.physics.screenClampTight;
-    maxY -= g_config.physics.screenClampTight;
-  }
-
-  if (pos.x < minX) {
-    pos.x = minX + g_config.physics.snapDistance;
-    if ((state == SNATCH_CURSOR || state == RETURNING || state == FETCHING) &&
-        vel.x < 0) {
-      vel.x = std::abs(vel.x) + g_config.physics.screenClampBounce;
-    }
-  } else if (pos.x > maxX) {
-    pos.x = maxX - g_config.physics.snapDistance;
-    if ((state == SNATCH_CURSOR || state == RETURNING || state == FETCHING) &&
-        vel.x > 0) {
-      vel.x = -std::abs(vel.x) - g_config.physics.screenClampBounce;
-    }
-  }
-
-  if (pos.y < minY) {
-    pos.y = minY + g_config.physics.snapDistance;
-    if ((state == SNATCH_CURSOR || state == RETURNING || state == FETCHING) &&
-        vel.y < 0) {
-      vel.y = std::abs(vel.y) + g_config.physics.screenClampBounce;
-    }
-  } else if (pos.y > maxY) {
-    pos.y = maxY - g_config.physics.snapDistance;
-    if ((state == SNATCH_CURSOR || state == RETURNING || state == FETCHING) &&
-        vel.y > 0) {
-      vel.y = -std::abs(vel.y) - g_config.physics.screenClampBounce;
-    }
-  }
-
-  if (state == SNATCH_CURSOR) {
-    Vector2 revDir = snatchFwd * g_config.physics.directionReverseMultiplier;
-    dir = std::atan2(revDir.y, revDir.x) * (float)(180.0 / PI);
-  } else if (Vector2::Length(vel) > g_config.physics.directionRotateMinVel) {
-    Vector2 curDirVec = Vector2::FromAngleDegrees(dir);
-    Vector2 targetDirVec = Vector2::Normalize(vel);
-
-    if (state == RETURNING) {
-      targetDirVec = targetDirVec * g_config.physics.directionReverseMultiplier;
-    }
-
-    Vector2 blend = Vector2::Lerp(curDirVec, targetDirVec,
-                                  g_config.movement.directionBlendRate);
-    dir = std::atan2(blend.y, blend.x) * (float)(180.0 / PI);
-  }
-
-  if (debugSnatch && state == SNATCH_CURSOR &&
+  if (debugSnatch && state == GooseState::SNATCH_CURSOR &&
       time - lastDebugLog > debugLogInterval) {
     lastDebugLog = time;
     Vector2 btDev = GetBeakTipDevice();
@@ -448,7 +460,7 @@ void Goose::ForceFetchText(const std::string &text, int w, int h) {
 }
 
 void Goose::ForceWander(int w, int h) {
-  state = WANDER;
+  state = GooseState::WANDER;
   heldItem = nullptr;
   dragInit = false;
   forcedText.clear();
@@ -456,7 +468,7 @@ void Goose::ForceWander(int w, int h) {
 }
 
 void Goose::StartFetch(int w, int h) {
-  state = FETCHING;
+  state = GooseState::FETCHING;
 
   int side = rand() % 4;
   float edgeMargin = g_config.spawn.fetchEdgeMargin;
@@ -479,7 +491,7 @@ void Goose::StartFetch(int w, int h) {
 }
 
 void Goose::PickNewTarget(int w, int h) {
-  if (state == FETCHING || state == SNATCH_CURSOR || state == RETURNING) {
+  if (state == GooseState::FETCHING || state == GooseState::SNATCH_CURSOR || state == GooseState::RETURNING) {
     return;
   }
   parabolicCurvature = 0;
