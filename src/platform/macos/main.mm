@@ -62,6 +62,11 @@ void LogWrite(const char* level, const char* fmt, ...) {
 
 @interface AppDelegate : NSObject <NSApplicationDelegate>
 @property (nonatomic, strong) NSStatusItem* statusItem;
+- (void)addBehaviorItem:(NSString*)title configKey:(NSString*)key toMenu:(NSMenu*)menu;
+- (void)toggleBehavior:(NSMenuItem*)sender;
+- (bool*)getBehaviorFlag:(NSString*)key;
+- (void)openPresencePanel:(id)sender;
+- (void)openColorPicker:(id)sender;
 @end
 
 @implementation AppDelegate
@@ -116,6 +121,52 @@ void LogWrite(const char* level, const char* fmt, ...) {
 
     NSMenuItem* settingsItem = [menu addItemWithTitle:@"Settings" action:nil keyEquivalent:@""];
     settingsItem.submenu = settingsMenu;
+
+    NSMenu* behaviorsMenu = [[NSMenu alloc] initWithTitle:@"Behaviors"];
+
+    NSMenu* funMenu = [[NSMenu alloc] initWithTitle:@"Fun"];
+    [self addBehaviorItem:@"Ball" configKey:@"behaviors.fun.ball" toMenu:funMenu];
+    [self addBehaviorItem:@"BreadCrumbs" configKey:@"behaviors.fun.breadCrumbs" toMenu:funMenu];
+    [self addBehaviorItem:@"Hats" configKey:@"behaviors.fun.hats" toMenu:funMenu];
+    [self addBehaviorItem:@"Rainbow" configKey:@"behaviors.fun.rainbow" toMenu:funMenu];
+    [self addBehaviorItem:@"Acid" configKey:@"behaviors.fun.acid" toMenu:funMenu];
+    NSMenuItem* funItem = [behaviorsMenu addItemWithTitle:@"Fun" action:nil keyEquivalent:@""];
+    funItem.submenu = funMenu;
+
+    NSMenu* controlMenu = [[NSMenu alloc] initWithTitle:@"Control"];
+    [self addBehaviorItem:@"Honcker" configKey:@"behaviors.control.honcker" toMenu:controlMenu];
+    [self addBehaviorItem:@"Jail" configKey:@"behaviors.control.jail" toMenu:controlMenu];
+    [self addBehaviorItem:@"Portals" configKey:@"behaviors.control.portals" toMenu:controlMenu];
+    [self addBehaviorItem:@"Drag" configKey:@"behaviors.control.drag" toMenu:controlMenu];
+    [self addBehaviorItem:@"Banish" configKey:@"behaviors.control.banish" toMenu:controlMenu];
+    NSMenuItem* controlItem = [behaviorsMenu addItemWithTitle:@"Control" action:nil keyEquivalent:@""];
+    controlItem.submenu = controlMenu;
+
+    NSMenu* infoMenu = [[NSMenu alloc] initWithTitle:@"Info"];
+    [self addBehaviorItem:@"Nametag" configKey:@"behaviors.info.nametag" toMenu:infoMenu];
+    [self addBehaviorItem:@"Debugoose" configKey:@"behaviors.info.debugoose" toMenu:infoMenu];
+    [self addBehaviorItem:@"Presence" configKey:@"behaviors.info.presence" toMenu:infoMenu];
+    [self addBehaviorItem:@"Config GUI" configKey:@"behaviors.info.configGUI" toMenu:infoMenu];
+    [self addBehaviorItem:@"Color Picker" configKey:@"behaviors.info.colorPicker" toMenu:infoMenu];
+    [self addBehaviorItem:@"Clicker" configKey:@"behaviors.info.clicker" toMenu:infoMenu];
+    [self addBehaviorItem:@"GooseManager" configKey:@"behaviors.info.gooseManager" toMenu:infoMenu];
+    NSMenuItem* infoItem = [behaviorsMenu addItemWithTitle:@"Info" action:nil keyEquivalent:@""];
+    infoItem.submenu = infoMenu;
+
+    [behaviorsMenu addItem:[NSMenuItem separatorItem]];
+
+    NSMenuItem* colorPickerItem = [behaviorsMenu addItemWithTitle:@"Open Color Picker" action:@selector(openColorPicker:) keyEquivalent:@""];
+    colorPickerItem.target = self;
+
+    NSMenu* systemsMenu = [[NSMenu alloc] initWithTitle:@"Systems"];
+    [self addBehaviorItem:@"Health" configKey:@"behaviors.systems.health" toMenu:systemsMenu];
+    [self addBehaviorItem:@"AI" configKey:@"behaviors.systems.ai" toMenu:systemsMenu];
+    [self addBehaviorItem:@"Pomodoro" configKey:@"behaviors.systems.pomodoro" toMenu:systemsMenu];
+    NSMenuItem* systemsItem = [behaviorsMenu addItemWithTitle:@"Systems" action:nil keyEquivalent:@""];
+    systemsItem.submenu = systemsMenu;
+
+    NSMenuItem* behaviorsItem = [menu addItemWithTitle:@"Behaviors" action:nil keyEquivalent:@""];
+    behaviorsItem.submenu = behaviorsMenu;
 
     [menu addItem:[NSMenuItem separatorItem]];
 
@@ -203,6 +254,64 @@ void LogWrite(const char* level, const char* fmt, ...) {
     [[NSApplication sharedApplication] terminate:nil];
 }
 
+- (void)addBehaviorItem:(NSString*)title configKey:(NSString*)key toMenu:(NSMenu*)menu {
+    NSMenuItem* item = [menu addItemWithTitle:title action:@selector(toggleBehavior:) keyEquivalent:@""];
+    item.target = self;
+    item.representedObject = key;
+
+    bool* flag = [self getBehaviorFlag:key];
+    if (flag) {
+        item.state = *flag ? NSControlStateValueOn : NSControlStateValueOff;
+    }
+}
+
+- (bool*)getBehaviorFlag:(NSString*)key {
+    const char* k = [key UTF8String];
+    std::string s = k ? k : "";
+
+    if (s == "behaviors.fun.ball") return &g_config.behaviors.fun.ball;
+    if (s == "behaviors.fun.breadCrumbs") return &g_config.behaviors.fun.breadCrumbs;
+    if (s == "behaviors.fun.hats") return &g_config.behaviors.fun.hats;
+    if (s == "behaviors.fun.rainbow") return &g_config.behaviors.fun.rainbow;
+    if (s == "behaviors.fun.acid") return &g_config.behaviors.fun.acid;
+    if (s == "behaviors.control.honcker") return &g_config.behaviors.control.honcker;
+    if (s == "behaviors.control.jail") return &g_config.behaviors.control.jail;
+    if (s == "behaviors.control.portals") return &g_config.behaviors.control.portals;
+    if (s == "behaviors.control.drag") return &g_config.behaviors.control.drag;
+    if (s == "behaviors.control.banish") return &g_config.behaviors.control.banish;
+    if (s == "behaviors.info.nametag") return &g_config.behaviors.info.nametag;
+    if (s == "behaviors.info.debugoose") return &g_config.behaviors.info.debugoose;
+    if (s == "behaviors.info.presence") return &g_config.behaviors.info.presence;
+    if (s == "behaviors.info.configGUI") return &g_config.behaviors.info.configGUI;
+    if (s == "behaviors.info.colorPicker") return &g_config.behaviors.info.colorPicker;
+    if (s == "behaviors.info.clicker") return &g_config.behaviors.info.clicker;
+    if (s == "behaviors.info.gooseManager") return &g_config.behaviors.info.gooseManager;
+    if (s == "behaviors.systems.health") return &g_config.behaviors.systems.health;
+    if (s == "behaviors.systems.ai") return &g_config.behaviors.systems.ai;
+
+    return nullptr;
+}
+
+- (void)toggleBehavior:(NSMenuItem*)sender {
+    bool* flag = [self getBehaviorFlag:sender.representedObject];
+    if (flag) {
+        *flag = !*flag;
+        sender.state = *flag ? NSControlStateValueOn : NSControlStateValueOff;
+        DEBUG_LOG("Behavior '%s' toggled: %d", [sender.representedObject UTF8String], *flag);
+    }
+}
+
+- (void)openPresencePanel:(id)sender {
+    DEBUG_LOG("Opening presence panel");
+}
+
+- (void)openColorPicker:(id)sender {
+    NSColorPanel* panel = [NSColorPanel sharedColorPanel];
+    [panel makeKeyAndOrderFront:nil];
+    [[NSApplication sharedApplication] activateIgnoringOtherApps:YES];
+    DEBUG_LOG("Opened color picker");
+}
+
 - (void)applicationDidFinishLaunching:(NSNotification*)aNotification {
     DEBUG_LOG("App launching...");
 
@@ -271,6 +380,20 @@ void LogWrite(const char* level, const char* fmt, ...) {
     [[NSApplication sharedApplication] setActivationPolicy:NSApplicationActivationPolicyRegular];
     [self setupMenubar];
     DEBUG_LOG("App ready, entering run loop...");
+
+    if (g_config.behaviors.info.presence && !g_geese.empty()) {
+        auto& goose = g_geese.front();
+        const char* stateStr = "?";
+        switch (goose.state) {
+            case WANDER: stateStr = "W"; break;
+            case FETCHING: stateStr = "F"; break;
+            case RETURNING: stateStr = "R"; break;
+            case CHASE_CURSOR: stateStr = "C"; break;
+            case SNATCH_CURSOR: stateStr = "S"; break;
+            default: stateStr = "?"; break;
+        }
+        self.statusItem.button.title = [NSString stringWithUTF8String:stateStr];
+    }
 }
 
 - (void)applicationWillTerminate:(NSNotification*)aNotification {
@@ -288,6 +411,15 @@ void LogWrite(const char* level, const char* fmt, ...) {
 }
 
 @end
+
+void Presence_UpdateStatusFromBehavior(const char* status) {
+    dispatch_async(dispatch_get_main_queue(), ^{
+        AppDelegate* delegate = (AppDelegate*)[NSApp delegate];
+        if (delegate.statusItem) {
+            delegate.statusItem.button.title = [NSString stringWithUTF8String:status];
+        }
+    });
+}
 
 static bool IsControlCommand(const std::string& command) {
     return command == "start" ||

@@ -1,6 +1,7 @@
 #include "app_actions.h"
 #include "config.h"
 #include "world.h"
+#include "behavior.h"
 
 #include <fstream>
 #include <iomanip>
@@ -22,10 +23,13 @@ Goose* AppActions_SpawnGoose(const std::string& requestedName) {
     }
 
     g_geese.emplace_back(g_nextId++, name, g_screenWidth, g_screenHeight);
+    Goose* goose = &g_geese.back();
+    BehaviorRegistry::Instance().InitAll(goose);
+
 #if defined(__linux__)
     UiLogPush("Spawned " + name);
 #endif
-    return &g_geese.back();
+    return goose;
 }
 
 void AppActions_EnsureInitialGoose() {

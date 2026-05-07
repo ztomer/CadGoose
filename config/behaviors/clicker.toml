@@ -1,0 +1,12 @@
+# Clicker Behavior Config
+# Randomly clicks at goose position
+
+[settings]
+# Chance of clicking (1 in N per tick)
+chance = 300
+
+# Key code for clicker trigger
+key = 0x24
+
+# Random offset for click position
+clickOffset = 3

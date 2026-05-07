@@ -477,3 +477,23 @@ void Goose::StartFetch(int w, int h) {
 
   parabolicCurvature = ((rand() % 200) - 100) / 100.0f;
 }
+
+void Goose::PickNewTarget(int w, int h) {
+  if (state == FETCHING || state == SNATCH_CURSOR || state == RETURNING) {
+    return;
+  }
+  parabolicCurvature = 0;
+
+  float margin = g_config.spawn.marginX;
+  target = {(float)(rand() % (int)(w - margin * 2) + margin),
+            (float)(rand() % (int)(h - margin * 2) + margin)};
+}
+
+void Goose::UpdateDrag(double dt) {
+  if (!heldItem || dragInit)
+    return;
+
+  dragPos = GetBeakTipDevice();
+  dragRot = dir;
+  dragInit = true;
+}

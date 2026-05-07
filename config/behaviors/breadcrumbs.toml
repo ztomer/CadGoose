@@ -1,0 +1,26 @@
+# BreadCrumbs Behavior Config
+# Leave a trail of breadcrumbs
+
+[settings]
+# Maximum number of crumbs
+maxCrumbs = 50
+
+# Crumb lifetime in seconds
+lifetime = 10.0
+
+# Distance between crumbs
+spawnDist = 15.0
+
+# Crumb size
+size = 5.0
+
+# Key for triggering (RightShift)
+triggerKey = "RightShift"
+
+# Speed threshold to spawn crumbs
+speedThreshold = 10.0
+
+[color]
+r = 0.9
+g = 0.7
+b = 0.4

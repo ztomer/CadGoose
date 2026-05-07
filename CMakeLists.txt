@@ -8,15 +8,17 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 if(APPLE)
     set(MACOS TRUE)
+    add_subdirectory(vendor/toml11)
 elseif(UNIX)
     set(LINUX TRUE)
+    add_subdirectory(vendor/toml11)
 endif()
 
 if(MACOS)
     enable_language(OBJCXX)
     find_package(Threads REQUIRED)
 
-    file(GLOB_RECURSE COMMON_SOURCES "src/common/*.cpp")
+    file(GLOB_RECURSE COMMON_SOURCES "src/common/*.cpp" "src/common/*.mm")
     file(GLOB_RECURSE PLATFORM_SOURCES "src/platform/macos/*.cpp" "src/platform/macos/*.mm")
 
     set(SOURCES ${COMMON_SOURCES} ${PLATFORM_SOURCES})
@@ -28,6 +30,7 @@ if(MACOS)
     find_library(COREGRAPHICS_LIBRARY CoreGraphics)
     find_library(COREAUDIO_LIBRARY CoreAudio)
     find_library(APPLICATIONSERVICES_LIBRARY ApplicationServices)
+    find_library(CURL_LIBRARY curl)
 
     if(NOT COCOA_LIBRARY)
         message(FATAL_ERROR "Cocoa framework not found")
@@ -36,11 +39,13 @@ if(MACOS)
     add_executable(CadGoose ${SOURCES})
 
     target_link_libraries(CadGoose
+        toml11
         ${COCOA_LIBRARY}
         ${AVFOUNDATION_LIBRARY}
         ${COREGRAPHICS_LIBRARY}
         ${COREAUDIO_LIBRARY}
         ${APPLICATIONSERVICES_LIBRARY}
+        ${CURL_LIBRARY}
         Threads::Threads
     )
 
@@ -48,6 +53,7 @@ if(MACOS)
         ${CMAKE_CURRENT_SOURCE_DIR}/include
         ${CMAKE_CURRENT_SOURCE_DIR}/src/platform/macos
         ${CMAKE_CURRENT_SOURCE_DIR}/src/common
+        ${CMAKE_CURRENT_SOURCE_DIR}/vendor/toml11
     )
 
     set_target_properties(CadGoose PROPERTIES
@@ -110,6 +116,7 @@ elseif(LINUX)
     add_executable(CadGoose ${SOURCES})
 
     target_link_libraries(CadGoose
+        toml11
         ${GTK4_LIBRARIES}
         ${LS_LIBRARIES}
         ${SDL2_LIBRARIES}
@@ -135,6 +142,7 @@ elseif(LINUX)
         ${CMAKE_CURRENT_SOURCE_DIR}/src/common
         ${CMAKE_CURRENT_SOURCE_DIR}/src/platform/linux
         ${CMAKE_CURRENT_BINARY_DIR}
+        ${CMAKE_CURRENT_SOURCE_DIR}/vendor/toml11
     )
 
     target_compile_options(CadGoose PUBLIC
@@ -159,21 +167,49 @@ if(APPLE OR LINUX)
     
     add_executable(CadGooseTests 
         tests/test_main.cpp
+        tests/common/test_behavior.cpp
         src/common/app_actions.cpp
+        src/common/behavior.cpp
         src/common/config.cpp
         src/common/cursor_backend.cpp
         src/common/goose.cpp
         src/common/goose_behaviors.cpp
-        src/common/goose_physics.cpp
+        src/common/goose_drawing.mm
         src/common/items.cpp
         src/common/world.cpp
+        src/common/world_utils.mm
+        src/common/behaviors/behavior_honcker.cpp
+        src/common/behaviors/behavior_rainbow.cpp
+        src/common/behaviors/behavior_pomodoro.cpp
+        src/common/behaviors/behavior_ball.cpp
+        src/common/behaviors/behavior_breadcrumbs.cpp
+        src/common/behaviors/behavior_hats.cpp
+        src/common/behaviors/behavior_acid.cpp
+        src/common/behaviors/behavior_clicker.cpp
+        src/common/behaviors/behavior_drag.cpp
+        src/common/behaviors/behavior_jail.cpp
+        src/common/behaviors/behavior_health.cpp
+        src/common/behaviors/behavior_portal.cpp
+        src/common/behaviors/behavior_anger.cpp
+        src/common/behaviors/behavior_banish.cpp
+        src/common/behaviors/behavior_nametag.cpp
+        src/common/behaviors/behavior_debugoose.cpp
+        src/common/behaviors/behavior_goose_manager.cpp
+        src/common/behaviors/behavior_presence.cpp
+        src/common/behaviors/behavior_ai.mm
+        src/common/behaviors/behavior_color_picker.mm
     )
     
     if(APPLE)
         target_sources(CadGooseTests PRIVATE 
             src/common/cursor_backend.cpp 
+            src/common/world_utils.mm
+            src/platform/macos/window.mm
             src/platform/macos/cursor_backend.mm 
             src/platform/macos/renderer.mm
+            src/platform/macos/audio.mm
+            src/platform/macos/command_socket.cpp
+            tests/common/test_presence.cpp
             tests/platform/macos/test_renderer.mm
         )
         target_link_libraries(CadGooseTests
@@ -198,6 +234,7 @@ if(APPLE OR LINUX)
         ${CMAKE_CURRENT_SOURCE_DIR}/include
         ${CMAKE_CURRENT_SOURCE_DIR}/src/common
         ${CMAKE_CURRENT_SOURCE_DIR}/src/platform/macos
+        ${CMAKE_CURRENT_SOURCE_DIR}/vendor/toml11/include
     )
     
     if(APPLE)
