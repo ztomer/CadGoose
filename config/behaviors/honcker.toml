@@ -1,0 +1,6 @@
+# Honcker Behavior Config
+# Press F to make the goose honk
+
+[settings]
+# Key code for honk trigger (0x24 = F key)
+key = 0x24

@@ -1,0 +1,26 @@
+# Jail Behavior Config
+# Press O to set jail position, P to trap goose
+
+[settings]
+# Key code for setting position
+keyO = 0x2D
+
+# Key code for trapping
+keyP = 0x1E
+
+# Size of jail area
+size = 150.0
+
+# Jail line width
+lineWidth = 4.0
+
+[strokeColor]
+r = 0.5
+g = 0.5
+b = 0.5
+
+[fillColor]
+r = 0.3
+g = 0.3
+b = 0.3
+a = 0.3

@@ -83,6 +83,12 @@ inline float Clamp(float v, float lo, float hi) {
     return v < lo ? lo : (v > hi ? hi : v);
 }
 
+inline float NormalizeAngle360(float angle) {
+    while (angle >= 360.0f) angle -= 360.0f;
+    while (angle < 0.0f) angle += 360.0f;
+    return angle;
+}
+
 inline float Dot(const Vector2& a, const Vector2& b) {
     return a.x * b.x + a.y * b.y;
 }
@@ -103,6 +109,26 @@ inline Vector2 WorldToDevice(const Vector2& goosePos, const Vector2& worldPos, f
 inline Vector2 DeviceToWorld(const Vector2& goosePos, const Vector2& devicePos, float globalScale) {
     if (globalScale < 0.001f) return devicePos;
     return goosePos + (devicePos - goosePos) / globalScale;
+}
+
+// HSV to RGB conversion (hue in degrees 0-360)
+inline void HSV_to_RGB(float h, float s, float v, float* r, float* g, float* b) {
+    h = NormalizeAngle360(h);
+    float c = v * s;
+    float x = c * (1.0f - std::abs(std::fmod(h / 60.0f, 2.0f) - 1.0f));
+    float m = v - c;
+
+    float r1, g1, b1;
+    if (h < 60.0f) { r1 = c; g1 = x; b1 = 0; }
+    else if (h < 120.0f) { r1 = x; g1 = c; b1 = 0; }
+    else if (h < 180.0f) { r1 = 0; g1 = c; b1 = x; }
+    else if (h < 240.0f) { r1 = 0; g1 = x; b1 = c; }
+    else if (h < 300.0f) { r1 = x; g1 = 0; b1 = c; }
+    else { r1 = c; g1 = 0; b1 = x; }
+
+    *r = r1 + m;
+    *g = g1 + m;
+    *b = b1 + m;
 }
 
 #endif // MATH_H

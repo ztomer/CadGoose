@@ -17,6 +17,8 @@ Highly modified port of [CppGoose](https://github.com/jeffthepineapple/desktop-g
 - **macOS**: Native AppKit implementation with Core Graphics rendering
 - **Linux**: GTK4 with Wayland (Hyprland, wlroots) and X11 support
 
+See [README_MAC.md](README_MAC.md) or [README_LINUX.md](README_LINUX.md) for platform-specific details.
+
 ---
 
 ## Table of Contents
@@ -26,25 +28,10 @@ Highly modified port of [CppGoose](https://github.com/jeffthepineapple/desktop-g
   - [Table of Contents](#table-of-contents)
   - [Overview](#overview)
   - [Features](#features)
-  - [Requirements](#requirements)
-    - [Build tools](#build-tools)
-    - [Runtime libraries](#runtime-libraries)
-    - [Optional compositor support](#optional-compositor-support)
-  - [Building from Source](#building-from-source)
-    - [1. Install dependencies](#1-install-dependencies)
-    - [2. Configure and build](#2-configure-and-build)
-    - [3. In-tree builds](#3-in-tree-builds)
-  - [Running](#running)
-    - [Wayland notes](#wayland-notes)
-    - [X11 notes](#x11-notes)
   - [Configuration](#configuration)
   - [Project Structure](#project-structure)
-  - [Cursor Backend Selection](#cursor-backend-selection)
   - [State Machine](#state-machine)
   - [Assets](#assets)
-    - [Meme images](#meme-images)
-    - [Notepad messages](#notepad-messages)
-    - [Sound effects](#sound-effects)
   - [Known Limitations](#known-limitations)
   - [Contributing](#contributing)
   - [License](#license)
@@ -74,6 +61,7 @@ The application supports multiple simultaneous geese, each with its own name and
 - Cursor snatching: a goose can grab and drag the cursor briefly before releasing it
 - Dropped item system: geese pick up, carry, and drop meme images and text notes
 - Honking on a configurable timer
+- Pushable balls: soccer (white with black pentagons), beach (colorful stripes), and generic blue balls
 
 **Multi-monitor support**
 
@@ -89,130 +77,48 @@ The application supports multiple simultaneous geese, each with its own name and
 
 **Configuration persistence**
 
-- Settings are read from and written to `~/.config/desktop-goose/config.ini`
+- Settings are read from and written to `~/.config/desktop-goose/config.toml`
 - All tunable values survive restarts
 
----
+**Behaviors System**
 
-## Requirements
+CadGoose includes a comprehensive behavior system inspired by Desktop Goose ResourceHub mods. Behaviors are organized into four categories:
 
-### Build tools
+**Fun Behaviors:**
+- **Ball**: Push balls around the screen (soccer, beach, generic)
+- **BreadCrumbs**: Leave a trail of breadcrumbs
+- **Hats**: Put hats on geese
+- **Rainbow**: Cycle through rainbow colors
+- **Acid**: Spin wildly with honks
 
-- CMake 3.17 or newer
-- A C++17-capable compiler (GCC 9+ or Clang 10+ recommended)
-- `pkg-config`
+**Control Behaviors:**
+- **Honcker**: Press F to make the goose honk
+- **Jail**: Press O to set position, P to trap
+- **Portals**: Hold P + 1/2 to place portals
+- **Drag**: Click and drag the goose
+- **Banish**: Ctrl+Alt+Middle Click to banish goose
 
-### Runtime libraries
+**Info Behaviors:**
+- **Nametag**: Shows goose name above head
+- **Debugoose**: Debug overlay with state info
+- **Presence**: Shows goose state in menu bar
+- **Config GUI**: Open behavior settings window
+- **Color Picker**: Change goose color via color panel
+- **Clicker**: Random cursor clicks
+- **GooseManager**: Control goose tasks and speeds
 
-| Library | Purpose |
-|---|---|
-| GTK4 | UI toolkit and rendering |
-| gtk4-layer-shell | Wayland layer-shell overlay windows |
-| SDL2 | Audio playback |
-| SDL2_mixer | Sound effect mixing |
-| gdk-pixbuf-2.0 | Image loading for meme assets |
-| wayland-client | Wayland protocol base |
-| libcurl | (retained in build; unused after AI backend removal) |
-| X11 | X11 cursor position queries |
-| Xtst | X11 cursor movement injection |
+**Systems Behaviors:**
+- **Health**: Health bar system for geese
+- **AI**: Chat with the goose (requires API configuration)
+- **Pomodoro**: Work/rest timer mode
 
-### Optional compositor support
-
-- **Hyprland**: full cursor control via IPC socket
-- **wlroots-based compositors**: cursor movement via the `wlr-virtual-pointer-unstable-v1` Wayland protocol
-- **X11**: cursor queries and movement via XTest
-
-One of the above is required for cursor chase and snatch behavior. The application runs without cursor control but those features will be disabled.
-
----
-
-## Building from Source
-
-### 1. Install dependencies
-
-On Arch Linux:
-
-```
-sudo pacman -S cmake gtk4 gtk4-layer-shell sdl2 sdl2_mixer gdk-pixbuf2 wayland libcurl xorg-server-devel libxtst
-```
-
-On Fedora:
-
-```
-sudo dnf install cmake gtk4-devel gtk4-layer-shell-devel SDL2-devel SDL2_mixer-devel gdk-pixbuf2-devel wayland-devel libcurl-devel libX11-devel libXtst-devel
-```
-
-On Ubuntu 24.04 or later:
-
-```
-sudo apt install cmake libgtk-4-dev libgtk4-layer-shell-dev libsdl2-dev libsdl2-mixer-dev libgdk-pixbuf-2.0-dev libwayland-dev libcurl4-openssl-dev libx11-dev libxtst-dev
-```
-
-> **Note:** `gtk4-layer-shell` may not be available in older Ubuntu/Debian repositories. Build it from source from [github.com/wmww/gtk4-layer-shell](https://github.com/wmww/gtk4-layer-shell) if your package manager does not provide it.
-
-### 2. Configure and build
-
-```bash
-git clone https://github.com/yourname/CadGoose.git
-cd CadGoose
-cmake -B build -DCMAKE_BUILD_TYPE=Release
-cmake --build build --parallel
-```
-
-The compiled binary will be at `build/CadGoose`.
-
-### 3. In-tree builds
-
-The repository ships with some pre-generated Wayland protocol binding files. CMake will regenerate these via `wayland-scanner` if the tool is available. If `wayland-scanner` is not installed, the pre-generated files under `protocols/` will be used as-is.
-
----
-
-## Running
-
-Run the binary from the repository root so that the `Assets/` directory is resolved correctly.
-
-The default command starts Desktop Goose in the background so you can close your terminal afterward:
-
-```bash
-./build/CadGoose
-```
-
-You can also start it explicitly:
-
-```bash
-./build/CadGoose start
-```
-
-Or keep it attached to the current terminal for debugging:
-
-```bash
-./build/CadGoose start --foreground
-```
-
-Common CLI commands:
-
-```bash
-./build/CadGoose start
-./build/CadGoose spawn Pip
-./build/CadGoose clear
-./build/CadGoose ram
-./build/CadGoose status
-./build/CadGoose quit
-```
-
-### Wayland notes
-
-The application uses `gtk4-layer-shell` to create overlay windows. Your compositor must support the `wlr-layer-shell-unstable-v1` protocol. Most wlroots-based compositors (Sway, Hyprland, river, niri) and KDE Plasma 6 support this. GNOME does not expose this protocol by default.
-
-### X11 notes
-
-The application can run under X11 via XWayland or a native X11 session. Overlay transparency and always-on-top behaviour depend on a compositing window manager being active (e.g., Picom, Compton, or a compositor built into your desktop environment).
+Enable behaviors via the Behaviors menu in the status bar.
 
 ---
 
 ## Configuration
 
-Settings are persisted to `~/.config/desktop-goose/config.ini` by default. If an older working-directory `config.ini` exists, it is still read as a fallback for migration.
+Settings are persisted to `~/.config/desktop-goose/config.toml` by default. If an older working-directory `config.ini` exists, it is still read as a fallback for migration.
 
 Selected keys:
 
@@ -225,7 +131,7 @@ Selected keys:
 | `mud_lifetime` | `15` | Default footprint lifetime in seconds |
 | `debug_visuals` | `0` | Draw debug hitboxes and state labels |
 
-Settings are edited through `~/.config/desktop-goose/config.ini`. There is no settings UI and no CLI settings editor.
+Settings are edited through `~/.config/desktop-goose/config.toml`. There is no settings UI and no CLI settings editor.
 
 ---
 
@@ -239,7 +145,7 @@ CadGoose/
       goose_behaviors.cpp    Goose behavior implementations
       goose_physics.cpp      Goose physics and movement
       world.cpp              Global state containers (geese, items, footprints)
-      config.cpp             INI-based config registry
+      config.cpp             TOML-based config registry using toml11
       cursor_backend.cpp     Backend manager and selection
       app_actions.cpp        Goose spawning, commands
       items.cpp              Item data structures
@@ -279,20 +185,6 @@ CadGoose/
   build.sh                   Build script
   run.sh                     Run script
 ```
-
----
-
-## Cursor Backend Selection
-
-At startup, `cursor_backend.cpp` attempts to initialise backends in this order:
-
-1. **Hyprland** — detected via the `HYPRLAND_INSTANCE_SIGNATURE` environment variable. Communicates through the Hyprland IPC socket to read and set cursor position.
-2. **wlroots** — uses the `zwlr_virtual_pointer_manager_v1` Wayland global to inject pointer motion events. Available on most wlroots compositors that expose the protocol.
-3. **X11** — uses `XQueryPointer` to read position and `XTestFakeMotionEvent` to move the cursor. Works on native X11 sessions and XWayland.
-
-If none of these backends initialise successfully, the application continues without cursor interaction features. All other goose behaviors remain active.
-
-Only one goose can hold cursor control at a time, tracked globally via `g_cursorGrabberId`.
 
 ---
 
@@ -341,10 +233,10 @@ Sound files are loaded from `Assets/Sound/NotEmbedded/` via SDL2_mixer. Supporte
 
 Contributions are welcome. A few things to keep in mind:
 
-- The main orchestration file is `src/ui.cpp`. It is large and most feature additions will touch it. Try to keep new logic in dedicated source files where possible and call into them from `ui.cpp`.
+- The main orchestration file is `src/ui.cpp` (Linux) or `src/macos/renderer.mm` (macOS). Try to keep new logic in dedicated source files where possible.
 - `src/world.cpp` is the canonical home for any new global state. Avoid scattering new globals into other translation units.
 - The build currently has a mix of source files and pre-built artifacts in the tree. Do not commit build outputs or generated Wayland binding files that are already tracked under `protocols/`.
-- Run a `clang-format` pass (`.clang-format` style file to be added) before submitting patches.
+- Run a `clang-format` pass before submitting patches.
 
 To open an issue or pull request, use the GitHub interface for this repository.
 
@@ -355,3 +247,34 @@ To open an issue or pull request, use the GitHub interface for this repository.
 This project is released under the MIT License. See [LICENSE](LICENSE) for the full text.
 
 Third-party assets bundled under `Assets/` may carry their own licenses. Review individual files before redistribution.
+
+---
+
+## Mod Attribution
+
+CadGoose's behavior system is inspired by the excellent mods from the [Desktop Goose ResourceHub](https://desktopgooseunofficial.github.io/ResourceHub/mods/explore/mods.html). The following behaviors are based on or derived from ResourceHub mods:
+
+| Behavior | Based On | Original Author | License |
+|---------|----------|-----------------|---------|
+| Honcker | Honcker | DesktopGooseUnofficial | - |
+| Drag | DragGoose | euandeas/Straaft | - |
+| Jail | GooseJail | WackyModer | - |
+| Portal | PortalGoos | Moonaliss1 | MIT |
+| Clicker | Clicker | Wolf/NE1W01F | - |
+| Anger | OnePunchGoose | VisualError | - |
+| Ball | Ball (soccer, beach, generic) | TheOrlando | - |
+| BreadCrumbs | BreadCrumbs | Straaft | - |
+| Hats | (original) | - | - |
+| Acid | AcidGoose | F!NN | - |
+| Rainbow | (original) | - | - |
+| Health | (original) | - | - |
+| Banish | (original) | - | - |
+| Nametag | (original) | - | - |
+| Debugoose | (original) | - | - |
+| Presence | (original) | - | - |
+| GooseManager | (original) | - | - |
+| AI | (original) | - | - |
+
+Original mod sources are preserved in `references/mods/`. See `references/MOD_IMPLEMENTATION_GUIDE.md` for implementation details.
+
+> **Note**: Some original mod repositories have been deleted. DLLs were decompiled for reference purposes only.

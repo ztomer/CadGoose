@@ -1,0 +1,20 @@
+[debug]
+toTerminal = true
+visuals = false
+
+[general]
+globalScale = 1.5
+audioEnabled = true
+
+[color]
+[color.goose]
+r = 0.82
+g = 0.82
+b = 0.82
+
+[color.beak]
+r = 1.0
+g = 0.6
+b = 0.0
+
+

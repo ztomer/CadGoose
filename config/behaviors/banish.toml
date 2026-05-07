@@ -1,0 +1,17 @@
+# Banish Behavior Config
+# Ctrl+Alt+Middle Click to banish goose
+
+[settings]
+# Fade duration in seconds
+fadeDuration = 0.5
+
+# Respawn delay in seconds
+respawnDelay = 30.0
+
+# Fade opacity (0-1)
+fadeOpacity = 0.8
+
+[spawnMargin]
+# Spawn margin from edges
+x = 100.0
+y = 200.0

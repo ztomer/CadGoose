@@ -1,0 +1,36 @@
+# Portal Behavior Config
+# Hold P + 1/2 to place portals, P+0 to toggle
+
+[portal1]
+width = 80.0
+height = 80.0
+
+[portal1.fillColor]
+r = 0.0
+g = 0.8
+b = 1.0
+a = 0.5
+
+[portal1.strokeColor]
+r = 0.0
+g = 0.5
+b = 1.0
+
+[portal2]
+width = 80.0
+height = 80.0
+
+[portal2.fillColor]
+r = 1.0
+g = 0.5
+b = 0.0
+a = 0.5
+
+[portal2.strokeColor]
+r = 1.0
+g = 0.3
+b = 0.0
+
+[settings]
+# Line width for portals
+lineWidth = 3.0

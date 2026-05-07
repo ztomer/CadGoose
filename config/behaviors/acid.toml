@@ -1,0 +1,15 @@
+# Acid Behavior Config
+# Goose spins wildly with honks
+
+[settings]
+# Spin speed (degrees per second)
+spinSpeed = 720.0
+
+# Interval between honks (seconds)
+honkInterval = 0.15
+
+# Total rotation before stopping (degrees)
+rotationTotal = 1080.0
+
+# Chance of triggering (1 in N per tick)
+triggerChance = 300

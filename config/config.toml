@@ -1,0 +1,418 @@
+# CadGoose Configuration File
+
+[debug]
+toTerminal = false
+visuals = false
+
+[general]
+globalScale = 1.0
+audioEnabled = true
+memesEnabled = true
+canadaGooseMode = false
+
+[screen]
+defaultWidth = 1920
+defaultHeight = 1080
+
+[asset]
+memePlaceholderW = 200
+memePlaceholderH = 200
+textPlaceholderW = 300
+textPlaceholderH = 150
+notePlaceholderW = 300
+notePlaceholderH = 150
+
+[movement]
+baseWalkSpeed = 180.0
+baseRunSpeed = 480.0
+maxForce = 350.0
+moveDistanceThreshold = 1.0
+friction = 0.85
+maxSpeed = 600.0
+runSpeedMultiplier = 1.25
+initDirectionMax = 360.0
+speedLerpRate = 0.05
+arrivalRadius = 50.0
+runDistanceThreshold = 1200.0
+directionBlendRate = 0.15
+
+[physics]
+screenMargin = 50.0
+bounceFactorWall = 0.5
+bounceFactorCorner = 0.8
+cornerMargin = 100.0
+dragMinDt = 0.001
+dragVelocityThreshold = 10.0
+dragRotationSpeed = 12.0
+isoScaleX = 1.3
+isoScaleY = 0.4
+edgeAvoidMargin = 40.0
+edgeLookAheadSpeed = 0.4
+edgeLookAheadBase = 30.0
+edgeAvoidForce = 3.0
+screenClampTight = 20.0
+screenClampExpanded = 50.0
+screenClampBounce = 50.0
+steerSeekForce = 2.0
+curveFadeDistance = 200.0
+curveTangentForce = 0.8
+curveFadeMinVel = 10.0
+directionRotateMinVel = 1.0
+directionToCursorDist = 2.0
+snapDistance = 1.0
+directionReverseMultiplier = -1.0
+minValidScale = 0.01
+
+[spawn]
+marginX = 200.0
+marginY = 100.0
+targetReachedThresholdReturn = 60.0
+targetReachedThresholdNormal = 30.0
+targetReachedMinReturn = 50.0
+targetReachedMinNormal = 25.0
+randomTargetMarginX = 100.0
+randomTargetMarginY = 100.0
+itemDropMarginX = 300.0
+itemDropMarginY = 200.0
+itemPickupDistance = 28.0
+catchThresholdBase = 22.0
+catchThresholdMin = 15.0
+wanderTargetMargin = 400.0
+wanderTargetOffset = 200.0
+fetchEdgeMargin = 40.0
+maxFetchingGeese = 3.0
+separationMaxDistance = 70.0
+separationForceMultiplier = 1.5
+separationMinDistance = 0.1
+
+[rig]
+underbodyY = 9.0
+bodyY = 14.0
+neckBaseX = 15.0
+neckHeightIdle = 20.0
+neckHeightMoving = 10.0
+neckExtIdle = 3.0
+neckExtMoving = 16.0
+headBaseX = 3.0
+headBaseY = 2.0
+head1OffsetX = 2.0
+head1OffsetY = 4.0
+head1OffsetZ = 3.0
+head2OffsetX = 4.0
+head2OffsetY = -2.0
+beakBaseOffset = 4.0
+beakLen = 12.0
+beakWidth = 16.0
+neckLerpRate = 0.1
+runSpeedThreshold = 150.0
+strideMax = 15.0
+footSpacing = 8.0
+stepLiftHeight = 3.0
+footOffsetY = 2.0
+headForwardBias = 2.0
+
+[cursor]
+chaseEnabled = true
+chaseChance = 1
+multiMonitorEnabled = true
+
+[snatch]
+radiusBase = 40.0
+radiusRange = 80.0
+angularSpeedBase = 1.5
+speedMultiplier = 1.25
+offsetMax = 120.0
+duration = 3.0
+pullDistance = 140.0
+lateralBiasLimit = 0.75
+forwardBiasScale = 0.25
+forwardBiasMin = -0.35
+forwardBiasMax = 0.15
+tier3MaxStep = 500.0
+tier3MinDelta = 1.0
+angularSpeedRandomRange = 200.0
+
+[mud]
+enabled = true
+chance = 15
+lifetime = 15.0
+
+[honk]
+minGap = 0.60
+idleMin = 6.0
+idleMax = 14.0
+genericCooldown = 0.90
+chaseCooldown = 1.80
+fetchCooldown = 1.20
+idleCheckAhead = 2.0
+idleChanceDivisor = 3
+wanderHonkDivisor = 15
+
+[step]
+timeFetch = 0.15
+timeWander = 0.2
+timeSnatch = 0.12
+stepTriggerWalk = 5.0
+stepTriggerRun = 9.0
+overshootWalk = 1.5
+overshootRun = 4.0
+durationWalk = 0.16
+durationRun = 0.085
+liftWalk = 3.0
+liftRun = 7.0
+snapDistance = 90.0
+distFactorBase = 22.0
+distFactorMin = 0.9
+distFactorMax = 1.45
+durationMin = 0.055
+durationMax = 0.18
+leftFootAngle = -15.0
+rightFootAngle = 15.0
+footSpacing = 4.0
+zeroVelocityThreshold = 0.001
+minDuration = 0.001
+
+[item]
+pickupCooldown = 2.0
+itemLifetime = 15.0
+memePickupChance = 10
+fetchBaseChance = 2
+maxFetchBias = 100
+maxFetchGeese = 3
+memeFetchBiasMax = 30
+noteFetchBiasMax = 20
+attackMouseBiasMax = 25
+heistChancePercent = 10
+heistApproachMargin = 8
+
+[render]
+shadowOffsetX = 2.0
+shadowOffsetY = 10.0
+shadowWidth = 40.0
+shadowHeight = 30.0
+footSize = 8.0
+bodyWidth = 22.0
+bodyHeight = 22.0
+neckSize = 13.0
+head1Size = 15.0
+head2Size = 10.0
+beakWidth = 16.0
+beakHeight = 8.0
+beakMaxWidth = 9.0
+eyeSize = 4.0
+eyeOffsetXBack = -3.0
+eyeOffsetXFront = 3.0
+eyeOffsetY = -4.0
+eyeFacingThreshold = 0.5
+clickRadius = 30.0
+footprintWidth = 12.0
+footprintHeight = 8.0
+droppedItemSize = 20.0
+frameRate = 60.0
+frameDt = 0.016667
+debugTickMod = 60
+isoScaleX = 1.0
+isoScaleY = 0.7
+squashFactor = 0.92
+facingBackThreshold = 0.55
+closeButtonSize = 20.0
+closeButtonMargin = 16.0
+textNoteFontSize = 14.0
+textNotePadding = 5.0
+
+[render.memePlaceholderColor]
+r = 0.9
+g = 0.7
+b = 0.9
+
+[render.closeButtonColor]
+r = 0.9
+g = 0.1
+b = 0.1
+
+[render.closeButtonStroke]
+r = 1.0
+g = 1.0
+b = 1.0
+
+[color]
+[color.goose]
+r = 0.82
+g = 0.82
+b = 0.82
+
+[color.beak]
+r = 1.0
+g = 0.6
+b = 0.0
+
+[color.eye]
+r = 0.1
+g = 0.1
+b = 0.1
+
+[color.eyeHighlight]
+r = 1.0
+g = 0.8
+b = 0.0
+a = 0.8
+
+[color.shadow]
+r = 0.0
+g = 0.0
+b = 0.0
+
+[color.footprint]
+r = 0.3
+g = 0.3
+b = 0.3
+footprintAlphaMultiplier = 0.6
+
+[color.droppedItem]
+r = 0.5
+g = 0.5
+b = 0.5
+
+[color.canadaHead]
+r = 0.82
+g = 0.82
+b = 0.82
+
+[color.canadaNeck]
+r = 0.05
+g = 0.05
+b = 0.05
+
+[color.canadaBody]
+r = 0.35
+g = 0.28
+b = 0.22
+
+[color.canadaOutline]
+r = 0.15
+g = 0.12
+b = 0.1
+
+[color.canadaBeak]
+r = 0.22
+g = 0.22
+b = 0.22
+
+[color.canadaEye]
+r = 0.1
+g = 0.1
+b = 0.1
+
+[behaviors.fun]
+ball = false
+breadCrumbs = false
+hats = false
+rainbow = false
+acid = false
+anger = false
+
+[behaviors.control]
+honcker = false
+jail = false
+portals = false
+drag = false
+banish = false
+
+[behaviors.info]
+nametag = false
+debugoose = false
+presence = false
+configGUI = false
+colorPicker = false
+clicker = false
+gooseManager = false
+
+[behaviors.systems]
+health = false
+ai = false
+
+[behaviors.honcker]
+key = 0x24
+
+[behaviors.drag]
+radius = 45.0
+
+[behaviors.jail]
+keyO = 0x2D
+keyP = 0x1E
+size = 150.0
+
+[behaviors.anger]
+increaseRate = 15.0
+decreaseRate = 8.0
+punchCooldown = 2.0
+punchDuration = 0.3
+cursorRadius = 100.0
+maxAnger = 100.0
+punchThreshold = 80.0
+minVisualThreshold = 10.0
+
+[behaviors.clicker]
+chance = 300
+key = 0x24
+
+[behaviors.health]
+maxHealth = 100.0
+regenRate = 0.5
+damageCooldown = 2.0
+damageSpeedThreshold = 200.0
+damageAmount = 5.0
+
+[behaviors.acid]
+spinSpeed = 720.0
+honkInterval = 0.15
+rotationTotal = 1080.0
+triggerChance = 300
+
+[behaviors.rainbow]
+hueSpeed = 120.0
+
+[behaviors.ball]
+count = 5
+size = 25.0
+speed = 300.0
+friction = 0.98
+spawnChance = 300.0
+spawnRange = 100.0
+interactionRadius = 30.0
+bounceFactor = 0.8
+
+[behaviors.breadCrumbs]
+maxCrumbs = 50
+lifetime = 10.0
+spawnDist = 15.0
+size = 5.0
+triggerKey = "RightShift"
+
+[behaviors.hats]
+path = ""
+sizeX = 32.0
+sizeY = 24.0
+offsetX = 0.0
+offsetY = -15.0
+
+[portal]
+p1Width = 80.0
+p1Height = 80.0
+p2Width = 80.0
+p2Height = 80.0
+
+[ai]
+endpoint = "https://api.openai.com/v1/chat/completions"
+model = "gpt-3.5-turbo"
+keychainService = "com.cadgoose.ai"
+
+[gooseManager.tasks]
+wander = true
+fetch = true
+chase = true
+snatch = true
+
+[gooseManager.speeds]
+walk = true
+run = true

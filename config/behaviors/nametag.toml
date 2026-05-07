@@ -1,0 +1,32 @@
+# Nametag Behavior Config
+# Shows goose name above head
+
+[settings]
+# Width per character
+charWidth = 8.0
+
+# Box height
+boxHeight = 18.0
+
+# Horizontal padding
+boxPaddingX = 4.0
+
+# Vertical offset from head
+boxOffsetY = 40.0
+
+# Font name
+fontName = "Helvetica"
+
+# Font size
+fontSize = 12.0
+
+[bgColor]
+r = 0.0
+g = 0.0
+b = 0.0
+a = 0.7
+
+[textColor]
+r = 1.0
+g = 1.0
+b = 1.0

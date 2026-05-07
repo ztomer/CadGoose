@@ -1,7 +1,9 @@
 {
 	"InstallScripts" : 
 	[
-		"/Users/ztomer/Projects/CadGoose/build/cmake_install.cmake"
+		"/Users/ztomer/Projects/CadGoose/build/cmake_install.cmake",
+		"/Users/ztomer/Projects/CadGoose/build/vendor/toml11/cmake_install.cmake",
+		"/Users/ztomer/Projects/CadGoose/build/vendor/toml11/src/cmake_install.cmake"
 	],
 	"Parallel" : false
 }

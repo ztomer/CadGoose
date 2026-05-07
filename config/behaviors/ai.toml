@@ -1,0 +1,22 @@
+# AI Behavior Config
+# Chat with the goose via AI
+
+[settings]
+# API endpoint (leave empty for default OpenAI)
+endpoint = "https://api.openai.com/v1/chat/completions"
+
+# Model to use
+model = "gpt-3.5-turbo"
+
+# Keychain service name for API key
+keychainService = "com.cadgoose.ai"
+
+# Chat window dimensions
+windowWidth = 400
+windowHeight = 300
+
+# Chat history max entries
+maxHistory = 20
+
+# Response display duration (seconds)
+responseDuration = 5.0

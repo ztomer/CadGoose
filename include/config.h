@@ -218,6 +218,14 @@ struct ItemConfig {
   int heistApproachMargin = 8;
 };
 
+struct ColorRGB {
+  float r, g, b;
+};
+
+struct ColorRGBA {
+  float r, g, b, a;
+};
+
 struct RenderConfig {
   float shadowOffsetX = 2.0f;
   float shadowOffsetY = 10.0f;
@@ -248,14 +256,15 @@ struct RenderConfig {
   float isoScaleY = 0.7f;
   float squashFactor = 0.92f;
   float facingBackThreshold = 0.55f;
-};
 
-struct ColorRGB {
-  float r, g, b;
-};
-
-struct ColorRGBA {
-  float r, g, b, a;
+  // Dropped item UI
+  float closeButtonSize = 20.0f;
+  float closeButtonMargin = 16.0f;
+  float textNoteFontSize = 14.0f;
+  float textNotePadding = 5.0f;
+  ColorRGB memePlaceholderColor = {0.9f, 0.7f, 0.9f};
+  ColorRGB closeButtonColor = {0.9f, 0.1f, 0.1f};
+  ColorRGB closeButtonStroke = {1.0f, 1.0f, 1.0f};
 };
 
 struct ColorConfig {
@@ -276,6 +285,80 @@ struct ColorConfig {
   ColorRGB canadaEye = {0.1f, 0.1f, 0.1f};
 };
 
+struct BehaviorConfig {
+  struct Fun {
+    bool ball = false;
+    bool breadCrumbs = false;
+    bool hats = false;
+    bool rainbow = false;
+    bool acid = false;
+    bool anger = false;
+  } fun;
+
+  struct Control {
+    bool honcker = false;
+    bool jail = false;
+    bool portals = false;
+    bool drag = false;
+    bool banish = false;
+  } control;
+
+  struct Info {
+    bool nametag = false;
+    bool debugoose = false;
+    bool presence = false;
+    bool configGUI = false;
+    bool colorPicker = false;
+    bool clicker = false;
+    bool gooseManager = false;
+  } info;
+
+  struct Systems {
+    bool health = false;
+    bool ai = false;
+    bool pomodoro = false;
+  } systems;
+
+  struct HonckerConfig { int key = 0x24; } honcker;
+  struct DragConfig { float radius = 45.0f; } drag;
+  struct JailConfig { int keyO = 0x2D; int keyP = 0x1E; float size = 150.0f; } jail;
+  struct AngerConfig { float increaseRate = 15.0f; float decreaseRate = 8.0f; float punchCooldown = 2.0; float punchDuration = 0.3f; float cursorRadius = 100.0f; float maxAnger = 100.0f; float punchThreshold = 80.0f; float minVisualThreshold = 10.0f; } anger;
+  struct ClickerConfig { int chance = 300; int key = 0x24; } clicker;
+  struct HealthConfig { float maxHealth = 100.0f; float regenRate = 0.5f; float damageCooldown = 2.0f; float damageSpeedThreshold = 200.0f; float damageAmount = 5.0f; } health;
+  struct AcidConfig { float spinSpeed = 720.0f; float honkInterval = 0.15f; float rotationTotal = 1080.0f; int triggerChance = 300; } acid;
+  struct RainbowConfig { float hueSpeed = 120.0f; } rainbow;
+  struct PomodoroConfig {
+    bool enabled = false;
+    int workMinutes = 25;
+    int breakMinutes = 5;
+    int longBreakMinutes = 15;
+    int sessionsBeforeLongBreak = 4;
+    bool enableAggressiveMode = true;
+    float aggressiveHonkInterval = 2.0f;
+    float aggressiveSpeedMultiplier = 1.5f;
+  } pomodoro;
+  struct BallConfig {
+    int count = 5;
+    float size = 25.0f;
+    float speed = 300.0f;
+    float friction = 0.98f;
+    float spawnChance = 300.0f;
+    float spawnRange = 100.0f;
+    float interactionRadius = 30.0f;
+    float bounceFactor = 0.8f;
+    bool soccerEnabled = true;
+    bool beachEnabled = true;
+    float soccerSize = 28.0f;
+    float beachSize = 35.0f;
+    float soccerSpeed = 350.0f;
+    float beachSpeed = 200.0f;
+    float soccerBounce = 0.75f;
+    float beachBounce = 0.65f;
+  } ball;
+  struct BreadCrumbsConfig { int maxCrumbs = 50; float lifetime = 10.0f; float spawnDist = 15.0f; float size = 5.0f; std::string triggerKey = "RightShift"; } breadCrumbs;
+  struct HatsConfig { std::string path; float sizeX = 32.0f; float sizeY = 24.0f; float offsetX = 0.0f; float offsetY = -15.0f; } hats;
+};
+
 struct Config {
   DebugConfig debug;
   GeneralConfig general;
@@ -293,7 +376,14 @@ struct Config {
   ItemConfig item;
   RenderConfig render;
   ColorConfig color;
-  ModConfig mods;
+  BehaviorConfig behaviors;
+
+  struct PortalConfig { float p1Width = 80.0f; float p1Height = 80.0f; float p2Width = 80.0f; float p2Height = 80.0f; } portal;
+  struct AIConfig { std::string endpoint; std::string model = "gpt-3.5-turbo"; std::string keychainService; } ai;
+  struct GooseManagerConfig {
+    bool taskWander = true, taskFetch = true, taskChase = true, taskSnatch = true;
+    bool speedWalk = true, speedRun = true;
+  } gooseManager;
 };
 
 extern Config g_config;

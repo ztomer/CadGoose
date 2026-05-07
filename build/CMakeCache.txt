@@ -20,6 +20,9 @@ APPLICATIONSERVICES_LIBRARY:FILEPATH=/Applications/Xcode.app/Contents/Developer/
 //Path to a library.
 AVFOUNDATION_LIBRARY:FILEPATH=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks/AVFoundation.framework
 
+//Build the testing tree.
+BUILD_TESTING:BOOL=ON
+
 //Path to a program.
 CMAKE_ADDR2LINE:FILEPATH=CMAKE_ADDR2LINE-NOTFOUND
 
@@ -93,11 +96,59 @@ CMAKE_EXPORT_COMPILE_COMMANDS:BOOL=
 //Value Computed by CMake.
 CMAKE_FIND_PACKAGE_REDIRECTS_DIR:STATIC=/Users/ztomer/Projects/CadGoose/build/CMakeFiles/pkgRedirects
 
+//User executables (bin)
+CMAKE_INSTALL_BINDIR:PATH=bin
+
+//Read-only architecture-independent data (DATAROOTDIR)
+CMAKE_INSTALL_DATADIR:PATH=
+
+//Read-only architecture-independent data root (share)
+CMAKE_INSTALL_DATAROOTDIR:PATH=share
+
+//Documentation root (DATAROOTDIR/doc/PROJECT_NAME)
+CMAKE_INSTALL_DOCDIR:PATH=
+
+//C header files (include)
+CMAKE_INSTALL_INCLUDEDIR:PATH=include
+
+//Info documentation (DATAROOTDIR/info)
+CMAKE_INSTALL_INFODIR:PATH=
+
+//Object code libraries (lib)
+CMAKE_INSTALL_LIBDIR:PATH=lib
+
+//Program executables (libexec)
+CMAKE_INSTALL_LIBEXECDIR:PATH=libexec
+
+//Locale-dependent data (DATAROOTDIR/locale)
+CMAKE_INSTALL_LOCALEDIR:PATH=
+
+//Modifiable single-machine data (var)
+CMAKE_INSTALL_LOCALSTATEDIR:PATH=var
+
+//Man documentation (DATAROOTDIR/man)
+CMAKE_INSTALL_MANDIR:PATH=
+
 //Path to a program.
 CMAKE_INSTALL_NAME_TOOL:FILEPATH=/usr/bin/install_name_tool
 
+//C header files for non-gcc (/usr/include)
+CMAKE_INSTALL_OLDINCLUDEDIR:PATH=/usr/include
+
 //Install path prefix, prepended onto install directories.
 CMAKE_INSTALL_PREFIX:PATH=/usr/local
+
+//Run-time variable data (LOCALSTATEDIR/run)
+CMAKE_INSTALL_RUNSTATEDIR:PATH=
+
+//System admin executables (sbin)
+CMAKE_INSTALL_SBINDIR:PATH=sbin
+
+//Modifiable architecture-independent data (com)
+CMAKE_INSTALL_SHAREDSTATEDIR:PATH=com
+
+//Read-only single-machine data (etc)
+CMAKE_INSTALL_SYSCONFDIR:PATH=etc
 
 //Path to a program.
 CMAKE_LINKER:FILEPATH=/usr/bin/ld
@@ -179,6 +230,21 @@ CMAKE_PROJECT_NAME:STATIC=CadGoose
 //Value Computed by CMake
 CMAKE_PROJECT_SPDX_LICENSE:STATIC=
 
+//Value Computed by CMake
+CMAKE_PROJECT_VERSION:STATIC=4.4.0
+
+//Value Computed by CMake
+CMAKE_PROJECT_VERSION_MAJOR:STATIC=4
+
+//Value Computed by CMake
+CMAKE_PROJECT_VERSION_MINOR:STATIC=4
+
+//Value Computed by CMake
+CMAKE_PROJECT_VERSION_PATCH:STATIC=0
+
+//Value Computed by CMake
+CMAKE_PROJECT_VERSION_TWEAK:STATIC=
+
 //Path to a program.
 CMAKE_RANLIB:FILEPATH=/usr/bin/ranlib
 
@@ -253,6 +319,22 @@ COREAUDIO_LIBRARY:FILEPATH=/Applications/Xcode.app/Contents/Developer/Platforms/
 //Path to a library.
 COREGRAPHICS_LIBRARY:FILEPATH=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks/CoreGraphics.framework
 
+//Path to the coverage program that CTest uses for performing coverage
+// inspection
+COVERAGE_COMMAND:FILEPATH=/usr/bin/gcov
+
+//Extra command line flags to pass to the coverage tool
+COVERAGE_EXTRA_FLAGS:STRING=-l
+
+//How many times to retry timed-out CTest submissions.
+CTEST_SUBMIT_RETRY_COUNT:STRING=3
+
+//How long to wait between timed-out CTest submissions.
+CTEST_SUBMIT_RETRY_DELAY:STRING=5
+
+//Path to a library.
+CURL_LIBRARY:FILEPATH=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/lib/libcurl.tbd
+
 //Value Computed by CMake
 CadGoose_BINARY_DIR:STATIC=/Users/ztomer/Projects/CadGoose/build
 
@@ -262,8 +344,41 @@ CadGoose_IS_TOP_LEVEL:STATIC=ON
 //Value Computed by CMake
 CadGoose_SOURCE_DIR:STATIC=/Users/ztomer/Projects/CadGoose
 
+//Maximum time allowed before CTest will kill the test.
+DART_TESTING_TIMEOUT:STRING=1500
+
+//Path to a program.
+GITCOMMAND:FILEPATH=/opt/homebrew/bin/git
+
 //The directory containing a CMake configuration file for GTest.
 GTest_DIR:PATH=/opt/homebrew/lib/cmake/GTest
+
+//Command to build the project
+MAKECOMMAND:STRING=/opt/homebrew/bin/cmake --build . --config "${CTEST_CONFIGURATION_TYPE}"
+
+//Path to the memory checking command, used for memory error detection.
+MEMORYCHECK_COMMAND:FILEPATH=MEMORYCHECK_COMMAND-NOTFOUND
+
+//File that contains suppressions for the memory checker
+MEMORYCHECK_SUPPRESSIONS_FILE:FILEPATH=
+
+//Name of the computer/site where compile is being run
+SITE:STRING=Tomers-MacBook-Pro.local
+
+//enable access check feature (beta)
+TOML11_ENABLE_ACCESS_CHECK:BOOL=OFF
+
+//precompile toml11 library
+TOML11_PRECOMPILE:BOOL=OFF
+
+//Value Computed by CMake
+toml11_BINARY_DIR:STATIC=/Users/ztomer/Projects/CadGoose/build/vendor/toml11
+
+//Value Computed by CMake
+toml11_IS_TOP_LEVEL:STATIC=OFF
+
+//Value Computed by CMake
+toml11_SOURCE_DIR:STATIC=/Users/ztomer/Projects/CadGoose/vendor/toml11
 
 
 ########################
@@ -288,6 +403,8 @@ CMAKE_COLOR_MAKEFILE-ADVANCED:INTERNAL=1
 CMAKE_COMMAND:INTERNAL=/opt/homebrew/bin/cmake
 //Path to cpack program executable.
 CMAKE_CPACK_COMMAND:INTERNAL=/opt/homebrew/bin/cpack
+//ADVANCED property for variable: CMAKE_CTEST_COMMAND
+CMAKE_CTEST_COMMAND-ADVANCED:INTERNAL=1
 //Path to ctest program executable.
 CMAKE_CTEST_COMMAND:INTERNAL=/opt/homebrew/bin/ctest
 //ADVANCED property for variable: CMAKE_CXX_COMPILER
@@ -347,8 +464,40 @@ CMAKE_HAVE_LIBC_PTHREAD:INTERNAL=1
 //Source directory with the top level CMakeLists.txt file for this
 // project
 CMAKE_HOME_DIRECTORY:INTERNAL=/Users/ztomer/Projects/CadGoose
+//ADVANCED property for variable: CMAKE_INSTALL_BINDIR
+CMAKE_INSTALL_BINDIR-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: CMAKE_INSTALL_DATADIR
+CMAKE_INSTALL_DATADIR-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: CMAKE_INSTALL_DATAROOTDIR
+CMAKE_INSTALL_DATAROOTDIR-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: CMAKE_INSTALL_DOCDIR
+CMAKE_INSTALL_DOCDIR-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: CMAKE_INSTALL_INCLUDEDIR
+CMAKE_INSTALL_INCLUDEDIR-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: CMAKE_INSTALL_INFODIR
+CMAKE_INSTALL_INFODIR-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: CMAKE_INSTALL_LIBDIR
+CMAKE_INSTALL_LIBDIR-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: CMAKE_INSTALL_LIBEXECDIR
+CMAKE_INSTALL_LIBEXECDIR-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: CMAKE_INSTALL_LOCALEDIR
+CMAKE_INSTALL_LOCALEDIR-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: CMAKE_INSTALL_LOCALSTATEDIR
+CMAKE_INSTALL_LOCALSTATEDIR-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: CMAKE_INSTALL_MANDIR
+CMAKE_INSTALL_MANDIR-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_INSTALL_NAME_TOOL
 CMAKE_INSTALL_NAME_TOOL-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: CMAKE_INSTALL_OLDINCLUDEDIR
+CMAKE_INSTALL_OLDINCLUDEDIR-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: CMAKE_INSTALL_RUNSTATEDIR
+CMAKE_INSTALL_RUNSTATEDIR-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: CMAKE_INSTALL_SBINDIR
+CMAKE_INSTALL_SBINDIR-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: CMAKE_INSTALL_SHAREDSTATEDIR
+CMAKE_INSTALL_SHAREDSTATEDIR-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: CMAKE_INSTALL_SYSCONFDIR
+CMAKE_INSTALL_SYSCONFDIR-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_LINKER
 CMAKE_LINKER-ADVANCED:INTERNAL=1
 //Name of CMakeLists files to read
@@ -368,7 +517,7 @@ CMAKE_MODULE_LINKER_FLAGS_RELWITHDEBINFO-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_NM
 CMAKE_NM-ADVANCED:INTERNAL=1
 //number of local generators
-CMAKE_NUMBER_OF_MAKEFILES:INTERNAL=1
+CMAKE_NUMBER_OF_MAKEFILES:INTERNAL=3
 //ADVANCED property for variable: CMAKE_OBJCOPY
 CMAKE_OBJCOPY-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_OBJCXX_COMPILER
@@ -425,8 +574,56 @@ CMAKE_TAPI-ADVANCED:INTERNAL=1
 CMAKE_UNAME:INTERNAL=/usr/bin/uname
 //ADVANCED property for variable: CMAKE_VERBOSE_MAKEFILE
 CMAKE_VERBOSE_MAKEFILE-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: COVERAGE_COMMAND
+COVERAGE_COMMAND-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: COVERAGE_EXTRA_FLAGS
+COVERAGE_EXTRA_FLAGS-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: CTEST_SUBMIT_RETRY_COUNT
+CTEST_SUBMIT_RETRY_COUNT-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: CTEST_SUBMIT_RETRY_DELAY
+CTEST_SUBMIT_RETRY_DELAY-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: DART_TESTING_TIMEOUT
+DART_TESTING_TIMEOUT-ADVANCED:INTERNAL=1
 //Details about finding GTest
 FIND_PACKAGE_MESSAGE_DETAILS_GTest:INTERNAL=[/opt/homebrew/lib/cmake/GTest/GTestConfig.cmake][ ][v1.17.0()]
 //Details about finding Threads
 FIND_PACKAGE_MESSAGE_DETAILS_Threads:INTERNAL=[TRUE][v()]
+//ADVANCED property for variable: GITCOMMAND
+GITCOMMAND-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: MAKECOMMAND
+MAKECOMMAND-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: MEMORYCHECK_COMMAND
+MEMORYCHECK_COMMAND-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: MEMORYCHECK_SUPPRESSIONS_FILE
+MEMORYCHECK_SUPPRESSIONS_FILE-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: SITE
+SITE-ADVANCED:INTERNAL=1
+//Test TOML11_COMPILER_SUPPORTS_WALL
+TOML11_COMPILER_SUPPORTS_WALL:INTERNAL=1
+//Test TOML11_COMPILER_SUPPORTS_WCONVERSION
+TOML11_COMPILER_SUPPORTS_WCONVERSION:INTERNAL=1
+//Test TOML11_COMPILER_SUPPORTS_WDOUBLE_PROMOTION
+TOML11_COMPILER_SUPPORTS_WDOUBLE_PROMOTION:INTERNAL=1
+//Test TOML11_COMPILER_SUPPORTS_WDUPLICATED_BRANCHES
+TOML11_COMPILER_SUPPORTS_WDUPLICATED_BRANCHES:INTERNAL=
+//Test TOML11_COMPILER_SUPPORTS_WDUPLICATED_COND
+TOML11_COMPILER_SUPPORTS_WDUPLICATED_COND:INTERNAL=
+//Test TOML11_COMPILER_SUPPORTS_WERROR
+TOML11_COMPILER_SUPPORTS_WERROR:INTERNAL=1
+//Test TOML11_COMPILER_SUPPORTS_WEXTRA
+TOML11_COMPILER_SUPPORTS_WEXTRA:INTERNAL=1
+//Test TOML11_COMPILER_SUPPORTS_WLOGICAL_OP
+TOML11_COMPILER_SUPPORTS_WLOGICAL_OP:INTERNAL=
+//Test TOML11_COMPILER_SUPPORTS_WPEDANTIC
+TOML11_COMPILER_SUPPORTS_WPEDANTIC:INTERNAL=1
+//Test TOML11_COMPILER_SUPPORTS_WRANGE_LOOP_ANALYSIS
+TOML11_COMPILER_SUPPORTS_WRANGE_LOOP_ANALYSIS:INTERNAL=1
+//Test TOML11_COMPILER_SUPPORTS_WSHADOW
+TOML11_COMPILER_SUPPORTS_WSHADOW:INTERNAL=1
+//Test TOML11_COMPILER_SUPPORTS_WSIGN_CONVERSION
+TOML11_COMPILER_SUPPORTS_WSIGN_CONVERSION:INTERNAL=1
+//Test TOML11_COMPILER_SUPPORTS_WUNDEF
+TOML11_COMPILER_SUPPORTS_WUNDEF:INTERNAL=1
+//CMAKE_INSTALL_PREFIX during last run
+_GNUInstallDirs_LAST_CMAKE_INSTALL_PREFIX:INTERNAL=/usr/local
 

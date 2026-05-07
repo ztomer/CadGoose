@@ -1,0 +1,42 @@
+# Ball Behavior Config
+# Push balls around the screen (soccer, beach, generic)
+
+[settings]
+# Number of balls
+count = 5
+
+# Generic ball settings
+size = 25.0
+speed = 300.0
+friction = 0.98
+spawnChance = 300.0
+spawnRange = 100.0
+interactionRadius = 30.0
+bounceFactor = 0.8
+
+# Enable different ball types
+soccerEnabled = true
+beachEnabled = true
+
+[soccer]
+# Soccer ball settings
+size = 28.0
+speed = 350.0
+bounce = 0.75
+
+[beach]
+# Beach ball settings
+size = 35.0
+speed = 200.0
+bounce = 0.65
+
+[fillColor]
+r = 0.3
+g = 0.5
+b = 0.9
+
+[strokeColor]
+r = 0.2
+g = 0.4
+b = 0.7
+lineWidth = 2.0

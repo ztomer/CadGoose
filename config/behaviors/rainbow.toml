@@ -1,0 +1,6 @@
+# Rainbow Behavior Config
+# Cycle through rainbow colors
+
+[settings]
+# Hue rotation speed (degrees per second)
+hueSpeed = 120.0

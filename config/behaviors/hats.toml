@@ -1,0 +1,48 @@
+# Hats Behavior Config
+# Put hats on geese
+
+[settings]
+# Hat image path (empty = no hat)
+path = ""
+
+# Hat dimensions
+sizeX = 32.0
+sizeY = 24.0
+
+# Offset from head
+offsetX = 0.0
+offsetY = -15.0
+
+# Rim brightness multiplier
+rimMultiplier = 0.7
+
+# Outline brightness multiplier
+outlineMultiplier = 0.5
+
+# Line width for outline
+lineWidth = 1.0
+
+[style1]
+r = 0.2
+g = 0.2
+b = 0.4
+
+[style2]
+r = 0.8
+g = 0.6
+b = 0.2
+
+[style3]
+r = 0.4
+g = 0.8
+b = 0.4
+
+[style4]
+r = 0.9
+g = 0.1
+b = 0.1
+
+[style5]
+r = 0.5
+g = 0.3
+b = 0.7

@@ -108,6 +108,9 @@ public:
     double lastDebugLog = -1e9;
     static constexpr double debugLogInterval = 0.1;
 
+    // Behavior system enabled flag
+    bool behaviorsEnabled = true;
+
     Goose(int _id, const std::string& _name, int screenW, int screenH);
 
     CursorAction Update(double dt, double time, int scrW, int scrH, const CursorState& cursor);

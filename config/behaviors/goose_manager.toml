@@ -1,0 +1,23 @@
+# GooseManager Behavior Config
+# Control goose tasks and speeds
+
+[tasks]
+# Enable/disable individual tasks
+wander = true
+fetch = true
+chase = true
+snatch = true
+
+[speeds]
+# Enable/disable speeds
+walk = true
+run = true
+
+# Speed when walk is disabled
+walkSpeedDisabled = 0.0
+
+# Speed when run is disabled
+runSpeedDisabled = 50.0
+
+# Run speed threshold
+runSpeedThreshold = 100.0

@@ -1,0 +1,12 @@
+# Drag Behavior Config
+# Click and drag the goose with cursor
+
+[settings]
+# Radius for detecting goose under cursor
+radius = 45.0
+
+# Offset from cursor when dragging
+dragOffset = 5.0
+
+# Direction randomization range when dragged
+directionRandomRange = 10
