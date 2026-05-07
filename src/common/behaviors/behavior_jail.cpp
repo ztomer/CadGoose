@@ -56,7 +56,7 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
 
     if (IsKeyPressed(g_config.behaviors.jail.keyP)) {
         s_jailToggle = !s_jailToggle;
-        goose->state = WANDER;
+        goose->state = GooseState:: WANDER;
         g_assets.Honk();
     }
 

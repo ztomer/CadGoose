@@ -45,7 +45,7 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
     }
 #endif
 
-    if (onGoose && mouseDown && goose->state != SNATCH_CURSOR) {
+    if (onGoose && mouseDown && goose->state != GooseState:: SNATCH_CURSOR) {
         goose->pos.x = cursorPos.x - 5.0f;
         goose->pos.y = cursorPos.y;
 

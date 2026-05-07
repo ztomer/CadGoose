@@ -168,6 +168,7 @@ struct PomodoroState : public BehaviorState {
     double lastHonkTime = 0;
     bool isAggressive = false;
     float accumulatedRotation = 0.0f;
+    bool speedMultiplierApplied = false;
 
     void Reset() override {
         phase = PomodoroPhase::Work;
@@ -176,6 +177,7 @@ struct PomodoroState : public BehaviorState {
         lastHonkTime = 0;
         isAggressive = false;
         accumulatedRotation = 0.0f;
+        speedMultiplierApplied = false;
     }
 
     int GetPhaseDurationMinutes() const {

@@ -4,5 +4,4 @@
 @interface GooseView : NSView
 - (void)startAnimation;
 - (void)stopAnimation;
-- (void)handleClickAtPoint:(NSPoint)point;
 @end

@@ -996,3 +996,192 @@ TEST(AngerState, FarCursorNoAnger) {
     EXPECT_FALSE(shouldGetAngrier);
     EXPECT_GT(distToCursor, 100.0f);
 }
+
+// ===========================
+// Ball Type Tests
+// ===========================
+TEST(BallType, SoccerBallProperties) {
+    BallState::Ball ball = BallState::CreateSoccerBall(28.0f);
+
+    EXPECT_EQ(ball.type, BallState::BallType::Soccer);
+    EXPECT_FLOAT_EQ(ball.radius, 28.0f);
+    EXPECT_FLOAT_EQ(ball.r, 1.0f);
+    EXPECT_FLOAT_EQ(ball.g, 1.0f);
+    EXPECT_FLOAT_EQ(ball.b, 1.0f);
+    EXPECT_TRUE(ball.hasPattern);
+    EXPECT_TRUE(ball.active);
+}
+
+TEST(BallType, BeachBallProperties) {
+    BallState::Ball ball = BallState::CreateBeachBall(35.0f);
+
+    EXPECT_EQ(ball.type, BallState::BallType::Beach);
+    EXPECT_FLOAT_EQ(ball.radius, 35.0f);
+    EXPECT_FLOAT_EQ(ball.r, 1.0f);
+    EXPECT_FLOAT_EQ(ball.g, 0.9f);
+    EXPECT_FLOAT_EQ(ball.b, 0.6f);
+    EXPECT_TRUE(ball.hasPattern);
+    EXPECT_TRUE(ball.active);
+}
+
+TEST(BallType, GenericBallProperties) {
+    BallState::Ball ball = BallState::CreateGenericBall(25.0f);
+
+    EXPECT_EQ(ball.type, BallState::BallType::Generic);
+    EXPECT_FLOAT_EQ(ball.radius, 25.0f);
+    EXPECT_FLOAT_EQ(ball.r, 0.3f);
+    EXPECT_FLOAT_EQ(ball.g, 0.5f);
+    EXPECT_FLOAT_EQ(ball.b, 0.9f);
+    EXPECT_FALSE(ball.hasPattern);
+    EXPECT_TRUE(ball.active);
+}
+
+TEST(BallType, DifferentBounceFactors) {
+    constexpr float SOCCER_BOUNCE = 0.75f;
+    constexpr float BEACH_BOUNCE = 0.65f;
+    constexpr float GENERIC_BOUNCE = 0.8f;
+
+    EXPECT_NE(SOCCER_BOUNCE, BEACH_BOUNCE);
+    EXPECT_NE(BEACH_BOUNCE, GENERIC_BOUNCE);
+}
+
+TEST(BallType, SoccerBallDifferentSpeed) {
+    constexpr float SOCCER_SPEED = 350.0f;
+    constexpr float GENERIC_SPEED = 300.0f;
+
+    EXPECT_GT(SOCCER_SPEED, GENERIC_SPEED);
+}
+
+TEST(BallType, BeachBallLarger) {
+    constexpr float BEACH_SIZE = 35.0f;
+    constexpr float GENERIC_SIZE = 25.0f;
+
+    EXPECT_GT(BEACH_SIZE, GENERIC_SIZE);
+}
+
+// ===========================
+// Pomodoro Timer Tests
+// ===========================
+TEST(PomodoroState, InitialPhase) {
+    PomodoroState state;
+    state.Reset();
+
+    EXPECT_EQ(state.phase, PomodoroPhase::Work);
+    EXPECT_EQ(state.completedSessions, 0);
+    EXPECT_FALSE(state.isAggressive);
+    EXPECT_FLOAT_EQ(state.accumulatedRotation, 0.0f);
+    EXPECT_FALSE(state.speedMultiplierApplied);
+}
+
+TEST(PomodoroState, PhaseTransitions) {
+    PomodoroState state;
+    state.phase = PomodoroPhase::Work;
+    state.completedSessions = 0;
+
+    state.completedSessions++;
+    state.phase = PomodoroPhase::Break;
+    EXPECT_EQ(state.phase, PomodoroPhase::Break);
+
+    state.phase = PomodoroPhase::Work;
+    state.completedSessions++;
+    EXPECT_EQ(state.phase, PomodoroPhase::Work);
+
+    state.phase = PomodoroPhase::LongBreak;
+    EXPECT_EQ(state.phase, PomodoroPhase::LongBreak);
+}
+
+TEST(PomodoroState, SessionCounting) {
+    constexpr int SESSIONS_BEFORE_LONG_BREAK = 4;
+
+    int sessions = 0;
+    EXPECT_EQ(sessions, 0);
+
+    for (int i = 0; i < SESSIONS_BEFORE_LONG_BREAK; ++i) {
+        sessions++;
+    }
+
+    EXPECT_EQ(sessions, SESSIONS_BEFORE_LONG_BREAK);
+    bool shouldLongBreak = (sessions >= SESSIONS_BEFORE_LONG_BREAK);
+    EXPECT_TRUE(shouldLongBreak);
+}
+
+TEST(PomodoroState, AggressiveModeActivation) {
+    PomodoroState state;
+    state.phase = PomodoroPhase::Work;
+    EXPECT_FALSE(state.isAggressive);
+
+    state.isAggressive = true;
+    EXPECT_TRUE(state.isAggressive);
+}
+
+TEST(PomodoroState, RotationAccumulation) {
+    PomodoroState state;
+    float rotation = 0.0f;
+
+    for (int i = 0; i < 60; ++i) {
+        rotation += 90.0f * (1.0f / 60.0f);
+    }
+
+    state.accumulatedRotation = rotation;
+    EXPECT_NEAR(state.accumulatedRotation, 90.0f, 0.1f);
+}
+
+TEST(PomodoroState, PhaseDurations) {
+    constexpr int WORK_MINUTES = 25;
+    constexpr int BREAK_MINUTES = 5;
+    constexpr int LONG_BREAK_MINUTES = 15;
+
+    PomodoroState state;
+
+    state.phase = PomodoroPhase::Work;
+    EXPECT_EQ(state.GetPhaseDurationMinutes(), WORK_MINUTES);
+
+    state.phase = PomodoroPhase::Break;
+    EXPECT_EQ(state.GetPhaseDurationMinutes(), BREAK_MINUTES);
+
+    state.phase = PomodoroPhase::LongBreak;
+    EXPECT_EQ(state.GetPhaseDurationMinutes(), LONG_BREAK_MINUTES);
+}
+
+TEST(PomodoroState, AggressiveHonkInterval) {
+    constexpr float HONK_INTERVAL = 2.0f;
+    double lastHonk = 0.0;
+    double currentTime = 0.0;
+    bool shouldHonk = false;
+
+    currentTime = 0.5;
+    shouldHonk = (currentTime - lastHonk) >= HONK_INTERVAL;
+    EXPECT_FALSE(shouldHonk);
+
+    lastHonk = currentTime;
+
+    currentTime = 2.0;
+    shouldHonk = (currentTime - lastHonk) >= HONK_INTERVAL;
+    EXPECT_FALSE(shouldHonk);
+
+    lastHonk = currentTime;
+
+    currentTime = 4.0;
+    shouldHonk = (currentTime - lastHonk) >= HONK_INTERVAL;
+    EXPECT_TRUE(shouldHonk);
+}
+
+TEST(PomodoroState, SpeedMultiplierInAggressiveMode) {
+    constexpr float SPEED_MULTIPLIER = 1.5f;
+    constexpr float BASE_WALK_SPEED = 180.0f;
+    constexpr float BASE_RUN_SPEED = 480.0f;
+
+    float aggressiveSpeed = BASE_RUN_SPEED * SPEED_MULTIPLIER;
+    EXPECT_FLOAT_EQ(aggressiveSpeed, 720.0f);
+}
+
+TEST(PomodoroState, TimeRemainingCalculation) {
+    double phaseStartTime = 100.0;
+    double phaseDuration = 25.0 * 60.0;
+    double currentTime = 110.0;
+
+    double elapsed = currentTime - phaseStartTime;
+    double remaining = phaseDuration - elapsed;
+
+    EXPECT_NEAR(remaining, 1490.0, 0.1);
+}

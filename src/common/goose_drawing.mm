@@ -225,7 +225,7 @@ void DrawLeaves(CGContextRef ctx, const std::list<LeafPile>& leafPiles, double c
 
 void DrawDroppedItem(CGContextRef ctx, const DroppedItem& item, float viewHeight) {
     CGContextSaveGState(ctx);
-    CGContextTranslateCTM(ctx, item.pos.x, viewHeight - item.pos.y);
+    CGContextTranslateCTM(ctx, item.pos.x, item.pos.y);
     CGContextRotateCTM(ctx, -item.rotation);
 
     float x = -item.data->w / 2.0f;

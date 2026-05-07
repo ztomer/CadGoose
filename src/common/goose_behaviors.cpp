@@ -49,7 +49,7 @@ void updateIdleHonk(Goose::HonkState& hs, double time, double cd, double& lastGe
 
 void Goose::StartSnatch(double time, const Vector2& cursorPos) {
     g_cursorGrabberId = id;
-    state = SNATCH_CURSOR;
+    state = GooseState::SNATCH_CURSOR;
     snatchStartTime = time;
     snatchAnchor = pos;
     snatchFwd = GetSnatchForward(dir, ISO_SCALE);
@@ -77,7 +77,7 @@ void Goose::EndSnatch(double time, int w, int h) {
         fprintf(f, "[ENDSNATCH] g%d: releasing cursor grab (was %d)\n", id, g_cursorGrabberId);
         g_cursorGrabberId = -1;
     }
-    state = WANDER;
+    state = GooseState::WANDER;
     fprintf(f, "[ENDSNATCH] g%d: now state=%d\n", id, state);
     PickNewTarget(w, h);
     triggerHonk(honkState, time, g_config.honk.genericCooldown, honkState.lastGeneric);
@@ -85,13 +85,13 @@ void Goose::EndSnatch(double time, int w, int h) {
 
 static CursorAction handleChaseCursor(Goose& g, double time, const CursorState& cursor, int w, int h) {
     if (g_cursorGrabberId != -1 && g_cursorGrabberId != g.id) {
-        g.state = WANDER;
+        g.state = GooseState::WANDER;
         g.PickNewTarget(w, h);
         return {};
     }
 
     if (!cursor.hasPos()) {
-        g.state = WANDER;
+        g.state = GooseState::WANDER;
         g.PickNewTarget(w, h);
         return {};
     }
@@ -112,7 +112,7 @@ static CursorAction handleChaseCursor(Goose& g, double time, const CursorState& 
         if (g_cursorGrabberId == -1) {
             g.StartSnatch(time, g.target);
         } else {
-            g.state = WANDER;
+            g.state = GooseState::WANDER;
             g.PickNewTarget(w, h);
         }
     }
@@ -120,7 +120,7 @@ static CursorAction handleChaseCursor(Goose& g, double time, const CursorState& 
 }
 
 static bool shouldPickupItem(Goose& g) {
-    return !g.heldItem && (g.state == WANDER || g.state == FETCHING);
+    return !g.heldItem && (g.state == GooseState::WANDER || g.state == GooseState::FETCHING);
 }
 
 static bool canPickupItem(double timeSinceDropped) {
@@ -141,7 +141,7 @@ static void tryPickupItem(Goose& g, double time, int w, int h) {
 
             g.heldItem = it->data;
             g_droppedItems.erase(it);
-            g.state = RETURNING;
+            g.state = GooseState::RETURNING;
             g.target = {static_cast<float>(rand() % (std::max(1, (int)(w - g_config.spawn.itemDropMarginX * 2)) + (int)g_config.spawn.itemDropMarginX)),
                         static_cast<float>(rand() % (std::max(1, (int)(h - g_config.spawn.itemDropMarginY * 2)) + (int)g_config.spawn.itemDropMarginY))};
             g_assets.Bite();
@@ -165,7 +165,7 @@ static void handleWander(Goose& g, double time, const CursorState& cursor, int w
                 time, g.id, g_cursorGrabberId, chaseEnabled, cursorValid, totalChance, roll);
         if (totalChance > 100) totalChance = 100;
         if (roll < totalChance) {
-            g.state = CHASE_CURSOR;
+            g.state = GooseState::CHASE_CURSOR;
             g.target = cursor.position;
             triggerHonk(g.honkState, time, g_config.honk.chaseCooldown, g.honkState.lastChase);
             chased = true;
@@ -179,7 +179,7 @@ static void handleWander(Goose& g, double time, const CursorState& cursor, int w
         if (trigger > g_config.item.maxFetchBias) trigger = g_config.item.maxFetchBias;
 
         int fetchCount = 0;
-        for (auto& other : g_geese) if (other.state == FETCHING) fetchCount++;
+        for (auto& other : g_geese) if (other.state == GooseState::FETCHING) fetchCount++;
 
         FILE* f = GetDebugLog();
         int fetchRoll = rand() % 100;
@@ -242,12 +242,12 @@ static void handleFetching(Goose& g, double time, int w, int h) {
     g.forcedText.clear();
 
     if (g.heldItem) {
-        g.state = RETURNING;
+        g.state = GooseState::RETURNING;
         g.target = {static_cast<float>(rand() % (std::max(1, w - (int)g_config.spawn.wanderTargetMargin)) + (int)g_config.spawn.wanderTargetOffset),
                     static_cast<float>(rand() % (std::max(1, h - (int)g_config.spawn.wanderTargetMargin)) + (int)g_config.spawn.wanderTargetOffset)};
         triggerHonk(g.honkState, time, g_config.honk.fetchCooldown, g.honkState.lastFetch);
     } else {
-        g.state = WANDER;
+        g.state = GooseState::WANDER;
         g.PickNewTarget(w, h);
     }
 }
@@ -286,7 +286,7 @@ static void handleReturning(Goose& g, double time, int w, int h) {
         g_assets.Bite();
     }
 
-    g.state = WANDER;
+    g.state = GooseState::WANDER;
     g.PickNewTarget(w, h);
     g.stepTime = g_config.step.timeWander;
     triggerHonk(g.honkState, time, g_config.honk.fetchCooldown, g.honkState.lastFetch);
@@ -309,15 +309,15 @@ static bool isTargetReached(Goose& g, float threshold) {
 CursorAction Goose::UpdateBehaviors(double dt, double time, int w, int h, const CursorState& cursor) {
     initHonkState(honkState, time);
 
-    if (heldItem != nullptr && state == WANDER) {
-        state = RETURNING;
+    if (heldItem != nullptr && state == GooseState::WANDER) {
+        state = GooseState::RETURNING;
         if (target.x < 0 || target.x > w || target.y < 0 || target.y > h) {
             target = {static_cast<float>(rand() % (std::max(1, w - (int)g_config.spawn.wanderTargetMargin)) + (int)g_config.spawn.wanderTargetOffset),
                       static_cast<float>(rand() % (std::max(1, h - (int)g_config.spawn.wanderTargetMargin)) + (int)g_config.spawn.wanderTargetOffset)};
         }
     }
 
-    if (state == SNATCH_CURSOR) {
+    if (state == GooseState::SNATCH_CURSOR) {
         snatchAngle += snatchAngularSpeed * (float)dt;
 
         Vector2 goosePosDev = WorldCoord::GoosePos(*this);
@@ -386,11 +386,11 @@ CursorAction Goose::UpdateBehaviors(double dt, double time, int w, int h, const 
         return {};
     }
 
-    if (state == CHASE_CURSOR) {
+    if (state == GooseState::CHASE_CURSOR) {
         return handleChaseCursor(*this, time, cursor, w, h);
     }
 
-    if (state == WANDER && time >= honkState.nextIdleHonk) {
+    if (state == GooseState::WANDER && time >= honkState.nextIdleHonk) {
         if ((rand() % g_config.honk.idleChanceDivisor) == 0) {
             updateIdleHonk(honkState, time, g_config.honk.genericCooldown, honkState.lastGeneric);
         } else {
@@ -398,12 +398,12 @@ CursorAction Goose::UpdateBehaviors(double dt, double time, int w, int h, const 
         }
     }
 
-    float threshold = (state == RETURNING) ? std::max(WorldCoord::Scale(g_config.spawn.targetReachedThresholdReturn), g_config.spawn.targetReachedMinReturn)
+    float threshold = (state == GooseState::RETURNING) ? std::max(WorldCoord::Scale(g_config.spawn.targetReachedThresholdReturn), g_config.spawn.targetReachedMinReturn)
                                            : std::max(WorldCoord::Scale(g_config.spawn.targetReachedThresholdNormal), g_config.spawn.targetReachedMinNormal);
 
     bool reached = isTargetReached(*this, threshold);
     FILE* f = GetDebugLog();
-    if (state == WANDER) {
+    if (state == GooseState::WANDER) {
         Vector2 btPoint = GetBeakTipDevice();
         fprintf(f, "[TARGET] t=%.1f g%d: state=%d bt(%.0f,%.0f) tgt(%.0f,%.0f) dist=%.1f thr=%.1f reached=%d\n",
                 time, id, state, btPoint.x, btPoint.y, target.x, target.y,
@@ -411,9 +411,9 @@ CursorAction Goose::UpdateBehaviors(double dt, double time, int w, int h, const 
     }
 
     if (reached) {
-        if (state == WANDER) handleWander(*this, time, cursor, w, h);
-        else if (state == FETCHING) handleFetching(*this, time, w, h);
-        else if (state == RETURNING) handleReturning(*this, time, w, h);
+        if (state == GooseState::WANDER) handleWander(*this, time, cursor, w, h);
+        else if (state == GooseState::FETCHING) handleFetching(*this, time, w, h);
+        else if (state == GooseState::RETURNING) handleReturning(*this, time, w, h);
     }
 
     tryPickupItem(*this, time, w, h);

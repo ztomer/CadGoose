@@ -65,8 +65,9 @@ public:
     void ShowPermissionDeniedAlert(const char* behaviorId) {
         dispatch_async(dispatch_get_main_queue(), ^{
             NSAlert* alert = [[NSAlert alloc] init];
-            alert.messageText = [NSString stringWithFormat:@"%s Requires Accessibility Permission",
-                                  [NSString stringWithUTF8String:behaviorId]];
+            NSString* message = [NSString stringWithFormat:@"%s Requires Accessibility Permission",
+                                  behaviorId];
+            alert.messageText = message;
             alert.informativeText = @"Please enable Accessibility permissions in System Settings > Privacy & Security > Accessibility to use this behavior.";
             [alert addButtonWithTitle:@"Open System Settings"];
             [alert addButtonWithTitle:@"Cancel"];
