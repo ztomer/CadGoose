@@ -591,7 +591,7 @@ TEST(Integration, Goose_DropItem) {
     g.state = GooseState::RETURNING;
     g.pos = {100, 100};
     g.target = {100, 100}; // Reached
-    g.heldItem = g_assets.GetRandomMeme();
+    g.heldItem = g_assets.GetRandomMeme(1920, 1080, 0.1f);
     
     int initialDrops = g_droppedItems.size();
     
@@ -617,7 +617,7 @@ AssetManager g_assets;
 
 void AssetManager::Init() {}
 AssetManager::~AssetManager() {}
-ItemData* AssetManager::GetRandomMeme() { 
+ItemData* AssetManager::GetRandomMeme(int, int, float) { 
     ItemData* i = new ItemData();
     i->type = ItemData::MEME;
     i->w = 100; i->h = 100;

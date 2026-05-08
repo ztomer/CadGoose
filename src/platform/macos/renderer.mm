@@ -308,6 +308,7 @@ static void DrawLine(CGContextRef ctx, Vector2 a, Vector2 b, float width, float 
 
     for (auto& g : g_geese) {
         DrawGoose(&g, ctx);
+        DrawHeldItem(&g, ctx);
     }
 
     for (auto& g : g_geese) {

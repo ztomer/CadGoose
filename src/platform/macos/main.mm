@@ -413,7 +413,7 @@ void LogWrite(const char* level, const char* fmt, ...) {
 
 @end
 
-void Presence_UpdateStatusFromBehavior(const char* status) {
+extern "C" void Presence_UpdateStatusFromBehavior(const char* status) {
     dispatch_async(dispatch_get_main_queue(), ^{
         AppDelegate* delegate = (AppDelegate*)[NSApp delegate];
         if (delegate.statusItem) {

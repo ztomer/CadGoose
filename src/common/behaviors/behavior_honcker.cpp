@@ -12,7 +12,7 @@
 static bool s_enabled = true;
 static bool s_wasPressed = false;
 
-static bool IsKeyPressed(int keyCode) {
+static bool IsKeyHeld(int keyCode) {
     CGEventSourceRef source = CGEventSourceCreate(kCGEventSourceStateHIDSystemState);
     if (!source) return false;
 
@@ -22,9 +22,8 @@ static bool IsKeyPressed(int keyCode) {
         return false;
     }
 
-    CGKeyCode key = (CGKeyCode)keyCode;
     int64_t eventKey = CGEventGetIntegerValueField(event, kCGKeyboardEventKeycode);
-    bool pressed = (eventKey == key);
+    bool pressed = (eventKey == keyCode);
 
     CFRelease(event);
     CFRelease(source);
@@ -37,7 +36,8 @@ static void init(BehaviorContext& ctx) {
 static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
     if (!g_config.behaviors.control.honcker) return;
 
-    bool pressed = IsKeyPressed(g_config.behaviors.honcker.key);
+    int keyCode = g_config.behaviors.honcker.key;
+    bool pressed = IsKeyHeld(keyCode);
 
     if (pressed && !s_wasPressed) {
         g_assets.Honk();

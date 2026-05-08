@@ -392,7 +392,17 @@ struct Config {
   BehaviorConfig behaviors;
 
   struct PortalConfig { float p1Width = 80.0f; float p1Height = 80.0f; float p2Width = 80.0f; float p2Height = 80.0f; } portal;
-  struct AIConfig { std::string endpoint; std::string model = "gpt-3.5-turbo"; std::string keychainService; } ai;
+  struct AIConfig {
+    bool useOsaurus = true;
+    bool useOllama = false;
+    int osaurusPort = 1337;
+    int ollamaPort = 11434;
+    std::string osaurusEndpoint;
+    std::string ollamaEndpoint;
+    std::string osaurusModel = "llama3";
+    std::string ollamaModel = "llama3";
+    std::string keychainService;
+  } ai;
   struct GooseManagerConfig {
     bool taskWander = true, taskFetch = true, taskChase = true, taskSnatch = true;
     bool speedWalk = true, speedRun = true;

@@ -7,6 +7,8 @@
 #include "goose.h"
 #include "config.h"
 #include "world.h"
+#include <CoreGraphics/CoreGraphics.h>
+#include <CoreText/CoreText.h>
 #include <cmath>
 
 static bool s_enabled = true;
@@ -86,6 +88,10 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
 static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
     if (!g_config.behaviors.pomodoro.enabled) return;
 
+#ifdef __APPLE__
+    CGContextRef cg = (CGContextRef)renderCtx;
+    if (!cg) return;
+
     auto* state = BehaviorStateManager::Instance().Get<PomodoroState>(goose->id, "pomodoro");
     if (!state) return;
 
@@ -94,26 +100,61 @@ static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
     int minutes = (int)(remaining / 60.0);
     int seconds = (int)fmod(remaining, 60.0);
 
-    const char* phaseLabel = "WORK";
-    float r = 0.8f, g = 0.2f, b = 0.2f;
+    const char* phaseLabel = "W";
+    float bgR = 0.3f, bgG = 0.3f, bgB = 0.3f;
 
     switch (state->phase) {
         case PomodoroPhase::Work:
-            phaseLabel = state->isAggressive ? "WORK - ATTACK!" : "WORK";
-            r = 0.8f; g = 0.2f; b = 0.2f;
+            phaseLabel = state->isAggressive ? "ATK!" : "W";
+            bgR = 0.6f; bgG = 0.2f; bgB = 0.2f;
             break;
         case PomodoroPhase::Break:
-            phaseLabel = "BREAK";
-            r = 0.2f; g = 0.8f; b = 0.2f;
+            phaseLabel = "B";
+            bgR = 0.2f; bgG = 0.5f; bgB = 0.2f;
             break;
         case PomodoroPhase::LongBreak:
-            phaseLabel = "LONG BREAK";
-            r = 0.2f; g = 0.4f; b = 0.8f;
+            phaseLabel = "LB";
+            bgR = 0.2f; bgG = 0.3f; bgB = 0.6f;
             break;
     }
 
-    fprintf(stderr, "[POMODORO] %s - %02d:%02d (%d/4 sessions)\n",
-            phaseLabel, minutes, seconds, state->completedSessions + 1);
+    char timerText[32];
+    snprintf(timerText, sizeof(timerText), "%s %02d:%02d", phaseLabel, minutes, seconds);
+
+    Vector2 headPos = WorldCoord::RigNeckHead(*goose);
+    float textWidth = 80.0f;
+    float textHeight = 20.0f;
+
+    CGContextSaveGState(cg);
+    CGContextSetRGBFillColor(cg, bgR, bgG, bgB, 0.85f);
+    CGContextFillRect(cg, CGRectMake(headPos.x - textWidth/2, headPos.y - 60.0f, textWidth, textHeight));
+
+    CTFontRef font = CTFontCreateWithName(CFSTR("Helvetica-Bold"), 11.0f, NULL);
+    if (font) {
+        CGColorRef white = CGColorCreateGenericRGB(1.0f, 1.0f, 1.0f, 1.0f);
+        CFTypeRef keys[] = { kCTFontAttributeName, kCTForegroundColorAttributeName };
+        CFTypeRef values[] = { font, white };
+        CFDictionaryRef attributes = CFDictionaryCreate(NULL, (const void**)keys, (const void**)values, 2, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
+
+        CFStringRef string = CFStringCreateWithBytes(NULL, (const UInt8*)timerText, strlen(timerText), kCFStringEncodingUTF8, false);
+        CFAttributedStringRef attrStr = CFAttributedStringCreate(NULL, string, attributes);
+        CTLineRef line = CTLineCreateWithAttributedString(attrStr);
+
+        if (line) {
+            CGContextSetTextPosition(cg, headPos.x - textWidth/2 + 5.0f, headPos.y - 48.0f);
+            CTLineDraw(line, cg);
+            CFRelease(line);
+        }
+
+        CFRelease(attrStr);
+        CFRelease(string);
+        CFRelease(attributes);
+        CGColorRelease(white);
+        CFRelease(font);
+    }
+
+    CGContextRestoreGState(cg);
+#endif
 }
 
 static Behavior g_pomodoroBehavior = {

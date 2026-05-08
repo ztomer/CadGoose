@@ -43,25 +43,38 @@ static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
     CGContextSaveGState(cg);
 
     int logCount = (int)s_recentLogs.size();
-    CGContextSetRGBFillColor(cg, 0.1f, 0.1f, 0.1f, 0.8f);
-    CGContextFillRect(cg, CGRectMake(10, 10, 300, (float)(logCount * 20 + 30)));
+    CGContextSetRGBFillColor(cg, 0.15f, 0.15f, 0.15f, 0.9f);
+    CGContextFillRect(cg, CGRectMake(8, 8, 320, (float)(logCount * 20 + 35)));
+    CGContextSetRGBStrokeColor(cg, 0.3f, 0.3f, 0.3f, 1.0f);
+    CGContextSetLineWidth(cg, 1.0f);
+    CGContextStrokeRect(cg, CGRectMake(8, 8, 320, (float)(logCount * 20 + 35)));
 
     CTFontRef font = CTFontCreateWithName(CFSTR("Courier"), 12.0f, NULL);
     if (font) {
-        CGContextSetRGBFillColor(cg, 0.0f, 1.0f, 0.0f, 1.0f);
+        CGColorRef white = CGColorCreateGenericRGB(1.0f, 1.0f, 1.0f, 1.0f);
+        CFTypeRef keys[] = { kCTFontAttributeName, kCTForegroundColorAttributeName };
+        CFTypeRef values[] = { font, white };
+        CFDictionaryRef attributes = CFDictionaryCreate(NULL, (const void**)keys, (const void**)values, 2, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
+
+        CGContextSetTextMatrix(cg, CGAffineTransformMakeScale(1.0, -1.0));
 
         for (int i = 0; i < logCount; i++) {
             const std::string& log = s_recentLogs[i];
             CFStringRef string = CFStringCreateWithBytes(NULL, (const UInt8*)log.c_str(), log.length(), kCFStringEncodingUTF8, false);
-            CTLineRef line = CTLineCreateWithAttributedString(CFAttributedStringCreate(NULL, string, NULL));
+            CFAttributedStringRef attrStr = CFAttributedStringCreate(NULL, string, attributes);
+            CTLineRef line = CTLineCreateWithAttributedString(attrStr);
 
             if (line) {
                 CGContextSetTextPosition(cg, 20, 25 + i * 20);
                 CTLineDraw(line, cg);
                 CFRelease(line);
             }
+            CFRelease(attrStr);
             CFRelease(string);
         }
+        
+        CFRelease(attributes);
+        CGColorRelease(white);
         CFRelease(font);
     }
 

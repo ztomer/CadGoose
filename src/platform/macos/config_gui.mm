@@ -81,45 +81,83 @@
 - (void)loadConfigItems {
     [self.configItems removeAllObjects];
 
-    [self.configItems addObject:@{@"name": @"Fun - Ball", @"key": @"behaviors.fun.ball", @"type": @"bool"}];
-    [self.configItems addObject:@{@"name": @"Fun - BreadCrumbs", @"key": @"behaviors.fun.breadCrumbs", @"type": @"bool"}];
-    [self.configItems addObject:@{@"name": @"Fun - Hats", @"key": @"behaviors.fun.hats", @"type": @"bool"}];
-    [self.configItems addObject:@{@"name": @"Fun - Rainbow", @"key": @"behaviors.fun.rainbow", @"type": @"bool"}];
-    [self.configItems addObject:@{@"name": @"Fun - Acid", @"key": @"behaviors.fun.acid", @"type": @"bool"}];
-    [self.configItems addObject:@{@"name": @"Fun - Anger", @"key": @"behaviors.fun.anger", @"type": @"bool"}];
+    // Fun behaviors
+    [self.configItems addObject:@{@"name": @"FUN", @"type": @"header"}];
+    [self.configItems addObject:@{@"name": @"  Ball", @"key": @"behaviors.fun.ball", @"type": @"bool"}];
+    [self.configItems addObject:@{@"name": @"  BreadCrumbs", @"key": @"behaviors.fun.breadCrumbs", @"type": @"bool"}];
+    [self.configItems addObject:@{@"name": @"  Hats", @"key": @"behaviors.fun.hats", @"type": @"bool"}];
+    [self.configItems addObject:@{@"name": @"  Rainbow", @"key": @"behaviors.fun.rainbow", @"type": @"bool"}];
+    [self.configItems addObject:@{@"name": @"  Acid", @"key": @"behaviors.fun.acid", @"type": @"bool"}];
+    [self.configItems addObject:@{@"name": @"  Anger", @"key": @"behaviors.fun.anger", @"type": @"bool"}];
 
-    [self.configItems addObject:@{@"name": @"Control - Honcker", @"key": @"behaviors.control.honcker", @"type": @"bool"}];
-    [self.configItems addObject:@{@"name": @"Control - Jail", @"key": @"behaviors.control.jail", @"type": @"bool"}];
-    [self.configItems addObject:@{@"name": @"Control - Portals", @"key": @"behaviors.control.portals", @"type": @"bool"}];
-    [self.configItems addObject:@{@"name": @"Control - Drag", @"key": @"behaviors.control.drag", @"type": @"bool"}];
-    [self.configItems addObject:@{@"name": @"Control - Banish", @"key": @"behaviors.control.banish", @"type": @"bool"}];
+    // Control behaviors
+    [self.configItems addObject:@{@"name": @"CONTROL", @"type": @"header"}];
+    [self.configItems addObject:@{@"name": @"  Honcker", @"key": @"behaviors.control.honcker", @"type": @"bool"}];
+    [self.configItems addObject:@{@"name": @"  Jail", @"key": @"behaviors.control.jail", @"type": @"bool"}];
+    [self.configItems addObject:@{@"name": @"  Portals", @"key": @"behaviors.control.portals", @"type": @"bool"}];
+    [self.configItems addObject:@{@"name": @"  Drag", @"key": @"behaviors.control.drag", @"type": @"bool"}];
+    [self.configItems addObject:@{@"name": @"  Banish", @"key": @"behaviors.control.banish", @"type": @"bool"}];
 
-    [self.configItems addObject:@{@"name": @"Info - Nametag", @"key": @"behaviors.info.nametag", @"type": @"bool"}];
-    [self.configItems addObject:@{@"name": @"Info - Debugoose", @"key": @"behaviors.info.debugoose", @"type": @"bool"}];
-    [self.configItems addObject:@{@"name": @"Info - Clicker", @"key": @"behaviors.info.clicker", @"type": @"bool"}];
+    // Info behaviors
+    [self.configItems addObject:@{@"name": @"INFO", @"type": @"header"}];
+    [self.configItems addObject:@{@"name": @"  Nametag", @"key": @"behaviors.info.nametag", @"type": @"bool"}];
+    [self.configItems addObject:@{@"name": @"  Debugoose", @"key": @"behaviors.info.debugoose", @"type": @"bool"}];
+    [self.configItems addObject:@{@"name": @"  Presence", @"key": @"behaviors.info.presence", @"type": @"bool"}];
+    [self.configItems addObject:@{@"name": @"  Clicker", @"key": @"behaviors.info.clicker", @"type": @"bool"}];
+    [self.configItems addObject:@{@"name": @"  GooseManager", @"key": @"behaviors.info.gooseManager", @"type": @"bool"}];
+    [self.configItems addObject:@{@"name": @"  Color Picker", @"key": @"behaviors.info.colorPicker", @"type": @"bool"}];
 
-    [self.configItems addObject:@{@"name": @"Systems - Health", @"key": @"behaviors.systems.health", @"type": @"bool"}];
-    [self.configItems addObject:@{@"name": @"Systems - AI", @"key": @"behaviors.systems.ai", @"type": @"bool"}];
+    // Systems
+    [self.configItems addObject:@{@"name": @"SYSTEMS", @"type": @"header"}];
+    [self.configItems addObject:@{@"name": @"  Health", @"key": @"behaviors.systems.health", @"type": @"bool"}];
+    [self.configItems addObject:@{@"name": @"  AI", @"key": @"behaviors.systems.ai", @"type": @"bool"}];
+    [self.configItems addObject:@{@"name": @"  Pomodoro", @"key": @"behaviors.systems.pomodoro", @"type": @"bool"}];
 
-    [self.configItems addObject:@{@"name": @"Ball Count", @"key": @"behaviors.ball.count", @"type": @"int"}];
-    [self.configItems addObject:@{@"name": @"Ball Size", @"key": @"behaviors.ball.size", @"type": @"float"}];
-    [self.configItems addObject:@{@"name": @"Ball Speed", @"key": @"behaviors.ball.speed", @"type": @"float"}];
-    [self.configItems addObject:@{@"name": @"Ball Friction", @"key": @"behaviors.ball.friction", @"type": @"float"}];
+    // Ball settings
+    [self.configItems addObject:@{@"name": @"BALL SETTINGS", @"type": @"header"}];
+    [self.configItems addObject:@{@"name": @"  Count", @"key": @"behaviors.ball.count", @"type": @"int"}];
+    [self.configItems addObject:@{@"name": @"  Size", @"key": @"behaviors.ball.size", @"type": @"float"}];
+    [self.configItems addObject:@{@"name": @"  Speed", @"key": @"behaviors.ball.speed", @"type": @"float"}];
+    [self.configItems addObject:@{@"name": @"  Friction", @"key": @"behaviors.ball.friction", @"type": @"float"}];
 
-    [self.configItems addObject:@{@"name": @"Acid Spin Speed", @"key": @"behaviors.acid.spinSpeed", @"type": @"float"}];
-    [self.configItems addObject:@{@"name": @"Acid Honk Interval", @"key": @"behaviors.acid.honkInterval", @"type": @"float"}];
-    [self.configItems addObject:@{@"name": @"Acid Trigger Chance", @"key": @"behaviors.acid.triggerChance", @"type": @"int"}];
+    // Acid settings
+    [self.configItems addObject:@{@"name": @"ACID SETTINGS", @"type": @"header"}];
+    [self.configItems addObject:@{@"name": @"  Spin Speed", @"key": @"behaviors.acid.spinSpeed", @"type": @"float"}];
+    [self.configItems addObject:@{@"name": @"  Honk Interval", @"key": @"behaviors.acid.honkInterval", @"type": @"float"}];
+    [self.configItems addObject:@{@"name": @"  Trigger Chance", @"key": @"behaviors.acid.triggerChance", @"type": @"int"}];
 
-    [self.configItems addObject:@{@"name": @"Rainbow Hue Speed", @"key": @"behaviors.rainbow.hueSpeed", @"type": @"float"}];
+    // Rainbow settings
+    [self.configItems addObject:@{@"name": @"RAINBOW SETTINGS", @"type": @"header"}];
+    [self.configItems addObject:@{@"name": @"  Hue Speed", @"key": @"behaviors.rainbow.hueSpeed", @"type": @"float"}];
 
-    [self.configItems addObject:@{@"name": @"Health Max", @"key": @"behaviors.health.maxHealth", @"type": @"float"}];
-    [self.configItems addObject:@{@"name": @"Health Regen Rate", @"key": @"behaviors.health.regenRate", @"type": @"float"}];
+    // Health settings
+    [self.configItems addObject:@{@"name": @"HEALTH SETTINGS", @"type": @"header"}];
+    [self.configItems addObject:@{@"name": @"  Max Health", @"key": @"behaviors.health.maxHealth", @"type": @"float"}];
+    [self.configItems addObject:@{@"name": @"  Regen Rate", @"key": @"behaviors.health.regenRate", @"type": @"float"}];
 
-    [self.configItems addObject:@{@"name": @"Jail Size", @"key": @"behaviors.jail.size", @"type": @"float"}];
-    [self.configItems addObject:@{@"name": @"Jail Key O", @"key": @"behaviors.jail.keyO", @"type": @"int"}];
-    [self.configItems addObject:@{@"name": @"Jail Key P", @"key": @"behaviors.jail.keyP", @"type": @"int"}];
+    // Jail settings
+    [self.configItems addObject:@{@"name": @"JAIL SETTINGS", @"type": @"header"}];
+    [self.configItems addObject:@{@"name": @"  Size", @"key": @"behaviors.jail.size", @"type": @"float"}];
 
-    [self.configItems addObject:@{@"name": @"Clicker Chance", @"key": @"behaviors.clicker.chance", @"type": @"int"}];
+    // Clicker settings
+    [self.configItems addObject:@{@"name": @"CLICKER SETTINGS", @"type": @"header"}];
+    [self.configItems addObject:@{@"name": @"  Chance", @"key": @"behaviors.clicker.chance", @"type": @"int"}];
+
+    // Pomodoro settings
+    [self.configItems addObject:@{@"name": @"POMODORO SETTINGS", @"type": @"header"}];
+    [self.configItems addObject:@{@"name": @"  Work Minutes", @"key": @"behaviors.pomodoro.workMinutes", @"type": @"int"}];
+    [self.configItems addObject:@{@"name": @"  Break Minutes", @"key": @"behaviors.pomodoro.breakMinutes", @"type": @"int"}];
+    [self.configItems addObject:@{@"name": @"  Long Break Minutes", @"key": @"behaviors.pomodoro.longBreakMinutes", @"type": @"int"}];
+    [self.configItems addObject:@{@"name": @"  Sessions Before Long Break", @"key": @"behaviors.pomodoro.sessionsBeforeLongBreak", @"type": @"int"}];
+
+    // AI settings
+    [self.configItems addObject:@{@"name": @"AI SETTINGS", @"type": @"header"}];
+    [self.configItems addObject:@{@"name": @"  Use Osaurus", @"key": @"ai.useOsaurus", @"type": @"bool"}];
+    [self.configItems addObject:@{@"name": @"  Use Ollama", @"key": @"ai.useOllama", @"type": @"bool"}];
+    [self.configItems addObject:@{@"name": @"  Osaurus Port", @"key": @"ai.osaurusPort", @"type": @"int"}];
+    [self.configItems addObject:@{@"name": @"  Ollama Port", @"key": @"ai.ollamaPort", @"type": @"int"}];
+    [self.configItems addObject:@{@"name": @"  Osaurus Model", @"key": @"ai.osaurusModel", @"type": @"string"}];
+    [self.configItems addObject:@{@"name": @"  Ollama Model", @"key": @"ai.ollamaModel", @"type": @"string"}];
 }
 
 - (void)closeWindow:(id)sender {
@@ -150,6 +188,9 @@
     if (s == "behaviors.info.gooseManager") return &g_config.behaviors.info.gooseManager;
     if (s == "behaviors.systems.health") return &g_config.behaviors.systems.health;
     if (s == "behaviors.systems.ai") return &g_config.behaviors.systems.ai;
+    if (s == "behaviors.systems.pomodoro") return &g_config.behaviors.systems.pomodoro;
+    if (s == "ai.useOsaurus") return &g_config.ai.useOsaurus;
+    if (s == "ai.useOllama") return &g_config.ai.useOllama;
 
     return nullptr;
 }
@@ -177,6 +218,12 @@
     if (s == "behaviors.jail.keyO") return @(g_config.behaviors.jail.keyO);
     if (s == "behaviors.jail.keyP") return @(g_config.behaviors.jail.keyP);
     if (s == "behaviors.clicker.chance") return @(g_config.behaviors.clicker.chance);
+    if (s == "behaviors.pomodoro.workMinutes") return @(g_config.behaviors.pomodoro.workMinutes);
+    if (s == "behaviors.pomodoro.breakMinutes") return @(g_config.behaviors.pomodoro.breakMinutes);
+    if (s == "behaviors.pomodoro.longBreakMinutes") return @(g_config.behaviors.pomodoro.longBreakMinutes);
+    if (s == "behaviors.pomodoro.sessionsBeforeLongBreak") return @(g_config.behaviors.pomodoro.sessionsBeforeLongBreak);
+    if (s == "ai.osaurusPort") return @(g_config.ai.osaurusPort);
+    if (s == "ai.ollamaPort") return @(g_config.ai.ollamaPort);
 
     return @"";
 }
@@ -207,6 +254,12 @@
     else if (s == "behaviors.jail.keyO") g_config.behaviors.jail.keyO = [value intValue];
     else if (s == "behaviors.jail.keyP") g_config.behaviors.jail.keyP = [value intValue];
     else if (s == "behaviors.clicker.chance") g_config.behaviors.clicker.chance = [value intValue];
+    else if (s == "behaviors.pomodoro.workMinutes") g_config.behaviors.pomodoro.workMinutes = [value intValue];
+    else if (s == "behaviors.pomodoro.breakMinutes") g_config.behaviors.pomodoro.breakMinutes = [value intValue];
+    else if (s == "behaviors.pomodoro.longBreakMinutes") g_config.behaviors.pomodoro.longBreakMinutes = [value intValue];
+    else if (s == "behaviors.pomodoro.sessionsBeforeLongBreak") g_config.behaviors.pomodoro.sessionsBeforeLongBreak = [value intValue];
+    else if (s == "ai.osaurusPort") g_config.ai.osaurusPort = [value intValue];
+    else if (s == "ai.ollamaPort") g_config.ai.ollamaPort = [value intValue];
 }
 
 - (NSInteger)numberOfRowsInTableView:(NSTableView*)tableView {

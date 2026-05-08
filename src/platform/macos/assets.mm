@@ -2,6 +2,7 @@
 #include "items.h"
 #include "audio.h"
 #include "config.h"
+#include "world.h"
 #include <iostream>
 #include <random>
 #include <filesystem>
@@ -65,7 +66,7 @@ void AssetManager::ScanFolder(std::string rel, std::vector<std::string>& out, st
     }
 }
 
-ItemData* AssetManager::GetRandomMeme() {
+ItemData* AssetManager::GetRandomMeme(int screenWidth, int screenHeight, float maxSizeFraction) {
     if (memePaths.empty()) return nullptr;
     static std::random_device rd;
     static std::mt19937 gen(rd());
@@ -75,11 +76,21 @@ ItemData* AssetManager::GetRandomMeme() {
     ItemData* data = new ItemData();
     data->type = ItemData::MEME;
 
+    int maxW = (int)(screenWidth * maxSizeFraction);
+    int maxH = (int)(screenHeight * maxSizeFraction);
+
     auto it = memeCache.find(path);
     if (it != memeCache.end()) {
         data->image = CGImageRetain(it->second);
         data->w = CGImageGetWidth(data->image);
         data->h = CGImageGetHeight(data->image);
+        if (data->w > maxW || data->h > maxH) {
+            float scaleW = (float)maxW / data->w;
+            float scaleH = (float)maxH / data->h;
+            float scale = std::min(scaleW, scaleH);
+            data->w = (int)(data->w * scale);
+            data->h = (int)(data->h * scale);
+        }
         return data;
     }
 
@@ -87,8 +98,29 @@ ItemData* AssetManager::GetRandomMeme() {
     NSImage* img = [[NSImage alloc] initWithContentsOfFile:nsPath];
     if (img) {
         NSSize size = img.size;
-        data->w = (int)size.width;
-        data->h = (int)size.height;
+        int origW = (int)size.width;
+        int origH = (int)size.height;
+        
+        int finalW = origW;
+        int finalH = origH;
+        
+        if (origW > maxW || origH > maxH) {
+            float scaleW = (float)maxW / origW;
+            float scaleH = (float)maxH / origH;
+            float scale = std::min(scaleW, scaleH);
+            finalW = (int)(origW * scale);
+            finalH = (int)(origH * scale);
+            
+            NSImage* resized = [[NSImage alloc] initWithSize:NSMakeSize(finalW, finalH)];
+            [resized lockFocus];
+            [[NSGraphicsContext currentContext] setImageInterpolation:NSImageInterpolationHigh];
+            [img drawInRect:NSMakeRect(0, 0, finalW, finalH) fromRect:NSMakeRect(0, 0, origW, origH) operation:NSCompositeSourceOver fraction:1.0];
+            [resized unlockFocus];
+            img = resized;
+        }
+        
+        data->w = finalW;
+        data->h = finalH;
         CGImageRef cgImage = [img CGImageForProposedRect:NULL context:nil hints:nil];
         if (cgImage) {
             data->image = CGImageRetain(cgImage);
