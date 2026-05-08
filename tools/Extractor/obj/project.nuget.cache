@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "6JupRvFFurs=",
+  "dgSpecHash": "RHPVuBiin0c=",
   "success": true,
-  "projectFilePath": "Extractor/Extractor.csproj",
+  "projectFilePath": "tools/Extractor/Extractor.csproj",
   "expectedPackageFiles": [],
   "logs": []
 }

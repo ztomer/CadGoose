@@ -533,6 +533,33 @@ src/common/app_actions.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/src/common/app_actions.cpp.s
 .PHONY : src/common/app_actions.cpp.s
 
+src/common/app_cli.o: src/common/app_cli.cpp.o
+.PHONY : src/common/app_cli.o
+
+# target to build an object file
+src/common/app_cli.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/common/app_cli.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/src/common/app_cli.cpp.o
+.PHONY : src/common/app_cli.cpp.o
+
+src/common/app_cli.i: src/common/app_cli.cpp.i
+.PHONY : src/common/app_cli.i
+
+# target to preprocess a source file
+src/common/app_cli.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/common/app_cli.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/src/common/app_cli.cpp.i
+.PHONY : src/common/app_cli.cpp.i
+
+src/common/app_cli.s: src/common/app_cli.cpp.s
+.PHONY : src/common/app_cli.s
+
+# target to generate assembly for a file
+src/common/app_cli.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/common/app_cli.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/src/common/app_cli.cpp.s
+.PHONY : src/common/app_cli.cpp.s
+
 src/common/behavior.o: src/common/behavior.cpp.o
 .PHONY : src/common/behavior.o
 
@@ -1091,6 +1118,87 @@ src/common/config.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/src/common/config.cpp.s
 .PHONY : src/common/config.cpp.s
 
+src/common/config_load.o: src/common/config_load.cpp.o
+.PHONY : src/common/config_load.o
+
+# target to build an object file
+src/common/config_load.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/common/config_load.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/src/common/config_load.cpp.o
+.PHONY : src/common/config_load.cpp.o
+
+src/common/config_load.i: src/common/config_load.cpp.i
+.PHONY : src/common/config_load.i
+
+# target to preprocess a source file
+src/common/config_load.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/common/config_load.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/src/common/config_load.cpp.i
+.PHONY : src/common/config_load.cpp.i
+
+src/common/config_load.s: src/common/config_load.cpp.s
+.PHONY : src/common/config_load.s
+
+# target to generate assembly for a file
+src/common/config_load.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/common/config_load.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/src/common/config_load.cpp.s
+.PHONY : src/common/config_load.cpp.s
+
+src/common/config_registry.o: src/common/config_registry.cpp.o
+.PHONY : src/common/config_registry.o
+
+# target to build an object file
+src/common/config_registry.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/common/config_registry.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/src/common/config_registry.cpp.o
+.PHONY : src/common/config_registry.cpp.o
+
+src/common/config_registry.i: src/common/config_registry.cpp.i
+.PHONY : src/common/config_registry.i
+
+# target to preprocess a source file
+src/common/config_registry.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/common/config_registry.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/src/common/config_registry.cpp.i
+.PHONY : src/common/config_registry.cpp.i
+
+src/common/config_registry.s: src/common/config_registry.cpp.s
+.PHONY : src/common/config_registry.s
+
+# target to generate assembly for a file
+src/common/config_registry.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/common/config_registry.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/src/common/config_registry.cpp.s
+.PHONY : src/common/config_registry.cpp.s
+
+src/common/config_save.o: src/common/config_save.cpp.o
+.PHONY : src/common/config_save.o
+
+# target to build an object file
+src/common/config_save.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/common/config_save.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/src/common/config_save.cpp.o
+.PHONY : src/common/config_save.cpp.o
+
+src/common/config_save.i: src/common/config_save.cpp.i
+.PHONY : src/common/config_save.i
+
+# target to preprocess a source file
+src/common/config_save.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/common/config_save.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/src/common/config_save.cpp.i
+.PHONY : src/common/config_save.cpp.i
+
+src/common/config_save.s: src/common/config_save.cpp.s
+.PHONY : src/common/config_save.s
+
+# target to generate assembly for a file
+src/common/config_save.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/common/config_save.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/src/common/config_save.cpp.s
+.PHONY : src/common/config_save.cpp.s
+
 src/common/cursor_backend.o: src/common/cursor_backend.cpp.o
 .PHONY : src/common/cursor_backend.o
 
@@ -1171,6 +1279,30 @@ src/common/goose_behaviors.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/common/goose_behaviors.cpp.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/src/common/goose_behaviors.cpp.s
 .PHONY : src/common/goose_behaviors.cpp.s
+
+src/common/goose_debug.o: src/common/goose_debug.cpp.o
+.PHONY : src/common/goose_debug.o
+
+# target to build an object file
+src/common/goose_debug.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/common/goose_debug.cpp.o
+.PHONY : src/common/goose_debug.cpp.o
+
+src/common/goose_debug.i: src/common/goose_debug.cpp.i
+.PHONY : src/common/goose_debug.i
+
+# target to preprocess a source file
+src/common/goose_debug.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/common/goose_debug.cpp.i
+.PHONY : src/common/goose_debug.cpp.i
+
+src/common/goose_debug.s: src/common/goose_debug.cpp.s
+.PHONY : src/common/goose_debug.s
+
+# target to generate assembly for a file
+src/common/goose_debug.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/common/goose_debug.cpp.s
+.PHONY : src/common/goose_debug.cpp.s
 
 src/common/goose_drawing.o: src/common/goose_drawing.mm.o
 .PHONY : src/common/goose_drawing.o
@@ -1371,6 +1503,30 @@ tests/common/test_behavior.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/tests/common/test_behavior.cpp.s
 .PHONY : tests/common/test_behavior.cpp.s
 
+tests/common/test_config.o: tests/common/test_config.cpp.o
+.PHONY : tests/common/test_config.o
+
+# target to build an object file
+tests/common/test_config.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/tests/common/test_config.cpp.o
+.PHONY : tests/common/test_config.cpp.o
+
+tests/common/test_config.i: tests/common/test_config.cpp.i
+.PHONY : tests/common/test_config.i
+
+# target to preprocess a source file
+tests/common/test_config.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/tests/common/test_config.cpp.i
+.PHONY : tests/common/test_config.cpp.i
+
+tests/common/test_config.s: tests/common/test_config.cpp.s
+.PHONY : tests/common/test_config.s
+
+# target to generate assembly for a file
+tests/common/test_config.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/tests/common/test_config.cpp.s
+.PHONY : tests/common/test_config.cpp.s
+
 tests/common/test_presence.o: tests/common/test_presence.cpp.o
 .PHONY : tests/common/test_presence.o
 
@@ -1468,6 +1624,9 @@ help:
 	@echo "... src/common/app_actions.o"
 	@echo "... src/common/app_actions.i"
 	@echo "... src/common/app_actions.s"
+	@echo "... src/common/app_cli.o"
+	@echo "... src/common/app_cli.i"
+	@echo "... src/common/app_cli.s"
 	@echo "... src/common/behavior.o"
 	@echo "... src/common/behavior.i"
 	@echo "... src/common/behavior.s"
@@ -1530,6 +1689,15 @@ help:
 	@echo "... src/common/config.o"
 	@echo "... src/common/config.i"
 	@echo "... src/common/config.s"
+	@echo "... src/common/config_load.o"
+	@echo "... src/common/config_load.i"
+	@echo "... src/common/config_load.s"
+	@echo "... src/common/config_registry.o"
+	@echo "... src/common/config_registry.i"
+	@echo "... src/common/config_registry.s"
+	@echo "... src/common/config_save.o"
+	@echo "... src/common/config_save.i"
+	@echo "... src/common/config_save.s"
 	@echo "... src/common/cursor_backend.o"
 	@echo "... src/common/cursor_backend.i"
 	@echo "... src/common/cursor_backend.s"
@@ -1539,6 +1707,9 @@ help:
 	@echo "... src/common/goose_behaviors.o"
 	@echo "... src/common/goose_behaviors.i"
 	@echo "... src/common/goose_behaviors.s"
+	@echo "... src/common/goose_debug.o"
+	@echo "... src/common/goose_debug.i"
+	@echo "... src/common/goose_debug.s"
 	@echo "... src/common/goose_drawing.o"
 	@echo "... src/common/items.o"
 	@echo "... src/common/items.i"
@@ -1562,6 +1733,9 @@ help:
 	@echo "... tests/common/test_behavior.o"
 	@echo "... tests/common/test_behavior.i"
 	@echo "... tests/common/test_behavior.s"
+	@echo "... tests/common/test_config.o"
+	@echo "... tests/common/test_config.i"
+	@echo "... tests/common/test_config.s"
 	@echo "... tests/common/test_presence.o"
 	@echo "... tests/common/test_presence.i"
 	@echo "... tests/common/test_presence.s"

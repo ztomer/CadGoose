@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <functional>
+#include <toml.hpp>
 
 enum ConfigType { CFG_BOOL, CFG_INT, CFG_FLOAT, CFG_STRING };
 
@@ -412,8 +413,15 @@ struct Config {
 extern Config g_config;
 extern double g_time;
 extern std::vector<ConfigOption> g_configRegistry;
+void OnConfigChange();
+
+std::filesystem::path ConfigDirPath();
 
 void Config_InitRegistry();
+void Config_Init();
+void Config_SaveAll();
+void Config_LoadAll();
+void Config_Load(const toml::basic_value<toml::type_config>& config);
 std::string Config_GetPath();
 const ConfigOption *Config_FindOptionByKey(const std::string &key);
 bool Config_GetValueByKey(const std::string &key, std::string *valueOut,

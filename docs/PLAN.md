@@ -70,8 +70,60 @@
   - ⚠️ `ui.cpp` (1632 LOC) - Linux UI, very large
   - ⚠️ `main.mm` (564 LOC) - macOS main, borderline
   - ⚠️ `goose.cpp` (511 LOC) - borderline
-- **Approach**: Extract Config_Load switch statement into per-section loaders
 - **Tool**: Add pre-commit hook or CI check
+
+### 5b. Config System Refactor (DRY Architecture) - IN PROGRESS
+- **Problem**: Config params listed 4x (struct default, Config_Load, Config_SaveNow, Config_InitRegistry)
+- **Root Cause**: No single source of truth; each function duplicates field enumeration
+
+#### Architecture Decision: Registry as Single Source of Truth
+
+**Key Insight**: `ConfigOption` struct already holds section/key/type/ptr/min/max/step/default.
+The registry is the natural single source of truth. Load/Save should iterate it.
+
+**Design Principles** (per user: "best option for long term maintainability"):
+1. **One Definition**: Each config param defined ONCE in `Config_InitRegistry()`
+2. **Auto-wiring**: Load/Save iterate registry, no manual field enumeration
+3. **Type Safety**: Macros generate correct ConfigOption with metadata
+4. **Colors are special**: Nested TOML (color.goose.r) requires helpers, not in registry
+5. **Callbacks optional**: onChange field for reactive save on edit
+
+#### File Responsibilities
+
+| File | Purpose | Size Target |
+|------|---------|-------------|
+| `config.h` | ConfigOption struct, macros, externs | ~400 LOC |
+| `config.cpp` | Globals (g_config, g_time, g_configRegistry), utility functions (Trim, ParseBool, etc), Config_GetPath, ConfigDirPath, Config_Get/SetValueByKey | <200 LOC |
+| `config_helpers.h` | TOML parsing helpers (get_bool/int/float, section_has_key), template for color helpers | ~100 LOC |
+| `config_load.cpp` | `Config_Load(toml)`, `Config_LoadAll()` - iterates registry, calls helpers | <100 LOC |
+| `config_save.cpp` | `Config_SaveAll()` - iterates registry, builds TOML table, writes file | <100 LOC |
+| `config_registry.cpp` | `Config_InitRegistry()` - ALL config entries in ONE place | ~380 LOC |
+
+#### How Load/Save Work
+
+**Load**: Iterate registry → for each option, call appropriate helper based on type → cast ptr to correct type → assign
+
+**Save**: Iterate registry → for each option, cast ptr to correct type → insert into toml::table[section][key]
+
+**Colors**: Explicit helper calls for nested TOML (color.goose.r, etc.) - these are not in the registry since TOML structure differs
+
+#### Adding New Config Param
+
+1. Add member to struct in `config.h` with default value
+2. Add ONE line to `Config_InitRegistry()` in `config_registry.cpp`:
+   ```
+   CONFIG_FLOAT("Section", "key_name", "Display Label", &g_config.section.memberName, min, max, step, OnConfigChange)
+   ```
+3. Load/Save auto-handled by iteration
+
+#### Implementation Status
+- [x] `config_helpers.h` - helpers for TOML parsing, colors
+- [x] `config_load.cpp` - iteration-based load (calls Config_LoadAll)
+- [x] `config_save.cpp` - iteration-based save
+- [x] `config_registry.cpp` - Config_InitRegistry with all entries
+- [ ] `config.cpp` - stripped to globals + utilities (<200 LOC target)
+- [ ] Verify: build succeeds, tests pass, app runs correctly
+- [ ] Lint: all source files <500 LOC
 
 ### Project Structure (Updated 2026-05-08)
 ```

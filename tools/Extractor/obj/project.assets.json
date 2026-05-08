@@ -13,11 +13,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "Extractor/Extractor.csproj",
+      "projectUniqueName": "tools/Extractor/Extractor.csproj",
       "projectName": "Extractor",
-      "projectPath": "Extractor/Extractor.csproj",
+      "projectPath": "tools/Extractor/Extractor.csproj",
       "packagesPath": "$HOME/.nuget/packages/",
-      "outputPath": "Extractor/obj/",
+      "outputPath": "tools/Extractor/obj/",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "$HOME/.nuget/NuGet/NuGet.Config"

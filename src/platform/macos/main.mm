@@ -11,11 +11,12 @@
 #include "world.h"
 #include "command_socket.h"
 #include "app_actions.h"
+#include "app_cli.h"
 #include "window.h"
 #include "renderer.h"
 #include "audio.h"
 
-bool g_debugMode = false;
+extern bool g_debugMode;
 FILE* g_logFile = nullptr;
 
 void OpenLogFile() {
@@ -185,7 +186,7 @@ void LogWrite(const char* level, const char* fmt, ...) {
 }
 
 - (void)reloadConfiguration:(id)sender {
-    Config_InitRegistry();
+    Config_Init();
     DEBUG_LOG("Configuration reloaded from menubar");
     // Update menu items states based on reloaded config
     NSMenu* menu = self.statusItem.menu;
@@ -316,7 +317,7 @@ void LogWrite(const char* level, const char* fmt, ...) {
 - (void)applicationDidFinishLaunching:(NSNotification*)aNotification {
     DEBUG_LOG("App launching...");
 
-    Config_InitRegistry();
+    Config_Init();
     DEBUG_LOG("Config init done");
 
     g_assets.Init();
@@ -422,105 +423,6 @@ extern "C" void Presence_UpdateStatusFromBehavior(const char* status) {
     });
 }
 
-static bool IsControlCommand(const std::string& command) {
-    return command == "start" ||
-           command == "spawn" ||
-           command == "clear" ||
-           command == "ram" ||
-           command == "status" ||
-           command == "quit";
-}
-
-static bool IsRunning() {
-    std::string response;
-    return CommandSocket_Send({"status"}, &response, nullptr);
-}
-
-static int DaemonizeProcess() {
-    pid_t pid = fork();
-    if (pid < 0) {
-        std::cerr << "Failed to fork" << std::endl;
-        return 1;
-    }
-    if (pid > 0) {
-        exit(0);
-    }
-    if (setsid() < 0) {
-        std::cerr << "Failed to create session" << std::endl;
-        return 1;
-    }
-    std::cout << "Desktop Goose started in background" << std::endl;
-    return 0;
-}
-
-static int HandleCliCommand(int argc, char** argv, int* appArgc) {
-    for (int i = 1; i < argc; i++) {
-        if (std::string(argv[i]) == "--debug") {
-            g_debugMode = true;
-            DEBUG_LOG("Debug mode enabled");
-        }
-    }
-
-    if (argc <= 1) {
-        if (IsRunning()) {
-            std::cout << "Desktop Goose is already running" << std::endl;
-            return 0;
-        }
-        *appArgc = 1;
-        return -1;
-    }
-
-    const std::string command = argv[1];
-    if (command == "--foreground") {
-        *appArgc = 1;
-        return -1;
-    }
-
-    if (command == "--help" || command == "help") {
-        std::cout
-            << "Desktop Goose commands:\n"
-            << "  CadGoose\n"
-            << "  CadGoose --debug\n"
-            << "  CadGoose start\n"
-            << "  CadGoose start --foreground\n"
-            << "  CadGoose spawn [name]\n"
-            << "  CadGoose clear\n"
-            << "  CadGoose ram\n"
-            << "  CadGoose status\n"
-            << "  CadGoose quit\n";
-        return 0;
-    }
-
-    if (!IsControlCommand(command)) return -1;
-
-    if (command == "start") {
-        if (argc > 2 && std::string(argv[2]) == "--foreground") {
-            *appArgc = 1;
-            return -1;
-        }
-
-        if (IsRunning()) {
-            std::cout << "Desktop Goose is already running" << std::endl;
-            return 0;
-        }
-
-        return DaemonizeProcess();
-    }
-
-    std::vector<std::string> args;
-    for (int i = 1; i < argc; ++i) args.emplace_back(argv[i]);
-
-    std::string response;
-    std::string error;
-    if (!CommandSocket_Send(args, &response, &error)) {
-        std::cerr << error << std::endl;
-        return 1;
-    }
-
-    if (!response.empty()) std::cout << response;
-    return 0;
-}
-
 int main(int argc, char** argv) {
     srand((unsigned int)time(NULL));
     OpenLogFile();
@@ -534,8 +436,8 @@ int main(int argc, char** argv) {
     char* runArgv[] = { argv[0], nullptr };
     int runArgc = 1;
 
-    const int cliStatus = HandleCliCommand(argc, argv, &runArgc);
-    fprintf(stderr, "[DEBUG] HandleCliCommand returned %d\n", cliStatus);
+    const int cliStatus = AppCli_HandleCommand(argc, argv, &runArgc);
+    fprintf(stderr, "[DEBUG] AppCli_HandleCommand returned %d\n", cliStatus);
     if (cliStatus >= 0) return cliStatus;
 
     @autoreleasepool {
