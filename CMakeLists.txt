@@ -87,7 +87,7 @@ elseif(LINUX)
         )
     endfunction()
 
-    set(VIRTUAL_POINTER_PROTOCOL "${CMAKE_CURRENT_SOURCE_DIR}/protocols/wlr-virtual-pointer-unstable-v1.xml")
+    set(VIRTUAL_POINTER_PROTOCOL "${CMAKE_CURRENT_SOURCE_DIR}/src/platform/linux/protocols/wlr-virtual-pointer-unstable-v1.xml")
     wayland_generate(${VIRTUAL_POINTER_PROTOCOL}
         "${CMAKE_CURRENT_BINARY_DIR}/wlr-virtual-pointer-unstable-v1-client-protocol.h"
         "${CMAKE_CURRENT_BINARY_DIR}/wlr-virtual-pointer-unstable-v1-protocol.c")

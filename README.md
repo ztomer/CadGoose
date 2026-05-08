@@ -17,7 +17,16 @@ Highly modified port of [CppGoose](https://github.com/jeffthepineapple/desktop-g
 - **macOS**: Native AppKit implementation with Core Graphics rendering
 - **Linux**: GTK4 with Wayland (Hyprland, wlroots) and X11 support
 
-See [README_MAC.md](README_MAC.md) or [README_LINUX.md](README_LINUX.md) for platform-specific details.
+See [docs/README_LINUX.md](docs/README_LINUX.md) for Linux platform details.
+
+---
+
+## Documentation
+
+- [docs/PLAN.md](docs/PLAN.md) - Current project priorities and status
+- [docs/COMPLETED_TASKS.md](docs/COMPLETED_TASKS.md) - Historical completed items
+- [docs/README_LINUX.md](docs/README_LINUX.md) - Linux build instructions
+- [docs/references/](docs/references/) - Mod implementation guides
 
 ---
 
@@ -138,52 +147,27 @@ Settings are edited through `~/.config/desktop-goose/config.toml`. There is no s
 ## Project Structure
 
 ```
-CadGoose/
-  src/
-    common/                  # Shared game logic
-      goose.cpp              Goose class: movement, animation, behavior
-      goose_behaviors.cpp    Goose behavior implementations
-      goose_physics.cpp      Goose physics and movement
-      world.cpp              Global state containers (geese, items, footprints)
-      config.cpp             TOML-based config registry using toml11
-      cursor_backend.cpp     Backend manager and selection
-      app_actions.cpp        Goose spawning, commands
-      items.cpp              Item data structures
-    platform/
-      macos/                 # macOS (AppKit)
-        main.mm              Entry point
-        window.mm            NSWindow overlay
-        renderer.mm          NSView rendering
-        cursor_backend.mm    CGEvent cursor control
-        audio.mm             AVFoundation audio
-        assets.mm            Asset loading
-        command_socket.cpp   Unix socket IPC
-      linux/                 # Linux (GTK4)
-        main.cpp             Entry point
-        ui.cpp               Overlay drawing and tick loop
-        hyprland.cpp         Hyprland IPC cursor backend
-        wlroots_backend.cpp  wlroots virtual-pointer cursor backend
-        x11_backend.cpp      X11/XTest cursor backend
-        assets.cpp           SDL/GTK asset loading
-        command_socket.cpp   GLib socket IPC
-        ram_tracker.cpp      Memory usage tracking
-  include/
-    goose_math.h             Shared vector and math helpers
-    goose.h                  Goose class definition
-    world.h                  Global state declarations
-    cursor_backend.h         Backend interface
-    ...
-  Assets/
-    Images/Memes/            PNG images geese can pick up and drop
-    Sound/NotEmbedded/       Sound effects loaded at runtime
-    Text/NotepadMessages/    Plain text files geese can carry as notes
-    Mods/                    Game modifications
-  protocols/
-    wlr-virtual-pointer-unstable-v1.xml
-  tests/                     Test suite
-  CMakeLists.txt
-  build.sh                   Build script
-  run.sh                     Run script
+src/
+  platform/
+    macos/                # macOS-specific (AppKit, CoreGraphics)
+    linux/                # Linux-specific (GTK4, Wayland/X11)
+      protocols/          # Wayland protocol definitions
+  common/                 # Shared game logic
+  include/                # Headers
+Assets/
+  Images/Memes/          # PNG images geese can pick up
+  Sound/NotEmbedded/     # Sound effects
+  Text/NotepadMessages/ # Text files for notes
+docs/
+  PLAN.md                # Project plan
+  COMPLETED_TASKS.md      # Historical completed items
+  references/             # Mod implementation guides
+  README_LINUX.md        # Linux build instructions
+tests/                    # Test suite
+tools/                    # Build tools (Extractor)
+vendor/                   # Third-party libraries
+CMakeLists.txt
+build.sh
 ```
 
 ---
@@ -252,29 +236,29 @@ Third-party assets bundled under `Assets/` may carry their own licenses. Review 
 
 ## Mod Attribution
 
-CadGoose's behavior system is inspired by the excellent mods from the [Desktop Goose ResourceHub](https://desktopgooseunofficial.github.io/ResourceHub/mods/explore/mods.html). The following behaviors are based on or derived from ResourceHub mods:
+CadGoose's behavior system is inspired by mods from the [Desktop Goose ResourceHub](https://desktopgooseunofficial.github.io/ResourceHub/mods/explore/mods.html). The following behaviors are based on or derived from ResourceHub mods:
 
-| Behavior | Based On | Original Author | License |
-|---------|----------|-----------------|---------|
-| Honcker | Honcker | DesktopGooseUnofficial | - |
-| Drag | DragGoose | euandeas/Straaft | - |
-| Jail | GooseJail | WackyModer | - |
-| Portal | PortalGoos | Moonaliss1 | MIT |
-| Clicker | Clicker | Wolf/NE1W01F | - |
-| Anger | OnePunchGoose | VisualError | - |
-| Ball | Ball (soccer, beach, generic) | TheOrlando | - |
-| BreadCrumbs | BreadCrumbs | Straaft | - |
-| Hats | (original) | - | - |
-| Acid | AcidGoose | F!NN | - |
-| Rainbow | (original) | - | - |
-| Health | (original) | - | - |
-| Banish | (original) | - | - |
-| Nametag | (original) | - | - |
-| Debugoose | (original) | - | - |
-| Presence | (original) | - | - |
-| GooseManager | (original) | - | - |
-| AI | (original) | - | - |
+| Behavior | Based On | Original Author | Source |
+|---------|----------|-----------------|--------|
+| Honcker | Honcker | DesktopGooseUnofficial | [ResourceHub](https://desktopgooseunofficial.github.io/ResourceHub/mods/Honcker.html) |
+| Drag | DragGoose | Straaft | [ResourceHub](https://desktopgooseunofficial.github.io/ResourceHub/mods/DragGoose.html) |
+| Jail | GooseJail | WackyModer | [GitHub](https://github.com/WackyModer/GooseJail) |
+| Portal | PortalGoos | Moonaliss1 | [GitHub](https://github.com/Moonaliss1/DesktopGooseMod_PortalGoos) |
+| Clicker | Clicker | Wolf/NE1W01F | [GitHub](https://github.com/NE1W01F/Gooes-Mod) |
+| Anger | OnePunchGoose | VisualError | [GitHub](https://github.com/VisualError/OnePunchGoose) |
+| Ball | Ball | TheOrlando | [GitHub](https://github.com/TheOrlando/DesktopGooseMod_Ball) |
+| BreadCrumbs | BreadCrumbs | Straaft | [ResourceHub](https://desktopgooseunofficial.github.io/ResourceHub/mods/BreadCrumbs.html) |
+| Hats | Hats | - | ResourceHub |
+| Acid | AcidGoose | F!NN | [ResourceHub](https://desktopgooseunofficial.github.io/ResourceHub/mods/AcidGoose.html) |
+| Rainbow | Rainbow | - | ResourceHub |
+| Health | Health | - | ResourceHub |
+| Banish | Banish | - | ResourceHub |
+| Nametag | Nametag | - | ResourceHub |
+| Debugoose | Debugoose | - | ResourceHub |
+| Presence | GoosePresence | - | ResourceHub |
+| GooseManager | GooseManager | - | ResourceHub |
+| AI | AI | - | ResourceHub |
 
-Original mod sources are preserved in `references/mods/`. See `references/MOD_IMPLEMENTATION_GUIDE.md` for implementation details.
+Original mod sources preserved in `references/mods/`. See `references/MOD_IMPLEMENTATION_GUIDE.md` for implementation details.
 
 > **Note**: Some original mod repositories have been deleted. DLLs were decompiled for reference purposes only.

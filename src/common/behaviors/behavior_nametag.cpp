@@ -37,31 +37,39 @@ static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
 
     CGContextSaveGState(cg);
 
-    CGContextSetRGBFillColor(cg, 0.0f, 0.0f, 0.0f, 0.6f);
     float nameWidth = (float)nameLen * 8.0f;
     float boxHeight = 18.0f;
     float boxX = headPos.x - nameWidth / 2.0f - 4.0f;
     float boxY = headPos.y - 40.0f;
-    CGContextFillRect(cg, CGRectMake(boxX, boxY, nameWidth + 8.0f, boxHeight));
+    
+    CGContextSetRGBFillColor(cg, 0.2f, 0.2f, 0.2f, 0.9f);
+    CGContextFillRect(cg, CGRectMake(boxX - 2.0f, boxY - 2.0f, nameWidth + 12.0f, boxHeight + 4.0f));
+    
+    CGContextSetRGBFillColor(cg, 1.0f, 1.0f, 1.0f, 1.0f);
 
     CTFontRef font = CTFontCreateWithName(CFSTR("Helvetica"), 12.0f, NULL);
     if (font) {
-        CFStringRef keys[] = { kCTFontAttributeName };
-        CFTypeRef values[] = { font };
-        CFDictionaryRef attributes = CFDictionaryCreate(NULL, (const void**)keys, (const void**)values, 1, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
+        CGColorRef white = CGColorCreateGenericRGB(1.0f, 1.0f, 1.0f, 1.0f);
+        CFTypeRef keys[] = { kCTFontAttributeName, kCTForegroundColorAttributeName };
+        CFTypeRef values[] = { font, white };
+        CFDictionaryRef attributes = CFDictionaryCreate(NULL, (const void**)keys, (const void**)values, 2, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
+
+        CGContextSetTextMatrix(cg, CGAffineTransformMakeScale(1.0, -1.0));
 
         CFStringRef string = CFStringCreateWithBytes(NULL, (const UInt8*)name, nameLen, kCFStringEncodingUTF8, false);
-        CTLineRef line = CTLineCreateWithAttributedString(CFAttributedStringCreate(NULL, string, attributes));
+        CFAttributedStringRef attrStr = CFAttributedStringCreate(NULL, string, attributes);
+        CTLineRef line = CTLineCreateWithAttributedString(attrStr);
 
         if (line) {
-            CGContextSetRGBFillColor(cg, 1.0f, 1.0f, 1.0f, 1.0f);
-            CGContextSetTextPosition(cg, headPos.x - nameWidth / 2.0f, headPos.y - 33.0f);
+            CGContextSetTextPosition(cg, headPos.x - nameWidth / 2.0f, headPos.y - 25.0f);
             CTLineDraw(line, cg);
             CFRelease(line);
         }
 
+        CFRelease(attrStr);
         CFRelease(string);
         CFRelease(attributes);
+        CGColorRelease(white);
         CFRelease(font);
     }
 

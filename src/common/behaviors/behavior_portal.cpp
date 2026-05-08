@@ -26,13 +26,30 @@ static bool IsKeyPressed(int keyCode) {
         return false;
     }
 
-    CGKeyCode key = CGKeyCode(keyCode);
     int64_t eventKey = CGEventGetIntegerValueField(event, kCGKeyboardEventKeycode);
-    bool pressed = (eventKey == key);
+    bool pressed = (eventKey == keyCode);
 
     CFRelease(event);
     CFRelease(source);
     return pressed;
+}
+
+static bool IsKeyHeld(int keyCode) {
+    CGEventSourceRef source = CGEventSourceCreate(kCGEventSourceStateHIDSystemState);
+    if (!source) return false;
+
+    CGEventRef event = CGEventCreate(source);
+    if (!event) {
+        CFRelease(source);
+        return false;
+    }
+
+    int64_t eventKey = CGEventGetIntegerValueField(event, kCGKeyboardEventKeycode);
+    bool held = (eventKey == keyCode);
+
+    CFRelease(event);
+    CFRelease(source);
+    return held;
 }
 
 static void init(BehaviorContext& ctx) {
@@ -79,16 +96,17 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
         }
     }
 
-    short pState = IsKeyPressed(P_KEY) ? -1 : 0;
-    if (pState != 0) {
+    bool pHeld = IsKeyHeld(0x50); // P key
+
+    if (pHeld) {
         CGEventRef event = CGEventCreate(nullptr);
         if (event) {
             CGPoint mousePos = CGEventGetLocation(event);
             CFRelease(event);
 
-            bool d1Pressed = IsKeyPressed(D1_KEY);
-            bool d2Pressed = IsKeyPressed(D2_KEY);
-            bool d0Pressed = IsKeyPressed(D0_KEY);
+            bool d1Pressed = IsKeyHeld(0x31); // 1 key
+            bool d2Pressed = IsKeyHeld(0x32); // 2 key
+            bool d0Pressed = IsKeyHeld(0x30); // 0 key
 
             if (d1Pressed) {
                 state->portalA.x = (float)mousePos.x;

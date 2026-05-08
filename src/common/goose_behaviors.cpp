@@ -231,7 +231,7 @@ static void handleFetching(Goose& g, double time, int w, int h) {
     if (!g.forcedText.empty()) {
         g.heldItem = g_assets.CreateTextItem(g.forcedText);
     } else if (g.forceItemFetch == 0) {
-        g.heldItem = g_assets.GetRandomMeme();
+        g.heldItem = g_assets.GetRandomMeme(w, h, 0.1f);
     } else if (g.forceItemFetch == 1) {
         g.heldItem = g_assets.GetRandomText();
     } else {

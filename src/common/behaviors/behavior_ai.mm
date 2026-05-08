@@ -13,11 +13,26 @@
 #ifdef __APPLE__
 #import <Cocoa/Cocoa.h>
 
+#pragma mark - AIHTTPClient
+
+@interface AIHTTPClient : NSObject
+@property (nonatomic, copy) NSString* endpoint;
+@property (nonatomic, copy) NSString* model;
+@property (nonatomic, strong) NSMutableArray* history;
+- (instancetype)initWithEndpoint:(NSString*)endpoint model:(NSString*)model;
+- (void)sendMessage:(NSString*)message completion:(void(^)(NSString* response, NSError* error))completion;
+@end
+
+#pragma mark - AIChatWindowController
+
 @interface AIChatWindowController : NSWindowController
 @property (nonatomic, copy) NSString* gooseName;
 @property (nonatomic, strong) NSTextField* inputField;
 @property (nonatomic, strong) NSTextView* chatView;
 @property (nonatomic, strong) NSButton* sendButton;
+@property (nonatomic, strong) AIHTTPClient* httpClient;
+- (void)sendMessage:(id)sender;
+- (void)appendResponse:(NSString*)response;
 @end
 
 @implementation AIChatWindowController
@@ -56,6 +71,22 @@
     [self.sendButton setAction:@selector(sendMessage:)];
     [contentView addSubview:self.sendButton];
 
+    NSString* endpoint;
+    NSString* model;
+
+    if (g_config.ai.useOsaurus) {
+        endpoint = [NSString stringWithFormat:@"http://localhost:%d/v1/chat/completions", g_config.ai.osaurusPort];
+        model = [NSString stringWithUTF8String:g_config.ai.osaurusModel.c_str()];
+    } else if (g_config.ai.useOllama) {
+        endpoint = [NSString stringWithFormat:@"http://localhost:%d/v1/chat/completions", g_config.ai.ollamaPort];
+        model = [NSString stringWithUTF8String:g_config.ai.ollamaModel.c_str()];
+    } else {
+        endpoint = @"http://localhost:1337/v1/chat/completions";
+        model = @"llama3";
+    }
+
+    self.httpClient = [[AIHTTPClient alloc] initWithEndpoint:endpoint model:model];
+
     return self;
 }
 
@@ -66,11 +97,115 @@
     NSString* chatText = self.chatView.string;
     chatText = [chatText stringByAppendingFormat:@"You: %@\n", message];
     self.chatView.string = chatText;
+    self.chatView.string = [self.chatView.string stringByAppendingString:@"Goose: HONK...\n"];
+
+    self.sendButton.enabled = NO;
+
+    __weak AIChatWindowController* weakSelf = self;
+    [self.httpClient sendMessage:message completion:^(NSString* response, NSError* error) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            AIChatWindowController* strong = weakSelf;
+            if (!strong) return;
+            strong.sendButton.enabled = YES;
+            if (error) {
+                [strong appendResponse:@"HONK! Something went wrong."];
+            } else {
+                [strong appendResponse:response ? response : @"HONK! No response."];
+            }
+        });
+    }];
 
     self.inputField.stringValue = @"";
 }
 
+- (void)appendResponse:(NSString*)response {
+    dispatch_async(dispatch_get_main_queue(), ^{
+        NSString* current = self.chatView.string;
+        NSRange honkRange = [current rangeOfString:@"Goose: HONK..."];
+        if (honkRange.location != NSNotFound) {
+            NSString* before = [current substringToIndex:honkRange.location];
+            self.chatView.string = [before stringByAppendingFormat:@"Goose: %@\n\n", response];
+        }
+    });
+}
+
 @end
+
+#pragma mark - AIHTTPClient Implementation
+
+@implementation AIHTTPClient
+
+- (instancetype)initWithEndpoint:(NSString*)endpoint model:(NSString*)model {
+    self = [super init];
+    if (self) {
+        _endpoint = endpoint;
+        _model = model;
+        _history = [NSMutableArray array];
+    }
+    return self;
+}
+
+- (void)sendMessage:(NSString*)message completion:(void(^)(NSString*, NSError*))completion {
+    [self.history addObject:@{@"role": @"user", @"content": message}];
+
+    NSURL* url = [NSURL URLWithString:self.endpoint];
+    if (!url) {
+        if (completion) completion(@"HONK! Can't reach the brain.", nil);
+        return;
+    }
+
+    NSMutableURLRequest* request = [NSMutableURLRequest requestWithURL:url];
+    [request setHTTPMethod:@"POST"];
+    [request setValue:@"application/json" forHTTPHeaderField:@"Content-Type"];
+
+    NSDictionary* body = @{
+        @"model": self.model,
+        @"messages": self.history,
+        @"max_tokens": @(200),
+        @"temperature": @(0.8)
+    };
+
+    NSError* jsonError;
+    NSData* jsonData = [NSJSONSerialization dataWithJSONObject:body options:0 error:&jsonError];
+    if (jsonError) {
+        if (completion) completion(@"HONK! Brain scrambled.", jsonError);
+        return;
+    }
+    [request setHTTPBody:jsonData];
+
+    NSURLSession* session = [NSURLSession sharedSession];
+    NSURLSessionDataTask* task = [session dataTaskWithRequest:request completionHandler:^(NSData* data, NSURLResponse* response, NSError* error) {
+        if (error) {
+            if (completion) completion(@"HONK! Something went wrong.", error);
+            return;
+        }
+
+        NSError* parseError;
+        NSDictionary* json = [NSJSONSerialization JSONObjectWithData:data options:0 error:&parseError];
+        if (parseError) {
+            if (completion) completion(@"HONK! Can't understand.", parseError);
+            return;
+        }
+
+        NSArray* choices = json[@"choices"];
+        if (choices && choices.count > 0) {
+            NSDictionary* msg = choices[0][@"message"];
+            NSString* content = msg[@"content"];
+            if (content) {
+                [self.history addObject:@{@"role": @"assistant", @"content": content}];
+                if (completion) completion(content, nil);
+                return;
+            }
+        }
+
+        if (completion) completion(@"HONK! No answer from brain.", nil);
+    }];
+    [task resume];
+}
+
+@end
+
+static AIHTTPClient* g_httpClient = nil;
 
 static AIChatWindowController* g_chatController = nil;
 

@@ -147,7 +147,11 @@ void DrawHeldItem(Goose* g, CGContextRef ctx) {
     CGContextTranslateCTM(ctx, -g->heldItem->w / 2, 0);
 
     if (g->heldItem->type == ItemData::MEME && g->heldItem->image) {
+        CGContextSaveGState(ctx);
+        CGContextTranslateCTM(ctx, 0, g->heldItem->h);
+        CGContextScaleCTM(ctx, 1.0, -1.0);
         CGContextDrawImage(ctx, CGRectMake(0, 0, g->heldItem->w, g->heldItem->h), g->heldItem->image);
+        CGContextRestoreGState(ctx);
     } else if (g->heldItem->type == ItemData::MEME) {
         CGContextSetRGBFillColor(ctx, 0.8f, 0.8f, 0.8f, 1.0f);
         CGContextFillRect(ctx, CGRectMake(0, 0, g->heldItem->w, g->heldItem->h));
@@ -163,8 +167,11 @@ void DrawHeldItem(Goose* g, CGContextRef ctx) {
             NSString* text = [NSString stringWithUTF8String:g->heldItem->textContent->c_str()];
             NSDictionary* attrs = @{NSFontAttributeName: [NSFont systemFontOfSize:10.0],
                                     NSForegroundColorAttributeName: [NSColor blackColor]};
-            NSRect textRect = NSMakeRect(5, 5, g->heldItem->w - 10, g->heldItem->h - 10);
-            [text drawInRect:textRect withAttributes:attrs];
+            float textX = 5;
+            float textY = 5;
+            float textW = g->heldItem->w - 10;
+            float textH = g->heldItem->h - 10;
+            [text drawInRect:NSMakeRect(textX, textY, textW, textH) withAttributes:attrs];
 #endif
         }
     }
@@ -245,13 +252,19 @@ void DrawDroppedItem(CGContextRef ctx, const DroppedItem& item, float viewHeight
         }
 
         NSString* text = [NSString stringWithUTF8String:item.data->Text().c_str()];
-        [text drawInRect:NSMakeRect(x + g_config.render.textNotePadding, y + g_config.render.textNotePadding,
-                                    item.data->w - g_config.render.textNotePadding * 2,
-                                    item.data->h - g_config.render.textNotePadding * 2) withAttributes:textAttrs];
+        float textX = x + g_config.render.textNotePadding;
+        float textY = y + g_config.render.textNotePadding;
+        float textW = item.data->w - g_config.render.textNotePadding * 2;
+        float textH = item.data->h - g_config.render.textNotePadding * 2;
+        [text drawInRect:NSMakeRect(textX, textY, textW, textH) withAttributes:textAttrs];
 #endif
     } else if (item.data->type == ItemData::MEME) {
         if (item.data->image) {
-            CGContextDrawImage(ctx, CGRectMake(x, y, item.data->w, item.data->h), item.data->image);
+            CGContextSaveGState(ctx);
+            CGContextTranslateCTM(ctx, x, y + item.data->h);
+            CGContextScaleCTM(ctx, 1.0, -1.0);
+            CGContextDrawImage(ctx, CGRectMake(0, 0, item.data->w, item.data->h), item.data->image);
+            CGContextRestoreGState(ctx);
         } else {
             CGContextSetRGBFillColor(ctx, g_config.render.memePlaceholderColor.r,
                                      g_config.render.memePlaceholderColor.g,

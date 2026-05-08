@@ -52,7 +52,7 @@ void AssetManager::Init() {
     ScanFolder("Text/NotepadMessages", textPaths, {".txt"});
 }
 
-ItemData* AssetManager::GetRandomMeme() {
+ItemData* AssetManager::GetRandomMeme(int screenWidth, int screenHeight, float maxSizeFraction) {
     if(memePaths.empty()) return nullptr;
     std::string p = memePaths[rand() % memePaths.size()];
     GdkPixbuf* pb = nullptr;
@@ -67,18 +67,23 @@ ItemData* AssetManager::GetRandomMeme() {
             if (err) g_error_free(err);
             return nullptr;
         }
-
-        // Scale down huge images once and share the cached result.
+        
+        int maxW = (int)(screenWidth * maxSizeFraction);
+        int maxH = (int)(screenHeight * maxSizeFraction);
         int w = gdk_pixbuf_get_width(pb);
         int h = gdk_pixbuf_get_height(pb);
-        if(w > 300) {
-            float ratio = 300.0f / w;
-            GdkPixbuf* scaled = gdk_pixbuf_scale_simple(pb, 300, h * ratio, GDK_INTERP_BILINEAR);
+        
+        if(w > maxW || h > maxH) {
+            float ratioW = (float)maxW / w;
+            float ratioH = (float)maxH / h;
+            float ratio = std::min(ratioW, ratioH);
+            int newW = (int)(w * ratio);
+            int newH = (int)(h * ratio);
+            GdkPixbuf* scaled = gdk_pixbuf_scale_simple(pb, newW, newH, GDK_INTERP_BILINEAR);
             g_object_unref(pb);
             pb = scaled;
         }
 
-        // Ensure 4 bytes per pixel (RGBA) to satisfy Cairo's stride requirements.
         if (!gdk_pixbuf_get_has_alpha(pb)) {
             GdkPixbuf* withAlpha = gdk_pixbuf_add_alpha(pb, FALSE, 0, 0, 0);
             g_object_unref(pb);

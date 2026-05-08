@@ -48,7 +48,8 @@ static void init(BehaviorContext& ctx) {
 static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
     if (!g_config.behaviors.info.clicker) return;
 
-    if ((rand() % g_config.behaviors.clicker.chance) == 3) {
+    int randomValue = rand() % g_config.behaviors.clicker.chance + 1;
+    if (randomValue == 3) {
         CGPoint originalPos = GetCurrentMousePos();
 
         CGEventSourceRef source = CGEventSourceCreate(kCGEventSourceStateHIDSystemState);
