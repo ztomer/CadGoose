@@ -65,11 +65,48 @@
 
 ### 5. File Size Limit (500 LOC)
 - **Rule**: No source file exceeds 500 lines
-- **Current offenders** (need refactor):
-  - [ ] `config.cpp` (1150 LOC) - Split by config section
-  - [ ] `goose.cpp` (~700 LOC) - Extract behavior logic
-  - [ ] `goose_drawing.mm` (~300 LOC) - OK for now
+- **Current offenders**:
+  - ⚠️ `config.cpp` (1150 LOC) - Config_Load has 237-line switch statement
+  - ⚠️ `ui.cpp` (1632 LOC) - Linux UI, very large
+  - ⚠️ `main.mm` (564 LOC) - macOS main, borderline
+  - ⚠️ `goose.cpp` (511 LOC) - borderline
+- **Approach**: Extract Config_Load switch statement into per-section loaders
 - **Tool**: Add pre-commit hook or CI check
+
+### Project Structure (Updated 2026-05-08)
+```
+docs/
+├── PLAN.md                    # Current project priorities
+├── COMPLETED_TASKS.md          # Historical completed items
+├── README_LINUX.md            # Linux build instructions
+└── references/
+    └── MOD_IMPLEMENTATION_GUIDE.md
+
+src/
+├── common/
+│   ├── config.cpp            ⚠️ 1150 LOC - needs refactor
+│   ├── goose.cpp              ⚠️ 511 LOC - borderline
+│   └── behaviors/             # All behavior implementations
+├── platform/
+│   ├── macos/                 # AppKit + CoreGraphics
+│   │   ├── main.mm           ⚠️ 564 LOC - borderline
+│   │   └── renderer.mm
+│   └── linux/
+│       ├── ui.cpp             ⚠️ 1632 LOC - very large
+│       └── protocols/         # Wayland protocol definitions
+└── include/                   # Headers
+
+tests/
+├── common/                    # Unit tests
+├── platform/macos/            # macOS rendering tests
+└── test_main.cpp             # Main test suite
+
+tools/
+└── Extractor/                # Asset extraction tool
+
+vendor/
+└── toml11/                   # TOML parsing library
+```
 
 ### 6. Code Review (Linus + Uncle Bob)
 - **Principles**:
