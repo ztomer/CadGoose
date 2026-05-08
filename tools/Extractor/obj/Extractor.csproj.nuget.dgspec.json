@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "/Users/ztomer/Projects/CadGoose/Extractor/Extractor.csproj": {}
+    "/Users/ztomer/Projects/CadGoose/tools/Extractor/Extractor.csproj": {}
   },
   "projects": {
-    "/Users/ztomer/Projects/CadGoose/Extractor/Extractor.csproj": {
+    "/Users/ztomer/Projects/CadGoose/tools/Extractor/Extractor.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/Users/ztomer/Projects/CadGoose/Extractor/Extractor.csproj",
+        "projectUniqueName": "/Users/ztomer/Projects/CadGoose/tools/Extractor/Extractor.csproj",
         "projectName": "Extractor",
-        "projectPath": "/Users/ztomer/Projects/CadGoose/Extractor/Extractor.csproj",
+        "projectPath": "/Users/ztomer/Projects/CadGoose/tools/Extractor/Extractor.csproj",
         "packagesPath": "/Users/ztomer/.nuget/packages/",
-        "outputPath": "/Users/ztomer/Projects/CadGoose/Extractor/obj/",
+        "outputPath": "/Users/ztomer/Projects/CadGoose/tools/Extractor/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "/Users/ztomer/.nuget/NuGet/NuGet.Config"

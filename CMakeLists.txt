@@ -168,9 +168,15 @@ if(APPLE OR LINUX)
     add_executable(CadGooseTests 
         tests/test_main.cpp
         tests/common/test_behavior.cpp
+        tests/common/test_config.cpp
         src/common/app_actions.cpp
+        src/common/app_cli.cpp
         src/common/behavior.cpp
         src/common/config.cpp
+        src/common/config_helpers.h
+        src/common/config_load.cpp
+        src/common/config_registry.cpp
+        src/common/config_save.cpp
         src/common/cursor_backend.cpp
         src/common/goose.cpp
         src/common/goose_behaviors.cpp

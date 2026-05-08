@@ -611,7 +611,6 @@ int main(int argc, char **argv) {
 // Mock dependencies for unit tests
 const std::string ASSET_ROOT_NAME = "Assets";
 std::filesystem::path ASSET_ROOT = "Assets";
-bool g_debugMode = false;
 
 AssetManager g_assets;
 
