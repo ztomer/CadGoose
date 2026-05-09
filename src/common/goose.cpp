@@ -365,15 +365,40 @@ void Goose::PickNewTarget(int w, int h) {
 }
 
 void Goose::UpdateDrag(double dt) {
-  static time_t s_lastPrint = 0;
-  time_t now = time(nullptr);
-  if (now != s_lastPrint) {
-    s_lastPrint = now;
-    fprintf(stderr, "[UD] g%d state=%d heldItem=%p dragInit=%d\n", id, (int)state, (void*)heldItem, dragInit);
+  if (!heldItem) {
+      dragInit = false;
+      return;
   }
-  if (!heldItem) return;
-  if (dragInit) return;
-  dragPos = GetBeakTipDevice();
-  dragRot = dir;
-  dragInit = true;
+
+  if (dt < g_config.physics.dragMinDt) return;
+
+  if (!dragInit) {
+    dragPos = GetBeakTipDevice();
+    dragRot = dir * ((float)PI / 180.0f);
+    dragVel = {0, 0};
+    dragRotVel = 0.0f;
+    dragInit = true;
+    return;
+  }
+
+  Vector2 targetPos = GetBeakTipDevice();
+  Vector2 diff = targetPos - dragPos;
+
+  // Spring physics
+  float springForce = 150.0f;
+  float damping = 0.85f;
+
+  dragVel = dragVel + diff * (springForce * (float)dt);
+  dragVel = dragVel * damping;
+  dragPos = dragPos + dragVel * (float)dt;
+
+  if (Vector2::Length(dragVel) > g_config.physics.dragVelocityThreshold) {
+      float targetRot = std::atan2(dragVel.y, dragVel.x);
+      
+      float rotDiff = targetRot - dragRot;
+      while (rotDiff > PI) rotDiff -= 2 * PI;
+      while (rotDiff < -PI) rotDiff += 2 * PI;
+      
+      dragRot += rotDiff * g_config.physics.dragRotationSpeed * (float)dt;
+  }
 }
