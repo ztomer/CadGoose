@@ -215,7 +215,7 @@ static void DrawLine(CGContextRef ctx, Vector2 a, Vector2 b, float width, float 
 - (NSView *)hitTest:(NSPoint)point {
     NSPoint p = [self convertPoint:point fromView:self.superview];
     float worldX = p.x;
-    float worldY = self.bounds.size.height - p.y;
+    float worldY = p.y;
 
     for (auto it = g_droppedItems.rbegin(); it != g_droppedItems.rend(); ++it) {
         DroppedItem& item = *it;
@@ -236,7 +236,7 @@ static void DrawLine(CGContextRef ctx, Vector2 a, Vector2 b, float width, float 
 - (void)mouseDown:(NSEvent *)event {
     NSPoint p = [self convertPoint:[event locationInWindow] fromView:nil];
     float worldX = p.x;
-    float worldY = self.bounds.size.height - p.y;
+    float worldY = p.y;
 
     for (auto it = g_droppedItems.rbegin(); it != g_droppedItems.rend(); ++it) {
         DroppedItem& item = *it;
