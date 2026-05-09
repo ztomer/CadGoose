@@ -250,10 +250,10 @@ static void DrawLine(CGContextRef ctx, Vector2 a, Vector2 b, float width, float 
         if (lx >= -item.data->w/2.0f && lx <= item.data->w/2.0f &&
             ly >= -item.data->h/2.0f && ly <= item.data->h/2.0f) {
 
-            float closeX = item.data->w/2.0f - g_config.render.closeButtonSize;
-            float closeY = item.data->h/2.0f - g_config.render.closeButtonSize;
-            if (lx >= closeX && lx <= item.data->w/2.0f &&
-                ly >= closeY && ly <= item.data->h/2.0f) {
+            float closeX = -item.data->w/2.0f;
+            float closeY = -item.data->h/2.0f;
+            if (lx >= closeX && lx <= closeX + g_config.render.closeButtonSize &&
+                ly >= closeY && ly <= closeY + g_config.render.closeButtonSize) {
                 delete item.data;
                 auto forward_it = std::prev(it.base());
                 g_droppedItems.erase(forward_it);

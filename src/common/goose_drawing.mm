@@ -273,8 +273,8 @@ void DrawDroppedItem(CGContextRef ctx, const DroppedItem& item, float viewHeight
         }
     }
 
-    float closeX = item.data->w / 2.0f - g_config.render.closeButtonSize;
-    float closeY = item.data->h / 2.0f - g_config.render.closeButtonSize;
+    float closeX = -item.data->w / 2.0f;
+    float closeY = -item.data->h / 2.0f;
     CGContextSetRGBFillColor(ctx, g_config.render.closeButtonColor.r,
                              g_config.render.closeButtonColor.g,
                              g_config.render.closeButtonColor.b, 0.8);

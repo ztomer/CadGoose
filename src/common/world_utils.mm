@@ -66,9 +66,9 @@ bool ItemHitTest(NSPoint p, float viewHeight, DroppedItem** hitItem, float close
 }
 
 bool CheckCloseButton(float lx, float ly, float w, float h, float closeButtonSize) {
-    float closeX = w/2.0f - closeButtonSize;
-    float closeY = h/2.0f - closeButtonSize;
-    return lx >= closeX && lx <= w/2.0f && ly >= closeY && ly <= h/2.0f;
+    float closeX = -w/2.0f;
+    float closeY = -h/2.0f;
+    return lx >= closeX && lx <= closeX + closeButtonSize && ly >= closeY && ly <= closeY + closeButtonSize;
 }
 
 void DeleteDroppedItem(DroppedItem* item) {
