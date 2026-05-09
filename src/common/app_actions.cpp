@@ -147,5 +147,18 @@ std::string AppActions_HandleCommand(const std::vector<std::string>& args) {
         return "ok cleared and quitting\n";
     }
 
+    if (command == "fetch") {
+        if (g_geese.empty()) return "error no goose\n";
+        int type = 0;
+        if (args.size() > 1) {
+            if (args[1] == "text") type = 1;
+            else if (args[1] == "meme") type = 0;
+        }
+        fprintf(stderr, "[CLI] fetch type=%d g_geese.size=%zu\n", type, g_geese.size());
+        g_geese.front().ForceFetch(type, g_screenWidth, g_screenHeight);
+        fprintf(stderr, "[CLI] after ForceFetch state=%d heldItem=%p\n", (int)g_geese.front().state, (void*)g_geese.front().heldItem);
+        return "ok force_fetch type=" + std::to_string(type) + "\n";
+    }
+
     return "error unknown command: " + command + "\n";
 }

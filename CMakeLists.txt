@@ -4,7 +4,13 @@ project(CadGoose)
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
-set(CMAKE_CXX_EXTENSIONS OFF)
+
+find_program(CCACHE_PROGRAM ccache)
+if(CCACHE_PROGRAM)
+    message(STATUS "ccache found: ${CCACHE_PROGRAM}")
+    set(CMAKE_C_COMPILER_LAUNCHER "${CCACHE_PROGRAM}")
+    set(CMAKE_CXX_COMPILER_LAUNCHER "${CCACHE_PROGRAM}")
+endif()
 
 if(APPLE)
     set(MACOS TRUE)
@@ -179,6 +185,7 @@ if(APPLE OR LINUX)
         src/common/config_save.cpp
         src/common/cursor_backend.cpp
         src/common/goose.cpp
+        src/common/goose_forces.cpp
         src/common/goose_behaviors.cpp
         src/common/goose_drawing.mm
         src/common/items.cpp

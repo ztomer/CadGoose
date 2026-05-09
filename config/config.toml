@@ -1,3 +1,39 @@
+[Debug]
+to_terminal = false
+visuals = false
+
+[General]
+global_scale = 1.0
+audio_enabled = false
+canada_goose_mode = false
+memes_enabled = true
+
+[Rig]
+neck_height_moving = 10.0
+head1_offset_y = 4.0
+foot_spacing = 8.0
+neck_height_idle = 20.0
+neck_lerp_rate = 0.1
+neck_ext_idle = 3.0
+head2_offset_x = 4.0
+neck_ext_moving = 16.0
+head_base_y = 2.0
+head_base_x = 3.0
+head1_offset_x = 2.0
+head1_offset_z = 3.0
+beak_base_offset = 4.0
+head2_offset_y = -2.0
+body_y = 14.0
+underbody_y = 9.0
+beak_len = 12.0
+run_speed_threshold = 150.0
+beak_width = 16.0
+neck_base_x = 15.0
+stride_max = 15.0
+step_lift_height = 3.0
+foot_offset_y = 2.0
+head_forward_bias = 2.0
+
 [Asset]
 meme_placeholder_w = 200
 note_placeholder_w = 300
@@ -75,6 +111,22 @@ r = 0.1
 g = 0.1
 b = 0.1
 
+[Snatch]
+radius_range = 80.0
+tier3_min_delta = 1.0
+angular_speed_base = 1.5
+tier3_max_step = 500.0
+speed_multiplier = 1.25
+offset_max = 120.0
+forward_bias_scale = 0.25
+duration = 3.0
+lateral_bias_limit = 0.75
+forward_bias_min = -0.35
+forward_bias_max = 0.15
+pull_distance = 140.0
+radius_base = 40.0
+angular_speed_random_range = 200.0
+
 [Render]
 eye_offset_x_back = -3.0
 dropped_item_size = 20.0
@@ -106,82 +158,10 @@ iso_scale_x = 1.0
 iso_scale_y = 0.7
 facing_back_threshold = 0.55
 
-[Snatch]
-radius_range = 80.0
-tier3_min_delta = 1.0
-angular_speed_base = 1.5
-tier3_max_step = 500.0
-speed_multiplier = 1.25
-offset_max = 120.0
-forward_bias_scale = 0.25
-duration = 3.0
-lateral_bias_limit = 0.75
-forward_bias_min = -0.35
-forward_bias_max = 0.15
-pull_distance = 140.0
-radius_base = 40.0
-angular_speed_random_range = 200.0
-
-[Rig]
-neck_height_moving = 10.0
-head1_offset_y = 4.0
-foot_spacing = 8.0
-neck_height_idle = 20.0
-neck_lerp_rate = 0.1
-neck_ext_idle = 3.0
-head2_offset_x = 4.0
-neck_ext_moving = 16.0
-head_base_y = 2.0
-head_base_x = 3.0
-head1_offset_x = 2.0
-head1_offset_z = 3.0
-beak_base_offset = 4.0
-head2_offset_y = -2.0
-body_y = 14.0
-underbody_y = 9.0
-beak_len = 12.0
-run_speed_threshold = 150.0
-beak_width = 16.0
-neck_base_x = 15.0
-stride_max = 15.0
-step_lift_height = 3.0
-foot_offset_y = 2.0
-head_forward_bias = 2.0
-
-[General]
-global_scale = 1.0
-audio_enabled = false
-canada_goose_mode = false
-memes_enabled = true
-
-[Debug]
-to_terminal = false
-visuals = false
-
-[Movement]
-base_walk_speed = 180.0
-init_direction_max = 360.0
-run_distance_threshold = 1200.0
-base_run_speed = 480.0
-max_speed = 600.0
-move_distance_threshold = 1.0
-friction = 0.85
-run_speed_multiplier = 1.25
-speed_lerp_rate = 0.05
-arrival_radius = 50.0
-max_force = 350.0
-direction_blend_rate = 0.15
-
-[Honk]
-min_gap = 0.6
-generic_cooldown = 0.9
-idle_check_ahead = 2.0
-idle_chance_divisor = 3
-idle_max = 14.0
-fetch_cooldown = 1.2
-chase_cooldown = 1.8
-idle_min = 6.0
-wander_honk_divisor = 15
+[Cursor]
+chase_enabled = true
+chase_chance = 1
+multi_monitor_enabled = true
 
 [Item]
 pickup_cooldown = 2.0
@@ -195,11 +175,6 @@ meme_fetch_bias_max = 30
 note_fetch_bias_max = 20
 attack_mouse_bias_max = 25
 heist_approach_margin = 8
-
-[Cursor]
-chase_enabled = true
-chase_chance = 1
-multi_monitor_enabled = true
 
 [Physics]
 bounce_factor_corner = 0.8
@@ -228,15 +203,6 @@ direction_to_cursor_dist = 2.0
 curve_fade_distance = 200.0
 curve_fade_min_vel = 10.0
 
-[Mud]
-enabled = true
-lifetime = 15.0
-chance = 15
-
-[Screen]
-default_width = 60
-default_height = 1080
-
 [Spawn]
 target_reached_threshold_return = 60.0
 fetch_edge_margin = 40.0
@@ -258,6 +224,35 @@ catch_threshold_min = 15.0
 wander_target_margin = 400.0
 max_fetching_geese = 1077936128
 separation_max_distance = 70.0
+
+[Screen]
+default_width = 60
+default_height = 1080
+
+[Honk]
+min_gap = 0.6
+generic_cooldown = 0.9
+idle_check_ahead = 2.0
+idle_chance_divisor = 3
+idle_max = 14.0
+fetch_cooldown = 1.2
+chase_cooldown = 1.8
+idle_min = 6.0
+wander_honk_divisor = 15
+
+[Movement]
+base_walk_speed = 180.0
+init_direction_max = 360.0
+run_distance_threshold = 1200.0
+base_run_speed = 480.0
+max_speed = 600.0
+move_distance_threshold = 1.0
+friction = 0.85
+run_speed_multiplier = 1.25
+speed_lerp_rate = 0.05
+arrival_radius = 50.0
+max_force = 350.0
+direction_blend_rate = 0.15
 
 [Step]
 lift_run = 7.0
@@ -282,5 +277,10 @@ foot_spacing = 4.0
 left_foot_angle = -15.0
 right_foot_angle = 15.0
 zero_velocity_threshold = 0.001
+
+[Mud]
+enabled = true
+lifetime = 15.0
+chance = 15
 
 

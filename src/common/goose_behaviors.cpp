@@ -223,7 +223,10 @@ static void handleWander(Goose& g, double time, const CursorState& cursor, int w
 }
 
 static void handleFetching(Goose& g, double time, int w, int h) {
+    fprintf(stderr, "[HF] g%d handleFetching called state=%d\n", g.id, (int)g.state);
+
     if (g.heldItem) {
+        fprintf(stderr, "[HF] g%d deleting existing heldItem\n", g.id);
         delete g.heldItem;
         g.heldItem = nullptr;
     }
@@ -238,15 +241,19 @@ static void handleFetching(Goose& g, double time, int w, int h) {
         g.heldItem = (rand() % 2 == 0) ? g_assets.GetRandomMeme() : g_assets.GetRandomText();
     }
 
+    fprintf(stderr, "[HF] g%d heldItem=%p image=%p after creation\n", g.id, (void*)g.heldItem, g.heldItem ? (void*)g.heldItem->image : nullptr);
+
     g.forceItemFetch = -1;
     g.forcedText.clear();
 
-    if (g.heldItem) {
+if (g.heldItem) {
         g.state = GooseState::RETURNING;
+        fprintf(stderr, "[HF] g%d -> RETURNING, dragPos=(%.1f,%.1f) dragInit=%d\n", g.id, g.dragPos.x, g.dragPos.y, g.dragInit);
         g.target = {static_cast<float>(rand() % (std::max(1, w - (int)g_config.spawn.wanderTargetMargin)) + (int)g_config.spawn.wanderTargetOffset),
                     static_cast<float>(rand() % (std::max(1, h - (int)g_config.spawn.wanderTargetMargin)) + (int)g_config.spawn.wanderTargetOffset)};
         triggerHonk(g.honkState, time, g_config.honk.fetchCooldown, g.honkState.lastFetch);
     } else {
+        fprintf(stderr, "[HF] g%d heldItem=null, staying WANDER\n", g.id);
         g.state = GooseState::WANDER;
         g.PickNewTarget(w, h);
     }
@@ -409,6 +416,8 @@ CursorAction Goose::UpdateBehaviors(double dt, double time, int w, int h, const 
                 time, id, state, btPoint.x, btPoint.y, target.x, target.y,
                 Vector2::Distance(btPoint, target), threshold, reached);
     }
+
+    
 
     if (reached) {
         if (state == GooseState::WANDER) handleWander(*this, time, cursor, w, h);
