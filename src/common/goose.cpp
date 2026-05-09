@@ -194,8 +194,9 @@ void Goose::SolveFeet(double time) {
           fp.timeSpawned = time;
           fp.lifetime = mudLifetime;
           g_footprints.push_back(fp);
-          g_assets.MudSquish();
-        } else if (time - lastStepSoundTime > stepSoundCooldown) {
+        }
+        
+        if (time - lastStepSoundTime > stepSoundCooldown) {
           g_assets.Pat();
           lastStepSoundTime = time;
         }

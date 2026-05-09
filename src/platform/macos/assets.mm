@@ -174,7 +174,7 @@ void AssetManager::Honk() {
 }
 
 void AssetManager::Pat() {
-    Audio_PlayMudSquish();
+    Audio_PlayPat();
 }
 
 void AssetManager::Bite() {
