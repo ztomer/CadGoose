@@ -10,6 +10,13 @@
 #include "behavior.h"
 
 #ifdef __APPLE__
+#include <CoreGraphics/CoreGraphics.h>
+#define DEBUG_DRAW_LOG(fmt, ...) do { fprintf(stderr, "[DRAW] " fmt "\n", ##__VA_ARGS__); } while(0)
+#else
+#define DEBUG_DRAW_LOG(fmt, ...) do {} while(0)
+#endif
+
+#ifdef __APPLE__
 #import <Foundation/Foundation.h>
 #import <AppKit/AppKit.h>
 #include <CoreGraphics/CoreGraphics.h>
@@ -138,7 +145,18 @@ void DrawGoose(Goose* g, CGContextRef ctx) {
 }
 
 void DrawHeldItem(Goose* g, CGContextRef ctx) {
-    if (!g->heldItem) return;
+    if (!g->heldItem) {
+        return;
+    }
+
+    DEBUG_DRAW_LOG("DrawHeldItem g%d: dragPos=(%.1f,%.1f) dragRot=%.3f dir=%.1f state=%d heldItem type=%d w=%d h=%d image=%p",
+              g->id, g->dragPos.x, g->dragPos.y, g->dragRot, g->dir, (int)g->state,
+              (int)g->heldItem->type, g->heldItem->w, g->heldItem->h, (void*)g->heldItem->image);
+
+    DEBUG_DRAW_LOG("  beakTipDevice=(%.1f,%.1f) beakBaseOffset=%.1f beakLen=%.1f",
+              WorldCoord::RigNeckHead(*g).x, WorldCoord::RigNeckHead(*g).y,
+              g_config.rig.beakBaseOffset, g_config.rig.beakLen);
+
     CGContextSaveGState(ctx);
 
     CGContextTranslateCTM(ctx, g->dragPos.x, g->dragPos.y);
@@ -146,10 +164,20 @@ void DrawHeldItem(Goose* g, CGContextRef ctx) {
     CGContextRotateCTM(ctx, -dragRad);
     CGContextTranslateCTM(ctx, -g->heldItem->w / 2, 0);
 
+    CGAffineTransform t = CGContextGetCTM(ctx);
+    DEBUG_DRAW_LOG("  CTM after transforms: a=%.2f b=%.2f c=%.2f d=%.2f tx=%.1f ty=%.1f",
+                   t.a, t.b, t.c, t.d, t.tx, t.ty);
+
     if (g->heldItem->type == ItemData::MEME && g->heldItem->image) {
+        DEBUG_DRAW_LOG("  drawing MEME image at CGRectMake(0,0,%d,%d) via Y-flip",
+                       g->heldItem->w, g->heldItem->h);
         CGContextSaveGState(ctx);
         CGContextTranslateCTM(ctx, 0, g->heldItem->h);
         CGContextScaleCTM(ctx, 1.0, -1.0);
+        DEBUG_DRAW_LOG("  post-flip CTM: a=%.2f b=%.2f c=%.2f d=%.2f tx=%.1f ty=%.1f",
+                       CGContextGetCTM(ctx).a, CGContextGetCTM(ctx).b,
+                       CGContextGetCTM(ctx).c, CGContextGetCTM(ctx).d,
+                       CGContextGetCTM(ctx).tx, CGContextGetCTM(ctx).ty);
         CGContextDrawImage(ctx, CGRectMake(0, 0, g->heldItem->w, g->heldItem->h), g->heldItem->image);
         CGContextRestoreGState(ctx);
     } else if (g->heldItem->type == ItemData::MEME) {

@@ -306,8 +306,16 @@ static void DrawLine(CGContextRef ctx, Vector2 a, Vector2 b, float width, float 
     DrawFootprints(ctx, g_footprints, self.currentTime);
     DrawLeaves(ctx, g_leafPiles, self.currentTime);
 
+    DEBUG_LOG("drawRect: g_geese.size=%zu g_droppedItems.size=%zu", g_geese.size(), g_droppedItems.size());
     for (auto& g : g_geese) {
+        DEBUG_LOG("  goose[%d]: heldItem=%p state=%d dragPos=(%.1f,%.1f) dragInit=%d",
+                   g.id, (void*)g.heldItem, (int)g.state, g.dragPos.x, g.dragPos.y, g.dragInit);
         DrawGoose(&g, ctx);
+        if (g.heldItem) {
+            DEBUG_LOG("    heldItem: type=%d w=%d h=%d image=%p",
+                      (int)g.heldItem->type, g.heldItem->w, g.heldItem->h,
+                      (void*)g.heldItem->image);
+        }
         DrawHeldItem(&g, ctx);
     }
 

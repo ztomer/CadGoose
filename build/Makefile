@@ -1313,6 +1313,33 @@ src/common/goose_drawing.mm.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/src/common/goose_drawing.mm.o
 .PHONY : src/common/goose_drawing.mm.o
 
+src/common/goose_forces.o: src/common/goose_forces.cpp.o
+.PHONY : src/common/goose_forces.o
+
+# target to build an object file
+src/common/goose_forces.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/common/goose_forces.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/src/common/goose_forces.cpp.o
+.PHONY : src/common/goose_forces.cpp.o
+
+src/common/goose_forces.i: src/common/goose_forces.cpp.i
+.PHONY : src/common/goose_forces.i
+
+# target to preprocess a source file
+src/common/goose_forces.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/common/goose_forces.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/src/common/goose_forces.cpp.i
+.PHONY : src/common/goose_forces.cpp.i
+
+src/common/goose_forces.s: src/common/goose_forces.cpp.s
+.PHONY : src/common/goose_forces.s
+
+# target to generate assembly for a file
+src/common/goose_forces.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/common/goose_forces.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/src/common/goose_forces.cpp.s
+.PHONY : src/common/goose_forces.cpp.s
+
 src/common/items.o: src/common/items.cpp.o
 .PHONY : src/common/items.o
 
@@ -1711,6 +1738,9 @@ help:
 	@echo "... src/common/goose_debug.i"
 	@echo "... src/common/goose_debug.s"
 	@echo "... src/common/goose_drawing.o"
+	@echo "... src/common/goose_forces.o"
+	@echo "... src/common/goose_forces.i"
+	@echo "... src/common/goose_forces.s"
 	@echo "... src/common/items.o"
 	@echo "... src/common/items.i"
 	@echo "... src/common/items.s"

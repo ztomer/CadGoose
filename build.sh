@@ -6,8 +6,7 @@ cd "$(dirname "$0")"
 
 echo "Building Desktop Goose for macOS..."
 
-rm -rf build
-mkdir build
+mkdir -p build
 cd build
 
 cmake .. -DCMAKE_BUILD_TYPE=Release
