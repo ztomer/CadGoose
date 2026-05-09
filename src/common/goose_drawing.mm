@@ -141,10 +141,13 @@ void DrawHeldItem(Goose* g, CGContextRef ctx) {
     if (!g->heldItem) return;
     CGContextSaveGState(ctx);
 
-    CGContextTranslateCTM(ctx, g->dragPos.x, g->dragPos.y);
+    Vector2 beak = g->GetBeakTipDevice();
+    CGContextTranslateCTM(ctx, beak.x, beak.y);
     float dragRad = g->dragRot;
     CGContextRotateCTM(ctx, -dragRad);
-    CGContextTranslateCTM(ctx, -g->heldItem->w / 2, 0);
+    
+    // Offset so the right edge of the item is at the beak, centered vertically
+    CGContextTranslateCTM(ctx, -g->heldItem->w - 5.0f, -g->heldItem->h / 2.0f);
 
     if (g->heldItem->type == ItemData::MEME && g->heldItem->image) {
         CGContextSaveGState(ctx);

@@ -5,6 +5,7 @@
 extern bool g_debugMode;
 
 static AVAudioPlayer* g_honkPlayers[4] = {nullptr, nullptr, nullptr, nullptr};
+static AVAudioPlayer* g_patPlayers[3] = {nullptr, nullptr, nullptr};
 static AVAudioPlayer* g_bitePlayer = nullptr;
 static AVAudioPlayer* g_mudPlayer = nullptr;
 static bool g_audioInitialized = false;
@@ -58,6 +59,20 @@ void Audio_Init() {
         [g_mudPlayer prepareToPlay];
     }
     
+    NSArray* patFiles = @[@"Pat1", @"Pat2", @"Pat3"];
+    for (int i = 0; i < 3; i++) {
+        NSString* path = [assetsPath stringByAppendingPathComponent:
+                          [NSString stringWithFormat:@"Sound/NotEmbedded/%@.wav", patFiles[i]]];
+        if ([[NSFileManager defaultManager] fileExistsAtPath:path]) {
+            NSURL* url = [NSURL fileURLWithPath:path];
+            g_patPlayers[i] = [[AVAudioPlayer alloc] initWithContentsOfURL:url error:nil];
+            if (g_patPlayers[i]) {
+                g_patPlayers[i].numberOfLoops = 0;
+                [g_patPlayers[i] prepareToPlay];
+            }
+        }
+    }
+    
     g_audioInitialized = true;
     DEBUG_LOG("Audio initialized");
 }
@@ -72,6 +87,18 @@ void Audio_PlayHonk() {
         player.currentTime = 0;
         [player play];
         DEBUG_LOG("Playing honk %d", idx + 1);
+    }
+}
+
+void Audio_PlayPat() {
+    if (!g_audioInitialized) Audio_Init();
+    
+    int idx = arc4random_uniform(3);
+    AVAudioPlayer* player = g_patPlayers[idx];
+    
+    if (player) {
+        player.currentTime = 0;
+        [player play];
     }
 }
 
