@@ -385,8 +385,8 @@ void Goose::UpdateDrag(double dt) {
   Vector2 diff = targetPos - dragPos;
 
   // Spring physics
-  float springForce = 150.0f;
-  float damping = 0.85f;
+  float springForce = 50.0f;
+  float damping = 0.80f;
 
   dragVel = dragVel + diff * (springForce * (float)dt);
   dragVel = dragVel * damping;
