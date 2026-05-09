@@ -64,6 +64,10 @@ static void DrawLine(CGContextRef ctx, Vector2 a, Vector2 b, float width, float 
 
 @implementation GooseView
 
+- (BOOL)isFlipped {
+    return YES;
+}
+
 - (instancetype)initWithFrame:(NSRect)frameRect {
     DEBUG_LOG("GooseView initWithFrame START, frame=%s", NSStringFromRect(frameRect).UTF8String);
 
@@ -189,7 +193,7 @@ static void DrawLine(CGContextRef ctx, Vector2 a, Vector2 b, float width, float 
         for (auto it = g_droppedItems.rbegin(); it != g_droppedItems.rend(); ++it) {
             DroppedItem& item = *it;
             float dx = p.x - item.pos.x;
-            float dy = (self.bounds.size.height - p.y) - item.pos.y;
+            float dy = p.y - item.pos.y;
             float cosA = cos(item.rotation);
             float sinA = sin(item.rotation);
             float lx = dx * cosA - dy * sinA;
@@ -271,7 +275,7 @@ static void DrawLine(CGContextRef ctx, Vector2 a, Vector2 b, float width, float 
     if (self.draggedItem) {
         NSPoint p = [self convertPoint:[event locationInWindow] fromView:nil];
         float worldX = p.x;
-        float worldY = self.bounds.size.height - p.y;
+        float worldY = p.y;
 
         self.draggedItem->pos.x = worldX + self.dragOffset.x;
         self.draggedItem->pos.y = worldY + self.dragOffset.y;
@@ -296,8 +300,6 @@ static void DrawLine(CGContextRef ctx, Vector2 a, Vector2 b, float width, float 
     CGContextClearRect(ctx, self.bounds);
 
     CGContextSaveGState(ctx);
-    CGContextTranslateCTM(ctx, 0, self.bounds.size.height);
-    CGContextScaleCTM(ctx, 1.0, -1.0);
 
     for (const auto& item : g_droppedItems) {
         DrawDroppedItem(ctx, item, self.bounds.size.height);
