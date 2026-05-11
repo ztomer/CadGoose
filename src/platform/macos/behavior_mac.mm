@@ -48,7 +48,6 @@ public:
 
     bool RequiresAccessibility(const char* behaviorId) {
         static const char* behaviorsRequiringAccess[] = {
-            "clicker",
             "onePunch",
             "drag",
             "banish"

@@ -3,159 +3,621 @@
 // ===========================
 #import <Cocoa/Cocoa.h>
 #include "config.h"
+#include <string>
 
-@interface ConfigGUIWindowController : NSWindowController <NSWindowDelegate, NSTableViewDelegate, NSTableViewDataSource, NSTextFieldDelegate>
+static bool s_getBoolForKey(const std::string& key) {
+    if (key == "behaviors.fun.ball") return g_config.behaviors.fun.ball;
+    if (key == "behaviors.fun.breadCrumbs") return g_config.behaviors.fun.breadCrumbs;
+    if (key == "behaviors.fun.hats") return g_config.behaviors.fun.hats;
+    if (key == "behaviors.fun.rainbow") return g_config.behaviors.fun.rainbow;
+    if (key == "behaviors.fun.acid") return g_config.behaviors.fun.acid;
+    if (key == "behaviors.fun.anger") return g_config.behaviors.fun.anger;
+    if (key == "behaviors.control.honcker") return g_config.behaviors.control.honcker;
+    if (key == "behaviors.control.jail") return g_config.behaviors.control.jail;
+    if (key == "behaviors.control.portals") return g_config.behaviors.control.portals;
+    if (key == "behaviors.control.drag") return g_config.behaviors.control.drag;
+    if (key == "behaviors.control.banish") return g_config.behaviors.control.banish;
+    if (key == "behaviors.info.nametag") return g_config.behaviors.info.nametag;
+    if (key == "behaviors.info.presence") return g_config.behaviors.info.presence;
+    if (key == "behaviors.info.configGUI") return g_config.behaviors.info.configGUI;
+    if (key == "behaviors.info.gooseManager") return g_config.behaviors.info.gooseManager;
+    if (key == "behaviors.systems.health") return g_config.behaviors.systems.health;
+    if (key == "behaviors.systems.ai") return g_config.behaviors.systems.ai;
+    if (key == "behaviors.systems.pomodoro") return g_config.behaviors.systems.pomodoro;
+    return false;
+}
+
+void s_setFloatValue(const std::string& key, float value) {
+    if (key == "behaviors.fun.ball.size") g_config.behaviors.ball.size = value;
+    else if (key == "behaviors.fun.breadCrumbs.max") g_config.behaviors.breadCrumbs.maxCrumbs = (int)value;
+    else if (key == "behaviors.fun.hats.size") g_config.behaviors.hats.sizeX = value;
+    else if (key == "behaviors.fun.rainbow.speed") g_config.behaviors.rainbow.hueSpeed = value;
+    else if (key == "behaviors.fun.acid.speed") g_config.behaviors.acid.spinSpeed = value;
+    else if (key == "behaviors.fun.anger.max") g_config.behaviors.anger.maxAnger = value;
+    else if (key == "behaviors.control.honcker.cooldown") g_config.behaviors.honcker.cooldown = value;
+    else if (key == "behaviors.control.jail.size") g_config.behaviors.jail.size = value;
+    else if (key == "behaviors.control.portals.width") g_config.portal.width = value;
+    else if (key == "behaviors.control.drag.radius") g_config.behaviors.drag.radius = value;
+    else if (key == "behaviors.control.banish.duration") g_config.behaviors.banish.duration = value;
+    else if (key == "behaviors.info.nametag.size") g_config.behaviors.nametag.size = value;
+    else if (key == "behaviors.info.presence.interval") g_config.behaviors.presence.interval = value;
+    else if (key == "behaviors.info.gooseManager.taskInterval") g_config.behaviors.gooseManager.taskInterval = value;
+    else if (key == "behaviors.systems.health.opacity") g_config.behaviors.health.opacity = value;
+    else if (key == "behaviors.systems.pomodoro.workDuration") g_config.behaviors.pomodoro.workMinutes = (int)value;
+    else if (key == "behaviors.systems.pomodoro.breakDuration") g_config.behaviors.pomodoro.breakMinutes = (int)value;
+}
+
+void s_setFloatValue(const std::string& key, float value);
+void s_setBoolValue(const std::string& key, bool value);
+
+@interface BehaviorRowView : NSView
+@property (nonatomic, strong) NSButton* toggle;
+@property (nonatomic, strong) NSTextField* nameLabel;
+@property (nonatomic, strong) NSTextField* descLabel;
+@property (nonatomic, strong) NSButton* detailBtn;
+@property (nonatomic, copy) NSString* configKey;
+@property (nonatomic, weak) id target;
+@property (nonatomic) SEL detailAction;
+- (void)toggled:(id)sender;
+- (void)openDetail:(id)sender;
+@end
+
+@implementation BehaviorRowView
+
+- (instancetype)initWithFrame:(NSRect)frame {
+    self = [super initWithFrame:frame];
+    if (self) {
+        self.wantsLayer = YES;
+
+        _toggle = [[NSButton alloc] initWithFrame:NSMakeRect(8, 4, 20, 20)];
+        _toggle.buttonType = NSButtonTypeSwitch;
+        _toggle.title = @"";
+        _toggle.target = self;
+        _toggle.action = @selector(toggled:);
+        [self addSubview:_toggle];
+
+        _nameLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(34, 6, 200, 16)];
+        _nameLabel.font = [NSFont boldSystemFontOfSize:13];
+        _nameLabel.textColor = [NSColor labelColor];
+        _nameLabel.backgroundColor = [NSColor clearColor];
+        _nameLabel.bordered = NO;
+        _nameLabel.editable = NO;
+        [self addSubview:_nameLabel];
+
+        _descLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(240, 6, 380, 16)];
+        _descLabel.font = [NSFont systemFontOfSize:11];
+        _descLabel.textColor = [NSColor secondaryLabelColor];
+        _descLabel.backgroundColor = [NSColor clearColor];
+        _descLabel.bordered = NO;
+        _descLabel.editable = NO;
+        _descLabel.lineBreakMode = NSLineBreakByTruncatingTail;
+        [self addSubview:_descLabel];
+
+        _detailBtn = [[NSButton alloc] initWithFrame:NSMakeRect(630, 6, 24, 24)];
+        [_detailBtn setTitle:@"…"];
+        [_detailBtn setBezelStyle:NSBezelStyleRounded];
+        _detailBtn.target = self;
+        _detailBtn.action = @selector(openDetail:);
+        [self addSubview:_detailBtn];
+    }
+    return self;
+}
+
+- (void)setEnabled:(BOOL)enabled {
+    _toggle.state = enabled ? NSControlStateValueOn : NSControlStateValueOff;
+}
+
+- (void)toggled:(id)sender {
+    if (_configKey) {
+        std::string key = std::string([_configKey UTF8String]);
+        bool val = ((NSButton*)sender).state == NSControlStateValueOn;
+        s_setBoolValue(key, val);
+    }
+}
+
+- (void)openDetail:(id)sender {
+    if (_target && _detailAction) {
+        [_target performSelector:_detailAction withObject:self.configKey];
+    }
+}
+
+@end
+
+static NSMutableArray* g_configItemsForAccess = nil;
+
+#define DETAIL_WIDTH 680
+#define DETAIL_HEIGHT 380
+
+// Detail panel for individual behavior settings
+@interface BehaviorDetailView : NSView
+@property (nonatomic, strong) NSTextField* titleLabel;
+@property (nonatomic, strong) NSView* contentView;
+@property (nonatomic, copy) NSString* configKey;
+- (void)configureForBehavior:(NSString*)key;
+@end
+
+@implementation BehaviorDetailView
+
+- (instancetype)initWithFrame:(NSRect)frame {
+    self = [super initWithFrame:frame];
+    if (self) {
+        self.wantsLayer = YES;
+        self.layer.backgroundColor = [NSColor windowBackgroundColor].CGColor;
+        self.hidden = YES;
+
+        _titleLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(12, 8, DETAIL_WIDTH - 24, 20)];
+        _titleLabel.font = [NSFont boldSystemFontOfSize:15];
+        _titleLabel.textColor = [NSColor labelColor];
+        _titleLabel.backgroundColor = [NSColor clearColor];
+        _titleLabel.bordered = NO;
+        _titleLabel.editable = NO;
+        [self addSubview:_titleLabel];
+
+        _contentView = [[NSView alloc] initWithFrame:NSMakeRect(0, 40, DETAIL_WIDTH, DETAIL_HEIGHT - 50)];
+        _contentView.wantsLayer = YES;
+        _contentView.layer.backgroundColor = [NSColor clearColor].CGColor;
+        [self addSubview:_contentView];
+    }
+    return self;
+}
+
+- (void)configureForBehavior:(NSString*)key {
+    _configKey = key;
+
+    // Clear previous content
+    for (NSView* subview in _contentView.subviews) {
+        [subview removeFromSuperview];
+    }
+
+    self.hidden = NO;
+    _titleLabel.stringValue = [NSString stringWithFormat:@"Settings for %@", [key lastPathComponent]];
+
+    float y = _contentView.bounds.size.height - 40;
+
+    if ([key isEqualToString:@"behaviors.fun.ball"]) {
+        _titleLabel.stringValue = @"Ball Behavior";
+        [self addSliderWithLabel:@"Ball Size" min:5.0f max:50.0f value:g_config.behaviors.ball.size atY:y key:@"behaviors.fun.ball.size"];
+        y -= 35;
+    } else if ([key isEqualToString:@"behaviors.fun.breadCrumbs"]) {
+        _titleLabel.stringValue = @"Breadcrumbs Behavior";
+        [self addSliderWithLabel:@"Max Crumbs" min:10.0f max:200.0f value:g_config.behaviors.breadCrumbs.maxCrumbs atY:y key:@"behaviors.fun.breadCrumbs.max"];
+        y -= 35;
+    } else if ([key isEqualToString:@"behaviors.fun.hats"]) {
+        _titleLabel.stringValue = @"Hats Behavior";
+        [self addSliderWithLabel:@"Hat Size" min:0.01f max:0.5f value:g_config.behaviors.hats.sizeX atY:y key:@"behaviors.fun.hats.size"];
+        y -= 35;
+    } else if ([key isEqualToString:@"behaviors.fun.rainbow"]) {
+        _titleLabel.stringValue = @"Rainbow Behavior";
+        [self addSliderWithLabel:@"Hue Speed" min:0.1f max:5.0f value:g_config.behaviors.rainbow.hueSpeed atY:y key:@"behaviors.fun.rainbow.speed"];
+        y -= 35;
+    } else if ([key isEqualToString:@"behaviors.fun.acid"]) {
+        _titleLabel.stringValue = @"Acid Behavior";
+        [self addSliderWithLabel:@"Spin Speed" min:0.1f max:5.0f value:g_config.behaviors.acid.spinSpeed atY:y key:@"behaviors.fun.acid.speed"];
+        y -= 35;
+    } else if ([key isEqualToString:@"behaviors.fun.anger"]) {
+        _titleLabel.stringValue = @"Anger Behavior";
+        [self addSliderWithLabel:@"Max Anger" min:0.0f max:200.0f value:g_config.behaviors.anger.maxAnger atY:y key:@"behaviors.fun.anger.max"];
+        y -= 35;
+    } else if ([key isEqualToString:@"behaviors.control.honcker"]) {
+        _titleLabel.stringValue = @"Honcker Behavior";
+        [self addSliderWithLabel:@"Honk Cooldown" min:0.1f max:10.0f value:g_config.behaviors.honcker.cooldown atY:y key:@"behaviors.control.honcker.cooldown"];
+        y -= 35;
+    } else if ([key isEqualToString:@"behaviors.control.jail"]) {
+        _titleLabel.stringValue = @"Jail Behavior";
+        [self addSliderWithLabel:@"Jail Size" min:50.0f max:300.0f value:g_config.behaviors.jail.size atY:y key:@"behaviors.control.jail.size"];
+        y -= 35;
+    } else if ([key isEqualToString:@"behaviors.control.portals"]) {
+        _titleLabel.stringValue = @"Portal Behavior";
+        [self addSliderWithLabel:@"Portal Width" min:30.0f max:200.0f value:g_config.portal.width atY:y key:@"behaviors.control.portals.width"];
+        y -= 35;
+    } else if ([key isEqualToString:@"behaviors.control.drag"]) {
+        _titleLabel.stringValue = @"Drag Behavior";
+        [self addSliderWithLabel:@"Drag Radius" min:50.0f max:300.0f value:g_config.behaviors.drag.radius atY:y key:@"behaviors.control.drag.radius"];
+        y -= 35;
+    } else if ([key isEqualToString:@"behaviors.control.banish"]) {
+        _titleLabel.stringValue = @"Banish Behavior";
+        [self addSliderWithLabel:@"Duration (s)" min:1.0f max:30.0f value:g_config.behaviors.banish.duration atY:y key:@"behaviors.control.banish.duration"];
+        y -= 35;
+    } else if ([key isEqualToString:@"behaviors.info.nametag"]) {
+        _titleLabel.stringValue = @"Nametag Behavior";
+        [self addSliderWithLabel:@"Font Size" min:8.0f max:40.0f value:g_config.behaviors.nametag.size atY:y key:@"behaviors.info.nametag.size"];
+        y -= 35;
+    } else if ([key isEqualToString:@"behaviors.info.presence"]) {
+        _titleLabel.stringValue = @"Presence Behavior";
+        [self addSliderWithLabel:@"Update Interval" min:1.0f max:60.0f value:g_config.behaviors.presence.interval atY:y key:@"behaviors.info.presence.interval"];
+        y -= 35;
+    } else if ([key isEqualToString:@"behaviors.info.gooseManager"]) {
+        _titleLabel.stringValue = @"Goose Manager";
+        [self addSliderWithLabel:@"Task Interval" min:1.0f max:60.0f value:g_config.behaviors.gooseManager.taskInterval atY:y key:@"behaviors.info.gooseManager.taskInterval"];
+        y -= 35;
+    } else if ([key isEqualToString:@"behaviors.systems.health"]) {
+        _titleLabel.stringValue = @"Health System";
+        [self addSliderWithLabel:@"Opacity" min:0.2f max:1.0f value:g_config.behaviors.health.opacity atY:y key:@"behaviors.systems.health.opacity"];
+        y -= 35;
+    } else if ([key isEqualToString:@"behaviors.systems.ai"]) {
+        _titleLabel.stringValue = @"AI Chat";
+        [self addProviderSelectorAtY:y];
+        y -= 90;
+    } else if ([key isEqualToString:@"behaviors.systems.pomodoro"]) {
+        _titleLabel.stringValue = @"Pomodoro Timer";
+        [self addSliderWithLabel:@"Work (min)" min:1.0f max:60.0f value:g_config.behaviors.pomodoro.workMinutes atY:y key:@"behaviors.systems.pomodoro.workDuration"];
+        y -= 35;
+        [self addSliderWithLabel:@"Break (min)" min:1.0f max:30.0f value:g_config.behaviors.pomodoro.breakMinutes atY:y key:@"behaviors.systems.pomodoro.breakDuration"];
+        y -= 35;
+    } else {
+        NSTextField* desc = [[NSTextField alloc] initWithFrame:NSMakeRect(12, y, DETAIL_WIDTH - 24, 30)];
+        desc.font = [NSFont systemFontOfSize:12];
+        desc.textColor = [NSColor secondaryLabelColor];
+        desc.backgroundColor = [NSColor clearColor];
+        desc.bordered = NO;
+        desc.editable = NO;
+        desc.stringValue = [NSString stringWithFormat:@"No settings for %@", [key lastPathComponent]];
+        [_contentView addSubview:desc];
+    }
+}
+
+- (void)addSliderWithLabel:(NSString*)label min:(float)min max:(float)max value:(float)value atY:(float)y key:(NSString*)key {
+    size_t hash = std::hash<std::string>{}([key UTF8String]);
+
+    NSTextField* labelField = [[NSTextField alloc] initWithFrame:NSMakeRect(12, y, 150, 16)];
+    labelField.font = [NSFont systemFontOfSize:12];
+    labelField.textColor = [NSColor labelColor];
+    labelField.backgroundColor = [NSColor clearColor];
+    labelField.bordered = NO;
+    labelField.editable = NO;
+    labelField.stringValue = label;
+    [_contentView addSubview:labelField];
+
+    NSSlider* slider = [[NSSlider alloc] initWithFrame:NSMakeRect(170, y, 300, 20)];
+    slider.minValue = min;
+    slider.maxValue = max;
+    slider.doubleValue = value;
+    slider.tag = (NSInteger)hash;
+    slider.target = self;
+    slider.action = @selector(sliderChanged:);
+    [_contentView addSubview:slider];
+
+    NSTextField* valueField = [[NSTextField alloc] initWithFrame:NSMakeRect(490, y, 80, 16)];
+    valueField.font = [NSFont systemFontOfSize:11];
+    valueField.textColor = [NSColor secondaryLabelColor];
+    valueField.backgroundColor = [NSColor clearColor];
+    valueField.bordered = NO;
+    valueField.editable = YES;
+    valueField.stringValue = [NSString stringWithFormat:@"%.2f", value];
+    valueField.tag = (NSInteger)hash;
+    valueField.target = self;
+    valueField.action = @selector(valueFieldChanged:);
+    [_contentView addSubview:valueField];
+}
+
+- (void)addProviderSelectorAtY:(float)y {
+    NSPopUpButton* popup = [[NSPopUpButton alloc] initWithFrame:NSMakeRect(12, y, 200, 24)];
+    [popup addItemWithTitle:@"Osaurus"];
+    [popup addItemWithTitle:@"Ollama"];
+    [popup addItemWithTitle:@"Custom"];
+
+    if (g_config.ai.useOsaurus) [popup selectItemAtIndex:0];
+    else if (g_config.ai.useOllama) [popup selectItemAtIndex:1];
+    else [popup selectItemAtIndex:2];
+
+    popup.target = self;
+    popup.action = @selector(providerChanged:);
+    [_contentView addSubview:popup];
+
+    NSTextField* portLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(220, y + 2, 40, 16)];
+    portLabel.stringValue = @"Port:";
+    portLabel.font = [NSFont systemFontOfSize:11];
+    portLabel.textColor = [NSColor labelColor];
+    portLabel.backgroundColor = [NSColor clearColor];
+    portLabel.bordered = NO;
+    portLabel.editable = NO;
+    [_contentView addSubview:portLabel];
+
+    NSTextField* portField = [[NSTextField alloc] initWithFrame:NSMakeRect(260, y, 60, 22)];
+    portField.integerValue = g_config.ai.useOsaurus ? g_config.ai.osaurusPort : g_config.ai.ollamaPort;
+    portField.tag = 100;
+    portField.target = self;
+    portField.action = @selector(portChanged:);
+    [_contentView addSubview:portField];
+
+    NSTextField* modelLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(340, y + 2, 50, 16)];
+    modelLabel.stringValue = @"Model:";
+    modelLabel.font = [NSFont systemFontOfSize:11];
+    modelLabel.textColor = [NSColor labelColor];
+    modelLabel.backgroundColor = [NSColor clearColor];
+    modelLabel.bordered = NO;
+    modelLabel.editable = NO;
+    [_contentView addSubview:modelLabel];
+
+    NSTextField* modelField = [[NSTextField alloc] initWithFrame:NSMakeRect(395, y, 140, 22)];
+    modelField.stringValue = [NSString stringWithUTF8String:(g_config.ai.useOsaurus ? g_config.ai.osaurusModel : g_config.ai.ollamaModel).c_str()];
+    modelField.tag = 101;
+    modelField.target = self;
+    modelField.action = @selector(modelChanged:);
+    [_contentView addSubview:modelField];
+}
+
+- (void)sliderChanged:(NSSlider*)sender {
+    float value = (float)sender.doubleValue;
+    std::string key = [[self keyForTag:(int)sender.tag] UTF8String];
+    if (!key.empty()) {
+        s_setFloatValue(key, value);
+    }
+    // Update value field
+    for (NSView* subview in _contentView.subviews) {
+        if ([subview isKindOfClass:[NSTextField class]] && ((NSTextField*)subview).tag == sender.tag) {
+            ((NSTextField*)subview).stringValue = [NSString stringWithFormat:@"%.2f", value];
+            break;
+        }
+    }
+}
+
+- (void)valueFieldChanged:(NSTextField*)sender {
+    float value = (float)sender.doubleValue;
+    std::string key = [[self keyForTag:(int)sender.tag] UTF8String];
+    if (!key.empty()) {
+        s_setFloatValue(key, value);
+    }
+    // Update slider
+    for (NSView* subview in _contentView.subviews) {
+        if ([subview isKindOfClass:[NSSlider class]] && ((NSSlider*)subview).tag == sender.tag) {
+            ((NSSlider*)subview).doubleValue = value;
+            break;
+        }
+    }
+}
+
+- (NSString*)keyForTag:(int)tag {
+    for (NSDictionary* item in g_configItemsForAccess) {
+        if (![item[@"type"] isEqualToString:@"behavior"]) continue;
+        NSString* key = item[@"key"];
+        size_t hash = std::hash<std::string>{}([key UTF8String]);
+        if ((int)hash == tag) return key;
+    }
+    return nil;
+}
+
+- (void)providerChanged:(NSPopUpButton*)sender {
+    NSInteger idx = sender.indexOfSelectedItem;
+    g_config.ai.useOsaurus = (idx == 0);
+    g_config.ai.useOllama = (idx == 1);
+
+    // Update port and model fields for selected provider
+    for (NSView* subview in _contentView.subviews) {
+        if ([subview isKindOfClass:[NSTextField class]] && subview.tag == 100) {
+            ((NSTextField*)subview).integerValue = (idx == 0) ? g_config.ai.osaurusPort : g_config.ai.ollamaPort;
+        }
+        if ([subview isKindOfClass:[NSTextField class]] && subview.tag == 101) {
+            ((NSTextField*)subview).stringValue = [NSString stringWithUTF8String:(idx == 0 ? g_config.ai.osaurusModel : g_config.ai.ollamaModel).c_str()];
+        }
+    }
+}
+
+- (void)portChanged:(NSTextField*)sender {
+    int port = (int)sender.integerValue;
+    NSInteger provider = -1;
+    for (NSView* subview in _contentView.subviews) {
+        if ([subview isKindOfClass:[NSPopUpButton class]]) {
+            provider = ((NSPopUpButton*)subview).indexOfSelectedItem;
+            break;
+        }
+    }
+    if (provider == 0) g_config.ai.osaurusPort = port;
+    else if (provider == 1) g_config.ai.ollamaPort = port;
+}
+
+- (void)modelChanged:(NSTextField*)sender {
+    std::string model = std::string([sender.stringValue UTF8String]);
+    NSInteger provider = -1;
+    for (NSView* subview in _contentView.subviews) {
+        if ([subview isKindOfClass:[NSPopUpButton class]]) {
+            provider = ((NSPopUpButton*)subview).indexOfSelectedItem;
+            break;
+        }
+    }
+    if (provider == 0) g_config.ai.osaurusModel = model;
+    else if (provider == 1) g_config.ai.ollamaModel = model;
+}
+
+@end
+
+@interface ConfigGUIWindowController : NSWindowController <NSTableViewDelegate, NSTableViewDataSource>
 @property (nonatomic, strong) NSTableView* behaviorsTable;
 @property (nonatomic, strong) NSMutableArray* configItems;
+@property (nonatomic, strong) BehaviorDetailView* detailView;
+@property (nonatomic) NSWindow* parentWindow;
++ (NSMutableArray*)configItemsForAccess;
 @end
 
 @implementation ConfigGUIWindowController
 
++ (NSMutableArray*)configItemsForAccess {
+    return g_configItemsForAccess;
+}
+
 - (instancetype)init {
-    self.configItems = [NSMutableArray array];
-    [self loadConfigItems];
+    self = [super init];
+    if (self) {
+        g_configItemsForAccess = [NSMutableArray array];
+        self.configItems = g_configItemsForAccess;
 
-    self.window = [[NSWindow alloc] initWithContentRect:NSMakeRect(0, 0, 500, 400)
-                                             styleMask:NSWindowStyleMaskTitled | NSWindowStyleMaskClosable
-                                               backing:NSBackingStoreBuffered
-                                                 defer:NO];
-    self.window.title = @"CadGoose Behavior Settings";
-    self.window.delegate = self;
-    [self.window center];
+        self.window = [[NSWindow alloc] initWithContentRect:NSMakeRect(0, 0, 700, 580)
+                                                 styleMask:NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskResizable
+                                                   backing:NSBackingStoreBuffered
+                                                     defer:NO];
+        self.window.title = @"CadGoose Behavior Settings";
+        [self.window center];
 
-    NSView* contentView = self.window.contentView;
-    [contentView setWantsLayer:YES];
+        NSView* contentView = self.window.contentView;
+        contentView.wantsLayer = YES;
 
-    NSView* headerView = [[NSView alloc] initWithFrame:NSMakeRect(0, 360, 500, 40)];
-    NSTextField* titleLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(20, 10, 460, 20)];
-    titleLabel.stringValue = @"Configure Behavior Settings";
-    titleLabel.font = [NSFont boldSystemFontOfSize:14];
-    titleLabel.textColor = [NSColor labelColor];
-    titleLabel.backgroundColor = [NSColor clearColor];
-    titleLabel.bordered = NO;
-    titleLabel.editable = NO;
-    [headerView addSubview:titleLabel];
-    [contentView addSubview:headerView];
+        // Header
+        NSView* headerView = [[NSView alloc] initWithFrame:NSMakeRect(0, 532, 700, 48)];
+        NSTextField* titleLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(12, 14, 500, 20)];
+        titleLabel.stringValue = @"Behavior Settings";
+        titleLabel.font = [NSFont boldSystemFontOfSize:16];
+        titleLabel.textColor = [NSColor labelColor];
+        titleLabel.backgroundColor = [NSColor clearColor];
+        titleLabel.bordered = NO;
+        titleLabel.editable = NO;
+        [headerView addSubview:titleLabel];
 
-    NSView* separatorLine = [[NSView alloc] initWithFrame:NSMakeRect(0, 358, 500, 1)];
-    separatorLine.wantsLayer = YES;
-    separatorLine.layer.backgroundColor = [NSColor separatorColor].CGColor;
-    [contentView addSubview:separatorLine];
+        NSButton* toggleAllBtn = [[NSButton alloc] initWithFrame:NSMakeRect(580, 12, 108, 24)];
+        [toggleAllBtn setTitle:@"Toggle All"];
+        [toggleAllBtn setBezelStyle:NSBezelStyleRounded];
+        toggleAllBtn.target = self;
+        toggleAllBtn.action = @selector(toggleAll:);
+        [headerView addSubview:toggleAllBtn];
 
-    NSScrollView* scrollView = [[NSScrollView alloc] initWithFrame:NSMakeRect(0, 0, 500, 350)];
-    scrollView.hasVerticalScroller = YES;
-    scrollView.hasHorizontalScroller = NO;
-    scrollView.borderType = NSNoBorder;
+        NSButton* reloadBtn = [[NSButton alloc] initWithFrame:NSMakeRect(460, 12, 100, 24)];
+        [reloadBtn setTitle:@"Reload"];
+        [reloadBtn setTarget:self];
+        [reloadBtn setAction:@selector(reloadConfig:)];
+        reloadBtn.bezelStyle = NSBezelStyleRounded;
+        [headerView addSubview:reloadBtn];
+        [contentView addSubview:headerView];
 
-    NSTableView* tableView = [[NSTableView alloc] initWithFrame:NSMakeRect(0, 0, 500, 350)];
-    tableView.headerView = nil;
-    tableView.rowHeight = 40;
+        // Detail view area
+        _detailView = [[BehaviorDetailView alloc] initWithFrame:NSMakeRect(700, 0, DETAIL_WIDTH, 580)];
+        [contentView addSubview:_detailView];
 
-    NSTableColumn* nameColumn = [[NSTableColumn alloc] initWithIdentifier:@"name"];
-    nameColumn.title = @"Setting";
-    nameColumn.width = 200;
-    [tableView addTableColumn:nameColumn];
+        // Separator
+        NSView* separator = [[NSView alloc] initWithFrame:NSMakeRect(0, 529, 700, 1)];
+        separator.wantsLayer = YES;
+        separator.layer.backgroundColor = [NSColor separatorColor].CGColor;
+        [contentView addSubview:separator];
 
-    NSTableColumn* valueColumn = [[NSTableColumn alloc] initWithIdentifier:@"value"];
-    valueColumn.title = @"Value";
-    valueColumn.width = 280;
-    [tableView addTableColumn:valueColumn];
+        // Scrollable table
+        NSScrollView* scrollView = [[NSScrollView alloc] initWithFrame:NSMakeRect(0, 0, 700, 528)];
+        scrollView.hasVerticalScroller = YES;
+        scrollView.hasHorizontalScroller = NO;
+        scrollView.borderType = NSNoBorder;
+        scrollView.autoresizingMask = NSViewWidthSizable | NSViewHeightSizable;
 
-    self.behaviorsTable = tableView;
-    tableView.delegate = self;
-    tableView.dataSource = self;
+        NSTableView* tableView = [[NSTableView alloc] initWithFrame:NSMakeRect(0, 0, 700, 528)];
+        tableView.headerView = nil;
+        tableView.rowHeight = 44;
+        tableView.delegate = self;
+        tableView.dataSource = self;
+        tableView.selectionHighlightStyle = NSTableViewSelectionHighlightStyleNone;
+        tableView.intercellSpacing = NSMakeSize(0, 0);
 
-    scrollView.documentView = tableView;
-    [contentView addSubview:scrollView];
+        NSTableColumn* column = [[NSTableColumn alloc] initWithIdentifier:@"main"];
+        column.width = 700;
+        [tableView addTableColumn:column];
 
-    NSButton* closeButton = [[NSButton alloc] initWithFrame:NSMakeRect(410, 365, 70, 28)];
-    [closeButton setTitle:@"Done"];
-    [closeButton setTarget:self];
-    [closeButton setAction:@selector(closeWindow:)];
-    closeButton.bezelStyle = NSBezelStyleRounded;
-    [contentView addSubview:closeButton];
+        self.behaviorsTable = tableView;
 
+        scrollView.documentView = tableView;
+        [contentView addSubview:scrollView];
+
+        // Bottom buttons
+        NSButton* closeBtn = [[NSButton alloc] initWithFrame:NSMakeRect(590, 6, 90, 28)];
+        [closeBtn setTitle:@"Close"];
+        [closeBtn setTarget:self];
+        [closeBtn setAction:@selector(closeWindow:)];
+        closeBtn.bezelStyle = NSBezelStyleRounded;
+        [contentView addSubview:closeBtn];
+
+        [self loadConfigItems];
+    }
     return self;
 }
 
 - (void)loadConfigItems {
+    if (!self.configItems) self.configItems = [NSMutableArray array];
     [self.configItems removeAllObjects];
 
-    std::string currentSection = "";
-    for (size_t i = 0; i < g_configRegistry.size(); ++i) {
-        const ConfigOption& opt = g_configRegistry[i];
-        if (opt.section != currentSection) {
-            currentSection = opt.section;
-            NSString* sectionName = [[NSString stringWithUTF8String:opt.section] uppercaseString];
-            [self.configItems addObject:@{@"name": sectionName, @"type": @"header"}];
-        }
-        
-        NSString* name = [NSString stringWithFormat:@"  %s", opt.label];
-        NSString* type = @"string";
-        if (opt.type == CFG_BOOL) type = @"bool";
-        else if (opt.type == CFG_INT) type = @"int";
-        else if (opt.type == CFG_FLOAT) type = @"float";
+    [self.configItems addObject:@{@"name": @"FUN", @"type": @"header"}];
+    [self addRow:@"Ball" key:@"behaviors.fun.ball" desc:@"Pushable balls that bounce around"];
+    [self addRow:@"Breadcrumbs" key:@"behaviors.fun.breadCrumbs" desc:@"Leave a trail of breadcrumbs"];
+    [self addRow:@"Hats" key:@"behaviors.fun.hats" desc:@"Put various hats on geese"];
+    [self addRow:@"Rainbow" key:@"behaviors.fun.rainbow" desc:@"Cycle colors on all geese"];
+    [self addRow:@"Acid" key:@"behaviors.fun.acid" desc:@"Geese spin and honk rapidly"];
+    [self addRow:@"Anger" key:@"behaviors.fun.anger" desc:@"Geese get angry and punch things"];
 
-        [self.configItems addObject:@{
-            @"name": name,
-            @"type": type,
-            @"index": @(i)
-        }];
+    [self.configItems addObject:@{@"name": @"CONTROL", @"type": @"header"}];
+    [self addRow:@"Honcker" key:@"behaviors.control.honcker" desc:@"Press F to honk at cursor"];
+    [self addRow:@"Jail" key:@"behaviors.control.jail" desc:@"Set traps with O, trigger with P"];
+    [self addRow:@"Portals" key:@"behaviors.control.portals" desc:@"Create portals with P+1/2, teleport with P+0"];
+    [self addRow:@"Drag" key:@"behaviors.control.drag" desc:@"Click and drag geese around"];
+    [self addRow:@"Banish" key:@"behaviors.control.banish" desc:@"Banish goose to another dimension"];
+
+    [self.configItems addObject:@{@"name": @"INFO", @"type": @"header"}];
+    [self addRow:@"Nametag" key:@"behaviors.info.nametag" desc:@"Show goose name above head"];
+    [self addRow:@"Presence" key:@"behaviors.info.presence" desc:@"Show Discord Rich Presence"];
+    [self addRow:@"Config GUI" key:@"behaviors.info.configGUI" desc:@"Toggle this settings window"];
+    [self addRow:@"Goose Manager" key:@"behaviors.info.gooseManager" desc:@"Control goose tasks and speeds"];
+
+    [self.configItems addObject:@{@"name": @"SYSTEMS", @"type": @"header"}];
+    [self addRow:@"Health" key:@"behaviors.systems.health" desc:@"Health bar system for geese"];
+    [self addRow:@"AI Chat" key:@"behaviors.systems.ai" desc:@"Chat with goose using local AI"];
+    [self addRow:@"Pomodoro" key:@"behaviors.systems.pomodoro" desc:@"Pomodoro timer behavior"];
+
+    if (self.behaviorsTable) {
+        [self.behaviorsTable reloadData];
     }
+}
+
+- (void)addRow:(NSString*)label key:(NSString*)key desc:(NSString*)desc {
+    [self.configItems addObject:@{@"key": key, @"label": label, @"desc": desc, @"type": @"behavior"}];
 }
 
 - (void)closeWindow:(id)sender {
     [self.window close];
 }
 
-- (ConfigOption*)getOptionForItem:(NSDictionary*)item {
-    if (!item[@"index"]) return nullptr;
-    size_t index = [item[@"index"] unsignedIntegerValue];
-    if (index < g_configRegistry.size()) {
-        return &g_configRegistry[index];
-    }
-    return nullptr;
+- (void)reloadConfig:(id)sender {
+    Config_Init();
+    [self loadConfigItems];
+    [self.behaviorsTable reloadData];
 }
 
-- (id)getValueForItem:(NSDictionary*)item {
-    ConfigOption* opt = [self getOptionForItem:item];
-    if (!opt || !opt->ptr) return @"";
-
-    if (opt->type == CFG_BOOL) {
-        bool val = *(bool*)opt->ptr;
-        return @(val);
-    } else if (opt->type == CFG_INT) {
-        int val = *(int*)opt->ptr;
-        return @(val);
-    } else if (opt->type == CFG_FLOAT) {
-        float val = *(float*)opt->ptr;
-        return @(val);
-    } else {
-        std::string val = *(std::string*)opt->ptr;
-        return [NSString stringWithUTF8String:val.c_str()];
+- (void)toggleAll:(id)sender {
+    bool anyOff = false;
+    for (NSDictionary* item in self.configItems) {
+        if (![item[@"type"] isEqualToString:@"behavior"]) continue;
+        NSString* key = item[@"key"];
+        if (!s_getBoolForKey(std::string([key UTF8String]))) { anyOff = true; break; }
     }
+    for (NSDictionary* item in self.configItems) {
+        if (![item[@"type"] isEqualToString:@"behavior"]) continue;
+        NSString* key = item[@"key"];
+        std::string k = std::string([key UTF8String]);
+        s_setBoolValue(k, anyOff);
+    }
+    [self.behaviorsTable reloadData];
 }
 
-- (void)setValue:(id)value forItem:(NSDictionary*)item {
-    ConfigOption* opt = [self getOptionForItem:item];
-    if (!opt || !opt->ptr) return;
+void s_setBoolValue(const std::string& key, bool value) {
+    if (key == "behaviors.fun.ball") g_config.behaviors.fun.ball = value;
+    else if (key == "behaviors.fun.breadCrumbs") g_config.behaviors.fun.breadCrumbs = value;
+    else if (key == "behaviors.fun.hats") g_config.behaviors.fun.hats = value;
+    else if (key == "behaviors.fun.rainbow") g_config.behaviors.fun.rainbow = value;
+    else if (key == "behaviors.fun.acid") g_config.behaviors.fun.acid = value;
+    else if (key == "behaviors.fun.anger") g_config.behaviors.fun.anger = value;
+    else if (key == "behaviors.control.honcker") g_config.behaviors.control.honcker = value;
+    else if (key == "behaviors.control.jail") g_config.behaviors.control.jail = value;
+    else if (key == "behaviors.control.portals") g_config.behaviors.control.portals = value;
+    else if (key == "behaviors.control.drag") g_config.behaviors.control.drag = value;
+    else if (key == "behaviors.control.banish") g_config.behaviors.control.banish = value;
+    else if (key == "behaviors.info.nametag") g_config.behaviors.info.nametag = value;
+    else if (key == "behaviors.info.presence") g_config.behaviors.info.presence = value;
+    else if (key == "behaviors.info.configGUI") g_config.behaviors.info.configGUI = value;
+    else if (key == "behaviors.info.gooseManager") g_config.behaviors.info.gooseManager = value;
+    else if (key == "behaviors.systems.health") g_config.behaviors.systems.health = value;
+    else if (key == "behaviors.systems.ai") g_config.behaviors.systems.ai = value;
+    else if (key == "behaviors.systems.pomodoro") g_config.behaviors.systems.pomodoro = value;
+}
 
-    if (opt->type == CFG_BOOL) {
-        *(bool*)opt->ptr = [value boolValue];
-    } else if (opt->type == CFG_INT) {
-        int val = [value intValue];
-        val = std::clamp(val, static_cast<int>(opt->min), static_cast<int>(opt->max));
-        *(int*)opt->ptr = val;
-    } else if (opt->type == CFG_FLOAT) {
-        float val = [value floatValue];
-        val = std::clamp(val, opt->min, opt->max);
-        *(float*)opt->ptr = val;
-    } else {
-        if ([value isKindOfClass:[NSString class]]) {
-            *(std::string*)opt->ptr = [value UTF8String];
-        }
+- (void)showDetailForBehavior:(NSString*)key {
+    [_detailView configureForBehavior:key];
+
+    NSRect frame = self.window.frame;
+    if (frame.size.width < 900) {
+        frame.size.width = 900;
+        [self.window setFrame:frame display:YES];
     }
-    if (opt->onChange) opt->onChange();
 }
 
 - (NSInteger)numberOfRowsInTableView:(NSTableView*)tableView {
@@ -164,90 +626,45 @@
 
 - (NSView*)tableView:(NSTableView*)tableView viewForTableColumn:(NSTableColumn*)column row:(NSInteger)row {
     NSDictionary* item = self.configItems[row];
-    NSString* identifier = column.identifier;
     NSString* type = item[@"type"];
 
-    if ([identifier isEqualToString:@"name"]) {
-        NSTextField* label = [tableView makeViewWithIdentifier:@"nameLabel" owner:self];
+    if ([type isEqualToString:@"header"]) {
+        NSTextField* label = [tableView makeViewWithIdentifier:@"headerLabel" owner:self];
         if (!label) {
             label = [[NSTextField alloc] init];
-            label.identifier = @"nameLabel";
+            label.identifier = @"headerLabel";
             label.backgroundColor = [NSColor clearColor];
             label.bordered = NO;
             label.editable = NO;
-            label.font = [NSFont systemFontOfSize:13];
+            label.font = [NSFont boldSystemFontOfSize:13];
+            label.textColor = [NSColor headerColor];
         }
+        label.frame = NSMakeRect(8, 6, 700, 36);
         label.stringValue = item[@"name"];
         return label;
     }
 
-    if ([identifier isEqualToString:@"value"]) {
-        if ([type isEqualToString:@"bool"]) {
-            NSButton* checkbox = [tableView makeViewWithIdentifier:@"checkbox" owner:self];
-            if (!checkbox) {
-                checkbox = [[NSButton alloc] init];
-                checkbox.identifier = @"checkbox";
-                checkbox.buttonType = NSButtonTypeSwitch;
-                checkbox.title = @"";
-            }
-            id val = [self getValueForItem:item];
-            checkbox.state = [val boolValue] ? NSControlStateValueOn : NSControlStateValueOff;
-            checkbox.tag = row;
-            [checkbox setTarget:self];
-            [checkbox setAction:@selector(toggleBool:)];
-            return checkbox;
-        } else {
-            NSTextField* field = [tableView makeViewWithIdentifier:@"numberField" owner:self];
-            if (!field) {
-                field = [[NSTextField alloc] init];
-                field.identifier = @"numberField";
-                field.font = [NSFont systemFontOfSize:12];
-                field.alignment = NSTextAlignmentRight;
-            }
-            id value = [self getValueForItem:item];
-            if ([type isEqualToString:@"int"]) {
-                field.stringValue = [NSString stringWithFormat:@"%d", [value intValue]];
-            } else if ([type isEqualToString:@"float"]) {
-                field.stringValue = [NSString stringWithFormat:@"%.1f", [value floatValue]];
-            } else {
-                field.stringValue = [value description];
-            }
-            field.tag = row;
-            field.delegate = self;
-            return field;
+    if ([type isEqualToString:@"behavior"]) {
+        BehaviorRowView* rowView = [tableView makeViewWithIdentifier:@"behaviorRow" owner:self];
+        if (!rowView) {
+            rowView = [[BehaviorRowView alloc] initWithFrame:NSMakeRect(0, 0, 700, 44)];
+            rowView.identifier = @"behaviorRow";
         }
+
+        rowView.configKey = item[@"key"];
+        rowView.nameLabel.stringValue = item[@"label"];
+        rowView.descLabel.stringValue = item[@"desc"] ?: @"";
+
+        std::string key = std::string([item[@"key"] UTF8String]);
+        bool val = s_getBoolForKey(key);
+        rowView.toggle.state = val ? NSControlStateValueOn : NSControlStateValueOff;
+        rowView.detailBtn.target = self;
+        rowView.detailBtn.action = @selector(showDetailForBehavior:);
+
+        return rowView;
     }
 
     return nil;
-}
-
-- (void)toggleBool:(NSButton*)sender {
-    NSInteger row = sender.tag;
-    NSDictionary* item = self.configItems[row];
-    id currentVal = [self getValueForItem:item];
-    bool newVal = ![currentVal boolValue];
-    [self setValue:@(newVal) forItem:item];
-    sender.state = newVal ? NSControlStateValueOn : NSControlStateValueOff;
-}
-
-- (void)controlTextDidEndEditing:(NSNotification*)notification {
-    NSTextField* field = notification.object;
-    NSInteger row = field.tag;
-    if (row < 0 || row >= (NSInteger)self.configItems.count) return;
-
-    NSDictionary* item = self.configItems[row];
-    NSString* type = item[@"type"];
-
-    if ([type isEqualToString:@"int"]) {
-        [self setValue:@([field.stringValue intValue]) forItem:item];
-    } else if ([type isEqualToString:@"float"]) {
-        [self setValue:@([field.stringValue floatValue]) forItem:item];
-    } else {
-        [self setValue:field.stringValue forItem:item];
-    }
-}
-
-- (void)windowWillClose:(NSNotification*)notification {
 }
 
 @end

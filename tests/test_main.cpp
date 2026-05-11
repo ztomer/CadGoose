@@ -638,3 +638,4 @@ void AssetManager::Honk() {}
 void AssetManager::Pat() {}
 void AssetManager::Bite() {}
 void AssetManager::MudSquish() {}
+CGImageRef AssetManager::GetBehaviorImage(const std::string&) { return nullptr; }

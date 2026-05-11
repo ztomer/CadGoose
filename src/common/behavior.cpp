@@ -28,6 +28,13 @@ constexpr float AIR_RESISTANCE = 0.995f;
 // ===========================
 // Behavior Registry Implementation
 // ===========================
+
+void EnsureBehaviorsRestored() {
+}
+
+void EnsureBehaviorsRestoredForce() {
+}
+
 void BehaviorRegistry::Register(Behavior& behavior) {
     behaviors.push_back(&behavior);
 }

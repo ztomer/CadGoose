@@ -250,7 +250,6 @@ CursorAction Goose::Update(double dt, double time, int w, int h,
     s_stateChanged = false;
   }
 
-  UpdateRig();
   CursorAction action = UpdateBehaviors(dt, time, w, h, cursor);
 
   float dist = Vector2::Length(target - pos);
@@ -285,6 +284,7 @@ CursorAction Goose::Update(double dt, double time, int w, int h,
   pos = pos + vel * (float)dt;
   ClampToScreen(w, h);
   UpdateDirection();
+  UpdateRig();
 
   if (debugSnatch && state == GooseState::SNATCH_CURSOR &&
       time - lastDebugLog > debugLogInterval) {

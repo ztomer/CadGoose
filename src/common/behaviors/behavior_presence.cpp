@@ -1,6 +1,6 @@
 // ===========================
 // behavior_presence.cpp
-// Presence Behavior - Menu bar status showing goose state
+// Presence Behavior - Menu bar status + goose window visibility
 // ===========================
 #include "behavior.h"
 #include "goose.h"
@@ -8,16 +8,18 @@
 #include "world.h"
 
 extern "C" void Presence_UpdateStatusFromBehavior(const char* status);
+extern "C" void Presence_SetGooseWindowVisible(bool visible);
 
 static bool s_enabled = true;
+static bool s_lastVisible = true;
 
 static void init(BehaviorContext& ctx) {
+    s_lastVisible = true;
 }
 
 static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
     if (!g_config.behaviors.info.presence) return;
-    
-    // Only update presence every 0.5s to avoid spamming the UI thread
+
     static double lastUpdate = 0.0;
     if (time - lastUpdate < 0.5) return;
     lastUpdate = time;
@@ -30,20 +32,25 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
         case GooseState::CHASE_CURSOR: status = "Chasing Cursor"; break;
         case GooseState::SNATCH_CURSOR: status = "Snatching Cursor"; break;
     }
-    
+
     char fullStatus[64];
     snprintf(fullStatus, sizeof(fullStatus), "Goose: %s", status);
     Presence_UpdateStatusFromBehavior(fullStatus);
+
+    bool targetVisible = g_config.behaviors.info.visible;
+    if (targetVisible != s_lastVisible) {
+        s_lastVisible = targetVisible;
+        Presence_SetGooseWindowVisible(targetVisible);
+    }
 }
 
 static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
-    if (!g_config.behaviors.info.presence) return;
 }
 
 static Behavior g_presenceBehavior = {
     .id = "presence",
     .name = "Presence",
-    .description = "Shows goose state in menu bar status",
+    .description = "Shows goose state in menu bar and controls goose window visibility",
     .enabledPtr = &s_enabled,
     .init = init,
     .tick = tick,

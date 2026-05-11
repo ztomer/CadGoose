@@ -45,6 +45,9 @@ public:
     void Bite();
     void MudSquish();
 
+    CGImageRef GetBehaviorImage(const std::string& name);
+    void PreloadBehaviorAssets();
+
 private:
 #ifdef __linux__
     void LoadAudio(std::vector<Mix_Chunk*>& v, std::string p);

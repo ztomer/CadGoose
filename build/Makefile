@@ -731,69 +731,6 @@ src/common/behaviors/behavior_breadcrumbs.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/src/common/behaviors/behavior_breadcrumbs.cpp.s
 .PHONY : src/common/behaviors/behavior_breadcrumbs.cpp.s
 
-src/common/behaviors/behavior_clicker.o: src/common/behaviors/behavior_clicker.cpp.o
-.PHONY : src/common/behaviors/behavior_clicker.o
-
-# target to build an object file
-src/common/behaviors/behavior_clicker.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/common/behaviors/behavior_clicker.cpp.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/src/common/behaviors/behavior_clicker.cpp.o
-.PHONY : src/common/behaviors/behavior_clicker.cpp.o
-
-src/common/behaviors/behavior_clicker.i: src/common/behaviors/behavior_clicker.cpp.i
-.PHONY : src/common/behaviors/behavior_clicker.i
-
-# target to preprocess a source file
-src/common/behaviors/behavior_clicker.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/common/behaviors/behavior_clicker.cpp.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/src/common/behaviors/behavior_clicker.cpp.i
-.PHONY : src/common/behaviors/behavior_clicker.cpp.i
-
-src/common/behaviors/behavior_clicker.s: src/common/behaviors/behavior_clicker.cpp.s
-.PHONY : src/common/behaviors/behavior_clicker.s
-
-# target to generate assembly for a file
-src/common/behaviors/behavior_clicker.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/common/behaviors/behavior_clicker.cpp.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/src/common/behaviors/behavior_clicker.cpp.s
-.PHONY : src/common/behaviors/behavior_clicker.cpp.s
-
-src/common/behaviors/behavior_color_picker.o: src/common/behaviors/behavior_color_picker.mm.o
-.PHONY : src/common/behaviors/behavior_color_picker.o
-
-# target to build an object file
-src/common/behaviors/behavior_color_picker.mm.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/common/behaviors/behavior_color_picker.mm.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/src/common/behaviors/behavior_color_picker.mm.o
-.PHONY : src/common/behaviors/behavior_color_picker.mm.o
-
-src/common/behaviors/behavior_debugoose.o: src/common/behaviors/behavior_debugoose.cpp.o
-.PHONY : src/common/behaviors/behavior_debugoose.o
-
-# target to build an object file
-src/common/behaviors/behavior_debugoose.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/common/behaviors/behavior_debugoose.cpp.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/src/common/behaviors/behavior_debugoose.cpp.o
-.PHONY : src/common/behaviors/behavior_debugoose.cpp.o
-
-src/common/behaviors/behavior_debugoose.i: src/common/behaviors/behavior_debugoose.cpp.i
-.PHONY : src/common/behaviors/behavior_debugoose.i
-
-# target to preprocess a source file
-src/common/behaviors/behavior_debugoose.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/common/behaviors/behavior_debugoose.cpp.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/src/common/behaviors/behavior_debugoose.cpp.i
-.PHONY : src/common/behaviors/behavior_debugoose.cpp.i
-
-src/common/behaviors/behavior_debugoose.s: src/common/behaviors/behavior_debugoose.cpp.s
-.PHONY : src/common/behaviors/behavior_debugoose.s
-
-# target to generate assembly for a file
-src/common/behaviors/behavior_debugoose.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/common/behaviors/behavior_debugoose.cpp.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/src/common/behaviors/behavior_debugoose.cpp.s
-.PHONY : src/common/behaviors/behavior_debugoose.cpp.s
-
 src/common/behaviors/behavior_drag.o: src/common/behaviors/behavior_drag.cpp.o
 .PHONY : src/common/behaviors/behavior_drag.o
 
@@ -1506,6 +1443,30 @@ src/platform/macos/window.mm.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/src/platform/macos/window.mm.o
 .PHONY : src/platform/macos/window.mm.o
 
+tests/common/presence_stub.o: tests/common/presence_stub.cpp.o
+.PHONY : tests/common/presence_stub.o
+
+# target to build an object file
+tests/common/presence_stub.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/tests/common/presence_stub.cpp.o
+.PHONY : tests/common/presence_stub.cpp.o
+
+tests/common/presence_stub.i: tests/common/presence_stub.cpp.i
+.PHONY : tests/common/presence_stub.i
+
+# target to preprocess a source file
+tests/common/presence_stub.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/tests/common/presence_stub.cpp.i
+.PHONY : tests/common/presence_stub.cpp.i
+
+tests/common/presence_stub.s: tests/common/presence_stub.cpp.s
+.PHONY : tests/common/presence_stub.s
+
+# target to generate assembly for a file
+tests/common/presence_stub.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/tests/common/presence_stub.cpp.s
+.PHONY : tests/common/presence_stub.cpp.s
+
 tests/common/test_behavior.o: tests/common/test_behavior.cpp.o
 .PHONY : tests/common/test_behavior.o
 
@@ -1529,6 +1490,126 @@ tests/common/test_behavior.s: tests/common/test_behavior.cpp.s
 tests/common/test_behavior.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/tests/common/test_behavior.cpp.s
 .PHONY : tests/common/test_behavior.cpp.s
+
+tests/common/test_behavior_ball.o: tests/common/test_behavior_ball.cpp.o
+.PHONY : tests/common/test_behavior_ball.o
+
+# target to build an object file
+tests/common/test_behavior_ball.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/tests/common/test_behavior_ball.cpp.o
+.PHONY : tests/common/test_behavior_ball.cpp.o
+
+tests/common/test_behavior_ball.i: tests/common/test_behavior_ball.cpp.i
+.PHONY : tests/common/test_behavior_ball.i
+
+# target to preprocess a source file
+tests/common/test_behavior_ball.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/tests/common/test_behavior_ball.cpp.i
+.PHONY : tests/common/test_behavior_ball.cpp.i
+
+tests/common/test_behavior_ball.s: tests/common/test_behavior_ball.cpp.s
+.PHONY : tests/common/test_behavior_ball.s
+
+# target to generate assembly for a file
+tests/common/test_behavior_ball.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/tests/common/test_behavior_ball.cpp.s
+.PHONY : tests/common/test_behavior_ball.cpp.s
+
+tests/common/test_behavior_breadcrumbs.o: tests/common/test_behavior_breadcrumbs.cpp.o
+.PHONY : tests/common/test_behavior_breadcrumbs.o
+
+# target to build an object file
+tests/common/test_behavior_breadcrumbs.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/tests/common/test_behavior_breadcrumbs.cpp.o
+.PHONY : tests/common/test_behavior_breadcrumbs.cpp.o
+
+tests/common/test_behavior_breadcrumbs.i: tests/common/test_behavior_breadcrumbs.cpp.i
+.PHONY : tests/common/test_behavior_breadcrumbs.i
+
+# target to preprocess a source file
+tests/common/test_behavior_breadcrumbs.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/tests/common/test_behavior_breadcrumbs.cpp.i
+.PHONY : tests/common/test_behavior_breadcrumbs.cpp.i
+
+tests/common/test_behavior_breadcrumbs.s: tests/common/test_behavior_breadcrumbs.cpp.s
+.PHONY : tests/common/test_behavior_breadcrumbs.s
+
+# target to generate assembly for a file
+tests/common/test_behavior_breadcrumbs.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/tests/common/test_behavior_breadcrumbs.cpp.s
+.PHONY : tests/common/test_behavior_breadcrumbs.cpp.s
+
+tests/common/test_behavior_hats.o: tests/common/test_behavior_hats.cpp.o
+.PHONY : tests/common/test_behavior_hats.o
+
+# target to build an object file
+tests/common/test_behavior_hats.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/tests/common/test_behavior_hats.cpp.o
+.PHONY : tests/common/test_behavior_hats.cpp.o
+
+tests/common/test_behavior_hats.i: tests/common/test_behavior_hats.cpp.i
+.PHONY : tests/common/test_behavior_hats.i
+
+# target to preprocess a source file
+tests/common/test_behavior_hats.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/tests/common/test_behavior_hats.cpp.i
+.PHONY : tests/common/test_behavior_hats.cpp.i
+
+tests/common/test_behavior_hats.s: tests/common/test_behavior_hats.cpp.s
+.PHONY : tests/common/test_behavior_hats.s
+
+# target to generate assembly for a file
+tests/common/test_behavior_hats.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/tests/common/test_behavior_hats.cpp.s
+.PHONY : tests/common/test_behavior_hats.cpp.s
+
+tests/common/test_behavior_registry.o: tests/common/test_behavior_registry.cpp.o
+.PHONY : tests/common/test_behavior_registry.o
+
+# target to build an object file
+tests/common/test_behavior_registry.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/tests/common/test_behavior_registry.cpp.o
+.PHONY : tests/common/test_behavior_registry.cpp.o
+
+tests/common/test_behavior_registry.i: tests/common/test_behavior_registry.cpp.i
+.PHONY : tests/common/test_behavior_registry.i
+
+# target to preprocess a source file
+tests/common/test_behavior_registry.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/tests/common/test_behavior_registry.cpp.i
+.PHONY : tests/common/test_behavior_registry.cpp.i
+
+tests/common/test_behavior_registry.s: tests/common/test_behavior_registry.cpp.s
+.PHONY : tests/common/test_behavior_registry.s
+
+# target to generate assembly for a file
+tests/common/test_behavior_registry.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/tests/common/test_behavior_registry.cpp.s
+.PHONY : tests/common/test_behavior_registry.cpp.s
+
+tests/common/test_behavior_states.o: tests/common/test_behavior_states.cpp.o
+.PHONY : tests/common/test_behavior_states.o
+
+# target to build an object file
+tests/common/test_behavior_states.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/tests/common/test_behavior_states.cpp.o
+.PHONY : tests/common/test_behavior_states.cpp.o
+
+tests/common/test_behavior_states.i: tests/common/test_behavior_states.cpp.i
+.PHONY : tests/common/test_behavior_states.i
+
+# target to preprocess a source file
+tests/common/test_behavior_states.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/tests/common/test_behavior_states.cpp.i
+.PHONY : tests/common/test_behavior_states.cpp.i
+
+tests/common/test_behavior_states.s: tests/common/test_behavior_states.cpp.s
+.PHONY : tests/common/test_behavior_states.s
+
+# target to generate assembly for a file
+tests/common/test_behavior_states.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/tests/common/test_behavior_states.cpp.s
+.PHONY : tests/common/test_behavior_states.cpp.s
 
 tests/common/test_config.o: tests/common/test_config.cpp.o
 .PHONY : tests/common/test_config.o
@@ -1673,13 +1754,6 @@ help:
 	@echo "... src/common/behaviors/behavior_breadcrumbs.o"
 	@echo "... src/common/behaviors/behavior_breadcrumbs.i"
 	@echo "... src/common/behaviors/behavior_breadcrumbs.s"
-	@echo "... src/common/behaviors/behavior_clicker.o"
-	@echo "... src/common/behaviors/behavior_clicker.i"
-	@echo "... src/common/behaviors/behavior_clicker.s"
-	@echo "... src/common/behaviors/behavior_color_picker.o"
-	@echo "... src/common/behaviors/behavior_debugoose.o"
-	@echo "... src/common/behaviors/behavior_debugoose.i"
-	@echo "... src/common/behaviors/behavior_debugoose.s"
 	@echo "... src/common/behaviors/behavior_drag.o"
 	@echo "... src/common/behaviors/behavior_drag.i"
 	@echo "... src/common/behaviors/behavior_drag.s"
@@ -1760,9 +1834,27 @@ help:
 	@echo "... src/platform/macos/renderer.o"
 	@echo "... src/platform/macos/renderer/renderer_goose_drawer.o"
 	@echo "... src/platform/macos/window.o"
+	@echo "... tests/common/presence_stub.o"
+	@echo "... tests/common/presence_stub.i"
+	@echo "... tests/common/presence_stub.s"
 	@echo "... tests/common/test_behavior.o"
 	@echo "... tests/common/test_behavior.i"
 	@echo "... tests/common/test_behavior.s"
+	@echo "... tests/common/test_behavior_ball.o"
+	@echo "... tests/common/test_behavior_ball.i"
+	@echo "... tests/common/test_behavior_ball.s"
+	@echo "... tests/common/test_behavior_breadcrumbs.o"
+	@echo "... tests/common/test_behavior_breadcrumbs.i"
+	@echo "... tests/common/test_behavior_breadcrumbs.s"
+	@echo "... tests/common/test_behavior_hats.o"
+	@echo "... tests/common/test_behavior_hats.i"
+	@echo "... tests/common/test_behavior_hats.s"
+	@echo "... tests/common/test_behavior_registry.o"
+	@echo "... tests/common/test_behavior_registry.i"
+	@echo "... tests/common/test_behavior_registry.s"
+	@echo "... tests/common/test_behavior_states.o"
+	@echo "... tests/common/test_behavior_states.i"
+	@echo "... tests/common/test_behavior_states.s"
 	@echo "... tests/common/test_config.o"
 	@echo "... tests/common/test_config.i"
 	@echo "... tests/common/test_config.s"

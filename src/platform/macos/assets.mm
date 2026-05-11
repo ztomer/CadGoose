@@ -47,6 +47,53 @@ void AssetManager::Init() {
     ScanFolder("Assets/Text/NotepadMessages", textPaths, {".txt"});
 
     std::cout << "Assets: " << memePaths.size() << " memes, " << textPaths.size() << " texts" << std::endl;
+
+    PreloadBehaviorAssets();
+}
+
+void AssetManager::PreloadBehaviorAssets() {
+    std::vector<std::string> behaviorImages = {
+        "Assets/Images/OtherGfx/ball.png",
+        "Assets/Images/OtherGfx/ball2.png",
+        "Assets/Images/OtherGfx/ball3.png",
+        "Assets/Images/OtherGfx/p1.png",
+        "Assets/Images/OtherGfx/p2.png",
+        "Assets/Images/OtherGfx/crumbs.png",
+        "Assets/Images/OtherGfx/heart.png",
+        "Assets/Images/OtherGfx/hat_default.png",
+        "Assets/Images/OtherGfx/honk.png"
+    };
+
+    for (const auto& path : behaviorImages) {
+        if (memeCache.find(path) != memeCache.end()) continue;
+        NSString* nsPath = [NSString stringWithUTF8String:path.c_str()];
+        NSImage* img = [[NSImage alloc] initWithContentsOfFile:nsPath];
+        if (img) {
+            CGImageRef cg = [img CGImageForProposedRect:NULL context:nil hints:nil];
+            if (cg) {
+                memeCache[path] = CGImageRetain(cg);
+            }
+        }
+    }
+}
+
+CGImageRef AssetManager::GetBehaviorImage(const std::string& name) {
+    auto it = memeCache.find(name);
+    if (it != memeCache.end()) {
+        return it->second;
+    }
+
+    NSString* nsPath = [NSString stringWithUTF8String:name.c_str()];
+    NSImage* img = [[NSImage alloc] initWithContentsOfFile:nsPath];
+    if (img) {
+        CGImageRef cg = [img CGImageForProposedRect:NULL context:nil hints:nil];
+        if (cg) {
+            CGImageRef retained = CGImageRetain(cg);
+            memeCache[name] = retained;
+            return retained;
+        }
+    }
+    return nullptr;
 }
 
 void AssetManager::ScanFolder(std::string rel, std::vector<std::string>& out, std::vector<std::string> exts) {

@@ -174,7 +174,13 @@ if(APPLE OR LINUX)
     add_executable(CadGooseTests 
         tests/test_main.cpp
         tests/common/test_behavior.cpp
+        tests/common/test_behavior_registry.cpp
+        tests/common/test_behavior_states.cpp
+        tests/common/test_behavior_ball.cpp
+        tests/common/test_behavior_breadcrumbs.cpp
+        tests/common/test_behavior_hats.cpp
         tests/common/test_config.cpp
+        tests/common/presence_stub.cpp
         src/common/app_actions.cpp
         src/common/app_cli.cpp
         src/common/behavior.cpp
@@ -193,24 +199,21 @@ if(APPLE OR LINUX)
         src/common/world_utils.mm
         src/common/behaviors/behavior_honcker.cpp
         src/common/behaviors/behavior_rainbow.cpp
+        src/common/behaviors/behavior_health.cpp
         src/common/behaviors/behavior_pomodoro.cpp
         src/common/behaviors/behavior_ball.cpp
         src/common/behaviors/behavior_breadcrumbs.cpp
         src/common/behaviors/behavior_hats.cpp
         src/common/behaviors/behavior_acid.cpp
-        src/common/behaviors/behavior_clicker.cpp
         src/common/behaviors/behavior_drag.cpp
         src/common/behaviors/behavior_jail.cpp
-        src/common/behaviors/behavior_health.cpp
         src/common/behaviors/behavior_portal.cpp
         src/common/behaviors/behavior_anger.cpp
         src/common/behaviors/behavior_banish.cpp
         src/common/behaviors/behavior_nametag.cpp
-        src/common/behaviors/behavior_debugoose.cpp
         src/common/behaviors/behavior_goose_manager.cpp
         src/common/behaviors/behavior_presence.cpp
         src/common/behaviors/behavior_ai.mm
-        src/common/behaviors/behavior_color_picker.mm
     )
     
     if(APPLE)
@@ -222,6 +225,7 @@ if(APPLE OR LINUX)
             src/platform/macos/renderer.mm
             src/platform/macos/audio.mm
             src/platform/macos/command_socket.cpp
+            tests/common/presence_stub.cpp
             tests/common/test_presence.cpp
             tests/platform/macos/test_renderer.mm
         )

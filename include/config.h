@@ -9,21 +9,31 @@
 enum ConfigType { CFG_BOOL, CFG_INT, CFG_FLOAT, CFG_STRING };
 
 #define CONFIG_OPTION(section, key, label, type, memberPtr, onChangeCb) \
-    { section, key, label, type, memberPtr, 0.0f, 1000.0f, 0.1f, "", onChangeCb }
+    { section, key, label, "", type, memberPtr, 0.0f, 1000.0f, 0.1f, "", onChangeCb }
 
 #define CONFIG_BOOL(section, key, label, memberPtr, onChangeCb) \
-    { section, key, label, CFG_BOOL, memberPtr, 0, 1, 1, "", onChangeCb }
+    { section, key, label, "", CFG_BOOL, memberPtr, 0, 1, 1, "", onChangeCb }
+
+#define CONFIG_BOOL_EX(section, key, label, explanation, memberPtr, onChangeCb) \
+    { section, key, label, explanation, CFG_BOOL, memberPtr, 0, 1, 1, "", onChangeCb }
 
 #define CONFIG_INT(section, key, label, memberPtr, minVal, maxVal, onChangeCb) \
-    { section, key, label, CFG_INT, memberPtr, minVal, maxVal, 1, "", onChangeCb }
+    { section, key, label, "", CFG_INT, memberPtr, minVal, maxVal, 1, "", onChangeCb }
+
+#define CONFIG_INT_EX(section, key, label, explanation, memberPtr, minVal, maxVal, onChangeCb) \
+    { section, key, label, explanation, CFG_INT, memberPtr, minVal, maxVal, 1, "", onChangeCb }
 
 #define CONFIG_FLOAT(section, key, label, memberPtr, minVal, maxVal, stepVal, onChangeCb) \
-    { section, key, label, CFG_FLOAT, memberPtr, minVal, maxVal, stepVal, "", onChangeCb }
+    { section, key, label, "", CFG_FLOAT, memberPtr, minVal, maxVal, stepVal, "", onChangeCb }
+
+#define CONFIG_FLOAT_EX(section, key, label, explanation, memberPtr, minVal, maxVal, stepVal, onChangeCb) \
+    { section, key, label, explanation, CFG_FLOAT, memberPtr, minVal, maxVal, stepVal, "", onChangeCb }
 
 struct ConfigOption {
   const char *section;
   const char *key;
   const char *label;
+  const char *explanation;
   ConfigType type;
   void *ptr;
   float min;
@@ -319,12 +329,10 @@ struct BehaviorConfig {
 
   struct Info {
     bool nametag = false;
-    bool debugoose = false;
     bool presence = false;
     bool configGUI = false;
-    bool colorPicker = false;
-    bool clicker = false;
     bool gooseManager = false;
+    bool visible = true;  // goose window visibility
   } info;
 
   struct Systems {
@@ -333,12 +341,16 @@ struct BehaviorConfig {
     bool pomodoro = false;
   } systems;
 
-  struct HonckerConfig { int key = 0x24; } honcker;
+  struct HonckerConfig { int key = 0x24; float size = 40.0f; float cooldown = 0.5f; } honcker;
   struct DragConfig { float radius = 45.0f; } drag;
   struct JailConfig { int keyO = 0x2D; int keyP = 0x1E; float size = 150.0f; } jail;
+  struct BanishConfig { float duration = 30.0f; } banish;
+  struct NametagConfig { float size = 14.0f; } nametag;
+  struct PresenceConfig { float interval = 1.0f; } presence;
+  struct HealthConfig { float opacity = 0.8f; float maxHealth = 100.0f; float regenRate = 0.5f; float damageCooldown = 2.0f; float damageSpeedThreshold = 200.0f; float damageAmount = 5.0f; } health;
+  struct GooseManagerConfig { bool taskWander = true, taskFetch = true, taskChase = true, taskSnatch = true; bool speedWalk = true, speedRun = true; float taskInterval = 5.0f; } gooseManager;
   struct AngerConfig { float increaseRate = 15.0f; float decreaseRate = 8.0f; float punchCooldown = 2.0; float punchDuration = 0.3f; float cursorRadius = 100.0f; float maxAnger = 100.0f; float punchThreshold = 80.0f; float minVisualThreshold = 10.0f; } anger;
   struct ClickerConfig { int chance = 300; int key = 0x24; } clicker;
-  struct HealthConfig { float maxHealth = 100.0f; float regenRate = 0.5f; float damageCooldown = 2.0f; float damageSpeedThreshold = 200.0f; float damageAmount = 5.0f; } health;
   struct AcidConfig { float spinSpeed = 720.0f; float honkInterval = 0.15f; float rotationTotal = 1080.0f; int triggerChance = 300; } acid;
   struct RainbowConfig { float hueSpeed = 120.0f; } rainbow;
   struct PomodoroConfig {
@@ -392,7 +404,7 @@ struct Config {
   ColorConfig color;
   BehaviorConfig behaviors;
 
-  struct PortalConfig { float p1Width = 80.0f; float p1Height = 80.0f; float p2Width = 80.0f; float p2Height = 80.0f; } portal;
+  struct PortalConfig { float p1Width = 80.0f; float p1Height = 80.0f; float p2Width = 80.0f; float p2Height = 80.0f; float width = 80.0f; } portal;
   struct AIConfig {
     bool useOsaurus = true;
     bool useOllama = false;

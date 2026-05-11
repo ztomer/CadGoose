@@ -7,6 +7,7 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include "config.h"
+#include "config_gui.h"
 #include "cursor_backend.h"
 #include "world.h"
 #include "command_socket.h"
@@ -61,6 +62,8 @@ void LogWrite(const char* level, const char* fmt, ...) {
     if (g_debugMode) LogWrite("DEBUG", fmt, ##__VA_ARGS__); \
 } while(0)
 
+extern "C" void AI_OpenChat(const char* gooseName);
+
 @interface AppDelegate : NSObject <NSApplicationDelegate>
 @property (nonatomic, strong) NSStatusItem* statusItem;
 - (void)setupMenubar;
@@ -68,7 +71,6 @@ void LogWrite(const char* level, const char* fmt, ...) {
 - (void)toggleBehavior:(NSMenuItem*)sender;
 - (bool*)getBehaviorFlag:(NSString*)key;
 - (void)openPresencePanel:(id)sender;
-- (void)openColorPicker:(id)sender;
 @end
 
 @implementation AppDelegate
@@ -83,92 +85,20 @@ void LogWrite(const char* level, const char* fmt, ...) {
     [menu addItemWithTitle:@"About CadGoose" action:@selector(showAbout:) keyEquivalent:@""];
     [menu addItem:[NSMenuItem separatorItem]];
 
-    NSMenuItem* spawnItem = [menu addItemWithTitle:@"Spawn Goose" action:@selector(spawnGoose:) keyEquivalent:@"g"];
-    spawnItem.keyEquivalentModifierMask = NSEventModifierFlagCommand;
-
-    NSMenuItem* clearItem = [menu addItemWithTitle:@"Clear All Geese" action:@selector(clearGeese:) keyEquivalent:@""];
+    [menu addItemWithTitle:@"Spawn Goose" action:@selector(spawnGoose:) keyEquivalent:@"g"];
+    [menu addItemWithTitle:@"Clear All Geese" action:@selector(clearGeese:) keyEquivalent:@""];
 
     [menu addItem:[NSMenuItem separatorItem]];
 
-    NSMenuItem* honkItem = [menu addItemWithTitle:@"Honk!" action:@selector(testHonk:) keyEquivalent:@"h"];
-    honkItem.keyEquivalentModifierMask = NSEventModifierFlagCommand;
+    [menu addItemWithTitle:@"Honk!" action:@selector(testHonk:) keyEquivalent:@"h"];
 
     [menu addItem:[NSMenuItem separatorItem]];
 
-    NSMenu* settingsMenu = [[NSMenu alloc] initWithTitle:@"Settings"];
+    NSMenuItem* prefsItem = [menu addItemWithTitle:@"Preferences..." action:@selector(openPreferences:) keyEquivalent:@","];
+    prefsItem.target = self;
 
-    NSMenuItem* mudItem = [settingsMenu addItemWithTitle:@"Enable Mud Footprints" action:@selector(toggleMud:) keyEquivalent:@""];
-    mudItem.target = self;
-    mudItem.state = g_config.mud.enabled ? NSControlStateValueOn : NSControlStateValueOff;
-
-    NSMenuItem* chaseItem = [settingsMenu addItemWithTitle:@"Enable Cursor Chase" action:@selector(toggleChase:) keyEquivalent:@""];
-    chaseItem.target = self;
-    chaseItem.state = g_config.cursor.chaseEnabled ? NSControlStateValueOn : NSControlStateValueOff;
-
-    NSMenuItem* memeItem = [settingsMenu addItemWithTitle:@"Enable Memes" action:@selector(toggleMemes:) keyEquivalent:@""];
-    memeItem.target = self;
-    memeItem.state = g_config.general.memesEnabled ? NSControlStateValueOn : NSControlStateValueOff;
-
-    NSMenuItem* canadaItem = [settingsMenu addItemWithTitle:@"Canada Goose Colors" action:@selector(toggleCanadaGoose:) keyEquivalent:@""];
-    canadaItem.target = self;
-    canadaItem.state = g_config.general.canadaGooseMode ? NSControlStateValueOn : NSControlStateValueOff;
-
-    [settingsMenu addItem:[NSMenuItem separatorItem]];
-
-    NSMenuItem* openConfigItem = [settingsMenu addItemWithTitle:@"Open Configuration" action:@selector(openConfiguration:) keyEquivalent:@""];
-    openConfigItem.target = self;
-
-    NSMenuItem* reloadConfigItem = [settingsMenu addItemWithTitle:@"Reload Configuration" action:@selector(reloadConfiguration:) keyEquivalent:@""];
-    reloadConfigItem.target = self;
-
-    NSMenuItem* settingsItem = [menu addItemWithTitle:@"Settings" action:nil keyEquivalent:@""];
-    settingsItem.submenu = settingsMenu;
-
-    NSMenu* behaviorsMenu = [[NSMenu alloc] initWithTitle:@"Behaviors"];
-
-    NSMenu* funMenu = [[NSMenu alloc] initWithTitle:@"Fun"];
-    [self addBehaviorItem:@"Ball" configKey:@"behaviors.fun.ball" toMenu:funMenu];
-    [self addBehaviorItem:@"BreadCrumbs" configKey:@"behaviors.fun.breadCrumbs" toMenu:funMenu];
-    [self addBehaviorItem:@"Hats" configKey:@"behaviors.fun.hats" toMenu:funMenu];
-    [self addBehaviorItem:@"Rainbow" configKey:@"behaviors.fun.rainbow" toMenu:funMenu];
-    [self addBehaviorItem:@"Acid" configKey:@"behaviors.fun.acid" toMenu:funMenu];
-    NSMenuItem* funItem = [behaviorsMenu addItemWithTitle:@"Fun" action:nil keyEquivalent:@""];
-    funItem.submenu = funMenu;
-
-    NSMenu* controlMenu = [[NSMenu alloc] initWithTitle:@"Control"];
-    [self addBehaviorItem:@"Honcker" configKey:@"behaviors.control.honcker" toMenu:controlMenu];
-    [self addBehaviorItem:@"Jail" configKey:@"behaviors.control.jail" toMenu:controlMenu];
-    [self addBehaviorItem:@"Portals" configKey:@"behaviors.control.portals" toMenu:controlMenu];
-    [self addBehaviorItem:@"Drag" configKey:@"behaviors.control.drag" toMenu:controlMenu];
-    [self addBehaviorItem:@"Banish" configKey:@"behaviors.control.banish" toMenu:controlMenu];
-    NSMenuItem* controlItem = [behaviorsMenu addItemWithTitle:@"Control" action:nil keyEquivalent:@""];
-    controlItem.submenu = controlMenu;
-
-    NSMenu* infoMenu = [[NSMenu alloc] initWithTitle:@"Info"];
-    [self addBehaviorItem:@"Nametag" configKey:@"behaviors.info.nametag" toMenu:infoMenu];
-    [self addBehaviorItem:@"Debugoose" configKey:@"behaviors.info.debugoose" toMenu:infoMenu];
-    [self addBehaviorItem:@"Presence" configKey:@"behaviors.info.presence" toMenu:infoMenu];
-    [self addBehaviorItem:@"Config GUI" configKey:@"behaviors.info.configGUI" toMenu:infoMenu];
-    [self addBehaviorItem:@"Color Picker" configKey:@"behaviors.info.colorPicker" toMenu:infoMenu];
-    [self addBehaviorItem:@"Clicker" configKey:@"behaviors.info.clicker" toMenu:infoMenu];
-    [self addBehaviorItem:@"GooseManager" configKey:@"behaviors.info.gooseManager" toMenu:infoMenu];
-    NSMenuItem* infoItem = [behaviorsMenu addItemWithTitle:@"Info" action:nil keyEquivalent:@""];
-    infoItem.submenu = infoMenu;
-
-    [behaviorsMenu addItem:[NSMenuItem separatorItem]];
-
-    NSMenuItem* colorPickerItem = [behaviorsMenu addItemWithTitle:@"Open Color Picker" action:@selector(openColorPicker:) keyEquivalent:@""];
-    colorPickerItem.target = self;
-
-    NSMenu* systemsMenu = [[NSMenu alloc] initWithTitle:@"Systems"];
-    [self addBehaviorItem:@"Health" configKey:@"behaviors.systems.health" toMenu:systemsMenu];
-    [self addBehaviorItem:@"AI" configKey:@"behaviors.systems.ai" toMenu:systemsMenu];
-    [self addBehaviorItem:@"Pomodoro" configKey:@"behaviors.systems.pomodoro" toMenu:systemsMenu];
-    NSMenuItem* systemsItem = [behaviorsMenu addItemWithTitle:@"Systems" action:nil keyEquivalent:@""];
-    systemsItem.submenu = systemsMenu;
-
-    NSMenuItem* behaviorsItem = [menu addItemWithTitle:@"Behaviors" action:nil keyEquivalent:@""];
-    behaviorsItem.submenu = behaviorsMenu;
+    NSMenuItem* chatItem = [menu addItemWithTitle:@"AI Chat" action:@selector(openAIChat:) keyEquivalent:@""];
+    chatItem.target = self;
 
     [menu addItem:[NSMenuItem separatorItem]];
 
@@ -179,24 +109,20 @@ void LogWrite(const char* level, const char* fmt, ...) {
     DEBUG_LOG("Menubar created");
 }
 
-- (void)openConfiguration:(id)sender {
-    NSString* configPath = [NSString stringWithUTF8String:Config_GetPath().c_str()];
-    [[NSWorkspace sharedWorkspace] openURL:[NSURL fileURLWithPath:configPath]];
-    DEBUG_LOG("Opened configuration file: %s", Config_GetPath().c_str());
-}
-
 - (void)reloadConfiguration:(id)sender {
     Config_Init();
-    DEBUG_LOG("Configuration reloaded from menubar");
-    // Update menu items states based on reloaded config
-    NSMenu* menu = self.statusItem.menu;
-    NSMenuItem* settingsItem = [menu itemWithTitle:@"Settings"];
-    if (settingsItem && settingsItem.submenu) {
-        NSMenu* settingsMenu = settingsItem.submenu;
-        [[settingsMenu itemWithTitle:@"Enable Mud Footprints"] setState:(g_config.mud.enabled ? NSControlStateValueOn : NSControlStateValueOff)];
-        [[settingsMenu itemWithTitle:@"Enable Cursor Chase"] setState:(g_config.cursor.chaseEnabled ? NSControlStateValueOn : NSControlStateValueOff)];
-        [[settingsMenu itemWithTitle:@"Enable Memes"] setState:(g_config.general.memesEnabled ? NSControlStateValueOn : NSControlStateValueOff)];
-        [[settingsMenu itemWithTitle:@"Canada Goose Colors"] setState:(g_config.general.canadaGooseMode ? NSControlStateValueOn : NSControlStateValueOff)];
+    DEBUG_LOG("Configuration reloaded");
+}
+
+- (void)openPreferences:(id)sender {
+    ConfigGUI_ShowWindow();
+}
+
+- (void)openAIChat:(id)sender {
+    if (!g_geese.empty()) {
+        AI_OpenChat(g_geese.front().name.c_str());
+    } else {
+        AI_OpenChat("Goose");
     }
 }
 
@@ -221,35 +147,6 @@ void LogWrite(const char* level, const char* fmt, ...) {
     Audio_Init();
     Audio_PlayHonk();
     DEBUG_LOG("Test honk from menubar");
-}
-
-- (void)toggleMud:(id)sender {
-    g_config.mud.enabled = !g_config.mud.enabled;
-    NSMenuItem* item = (NSMenuItem*)sender;
-    item.state = g_config.mud.enabled ? NSControlStateValueOn : NSControlStateValueOff;
-    DEBUG_LOG("Mud enabled: %d", g_config.mud.enabled);
-}
-
-- (void)toggleChase:(id)sender {
-    g_config.cursor.chaseEnabled = !g_config.cursor.chaseEnabled;
-    NSMenuItem* item = (NSMenuItem*)sender;
-    item.state = g_config.cursor.chaseEnabled ? NSControlStateValueOn : NSControlStateValueOff;
-    DEBUG_LOG("Cursor chase enabled: %d", g_config.cursor.chaseEnabled);
-}
-
-- (void)toggleMemes:(id)sender {
-    g_config.general.memesEnabled = !g_config.general.memesEnabled;
-    NSMenuItem* item = (NSMenuItem*)sender;
-    item.state = g_config.general.memesEnabled ? NSControlStateValueOn : NSControlStateValueOff;
-    DEBUG_LOG("Memes enabled: %d", g_config.general.memesEnabled);
-}
-
-- (void)toggleCanadaGoose:(id)sender {
-    g_config.general.canadaGooseMode = !g_config.general.canadaGooseMode;
-    NSMenuItem* item = (NSMenuItem*)sender;
-    item.state = g_config.general.canadaGooseMode ? NSControlStateValueOn : NSControlStateValueOff;
-    self.statusItem.button.title = g_config.general.canadaGooseMode ? @"\U0001F341" : @"\U0001FABF";
-    DEBUG_LOG("Canada Goose mode: %d", g_config.general.canadaGooseMode);
 }
 
 - (void)quitApp:(id)sender {
@@ -282,11 +179,8 @@ void LogWrite(const char* level, const char* fmt, ...) {
     if (s == "behaviors.control.drag") return &g_config.behaviors.control.drag;
     if (s == "behaviors.control.banish") return &g_config.behaviors.control.banish;
     if (s == "behaviors.info.nametag") return &g_config.behaviors.info.nametag;
-    if (s == "behaviors.info.debugoose") return &g_config.behaviors.info.debugoose;
     if (s == "behaviors.info.presence") return &g_config.behaviors.info.presence;
     if (s == "behaviors.info.configGUI") return &g_config.behaviors.info.configGUI;
-    if (s == "behaviors.info.colorPicker") return &g_config.behaviors.info.colorPicker;
-    if (s == "behaviors.info.clicker") return &g_config.behaviors.info.clicker;
     if (s == "behaviors.info.gooseManager") return &g_config.behaviors.info.gooseManager;
     if (s == "behaviors.systems.health") return &g_config.behaviors.systems.health;
     if (s == "behaviors.systems.ai") return &g_config.behaviors.systems.ai;
@@ -305,13 +199,6 @@ void LogWrite(const char* level, const char* fmt, ...) {
 
 - (void)openPresencePanel:(id)sender {
     DEBUG_LOG("Opening presence panel");
-}
-
-- (void)openColorPicker:(id)sender {
-    NSColorPanel* panel = [NSColorPanel sharedColorPanel];
-    [panel makeKeyAndOrderFront:nil];
-    [[NSApplication sharedApplication] activateIgnoringOtherApps:YES];
-    DEBUG_LOG("Opened color picker");
 }
 
 - (void)applicationDidFinishLaunching:(NSNotification*)aNotification {
@@ -419,6 +306,20 @@ extern "C" void Presence_UpdateStatusFromBehavior(const char* status) {
         AppDelegate* delegate = (AppDelegate*)[NSApp delegate];
         if (delegate.statusItem) {
             delegate.statusItem.button.title = [NSString stringWithUTF8String:status];
+        }
+    });
+}
+
+extern "C" void Presence_SetGooseWindowVisible(bool visible) {
+    dispatch_async(dispatch_get_main_queue(), ^{
+        WindowManager* wm = [WindowManager shared];
+        NSArray<GooseWindow*>* windows = [wm windows];
+        for (GooseWindow* window in windows) {
+            if (visible) {
+                [window orderFront:nil];
+            } else {
+                [window orderOut:nil];
+            }
         }
     });
 }
