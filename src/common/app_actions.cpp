@@ -160,5 +160,27 @@ std::string AppActions_HandleCommand(const std::vector<std::string>& args) {
         return "ok force_fetch type=" + std::to_string(type) + "\n";
     }
 
+    if (command == "enable") {
+        if (args.size() < 2) return "error missing behavior id\n";
+        auto* behavior = BehaviorRegistry::Instance().Get(args[1].c_str());
+        if (!behavior) return "error unknown behavior: " + args[1] + "\n";
+        if (behavior->enabledPtr) {
+            *behavior->enabledPtr = true;
+            return "ok enabled " + args[1] + "\n";
+        }
+        return "error behavior has no enabledPtr\n";
+    }
+
+    if (command == "disable") {
+        if (args.size() < 2) return "error missing behavior id\n";
+        auto* behavior = BehaviorRegistry::Instance().Get(args[1].c_str());
+        if (!behavior) return "error unknown behavior: " + args[1] + "\n";
+        if (behavior->enabledPtr) {
+            *behavior->enabledPtr = false;
+            return "ok disabled " + args[1] + "\n";
+        }
+        return "error behavior has no enabledPtr\n";
+    }
+
     return "error unknown command: " + command + "\n";
 }

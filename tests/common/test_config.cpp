@@ -370,3 +370,152 @@ TEST(ConfigPath, ConfigDirPathReturnsNonEmpty) {
     fs::path dir = ConfigDirPath();
     EXPECT_FALSE(dir.empty());
 }
+
+// ===========================
+// Config Edge Case Tests
+// ===========================
+TEST(ConfigEdgeCase, SetInvalidBoolValue) {
+    Config_Init();
+    auto opt = Config_FindOptionByKey("audio_enabled");
+    if (!opt || opt->type != CFG_BOOL) return;
+
+    float original = *(bool*)opt->ptr;
+    std::string error;
+    bool result = Config_SetValueByKey("audio_enabled", "not_a_bool", &error);
+    EXPECT_FALSE(result);
+    EXPECT_FALSE(error.empty());
+    *(bool*)opt->ptr = original;
+}
+
+TEST(ConfigEdgeCase, SetInvalidIntValue) {
+    Config_Init();
+    auto opt = Config_FindOptionByKey("default_width");
+    if (!opt || opt->type != CFG_INT) return;
+
+    float original = *(int*)opt->ptr;
+    std::string error;
+    bool result = Config_SetValueByKey("default_width", "abc", &error);
+    EXPECT_FALSE(result);
+    EXPECT_FALSE(error.empty());
+    *(int*)opt->ptr = (int)original;
+}
+
+TEST(ConfigEdgeCase, SetInvalidFloatValue) {
+    Config_Init();
+    auto opt = Config_FindOptionByKey("global_scale");
+    if (!opt || opt->type != CFG_FLOAT) return;
+
+    float original = *(float*)opt->ptr;
+    std::string error;
+    bool result = Config_SetValueByKey("global_scale", "xyz", &error);
+    EXPECT_FALSE(result);
+    EXPECT_FALSE(error.empty());
+    *(float*)opt->ptr = original;
+}
+
+TEST(ConfigEdgeCase, ClampFloatToBounds) {
+    Config_Init();
+    auto opt = Config_FindOptionByKey("global_scale");
+    if (!opt || opt->type != CFG_FLOAT) return;
+
+    float original = *(float*)opt->ptr;
+
+    Config_SetValueByKey("global_scale", "-5.0");
+    EXPECT_FLOAT_EQ(*(float*)opt->ptr, opt->min);
+
+    Config_SetValueByKey("global_scale", "999.0");
+    EXPECT_FLOAT_EQ(*(float*)opt->ptr, opt->max);
+
+    *(float*)opt->ptr = original;
+}
+
+TEST(ConfigEdgeCase, ClampIntToBounds) {
+    Config_Init();
+    auto opt = Config_FindOptionByKey("default_width");
+    if (!opt || opt->type != CFG_INT) return;
+
+    int original = *(int*)opt->ptr;
+
+    Config_SetValueByKey("default_width", "-999999");
+    EXPECT_EQ(*(int*)opt->ptr, (int)opt->min);
+
+    Config_SetValueByKey("default_width", "999999");
+    EXPECT_EQ(*(int*)opt->ptr, (int)opt->max);
+
+    *(int*)opt->ptr = original;
+}
+
+TEST(ConfigEdgeCase, EmptyTomlLoad) {
+    Config_Init();
+    auto original = Config_FindOptionByKey("global_scale");
+    if (!original || original->type != CFG_FLOAT) return;
+
+    float saved = *(float*)original->ptr;
+    auto tbl = toml::parse_str("");
+    Config_Load(tbl);
+    // Should not crash, values unchanged
+    EXPECT_FLOAT_EQ(*(float*)original->ptr, saved);
+    *(float*)original->ptr = saved;
+}
+
+TEST(ConfigEdgeCase, MissingSectionLoad) {
+    Config_Init();
+    auto tbl = toml::parse_str("[Nonexistent]\nkey = 123\n");
+    Config_Load(tbl);
+    // Should not crash
+    SUCCEED();
+}
+
+TEST(ConfigEdgeCase, RoundTripSaveLoad) {
+    Config_Init();
+    auto opt = Config_FindOptionByKey("global_scale");
+    if (!opt || opt->type != CFG_FLOAT) return;
+
+    float original = *(float*)opt->ptr;
+    Config_SetValueByKey("global_scale", "2.5");
+    Config_SaveAll();
+
+    auto tbl = toml::parse(Config_GetPath());
+    float loaded = 0.0f;
+    if (config_helpers::get_float(tbl, "General", "global_scale", loaded)) {
+        EXPECT_NEAR(loaded, 2.5f, 0.01f);
+    }
+
+    *(float*)opt->ptr = original;
+    Config_SaveAll();
+}
+
+TEST(ConfigEdgeCase, AllBehaviorTogglesDirectAccess) {
+    // Behavior toggles are direct struct fields, not config registry entries
+    // They are set/toggled in memory by the GUI and menu system
+    Config_Init();
+
+    // Verify all behavior fields exist and default to false
+    EXPECT_FALSE(g_config.behaviors.fun.ball);
+    EXPECT_FALSE(g_config.behaviors.fun.breadCrumbs);
+    EXPECT_FALSE(g_config.behaviors.fun.hats);
+    EXPECT_FALSE(g_config.behaviors.fun.rainbow);
+    EXPECT_FALSE(g_config.behaviors.fun.acid);
+    EXPECT_FALSE(g_config.behaviors.fun.anger);
+    EXPECT_FALSE(g_config.behaviors.control.honcker);
+    EXPECT_FALSE(g_config.behaviors.control.jail);
+    EXPECT_FALSE(g_config.behaviors.control.portals);
+    EXPECT_FALSE(g_config.behaviors.control.drag);
+    EXPECT_FALSE(g_config.behaviors.control.banish);
+    EXPECT_FALSE(g_config.behaviors.info.nametag);
+    EXPECT_FALSE(g_config.behaviors.info.presence);
+    EXPECT_FALSE(g_config.behaviors.info.configGUI);
+    EXPECT_FALSE(g_config.behaviors.info.gooseManager);
+    EXPECT_FALSE(g_config.behaviors.systems.health);
+    EXPECT_FALSE(g_config.behaviors.systems.ai);
+    EXPECT_FALSE(g_config.behaviors.systems.pomodoro);
+
+    // Verify we can toggle them
+    g_config.behaviors.fun.ball = true;
+    EXPECT_TRUE(g_config.behaviors.fun.ball);
+    g_config.behaviors.fun.ball = false;
+
+    g_config.behaviors.systems.ai = true;
+    EXPECT_TRUE(g_config.behaviors.systems.ai);
+    g_config.behaviors.systems.ai = false;
+}

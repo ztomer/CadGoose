@@ -7,13 +7,17 @@ void RegisterCommon(std::vector<ConfigOption>& r) {
         &g_config.debug.toTerminal, OnConfigChange));
     r.push_back(CONFIG_BOOL("Debug", "visuals", "Visuals",
         &g_config.debug.visuals, OnConfigChange));
-    r.push_back(CONFIG_FLOAT("General", "global_scale", "Global Scale",
+    r.push_back(CONFIG_FLOAT_EX("General", "global_scale", "Global Scale",
+        "Multiplier for goose size and speeds (0.1 - 10.0)",
         &g_config.general.globalScale, 0.0f, 10.0f, 0.1f, OnConfigChange));
-    r.push_back(CONFIG_BOOL("General", "audio_enabled", "Audio Enabled",
+    r.push_back(CONFIG_BOOL_EX("General", "audio_enabled", "Audio Enabled",
+        "Play honk sounds when goose moves",
         &g_config.general.audioEnabled, OnConfigChange));
-    r.push_back(CONFIG_BOOL("General", "memes_enabled", "Memes Enabled",
+    r.push_back(CONFIG_BOOL_EX("General", "memes_enabled", "Memes Enabled",
+        "Allow picking up images and text as items",
         &g_config.general.memesEnabled, OnConfigChange));
-    r.push_back(CONFIG_BOOL("General", "canada_goose_mode", "Canada Goose Mode",
+    r.push_back(CONFIG_BOOL_EX("General", "canada_goose_mode", "Canada Goose Mode",
+        "Use black and white goose colors with black neck",
         &g_config.general.canadaGooseMode, OnConfigChange));
     r.push_back(CONFIG_INT("Screen", "default_width", "Default Width",
         &g_config.screen.defaultWidth, 0, 10000, OnConfigChange));

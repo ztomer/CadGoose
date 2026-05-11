@@ -204,32 +204,10 @@
 }
 
 @end
-
-static AIHTTPClient* g_httpClient = nil;
-
-static AIChatWindowController* g_chatController = nil;
-
-extern "C" void AI_ShowChatWindow(const char* gooseName) {
-    dispatch_async(dispatch_get_main_queue(), ^{
-        NSString* name = [NSString stringWithUTF8String:gooseName ? gooseName : "Goose"];
-
-        if (g_chatController) {
-            [g_chatController.window makeKeyAndOrderFront:nil];
-        } else {
-            g_chatController = [[AIChatWindowController alloc] initWithGooseName:name];
-            [g_chatController.window makeKeyAndOrderFront:nil];
-        }
-
-        [[NSApplication sharedApplication] activateIgnoringOtherApps:YES];
-    });
-}
 #endif
 
-static bool s_enabled = true;
-static bool s_chatOpen = false;
-static std::string s_pendingQuestion = "";
-static std::string s_lastResponse = "";
-static double s_lastResponseTime = 0.0f;
+static AIHTTPClient* g_httpClient = nil;
+static AIChatWindowController* g_chatController = nil;
 
 struct AIState : public BehaviorState {
     std::vector<std::string> conversationHistory;
@@ -243,42 +221,48 @@ struct AIState : public BehaviorState {
     }
 };
 
+extern "C" void AI_OpenChat(const char* gooseName) {
+    dispatch_async(dispatch_get_main_queue(), ^{
+        NSString* name = [NSString stringWithUTF8String:gooseName ? gooseName : "Goose"];
+        if (g_chatController) {
+            [g_chatController.window makeKeyAndOrderFront:nil];
+        } else {
+            g_chatController = [[AIChatWindowController alloc] initWithGooseName:name];
+            [g_chatController.window makeKeyAndOrderFront:nil];
+        }
+        [[NSApplication sharedApplication] activateIgnoringOtherApps:YES];
+    });
+}
+
+extern "C" void AI_CloseChat() {
+    dispatch_async(dispatch_get_main_queue(), ^{
+        if (g_chatController) {
+            [g_chatController.window close];
+            g_chatController = nil;
+        }
+    });
+}
+
+extern "C" void AI_SendMessage(const char* message) {
+    dispatch_async(dispatch_get_main_queue(), ^{
+        if (g_chatController) {
+            g_chatController.inputField.stringValue = [NSString stringWithUTF8String:message];
+            [g_chatController sendMessage:nil];
+        }
+    });
+}
+
+static bool s_enabled = true;
+
 static void init(BehaviorContext& ctx) {
     auto* state = BehaviorStateManager::Instance().GetOrCreate<AIState>(ctx.goose->id, "ai");
     state->Reset();
 }
 
 static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
-    if (!g_config.behaviors.systems.ai) return;
-
-    auto* state = BehaviorStateManager::Instance().GetOrCreate<AIState>(goose->id, "ai");
-
-    if (s_chatOpen && !s_pendingQuestion.empty() && !state->awaitingResponse) {
-        state->awaitingResponse = true;
-        state->lastQuestionTime = time;
-        s_lastResponse = "HONK! I'm thinking...";
-        s_lastResponseTime = time;
-        state->awaitingResponse = false;
-        s_pendingQuestion = "";
-    }
 }
 
 static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
-    if (!g_config.behaviors.systems.ai) return;
-}
-
-void AI_OpenChat(const char* gooseName) {
-    s_chatOpen = true;
-    AI_ShowChatWindow(gooseName);
-}
-
-void AI_SendMessage(const char* message) {
-    s_pendingQuestion = message;
-}
-
-void AI_CloseChat() {
-    s_chatOpen = false;
-    s_pendingQuestion = "";
 }
 
 static Behavior g_aiBehavior = {

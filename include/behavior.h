@@ -8,6 +8,7 @@
 #include <string>
 #include <vector>
 #include <memory>
+#include <mutex>
 #include <unordered_map>
 #include <functional>
 #include <shared_mutex>
@@ -64,6 +65,7 @@ struct BallState : public BehaviorState {
         float radius = 25.0f;
         bool active = true;
         BallType type = BallType::Generic;
+        int currentFrame = 0;
 
         float r = 0.3f, g = 0.5f, b = 0.9f;
         float strokeR = 0.2f, strokeG = 0.4f, strokeB = 0.7f;
@@ -267,11 +269,15 @@ struct ClickerState : public BehaviorState {
 
 struct HonckerState : public BehaviorState {
     double lastHonkTime = 0;
+    double lastShowTime = 0;
     bool isOnCooldown = false;
+    bool visible = false;
 
     void Reset() override {
         lastHonkTime = 0;
+        lastShowTime = 0;
         isOnCooldown = false;
+        visible = false;
     }
 };
 
@@ -309,7 +315,9 @@ public:
 
         auto it = states.find(key);
         if (it != states.end()) {
-            return dynamic_cast<T*>(it->second.get());
+            T* ptr = dynamic_cast<T*>(it->second.get());
+            if (ptr) return ptr;
+            states.erase(it);
         }
         auto state = std::make_unique<T>();
         T* ptr = state.get();
@@ -432,5 +440,13 @@ private:
         auto* _b = BehaviorRegistry::Instance().Get(name); \
         return _b && *_b->enabledPtr && (goose) && (goose)->behaviorsEnabled; \
     }())
+
+// API functions for behaviors
+struct Goose;
+float Rainbow_GetHue(int gooseId);
+void Rainbow_SetHue(int gooseId, float hue);
+void Health_Damage(Goose* goose, float amount, double time);
+void Health_Heal(Goose* goose, float amount);
+void Honcker_Honk(Goose* goose, double time);
 
 #endif // BEHAVIOR_H
