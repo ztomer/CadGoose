@@ -128,6 +128,9 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
 
         if (goose) {
             goose->target = Vector2{ballCenterDevX, ballCenterDevY};
+            if (goose->state == GooseState::WANDER) {
+                goose->state = GooseState::CHASE_CURSOR;
+            }
         }
     }
 
