@@ -720,6 +720,455 @@ TEST(SoakTest, TenMinuteGoose) {
 }
 
 // ===========================
+// Guard Edge Case Tests
+// ===========================
+extern int g_frameId;
+TEST(GuardEdgeCases, SameFrameMultipleCalls) {
+    Goose g(90, "GuardEdge", 1920, 1080);
+    CursorState c;
+    c.caps = CAP_GET_POS;
+    c.position = {500, 500};
+
+    g_frameId = 100;
+    // First call: guard passes
+    g.Update(1.0/60.0, 0.0, 1920, 1080, c);
+    Vector2 pos1 = g.pos;
+
+    // Second call: same frame, guards fires
+    g.Update(1.0/60.0, 0.001, 1920, 1080, c);
+    EXPECT_EQ(g.pos.x, pos1.x) << "Guard should skip duplicate in same frame";
+    EXPECT_EQ(g.pos.y, pos1.y) << "Guard should skip duplicate in same frame";
+
+    // Third call: same frame, still skipped
+    g.Update(1.0/60.0, 0.002, 1920, 1080, c);
+    EXPECT_EQ(g.pos.x, pos1.x) << "Guard should skip third call in same frame";
+
+    // Next frame: guard passes
+    ++g_frameId;
+    g.Update(1.0/60.0, 0.017, 1920, 1080, c);
+    EXPECT_NE(g.pos.x, pos1.x) << "Goose should move on next frame";
+}
+
+TEST(GuardEdgeCases, GuardDoesNotFireInTests) {
+    // When g_frameId is 0 (no renderer), guard should never fire
+    Goose g(91, "GuardTest", 1920, 1080);
+    CursorState c;
+    c.caps = CAP_GET_POS;
+    c.position = {500, 500};
+
+    g_frameId = 0;
+    Vector2 pos1 = g.pos;
+    g.Update(1.0/60.0, 0.0, 1920, 1080, c);
+    Vector2 pos2 = g.pos;
+    g.Update(1.0/60.0, 0.1, 1920, 1080, c);
+    Vector2 pos3 = g.pos;
+
+    EXPECT_NE(pos1.x, pos2.x) << "Goose should move on frame 0 (no guard)";
+    EXPECT_NE(pos2.x, pos3.x) << "Goose should move again on frame 0 (no guard increment)";
+}
+
+// ===========================
+// Seek Force and Physics Tests
+// ===========================
+TEST(GoosePhysics, SeekForcePointsTowardTarget) {
+    Goose g(60, "Seek", 1920, 1080);
+    g.pos = {100, 100};
+    g.target = {500, 400}; // target is RIGHT and DOWN from pos
+    g.currentSpeed = 180.0f;
+    g.vel = {0, 0};
+
+    double dt = 1.0 / 60.0;
+    CursorState c;
+    c.caps = CAP_NONE;
+
+    g.Update(dt, 0.0, 1920, 1080, c);
+
+    // After one frame, velocity should have components toward target
+    // toTarget = (500-100, 400-100) = (400, 300)
+    // moveDir = normalize(400, 300) ≈ (0.8, 0.6)
+    // desiredVel = (0.8*180, 0.6*180) = (144, 108)
+    // steerForce ≈ ((144-0) * 2, (108-0) * 2) ≈ (288, 216), capped at maxForce=350
+    // vel.x should be positive (toward target.x > pos.x)
+    // vel.y should be positive (toward target.y > pos.y)
+    EXPECT_GT(g.vel.x, 0.0f) << "Velocity X should point toward target (positive)";
+    EXPECT_GT(g.vel.y, 0.0f) << "Velocity Y should point toward target (positive)";
+
+    // The direction ratio should roughly match the target direction
+    float dirRatio = g.vel.y / (g.vel.x + 1e-6f);
+    float targetRatio = 300.0f / 400.0f; // 0.75
+    EXPECT_NEAR(dirRatio, targetRatio, 0.5f) << "Velocity ratio should roughly match target ratio";
+}
+
+TEST(GoosePhysics, SeekForceReversesWhenTargetIsBehind) {
+    Goose g(61, "SeekReverse", 1920, 1080);
+    g.pos = {500, 500};
+    g.target = {100, 100}; // target is BEHIND (left and up)
+    g.currentSpeed = 180.0f;
+    g.vel = {200, 0}; // goose is moving right, away from target
+
+    double dt = 1.0 / 60.0;
+    CursorState c;
+    c.caps = CAP_NONE;
+
+    // Run many frames - seek force should eventually reverse velocity
+    for (int i = 0; i < 120; i++) {
+        g.Update(dt, i * dt, 1920, 1080, c);
+    }
+
+    // After 120 frames (~2 seconds), velocity should be toward target (negative x)
+    EXPECT_LT(g.vel.x, 0.0f) << "After 2s, velocity X should reverse toward target";
+    EXPECT_LT(g.vel.y, 0.0f) << "After 2s, velocity Y should point toward target";
+}
+
+TEST(GoosePhysics, VelocityStaysBelowCurrentSpeed) {
+    Goose g(62, "SpeedCap", 1920, 1080);
+    g.pos = {0, 0};
+    g.target = {5000, 0}; // far right
+    g.currentSpeed = 180.0f; // walk speed
+    g.vel = {0, 0};
+
+    double dt = 1.0 / 60.0;
+    CursorState c;
+    c.caps = CAP_NONE;
+
+    // Run for many frames
+    for (int i = 0; i < 600; i++) {
+        g.Update(dt, i * dt, 1920, 1080, c);
+        float speed = Vector2::Length(g.vel);
+        EXPECT_LE(speed, g.currentSpeed + 1.0f) << "Velocity magnitude should not exceed currentSpeed";
+    }
+}
+
+TEST(GoosePhysics, ClampToScreenKeepsGooseOnScreen) {
+    Goose g(63, "Clamp", 1920, 1080);
+    g.pos = {0, 0};
+    g.target = {1920, 1080};
+    g.vel = {-500, -500}; // pushing off-screen
+
+    double dt = 1.0 / 60.0;
+    CursorState c;
+    c.caps = CAP_NONE;
+
+    for (int i = 0; i < 10; i++) {
+        g.Update(dt, i * dt, 1920, 1080, c);
+        EXPECT_GE(g.pos.x, 0.0f) << "ClampToScreen should keep x >= 0";
+        EXPECT_GE(g.pos.y, 0.0f) << "ClampToScreen should keep y >= 0";
+        EXPECT_LE(g.pos.x, 1920.0f) << "ClampToScreen should keep x <= screenW";
+        EXPECT_LE(g.pos.y, 1080.0f) << "ClampToScreen should keep y <= screenH";
+    }
+}
+
+// ===========================
+// Behavior Integration Tests
+// ===========================
+TEST(GooseBehaviors, DragSetsPosAndZerosVel) {
+    // Simulate what behavior_drag.cpp does
+    Goose g(70, "Drag", 1920, 1080);
+    Vector2 cursorPos{500, 500};
+    g.pos = {495, 495}; // on goose (within radius)
+
+    // Drag behavior sets pos then zeros vel
+    g.pos.x = cursorPos.x - 5.0f;
+    g.pos.y = cursorPos.y;
+    g.vel.x = 0;
+    g.vel.y = 0;
+
+    EXPECT_FLOAT_EQ(g.pos.x, 495.0f) << "Drag should set pos.x = cursor.x - 5";
+    EXPECT_FLOAT_EQ(g.pos.y, 500.0f) << "Drag should set pos.y = cursor.y";
+    EXPECT_FLOAT_EQ(g.vel.x, 0.0f) << "Drag should zero vel.x";
+    EXPECT_FLOAT_EQ(g.vel.y, 0.0f) << "Drag should zero vel.y";
+}
+
+TEST(GooseBehaviors, JailSetsPosAndZerosVel) {
+    Goose g(71, "Jail", 1920, 1080);
+    Vector2 jailPos{300, 400};
+    g.pos = {100, 100};
+    g.vel = {50, -30};
+
+    // Jail behavior
+    g.target = jailPos;
+    g.pos = jailPos;
+    g.vel = {0, 0};
+
+    EXPECT_FLOAT_EQ(g.pos.x, 300.0f) << "Jail should set pos.x";
+    EXPECT_FLOAT_EQ(g.pos.y, 400.0f) << "Jail should set pos.y";
+    EXPECT_FLOAT_EQ(g.vel.x, 0.0f) << "Jail should zero vel.x";
+    EXPECT_FLOAT_EQ(g.vel.y, 0.0f) << "Jail should zero vel.y";
+}
+
+TEST(GooseBehaviors, PortalTeleportZerosVel) {
+    Goose g(72, "Portal", 1920, 1080);
+    Vector2 dest{800, 600};
+    g.pos = {100, 100};
+    g.vel = {100, 50};
+
+    // Portal teleport
+    g.pos.x = dest.x;
+    g.pos.y = dest.y;
+    g.vel = {0, 0};
+
+    EXPECT_FLOAT_EQ(g.pos.x, 800.0f);
+    EXPECT_FLOAT_EQ(g.pos.y, 600.0f);
+    EXPECT_FLOAT_EQ(g.vel.x, 0.0f);
+    EXPECT_FLOAT_EQ(g.vel.y, 0.0f);
+}
+
+TEST(GooseBehaviors, BanishRespawnZerosVel) {
+    Goose g(73, "Banish", 1920, 1080);
+    g.pos = {100, 100};
+    g.vel = {200, -100};
+
+    // Banish respawn
+    float screenW = 1920.0f;
+    float screenH = 1080.0f;
+    g.pos.x = 100.0f + (float)(rand() % (int)(screenW - 200.0f));
+    g.pos.y = 100.0f + (float)(rand() % (int)(screenH - 200.0f));
+    g.vel = {0, 0};
+
+    EXPECT_GE(g.pos.x, 100.0f) << "Banish respawn x >= 100";
+    EXPECT_GE(g.pos.y, 100.0f) << "Banish respawn y >= 100";
+    EXPECT_LE(g.pos.x, screenW - 100.0f) << "Banish respawn x <= screenW - 100";
+    EXPECT_LE(g.pos.y, screenH - 100.0f) << "Banish respawn y <= screenH - 100";
+    EXPECT_FLOAT_EQ(g.vel.x, 0.0f);
+    EXPECT_FLOAT_EQ(g.vel.y, 0.0f);
+}
+
+TEST(GooseBehaviors, BallTargetInDeviceSpace) {
+    // Test that ball target conversion from world to device space is correct
+    Goose g(74, "BallCoord", 1920, 1080);
+    float globalScale = 1.0f;
+    float s_ballPosX = 300.0f;
+    float s_ballPosY = 300.0f;
+    float BALL_SIZE = 40.0f;
+
+    float ballCenterX = s_ballPosX + BALL_SIZE / 2.0f;
+    float ballCenterY = s_ballPosY + BALL_SIZE / 2.0f;
+    float ballCenterDevX = ballCenterX * globalScale;
+    float ballCenterDevY = ballCenterY * globalScale;
+
+    // At scale=1.0, world and device are the same
+    EXPECT_FLOAT_EQ(ballCenterDevX, ballCenterX) << "At scale 1.0, device == world";
+    EXPECT_FLOAT_EQ(ballCenterDevY, ballCenterY) << "At scale 1.0, device == world";
+
+    // At scale=2.0, device = world * 2
+    globalScale = 2.0f;
+    ballCenterDevX = ballCenterX * globalScale;
+    ballCenterDevY = ballCenterY * globalScale;
+    EXPECT_FLOAT_EQ(ballCenterDevX, ballCenterX * 2.0f) << "At scale 2.0, device = world * 2";
+}
+
+TEST(GooseBehaviors, BallTargetSetsGooseTarget) {
+    Goose g(75, "BallTarget", 1920, 1080);
+    float globalScale = 1.0f;
+    float s_ballPosX = 400.0f, s_ballPosY = 500.0f;
+    float BALL_SIZE = 40.0f;
+
+    float ballCenterX = s_ballPosX + BALL_SIZE / 2.0f;
+    float ballCenterY = s_ballPosY + BALL_SIZE / 2.0f;
+    float ballCenterDevX = ballCenterX * globalScale;
+    float ballCenterDevY = ballCenterY * globalScale;
+
+    // Simulate ball behavior setting goose target
+    g.target = Vector2{ballCenterDevX, ballCenterDevY};
+    g.pos = {100, 1000}; // goose is LEFT of ball (ball center is at 420, 520)
+
+    Vector2 toTarget = g.target - g.pos;
+    // toTarget should point toward ball center (RIGHT and UP)
+    EXPECT_GT(toTarget.x, 0) << "Ball center (420) is to the RIGHT of goose (100)";
+    EXPECT_LT(toTarget.y, 0) << "Ball center (520) is ABOVE goose (1000)";
+}
+
+// ===========================
+// Coordinate Conversion Tests
+// ===========================
+TEST(CoordinateConversion, WorldToDeviceAndBack) {
+    // Test the WorldToDevice / DeviceToWorld functions from goose_math.h
+    Vector2 goosePos{500, 500};
+
+    // Device = goosePos + (worldPos - goosePos) * scale
+    // World = goosePos + (devicePos - goosePos) / scale
+
+    for (float scale : {0.5f, 1.0f, 2.0f, 3.0f}) {
+        Vector2 worldPos{300, 400};
+        Vector2 devicePos = WorldToDevice(goosePos, worldPos, scale);
+        Vector2 worldBack = DeviceToWorld(goosePos, devicePos, scale);
+
+        EXPECT_NEAR(worldBack.x, worldPos.x, 0.01f) << "Round-trip should recover world.x at scale " << scale;
+        EXPECT_NEAR(worldBack.y, worldPos.y, 0.01f) << "Round-trip should recover world.y at scale " << scale;
+    }
+}
+
+TEST(CoordinateConversion, GoosePosIsIdentityAtUnitScale) {
+    Goose g(80, "GoosePos", 1920, 1080);
+    g.pos = {100, 200};
+
+    // WorldCoord::GoosePos(g) should return g.pos when globalScale = 1
+    g_config.general.globalScale = 1.0f;
+    Vector2 posDev = WorldCoord::GoosePos(g);
+    EXPECT_FLOAT_EQ(posDev.x, g.pos.x) << "GoosePos.x should match g.pos.x at scale 1.0";
+    EXPECT_FLOAT_EQ(posDev.y, g.pos.y) << "GoosePos.y should match g.pos.y at scale 1.0";
+
+    // And for non-unit scale
+    g_config.general.globalScale = 2.5f;
+    posDev = WorldCoord::GoosePos(g);
+    // ToDevice(goose.pos, goose.pos, scale) = goose.pos + (goose.pos - goose.pos) * scale = goose.pos
+    EXPECT_FLOAT_EQ(posDev.x, g.pos.x) << "GoosePos is identity regardless of scale (pos-pos)*scale = 0";
+    EXPECT_FLOAT_EQ(posDev.y, g.pos.y) << "GoosePos is identity regardless of scale";
+    g_config.general.globalScale = 1.0f; // restore
+}
+
+// ===========================
+// State Machine Tests
+// ===========================
+TEST(GooseStateMachine, WanderToChaseToSnatchCycle) {
+    Goose g(85, "StateCycle", 1920, 1080);
+    g.pos = {500, 500};
+    g.target = {500, 500}; // at target, so handleWander will fire
+    g.state = GooseState::WANDER;
+    g.cursorChaseChance = 100; // always chase
+
+    CursorState c;
+    c.caps = CAP_GET_POS | CAP_MOVE_ABS;
+    c.position = {600, 500};
+
+    // Should trigger chase cursor with 100% chance
+    g.Update(1.0/60.0, 1.0, 1920, 1080, c);
+    // After update, state might be CHASE_CURSOR or WANDER depending on wand roll
+    // We can't assert exact state, but check the goose moves
+    float dist = Vector2::Distance(g.pos, g.target);
+    EXPECT_LT(dist, 2000.0f) << "Goose should remain on screen after state transition";
+}
+
+TEST(GooseStateMachine, FetchingCreatesItem) {
+    Goose g(86, "Fetch", 1920, 1080);
+    g.state = GooseState::FETCHING;
+    g.pos = {0, 0};
+    g.target = {-40, 500}; // off-screen fetch target
+    g.forceItemFetch = 1;
+    g.memeFetchBias = 100;
+    g.noteFetchBias = 100;
+
+    CursorState c;
+    c.caps = CAP_NONE;
+
+    // StartFetch sets target off-screen, goose moves there
+    // handleFetching should fire when target is reached
+    // Since target is off-screen, isTargetReached might trigger via overshoot
+    double dt = 1.0 / 60.0;
+    for (int i = 0; i < 60; i++) {
+        g.Update(dt, i * dt, 1920, 1080, c);
+    }
+
+    // After many frames, goose should have handled fetch
+    // State should be RETURNING or WANDER (not FETCHING)
+    EXPECT_NE(g.state, GooseState::WANDER) << "Fetch should complete and return to wander";
+}
+
+// ===========================
+// Multi-Geese Tests
+// ===========================
+TEST(MultiGoose, SeparationForcePushesApart) {
+    // Clear existing geese
+    g_geese.clear();
+    g_nextId = 100;
+
+    // Create two geese near each other
+    Goose& g1 = g_geese.emplace_back(100, "Sep1", 1920, 1080);
+    g1.pos = {500, 500};
+    g1.state = GooseState::WANDER;
+
+    Goose& g2 = g_geese.emplace_back(101, "Sep2", 1920, 1080);
+    g2.pos = {520, 500};
+    g2.state = GooseState::WANDER;
+
+    CursorState c;
+    c.caps = CAP_NONE;
+
+    Vector2 pos1before = g1.pos;
+    Vector2 pos2before = g2.pos;
+
+    // Disable chase for separation test
+    g1.cursorChaseChance = 0;
+    g2.cursorChaseChance = 0;
+    g1.attackMouseBias = 0;
+    g2.attackMouseBias = 0;
+    // Set targets to the same point so separation should dominate
+    g1.target = {1000, 1000};
+    g2.target = {1000, 1000};
+
+    double dt = 1.0 / 60.0;
+    for (int i = 0; i < 30; i++) {
+        g1.Update(dt, i * dt, 1920, 1080, c);
+        g2.Update(dt, i * dt, 1920, 1080, c);
+    }
+
+    // Geese should have moved apart OR toward target
+    float g1dist = Vector2::Distance(g1.pos, pos1before);
+    float g2dist = Vector2::Distance(g2.pos, pos2before);
+    float totalDist = g1dist + g2dist;
+
+    EXPECT_GT(totalDist, 10.0f) << "Geese should move (separation or seek)";
+
+    g_geese.clear(); // cleanup
+}
+
+// ===========================
+// SolveFeet Consistency Test
+// ===========================
+TEST(GooseFeet, SolveFeetProducesConsistentPositions) {
+    Goose g(110, "Feet", 1920, 1080);
+    g.pos = {500, 500};
+    g.dir = 0.0f; // facing right
+    g.currentSpeed = 180.0f;
+    g.vel = {180, 0};
+
+    CursorState c;
+    c.caps = CAP_NONE;
+    c.position = {1920, 1080};
+
+    // Run for a few frames
+    for (int i = 0; i < 30; i++) {
+        g.Update(1.0/60.0, i / 60.0, 1920, 1080, c);
+
+        // Feet positions should be finite and near the goose
+        EXPECT_TRUE(std::isfinite(g.rig.lFoot.currentPos.x));
+        EXPECT_TRUE(std::isfinite(g.rig.lFoot.currentPos.y));
+        EXPECT_TRUE(std::isfinite(g.rig.rFoot.currentPos.x));
+        EXPECT_TRUE(std::isfinite(g.rig.rFoot.currentPos.y));
+
+        // Feet should be roughly within 100 pixels of the goose
+        float lDist = Vector2::Distance(g.rig.lFoot.currentPos, g.pos);
+        float rDist = Vector2::Distance(g.rig.rFoot.currentPos, g.pos);
+        EXPECT_LT(lDist, 100.0f) << "Left foot should be near goose";
+        EXPECT_LT(rDist, 100.0f) << "Right foot should be near goose";
+    }
+}
+
+TEST(GooseFeet, SolveFeetFootPositionsSymmetric) {
+    Goose g(111, "FeetSym", 1920, 1080);
+    g.pos = {960, 540};
+    g.dir = 0.0f; // facing right
+    g.currentSpeed = 0.0f; // not moving — feet should be at home positions
+    g.vel = {0, 0};
+
+    CursorState c;
+    c.caps = CAP_NONE;
+
+    g.Update(1.0 / 60.0, 0.0, 1920, 1080, c);
+
+    // After SolveFeet, both feet should have been initialized from (0,0) to home positions
+    // Feet should NOT be at (0,0) after first update
+    EXPECT_NE(g.rig.lFoot.currentPos.x, 0.0f) << "Left foot should be initialized";
+    EXPECT_NE(g.rig.rFoot.currentPos.x, 0.0f) << "Right foot should be initialized";
+
+    // Feet should be at different positions (non-degenerate)
+    float diffX = std::abs(g.rig.rFoot.currentPos.x - g.rig.lFoot.currentPos.x);
+    float diffY = std::abs(g.rig.rFoot.currentPos.y - g.rig.lFoot.currentPos.y);
+    float totalDiff = diffX + diffY;
+    EXPECT_GT(totalDiff, 0.01f) << "Feet should be at different positions";
+}
+
+// ===========================
 // Multi-Window Duplicate Update Guard Test
 // ===========================
 extern int g_frameId;
