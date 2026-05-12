@@ -67,8 +67,6 @@ void s_setBoolValue(const std::string& key, bool value);
 - (instancetype)initWithFrame:(NSRect)frame {
     self = [super initWithFrame:frame];
     if (self) {
-        self.wantsLayer = YES;
-
         _toggle = [[NSButton alloc] initWithFrame:NSMakeRect(8, 4, 20, 20)];
         _toggle.buttonType = NSButtonTypeSwitch;
         _toggle.title = @"";
@@ -142,12 +140,7 @@ static NSMutableArray* g_configItemsForAccess = nil;
 - (instancetype)initWithFrame:(NSRect)frame {
     self = [super initWithFrame:frame];
     if (self) {
-        self.wantsLayer = YES;
-        self.layer.backgroundColor = [NSColor colorWithCalibratedWhite:0.92 alpha:1.0].CGColor;
-        self.layer.borderColor = [NSColor separatorColor].CGColor;
-        self.layer.borderWidth = 0.5;
         self.hidden = YES;
-
         // Header area
         _titleLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(14, frame.size.height - 28, frame.size.width - 60, 20)];
         _titleLabel.font = [NSFont boldSystemFontOfSize:15];
@@ -167,8 +160,6 @@ static NSMutableArray* g_configItemsForAccess = nil;
         [self addSubview:_closeBtn];
 
         _contentView = [[NSView alloc] initWithFrame:NSMakeRect(0, 0, frame.size.width, frame.size.height - 36)];
-        _contentView.wantsLayer = YES;
-        _contentView.layer.backgroundColor = [NSColor colorWithCalibratedWhite:0.96 alpha:1.0].CGColor;
         _contentView.autoresizingMask = NSViewWidthSizable | NSViewHeightSizable;
         [self addSubview:_contentView];
     }
@@ -470,7 +461,6 @@ static NSMutableArray* g_configItemsForAccess = nil;
         [self.window center];
 
         NSView* contentView = self.window.contentView;
-        contentView.wantsLayer = YES;
 
         // Header
         NSView* headerView = [[NSView alloc] initWithFrame:NSMakeRect(0, 532, 700, 48)];
@@ -506,8 +496,6 @@ static NSMutableArray* g_configItemsForAccess = nil;
 
         // Separator between table and detail
         NSView* separator = [[NSView alloc] initWithFrame:NSMakeRect(699, 0, 1, 529)];
-        separator.wantsLayer = YES;
-        separator.layer.backgroundColor = [NSColor separatorColor].CGColor;
         separator.autoresizingMask = NSViewHeightSizable | NSViewMaxXMargin;
         self.separatorLine = separator;
         [contentView addSubview:separator];
