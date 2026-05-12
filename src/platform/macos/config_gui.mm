@@ -143,28 +143,33 @@ static NSMutableArray* g_configItemsForAccess = nil;
     self = [super initWithFrame:frame];
     if (self) {
         self.wantsLayer = YES;
-        self.layer.backgroundColor = [NSColor colorWithCalibratedWhite:0.95 alpha:1.0].CGColor;
+        self.layer.backgroundColor = [NSColor colorWithCalibratedWhite:0.92 alpha:1.0].CGColor;
+        self.layer.borderColor = [NSColor separatorColor].CGColor;
+        self.layer.borderWidth = 0.5;
         self.hidden = YES;
 
-        _titleLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(12, 8, DETAIL_WIDTH - 60, 20)];
+        // Header area
+        _titleLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(14, frame.size.height - 28, frame.size.width - 60, 20)];
         _titleLabel.font = [NSFont boldSystemFontOfSize:15];
         _titleLabel.textColor = [NSColor labelColor];
         _titleLabel.backgroundColor = [NSColor clearColor];
         _titleLabel.bordered = NO;
         _titleLabel.editable = NO;
+        _titleLabel.autoresizingMask = NSViewWidthSizable | NSViewMinYMargin;
         [self addSubview:_titleLabel];
 
-        _closeBtn = [[NSButton alloc] initWithFrame:NSMakeRect(DETAIL_WIDTH - 28, 8, 20, 20)];
+        _closeBtn = [[NSButton alloc] initWithFrame:NSMakeRect(frame.size.width - 28, frame.size.height - 28, 20, 20)];
         _closeBtn.title = @"✕";
         _closeBtn.bezelStyle = NSBezelStyleRounded;
         _closeBtn.target = self;
         _closeBtn.action = @selector(closeDetail:);
-        _closeBtn.autoresizingMask = NSViewMinXMargin;
+        _closeBtn.autoresizingMask = NSViewMinXMargin | NSViewMinYMargin;
         [self addSubview:_closeBtn];
 
-        _contentView = [[NSView alloc] initWithFrame:NSMakeRect(0, 40, DETAIL_WIDTH, DETAIL_HEIGHT - 50)];
+        _contentView = [[NSView alloc] initWithFrame:NSMakeRect(0, 0, frame.size.width, frame.size.height - 36)];
         _contentView.wantsLayer = YES;
-        _contentView.layer.backgroundColor = [NSColor clearColor].CGColor;
+        _contentView.layer.backgroundColor = [NSColor colorWithCalibratedWhite:0.96 alpha:1.0].CGColor;
+        _contentView.autoresizingMask = NSViewWidthSizable | NSViewHeightSizable;
         [self addSubview:_contentView];
     }
     return self;
