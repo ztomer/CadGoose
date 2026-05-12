@@ -146,8 +146,15 @@ static void DrawLine(CGContextRef ctx, Vector2 a, Vector2 b, float width, float 
 }
 
 - (void)tick {
+    // Increment g_frameId only once per real frame batch, not once per window
+    // Both windows' timers fire within the same runloop pass on the serial main queue.
     extern int g_frameId;
-    ++g_frameId;
+    static bool s_latch = false;
+    if (!s_latch) {
+        s_latch = true;
+        ++g_frameId;
+        dispatch_async(dispatch_get_main_queue(), ^{ s_latch = false; });
+    }
 
     self.currentTime += g_config.render.frameDt;
     self.tickCount++;
