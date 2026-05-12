@@ -272,8 +272,12 @@ static NSMutableArray* g_configItemsForAccess = nil;
         y -= 35;
     } else if ([key isEqualToString:@"behaviors.systems.ai"]) {
         _titleLabel.stringValue = @"AI Chat";
+        [self addInstructionLabel:@"🤖 Chat with your goose using local AI" atY:y];
+        y -= 25;
         [self addProviderSelectorAtY:y];
-        y -= 90;
+        y -= 120;
+        [self addPromptDisplayAtY:y];
+        y -= 60;
     } else if ([key isEqualToString:@"behaviors.systems.pomodoro"]) {
         _titleLabel.stringValue = @"Pomodoro Timer";
         [self addSliderWithLabel:@"Work (min)" min:1.0f max:60.0f value:g_config.behaviors.pomodoro.workMinutes atY:y key:@"behaviors.systems.pomodoro.workDuration"];
@@ -388,6 +392,28 @@ static NSMutableArray* g_configItemsForAccess = nil;
     modelField.target = self;
     modelField.action = @selector(modelChanged:);
     [_contentView addSubview:modelField];
+}
+
+- (void)addPromptDisplayAtY:(float)y {
+    NSTextField* promptTitle = [[NSTextField alloc] initWithFrame:NSMakeRect(12, y, 200, 16)];
+    promptTitle.stringValue = @"🧠 System Prompt:";
+    promptTitle.font = [NSFont fontWithName:@"Comic Sans MS" size:12] ?: [NSFont boldSystemFontOfSize:12];
+    promptTitle.textColor = [NSColor labelColor];
+    promptTitle.backgroundColor = [NSColor clearColor];
+    promptTitle.bordered = NO;
+    promptTitle.editable = NO;
+    [_contentView addSubview:promptTitle];
+
+    // Build the prompt text from the goose persona
+    NSString* promptText = @"You are a mischievous Canadian goose. You live on\nthe user's desktop, steal things, and honk a lot.\nKeep responses short, sarcastic, and goose-like.";
+    NSTextField* promptBody = [[NSTextField alloc] initWithFrame:NSMakeRect(12, y - 45, DETAIL_WIDTH - 24, 40)];
+    promptBody.font = [NSFont fontWithName:@"Comic Sans MS" size:11] ?: [NSFont systemFontOfSize:11];
+    promptBody.textColor = [NSColor secondaryLabelColor];
+    promptBody.backgroundColor = [NSColor clearColor];
+    promptBody.bordered = NO;
+    promptBody.editable = NO;
+    promptBody.stringValue = promptText;
+    [_contentView addSubview:promptBody];
 }
 
 - (void)sliderChanged:(NSSlider*)sender {
