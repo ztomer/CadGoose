@@ -81,6 +81,7 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
             float screenH = (float)g_screenHeight;
             goose->pos.x = 100.0f + (float)(rand() % (int)(screenW - 200.0f));
             goose->pos.y = 100.0f + (float)(rand() % (int)(screenH - 200.0f));
+            goose->vel = {0, 0};
             s_banished = false;
             state->fadeProgress = 0.0f;
         }

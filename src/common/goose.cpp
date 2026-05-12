@@ -3,6 +3,7 @@
 #include "config.h"
 #include "goose_math.h"
 #include "world.h"
+#include "behavior.h"
 #include <cmath>
 #include <cstdio>
 
@@ -233,6 +234,7 @@ void Goose::UpdateDirection() {
 
 CursorAction Goose::Update(double dt, double time, int w, int h,
                            const CursorState &cursor) {
+  // Guard against duplicate updates from multiple windows - handled in renderer.mm dispatch_async
   if (state != prevState) {
     FILE *f = GetDebugLog();
     const char *stateNames[] = {"W", "F", "R", "C", "S"};
@@ -306,6 +308,8 @@ CursorAction Goose::Update(double dt, double time, int w, int h,
 
   SolveFeet(time);
   UpdateDrag(dt);
+
+  BehaviorRegistry::Instance().TickAll(this, dt, time);
 
   return action;
 }

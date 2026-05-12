@@ -63,8 +63,8 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
     if (s_jailToggle) {
         goose->target = s_jailPosition;
         s_jailPos = goose->pos;
-
         goose->pos = s_jailPosition;
+        goose->vel = {0, 0};
     }
 }
 

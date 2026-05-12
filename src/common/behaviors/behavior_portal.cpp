@@ -76,11 +76,13 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
         if (inP1 && state->portalB.active) {
             goose->pos.x = state->portalB.x;
             goose->pos.y = state->portalB.y;
+            goose->vel = {0, 0};
             g_assets.Honk();
             state->justTeleported = true;
         } else if (inP2 && state->portalA.active) {
             goose->pos.x = state->portalA.x;
             goose->pos.y = state->portalA.y;
+            goose->vel = {0, 0};
             g_assets.Honk();
             state->justTeleported = true;
         }

@@ -149,24 +149,24 @@ static void DrawLine(CGContextRef ctx, Vector2 a, Vector2 b, float width, float 
     self.currentTime += g_config.render.frameDt;
     self.tickCount++;
 
+    // Only update geese once per real frame (not once per window)
+    static int s_updateToggle = 0;
+    bool shouldUpdate = (++s_updateToggle % 2 == 1);
+
     CursorState cursor = {};
     CursorAction action = {};
     if (g_cursorProvider) {
         cursor = g_cursorProvider->Read();
     }
 
-    for (auto& g : g_geese) {
-        CursorAction a = g.Update(g_config.render.frameDt, self.currentTime, (int)self.bounds.size.width, (int)self.bounds.size.height, cursor);
-        if (!a.isNone()) action = a;
-        if (g_debugMode && self.tickCount % g_config.render.debugTickMod == 0) {
-            DEBUG_LOG("Goose %d pos: %.1f,%.1f speed: %.1f", g.id, g.pos.x, g.pos.y, g.currentSpeed);
+    if (shouldUpdate) {
+        for (auto& g : g_geese) {
+            CursorAction a = g.Update(g_config.render.frameDt, self.currentTime, (int)self.bounds.size.width, (int)self.bounds.size.height, cursor);
+            if (!a.isNone()) action = a;
+            if (g_debugMode && self.tickCount % g_config.render.debugTickMod == 0) {
+                DEBUG_LOG("Goose %d pos: %.1f,%.1f speed: %.1f", g.id, g.pos.x, g.pos.y, g.currentSpeed);
+            }
         }
-
-        BehaviorContext ctx;
-        ctx.goose = &g;
-        ctx.time = self.currentTime;
-        ctx.isJailed = false;
-        BehaviorRegistry::Instance().TickAll(&g, g_config.render.frameDt, self.currentTime);
     }
 
     if (g_cursorProvider && !action.isNone()) {
