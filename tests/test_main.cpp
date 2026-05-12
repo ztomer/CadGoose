@@ -720,54 +720,6 @@ TEST(SoakTest, TenMinuteGoose) {
 }
 
 // ===========================
-// Guard Edge Case Tests
-// ===========================
-extern int g_frameId;
-TEST(GuardEdgeCases, SameFrameMultipleCalls) {
-    Goose g(90, "GuardEdge", 1920, 1080);
-    CursorState c;
-    c.caps = CAP_GET_POS;
-    c.position = {500, 500};
-
-    g_frameId = 100;
-    // First call: guard passes
-    g.Update(1.0/60.0, 0.0, 1920, 1080, c);
-    Vector2 pos1 = g.pos;
-
-    // Second call: same frame, guards fires
-    g.Update(1.0/60.0, 0.001, 1920, 1080, c);
-    EXPECT_EQ(g.pos.x, pos1.x) << "Guard should skip duplicate in same frame";
-    EXPECT_EQ(g.pos.y, pos1.y) << "Guard should skip duplicate in same frame";
-
-    // Third call: same frame, still skipped
-    g.Update(1.0/60.0, 0.002, 1920, 1080, c);
-    EXPECT_EQ(g.pos.x, pos1.x) << "Guard should skip third call in same frame";
-
-    // Next frame: guard passes
-    ++g_frameId;
-    g.Update(1.0/60.0, 0.017, 1920, 1080, c);
-    EXPECT_NE(g.pos.x, pos1.x) << "Goose should move on next frame";
-}
-
-TEST(GuardEdgeCases, GuardDoesNotFireInTests) {
-    // When g_frameId is 0 (no renderer), guard should never fire
-    Goose g(91, "GuardTest", 1920, 1080);
-    CursorState c;
-    c.caps = CAP_GET_POS;
-    c.position = {500, 500};
-
-    g_frameId = 0;
-    Vector2 pos1 = g.pos;
-    g.Update(1.0/60.0, 0.0, 1920, 1080, c);
-    Vector2 pos2 = g.pos;
-    g.Update(1.0/60.0, 0.1, 1920, 1080, c);
-    Vector2 pos3 = g.pos;
-
-    EXPECT_NE(pos1.x, pos2.x) << "Goose should move on frame 0 (no guard)";
-    EXPECT_NE(pos2.x, pos3.x) << "Goose should move again on frame 0 (no guard increment)";
-}
-
-// ===========================
 // Seek Force and Physics Tests
 // ===========================
 TEST(GoosePhysics, SeekForcePointsTowardTarget) {
@@ -1169,37 +1121,6 @@ TEST(GooseFeet, SolveFeetFootPositionsSymmetric) {
 }
 
 // ===========================
-// Multi-Window Duplicate Update Guard Test
-// ===========================
-extern int g_frameId;
-TEST(GuardTest, DuplicateUpdateSkipped) {
-    Goose g(99, "Guard", 1920, 1080);
-    CursorState c;
-    c.caps = CAP_GET_POS;
-    c.position = {500, 500};
-
-    // Simulate renderer running — it increments g_frameId to >0
-    g_frameId = 42;
-
-    // First update — should run normally
-    Vector2 posBefore = g.pos;
-    g.Update(1.0/60.0, 0.0, 1920, 1080, c);
-    Vector2 posAfter1 = g.pos;
-    EXPECT_NE(posAfter1.x, posBefore.x) << "Goose should move on first update";
-
-    // Second update at same g_frameId — guard should prevent double-move
-    // This simulates a second window's timer firing within the same tick cycle.
-    float movedX = g.pos.x;
-    g.Update(1.0/60.0, 0.001, 1920, 1080, c);
-    EXPECT_EQ(g.pos.x, movedX) << "Duplicate update was NOT skipped — double-move detected";
-
-    // Next real frame (renderer incremented g_frameId)
-    ++g_frameId;
-    g.Update(1.0/60.0, 0.017, 1920, 1080, c);
-    EXPECT_NE(g.pos.x, movedX) << "Goose didn't move on next frame";
-}
-
-// ===========================
 // Physics Force Edge Cases
 // ===========================
 TEST(GoosePhysics, SeekForceSettlesAtArrival) {
@@ -1299,7 +1220,6 @@ TEST(GooseDirection, UpdateDirectionFromVelocity) {
 }
 
 TEST(GooseDirection, DirectionBlendsSmoothly) {
-    g_frameId = 0;
     Goose g(211, "DirBlend", 1920, 1080);
     g.pos = {500, 500};
     g.target = {500, 0}; // ABOVE the goose — vel should go UP, dir → -90°
@@ -1493,7 +1413,6 @@ TEST(GooseLifecycle, RapidFrameBurst) {
 // State Transition Constraints
 // ===========================
 TEST(GooseStates, WanderPickNewTarget) {
-    g_frameId = 0; // no guard in tests
     Goose g(410, "PickTgt", 1920, 1080);
 
     g.pos = {500, 500};
@@ -1511,7 +1430,6 @@ TEST(GooseStates, WanderPickNewTarget) {
 }
 
 TEST(GooseStates, SnatchReleaseTransitionsToWander) {
-    g_frameId = 0;
     Goose g(411, "SnatchEnd", 1920, 1080);
     g.state = GooseState::SNATCH_CURSOR;
     g.snatchStartTime = 0.0;
@@ -1571,9 +1489,6 @@ TEST(EdgeCase, GooseAtScreenCornerBottomRight) {
 }
 
 TEST(EdgeCase, GooseNanPosition) {
-    // NaN position is handled in DrawGoose (skips rendering) but physics may propagate NaN.
-    // Test that we can recover by setting a valid position afterwards.
-    g_frameId = 0;
     Goose g(422, "NanPos", 1920, 1080);
     // Start from a valid position, then force a target far away
     g.pos = {500, 500};
@@ -1611,8 +1526,6 @@ TEST(EdgeCase, GooseNegativeDimensions) {
 // Feet NaN / Double-Update Recovery Tests
 // ===========================
 TEST(FeetStability, ConsecutiveUpdatesNoNanFeet) {
-    // Simulate what happens when double-update occurs (both windows call Update)
-    g_frameId = 0;
     Goose g(500, "FeetStress", 1920, 1080);
     g.pos = {500, 500};
     g.target = {800, 600};
@@ -1648,7 +1561,6 @@ TEST(FeetStability, ConsecutiveUpdatesNoNanFeet) {
 }
 
 TEST(FeetStability, SolveFeetNanGuardRecovers) {
-    g_frameId = 0;
     Goose g(501, "FeetRecover", 1920, 1080);
     g.pos = {500, 500};
     g.target = {500, 500};
@@ -1676,56 +1588,7 @@ TEST(FeetStability, SolveFeetNanGuardRecovers) {
     EXPECT_LT(Vector2::Distance(g.rig.rFoot.currentPos, g.pos), 100.0f);
 }
 
-// ===========================
-// Renderer Guard Integration Test
-// ===========================
-TEST(GuardIntegration, BatchGuardPreventsDoubleMove) {
-    // Simulates the renderer's batch guard: first tick updates, second skips
-    Goose g(502, "BatchGuard", 1920, 1080);
-    g_frameId = 0;
 
-    CursorState c;
-    c.caps = CAP_GET_POS;
-    c.position = {500, 500};
-
-    // First tick — should update
-    ++g_frameId; // simulates renderer incrementing on first tick
-    Vector2 pos1 = g.pos;
-    g.Update(1.0/60.0, 0.0, 1920, 1080, c);
-    EXPECT_NE(g.pos.x, pos1.x) << "First tick should move goose";
-
-    // Second tick — g_frameId unchanged, guard should fire
-    float posXafter1 = g.pos.x;
-    g.Update(1.0/60.0, 0.001, 1920, 1080, c);
-    EXPECT_EQ(g.pos.x, posXafter1) << "Second tick should be blocked by guard";
-
-    // Third tick — new g_frameId, should update again
-    ++g_frameId;
-    g.Update(1.0/60.0, 0.017, 1920, 1080, c);
-    EXPECT_NE(g.pos.x, posXafter1) << "Third tick should move goose again";
-}
-
-TEST(GuardIntegration, BatchGuardKeepsFeetFinite) {
-    // 1000 simulated frames with both windows calling Update
-    // Verifies no foot corruption over time
-    Goose g(503, "BatchStress", 1920, 1080);
-    g_frameId = 0;
-
-    CursorState c;
-    c.caps = CAP_GET_POS;
-    c.position = {960, 540};
-
-    for (int frame = 0; frame < 1000; frame++) {
-        ++g_frameId; // first window
-        g.Update(1.0/60.0, frame / 60.0, 1920, 1080, c);
-        g.Update(1.0/60.0, frame / 60.0 + 0.001, 1920, 1080, c); // second window — blocked by guard
-
-        EXPECT_TRUE(std::isfinite(g.rig.lFoot.currentPos.x));
-        EXPECT_TRUE(std::isfinite(g.rig.rFoot.currentPos.x));
-        EXPECT_LT(Vector2::Distance(g.rig.lFoot.currentPos, g.pos), 200.0f);
-        EXPECT_LT(Vector2::Distance(g.rig.rFoot.currentPos, g.pos), 200.0f);
-    }
-}
 
 void AssetManager::MudSquish() {}
 CGImageRef AssetManager::GetBehaviorImage(const std::string&) { return nullptr; }
