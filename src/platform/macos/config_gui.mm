@@ -79,9 +79,6 @@ void s_setBoolValue(const std::string& key, bool value);
     if ([key hasSuffix:@"drag"]) return @"🖱️";
     if ([key hasSuffix:@"banish"]) return @"👻";
     if ([key hasSuffix:@"nametag"]) return @"🏷️";
-    if ([key hasSuffix:@"presence"]) return @"👤";
-    if ([key hasSuffix:@"configGUI"]) return @"⚙️";
-    if ([key hasSuffix:@"gooseManager"]) return @"🦆";
     if ([key hasSuffix:@"health"]) return @"❤️";
     if ([key hasSuffix:@"ai"]) return @"🤖";
     if ([key hasSuffix:@"pomodoro"]) return @"⏰";
@@ -557,6 +554,7 @@ static NSMutableArray* g_configItemsForAccess = nil;
         scrollView.hasVerticalScroller = YES;
         scrollView.hasHorizontalScroller = NO;
         scrollView.borderType = NSNoBorder;
+        scrollView.drawsBackground = NO;
         scrollView.autoresizingMask = NSViewHeightSizable | NSViewMaxXMargin;
 
         NSTableView* tableView = [[NSTableView alloc] initWithFrame:NSMakeRect(0, 0, 700, 528)];
@@ -565,6 +563,7 @@ static NSMutableArray* g_configItemsForAccess = nil;
         tableView.delegate = self;
         tableView.dataSource = self;
         tableView.selectionHighlightStyle = NSTableViewSelectionHighlightStyleNone;
+        tableView.backgroundColor = [NSColor clearColor];
         tableView.intercellSpacing = NSMakeSize(0, 0);
 
         NSTableColumn* column = [[NSTableColumn alloc] initWithIdentifier:@"main"];
@@ -629,9 +628,6 @@ static NSMutableArray* g_configItemsForAccess = nil;
 
     [self.configItems addObject:@{@"name": @"INFO", @"type": @"header"}];
     [self addRow:@"Nametag" key:@"behaviors.info.nametag" desc:@"Show goose name above head"];
-    [self addRow:@"Presence" key:@"behaviors.info.presence" desc:@"Show Discord Rich Presence"];
-    [self addRow:@"Config GUI" key:@"behaviors.info.configGUI" desc:@"Toggle this settings window"];
-    [self addRow:@"Goose Manager" key:@"behaviors.info.gooseManager" desc:@"Control goose tasks and speeds"];
 
     [self.configItems addObject:@{@"name": @"SYSTEMS", @"type": @"header"}];
     [self addRow:@"Health" key:@"behaviors.systems.health" desc:@"Health bar system for geese"];
@@ -705,6 +701,12 @@ void s_setBoolValue(const std::string& key, bool value) {
     }
 }
 
+- (CGFloat)tableView:(NSTableView*)tableView heightOfRow:(NSInteger)row {
+    NSDictionary* item = self.configItems[row];
+    if ([item[@"type"] isEqualToString:@"header"]) return 28;
+    return 44;
+}
+
 - (NSInteger)numberOfRowsInTableView:(NSTableView*)tableView {
     return self.configItems.count;
 }
@@ -724,7 +726,7 @@ void s_setBoolValue(const std::string& key, bool value) {
             label.font = [NSFont fontWithName:@"Comic Sans MS" size:14] ?: [NSFont boldSystemFontOfSize:14];
             label.textColor = [NSColor colorWithRed:0.9 green:0.1 blue:0.1 alpha:1.0];
         }
-        label.frame = NSMakeRect(12, 8, 700, 36);
+        label.frame = NSMakeRect(12, 2, 700, 24);
         label.stringValue = [NSString stringWithFormat:@"🇨🇦  %@", item[@"name"]];
         return label;
     }
@@ -740,12 +742,14 @@ void s_setBoolValue(const std::string& key, bool value) {
         rowView.nameLabel.stringValue = item[@"label"];
         rowView.descLabel.stringValue = item[@"desc"] ?: @"";
         rowView.iconLabel.stringValue = [BehaviorRowView iconForConfigKey:item[@"key"]];
+        rowView.target = self;
+        rowView.detailAction = @selector(showDetailForBehavior:);
+        rowView.detailBtn.target = rowView;
+        rowView.detailBtn.action = @selector(openDetail:);
 
         std::string key = std::string([item[@"key"] UTF8String]);
         bool val = s_getBoolForKey(key);
         rowView.toggle.state = val ? NSControlStateValueOn : NSControlStateValueOff;
-        rowView.detailBtn.target = self;
-        rowView.detailBtn.action = @selector(showDetailForBehavior:);
 
         return rowView;
     }
