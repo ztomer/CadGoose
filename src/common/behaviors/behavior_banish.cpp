@@ -16,37 +16,12 @@ static constexpr float FADE_DURATION = 0.5f;
 static constexpr float RESPAWN_DELAY = 30.0f;
 
 static bool IsMiddleMouseDown() {
-    CGEventSourceRef source = CGEventSourceCreate(kCGEventSourceStateHIDSystemState);
-    if (!source) return false;
-
-    CGEventRef event = CGEventCreate(source);
-    if (!event) {
-        CFRelease(source);
-        return false;
-    }
-
-    CGEventType type = CGEventGetType(event);
-    bool isMiddle = (type == kCGEventOtherMouseDown);
-    CFRelease(event);
-    CFRelease(source);
-    return isMiddle;
+    return CGEventSourceButtonState(kCGEventSourceStateHIDSystemState, kCGMouseButtonCenter);
 }
 
 static bool AreModifiersPressed() {
-    CGEventSourceRef source = CGEventSourceCreate(kCGEventSourceStateHIDSystemState);
-    if (!source) return false;
-
-    CGEventRef event = CGEventCreate(source);
-    if (!event) {
-        CFRelease(source);
-        return false;
-    }
-
-    CGEventFlags flags = CGEventGetFlags(event);
-    bool ctrlAlt = (flags & kCGEventFlagMaskControl) && (flags & kCGEventFlagMaskAlternate);
-    CFRelease(event);
-    CFRelease(source);
-    return ctrlAlt;
+    CGEventFlags flags = CGEventSourceFlagsState(kCGEventSourceStateHIDSystemState);
+    return (flags & kCGEventFlagMaskControl) && (flags & kCGEventFlagMaskAlternate);
 }
 
 static void init(BehaviorContext& ctx) {

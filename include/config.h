@@ -341,9 +341,9 @@ struct BehaviorConfig {
     bool pomodoro = false;
   } systems;
 
-  struct HonckerConfig { int key = 0x24; float size = 40.0f; float cooldown = 0.5f; } honcker;
+  struct HonckerConfig { int key = 0x03; float size = 40.0f; float cooldown = 0.5f; } honcker; // F key
   struct DragConfig { float radius = 45.0f; } drag;
-  struct JailConfig { int keyO = 0x2D; int keyP = 0x1E; float size = 150.0f; } jail;
+  struct JailConfig { int keyO = 0x1F; int keyP = 0x23; float size = 150.0f; } jail; // O, P keys
   struct BanishConfig { float duration = 30.0f; } banish;
   struct NametagConfig { float size = 14.0f; } nametag;
   struct PresenceConfig { float interval = 1.0f; } presence;

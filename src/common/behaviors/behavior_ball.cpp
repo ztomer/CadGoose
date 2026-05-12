@@ -18,9 +18,9 @@ static bool s_enabled = true;
 static CGImageRef s_ballImages[3] = {nullptr, nullptr, nullptr};
 
 static constexpr float BALL_SIZE = 40.0f;
-static constexpr float KICK_SPEED = 20.0f;
-static constexpr float DECELERATION = 0.25f;
-static constexpr float SPEED_THRESHOLD = 1.0f;
+static constexpr float KICK_SPEED = 500.0f;
+static constexpr float DECELERATION = 3.0f;
+static constexpr float SPEED_THRESHOLD = 5.0f;
 
 static Vector2 s_ballPos{300.0f, 300.0f};
 static Vector2 s_ballVel{0.0f, 0.0f};
@@ -68,7 +68,7 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
     }
 
     if (s_ballSpeed > SPEED_THRESHOLD) {
-        s_animationGap = 0.25f / s_ballSpeed;
+        s_animationGap = std::max(0.05f, std::min(0.2f, 5.0f / s_ballSpeed));
         if (time - s_lastAnimateTime > s_animationGap) {
             if (s_ballVel.x < 0) {
                 s_currentImage++;
