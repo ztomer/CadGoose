@@ -56,12 +56,11 @@ void s_setBoolValue(const std::string& key, bool value);
 @property (nonatomic, strong) NSTextField* iconLabel;
 @property (nonatomic, strong) NSTextField* nameLabel;
 @property (nonatomic, strong) NSTextField* descLabel;
-@property (nonatomic, strong) NSButton* detailBtn;
 @property (nonatomic, copy) NSString* configKey;
 @property (nonatomic, weak) id target;
 @property (nonatomic) SEL detailAction;
-- (void)toggled:(id)sender;
-- (void)openDetail:(id)sender;
+@property (nonatomic, getter=isSelected) BOOL selected;
+- (void)openDetail;
 + (NSString*)iconForConfigKey:(NSString*)key;
 @end
 
@@ -121,13 +120,6 @@ void s_setBoolValue(const std::string& key, bool value);
         _descLabel.lineBreakMode = NSLineBreakByTruncatingTail;
         [self addSubview:_descLabel];
 
-        _detailBtn = [[NSButton alloc] initWithFrame:NSMakeRect(630, 6, 24, 24)];
-        [_detailBtn setTitle:@"⚙️"];
-        [_detailBtn setBezelStyle:NSBezelStyleRounded];
-        _detailBtn.target = self;
-        _detailBtn.action = @selector(openDetail:);
-        [self addSubview:_detailBtn];
-
         // Row separator
         NSView* separator = [[NSView alloc] initWithFrame:NSMakeRect(8, 0, 660, 1)];
         separator.wantsLayer = YES;
@@ -136,6 +128,28 @@ void s_setBoolValue(const std::string& key, bool value);
         [self addSubview:separator];
     }
     return self;
+}
+
+- (void)drawRect:(NSRect)dirtyRect {
+    if (_selected) {
+        [[NSColor colorWithWhite:1.0 alpha:0.08] setFill];
+        NSRectFill(self.bounds);
+    }
+    [super drawRect:dirtyRect];
+}
+
+- (void)mouseUp:(NSEvent*)event {
+    NSPoint pt = [self convertPoint:event.locationInWindow fromView:nil];
+    if (NSPointInRect(pt, _toggle.frame)) {
+        [_toggle performClick:nil];
+        return;
+    }
+    [self openDetail];
+}
+
+- (void)setSelected:(BOOL)selected {
+    _selected = selected;
+    [self setNeedsDisplay:YES];
 }
 
 - (void)setEnabled:(BOOL)enabled {
@@ -150,7 +164,7 @@ void s_setBoolValue(const std::string& key, bool value);
     }
 }
 
-- (void)openDetail:(id)sender {
+- (void)openDetail {
     if (_target && _detailAction) {
         [_target performSelector:_detailAction withObject:self.configKey];
     }
@@ -615,6 +629,7 @@ static NSMutableArray* g_configItemsForAccess = nil;
 @property (nonatomic, strong) NSMutableArray* configItems;
 @property (nonatomic, strong) BehaviorDetailView* detailView;
 @property (nonatomic) NSWindow* parentWindow;
+@property (nonatomic) NSInteger selectedRowIndex;
 + (NSMutableArray*)configItemsForAccess;
 @end
 
@@ -651,7 +666,7 @@ static NSMutableArray* g_configItemsForAccess = nil;
         NSView* appBar = [[NSView alloc] initWithFrame:NSMakeRect(0, WINDOW_HEIGHT - APPBAR_HEIGHT, WINDOW_WIDTH, APPBAR_HEIGHT)];
 
         NSTextField* appTitle = [[NSTextField alloc] initWithFrame:NSMakeRect(72, 9, 200, 20)];
-        appTitle.stringValue = @"Behaviors";
+        appTitle.stringValue = @"Preferences";
         appTitle.font = [NSFont systemFontOfSize:15 weight:NSFontWeightSemibold];
         appTitle.textColor = [NSColor labelColor];
         appTitle.backgroundColor = [NSColor clearColor];
@@ -693,6 +708,7 @@ static NSMutableArray* g_configItemsForAccess = nil;
         tableView.headerView = nil;
         tableView.delegate = self;
         tableView.dataSource = self;
+        tableView.allowsEmptySelection = YES;
         tableView.selectionHighlightStyle = NSTableViewSelectionHighlightStyleNone;
         tableView.backgroundColor = [NSColor clearColor];
         tableView.intercellSpacing = NSMakeSize(0, 0);
@@ -797,6 +813,22 @@ void s_setBoolValue(const std::string& key, bool value) {
     [_detailView configureForBehavior:key];
 }
 
+- (void)tableViewSelectionDidChange:(NSNotification*)note {
+    NSInteger row = self.behaviorsTable.selectedRow;
+    if (row >= 0 && row < (NSInteger)self.configItems.count) {
+        NSDictionary* item = self.configItems[row];
+        if ([item[@"type"] isEqualToString:@"behavior"]) {
+            self.selectedRowIndex = row;
+            [self showDetailForBehavior:item[@"key"]];
+        } else {
+            self.selectedRowIndex = -1;
+        }
+    } else {
+        self.selectedRowIndex = -1;
+    }
+    [self.behaviorsTable reloadData];
+}
+
 - (CGFloat)tableView:(NSTableView*)tableView heightOfRow:(NSInteger)row {
     NSDictionary* item = self.configItems[row];
     if ([item[@"type"] isEqualToString:@"header"]) return 28;
@@ -840,8 +872,7 @@ void s_setBoolValue(const std::string& key, bool value) {
         rowView.iconLabel.stringValue = [BehaviorRowView iconForConfigKey:item[@"key"]];
         rowView.target = self;
         rowView.detailAction = @selector(showDetailForBehavior:);
-        rowView.detailBtn.target = rowView;
-        rowView.detailBtn.action = @selector(openDetail:);
+        rowView.selected = (row == self.selectedRowIndex && [item[@"type"] isEqualToString:@"behavior"]);
 
         std::string key = std::string([item[@"key"] UTF8String]);
         bool val = s_getBoolForKey(key);

@@ -9,9 +9,7 @@
 #include "world.h"
 
 static bool s_enabled = true;
-static bool s_jailToggle = false;
-static Vector2 s_jailPos{-250.0f, -250.0f};
-static Vector2 s_jailPosition{300.0f, 400.0f};
+static bool s_wasKeyDown = false;
 
 static bool IsKeyPressed(int keyCode) {
     return CGEventSourceKeyState(kCGEventSourceStateHIDSystemState, (CGKeyCode)keyCode);
@@ -24,45 +22,53 @@ static void init(BehaviorContext& ctx) {
 
 static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
     if (!g_config.behaviors.control.jail) {
-        s_jailToggle = false;
+        auto* state = BehaviorStateManager::Instance().Get<JailState>(goose->id, "jail");
+        if (state) state->isJailed = false;
         return;
     }
 
+    auto* state = BehaviorStateManager::Instance().GetOrCreate<JailState>(goose->id, "jail");
+
     Vector2 cursorPos{-1, -1};
     if (g_cursorProvider) {
-        CursorState state = g_cursorProvider->Read();
-        if (state.hasPos()) {
-            cursorPos = state.position;
+        CursorState cs = g_cursorProvider->Read();
+        if (cs.hasPos()) {
+            cursorPos = cs.position;
         }
     }
 
     if (IsKeyPressed(g_config.behaviors.jail.keyO)) {
-        s_jailPosition = cursorPos;
+        state->jailPos = cursorPos;
+        state->positionSet = true;
     }
 
-    if (IsKeyPressed(g_config.behaviors.jail.keyP)) {
-        s_jailToggle = !s_jailToggle;
-        goose->state = GooseState:: WANDER;
+    bool keyDown = IsKeyPressed(g_config.behaviors.jail.keyP);
+    if (keyDown && !s_wasKeyDown) {
+        state->isJailed = !state->isJailed;
+        goose->state = GooseState::WANDER;
         g_assets.Honk();
     }
+    s_wasKeyDown = keyDown;
 
-    if (s_jailToggle) {
-        goose->target = s_jailPosition;
-        s_jailPos = goose->pos;
-        goose->pos = s_jailPosition;
+    if (state->isJailed && state->positionSet) {
+        goose->target = state->jailPos;
+        goose->pos = state->jailPos;
         goose->vel = {0, 0};
     }
 }
 
 static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
-    if (!g_config.behaviors.control.jail || !s_jailToggle) return;
+    if (!g_config.behaviors.control.jail) return;
+
+    auto* state = BehaviorStateManager::Instance().Get<JailState>(goose->id, "jail");
+    if (!state || !state->isJailed || !state->positionSet) return;
 
 #ifdef __APPLE__
     CGContextRef cg = (CGContextRef)renderCtx;
     if (!cg) return;
 
     float jailSize = g_config.behaviors.jail.size;
-    CGRect rect = CGRectMake(s_jailPos.x - jailSize/2, s_jailPos.y - jailSize/2, jailSize, jailSize);
+    CGRect rect = CGRectMake(state->jailPos.x - jailSize/2, state->jailPos.y - jailSize/2, jailSize, jailSize);
 
     CGContextSetRGBStrokeColor(cg, 0.5f, 0.5f, 0.5f, 1.0f);
     CGContextSetLineWidth(cg, 4.0f);

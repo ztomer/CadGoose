@@ -13,6 +13,60 @@
 #ifdef __APPLE__
 #import <Cocoa/Cocoa.h>
 
+#pragma mark - Foundation Fallback
+
+static NSString* s_fallbackResponseForMessage(NSString* message, NSString* gooseName) {
+    @autoreleasepool {
+        if (message.length == 0) return @"HONK! Silence speaks volumes... HONK!";
+
+        NSLinguisticTagger* tagger = [[NSLinguisticTagger alloc] initWithTagSchemes:@[NSLinguisticTagSchemeLexicalClass] options:0];
+        [tagger setString:message];
+
+        __block NSMutableSet* keywords = [NSMutableSet set];
+        [tagger enumerateTagsInRange:NSMakeRange(0, message.length)
+                              scheme:NSLinguisticTagSchemeLexicalClass
+                             options:NSLinguisticTaggerOmitWhitespace | NSLinguisticTaggerOmitPunctuation | NSLinguisticTaggerOmitOther
+                          usingBlock:^(NSString* _Nullable tag, NSRange tokenRange, NSRange sentenceRange, BOOL* _Nonnull stop) {
+            NSString* word = [[message substringWithRange:tokenRange] lowercaseString];
+            if ([tag isEqualToString:NSLinguisticTagNoun] || [tag isEqualToString:NSLinguisticTagVerb]) {
+                [keywords addObject:word];
+            }
+        }];
+
+        if ([keywords containsObject:@"honk"]) return @"HONK! HONK HONK! 🦆";
+        if ([keywords containsObject:@"sad"] || [keywords containsObject:@"mad"] || [keywords containsObject:@"angry"])
+            return @"HONK! Why so mad? Have some bread crumbs. 🍞";
+        if ([keywords containsObject:@"happy"] || [keywords containsObject:@"love"] || [keywords containsObject:@"great"])
+            return @"HONK! You seem happy! Me too! HONK! 🎉";
+        if ([keywords intersectsSet:[NSSet setWithObjects:@"food", @"bread", @"seed", @"feed", @"eat", nil]])
+            return @"HONK! FOOD?! Where?! HONK HONK! 🍞";
+        if ([keywords containsObject:@"name"]) return [NSString stringWithFormat:@"HONK! I'm %@, a goose! HONK!", gooseName ?: @"a goose"];
+        if ([keywords containsObject:@"goose"]) return @"HONK! Yes, I'm a goose! The best goose! HONK!";
+        if ([keywords containsObject:@"bye"] || [keywords containsObject:@"goodbye"])
+            return @"HONK! Bye bye! Don't forget to feed the geese! 🦆";
+        if ([keywords containsObject:@"hello"] || [keywords containsObject:@"hi"] || [keywords containsObject:@"hey"])
+            return @"HONK! Hello to you too! 🦆";
+        if ([keywords containsObject:@"help"] || [keywords containsObject:@"what"])
+            return @"HONK! I'm a goose. I walk, I honk, I steal things. What else do you need to know?";
+        if ([keywords containsObject:@"dance"] || [keywords containsObject:@"spin"])
+            return @"HONK! *goose does a little dance* HONK HONK! 🕺";
+        if ([keywords containsObject:@"sing"] || [keywords containsObject:@"song"])
+            return @"HONK HONK HOOOOONK! *a beautiful goose song* 🎶";
+
+        static NSArray* defaults = @[
+            @"HONK! 🦆",
+            @"HONK HONK!",
+            @"🦆 The goose acknowledges your presence. HONK!",
+            @"HONK! I'm a goose, what did you expect?",
+            @"*goose tilts head* HONK?",
+            @"HONK! That's nice. Anyway, HONK!",
+            @"HONK! I don't understand but I support you!",
+            @"🦆 HONK! Have you tried turning it off and on again?",
+        ];
+        return defaults[arc4random_uniform((uint32_t)defaults.count)];
+    }
+}
+
 #pragma mark - AIHTTPClient
 
 @interface AIHTTPClient : NSObject
@@ -130,10 +184,13 @@
             AIChatWindowController* strong = weakSelf;
             if (!strong) return;
             strong.sendButton.enabled = YES;
-            if (error) {
-                [strong appendResponse:@"HONK! Something went wrong."];
+            if (error || !response) {
+                NSString* fallback = s_fallbackResponseForMessage(message, strong.gooseName);
+                [strong appendResponse:fallback];
+                fprintf(stderr, "[AI] Using fallback response (error: %s)\n",
+                        error.localizedDescription.UTF8String ?: "nil");
             } else {
-                [strong appendResponse:response ? response : @"HONK! No response."];
+                [strong appendResponse:response];
             }
         });
     }];

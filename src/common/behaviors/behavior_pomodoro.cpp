@@ -141,8 +141,14 @@ static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
         CTLineRef line = CTLineCreateWithAttributedString(attrStr);
 
         if (line) {
-            CGContextSetTextPosition(cg, headPos.x - textWidth/2 + 5.0f, headPos.y - 48.0f);
+            float textX = headPos.x - textWidth/2 + 5.0f;
+            float textY = headPos.y - 48.0f;
+            CGContextSaveGState(cg);
+            CGContextTranslateCTM(cg, textX, textY);
+            CGContextScaleCTM(cg, 1.0, -1.0);
+            CGContextSetTextPosition(cg, 0, 0);
             CTLineDraw(line, cg);
+            CGContextRestoreGState(cg);
             CFRelease(line);
         }
 
