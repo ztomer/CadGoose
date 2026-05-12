@@ -52,9 +52,24 @@ static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
 
     float halfW = drawW / 2.0f;
     float halfH = drawH / 2.0f;
-    CGContextTranslateCTM(cg, -halfW, halfH);
-    CGContextScaleCTM(cg, 1.0, -1.0);
-    CGContextDrawImage(cg, CGRectMake(0, 0, drawW, drawH), s_hatImage);
+
+    // Pre-render hat to bitmap at exact size to avoid Metal shader compilation
+    if (drawW > 0 && drawH > 0) {
+        CGColorSpaceRef cs = CGColorSpaceCreateDeviceRGB();
+        CGContextRef bmp = CGBitmapContextCreate(nullptr, (size_t)drawW, (size_t)drawH, 8, 0, cs, kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host);
+        CGColorSpaceRelease(cs);
+        if (bmp) {
+            CGContextDrawImage(bmp, CGRectMake(0, 0, drawW, drawH), s_hatImage);
+            CGImageRef scaled = CGBitmapContextCreateImage(bmp);
+            CGContextRelease(bmp);
+            if (scaled) {
+                CGContextTranslateCTM(cg, -halfW, halfH);
+                CGContextScaleCTM(cg, 1.0, -1.0);
+                CGContextDrawImage(cg, CGRectMake(0, 0, drawW, drawH), scaled);
+                CGImageRelease(scaled);
+            }
+        }
+    }
     CGContextRestoreGState(cg);
 }
 

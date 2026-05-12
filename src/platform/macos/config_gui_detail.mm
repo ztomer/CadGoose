@@ -44,7 +44,7 @@
         y -= 35;
     } else if ([key isEqualToString:@"behaviors.fun.hats"]) {
         _titleLabel.stringValue = @"Hats Behavior";
-        [self addSliderWithLabel:@"Hat Size" min:0.01f max:0.5f value:g_config.behaviors.hats.sizeX atY:y key:@"behaviors.fun.hats.size"];
+        [self addSliderWithLabel:@"Hat Size" min:4.0f max:128.0f value:g_config.behaviors.hats.sizeX atY:y key:@"behaviors.fun.hats.size"];
         y -= 35;
     } else if ([key isEqualToString:@"behaviors.fun.rainbow"]) {
         _titleLabel.stringValue = @"Rainbow Behavior";

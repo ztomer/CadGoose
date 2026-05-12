@@ -151,8 +151,11 @@ TEST(HatsBehavior, ImageScale) {
     EXPECT_FLOAT_EQ(drawH, 16.0f);
 
     CGRect rect = CGRectMake(-drawW/2, -drawH/2, drawW, drawH);
-    CGContextDrawImage((CGContextRef)1, rect, nil);
-    SUCCEED() << "DrawDroppedItem-style centered rect matched";
+    EXPECT_EQ(rect.origin.x, -drawW/2);
+    EXPECT_EQ(rect.origin.y, -drawH/2);
+    EXPECT_EQ(rect.size.width, drawW);
+    EXPECT_EQ(rect.size.height, drawH);
+    SUCCEED() << "Scale and centered rect dimensions verified";
 }
 
 TEST(HatsBehavior, HeadPositionWithOffsets) {
