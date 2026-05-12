@@ -3,6 +3,7 @@
 // ===========================
 #import <Cocoa/Cocoa.h>
 #include "config.h"
+#include "world.h"
 #include <string>
 
 static bool s_getBoolForKey(const std::string& key) {
@@ -104,7 +105,7 @@ void s_setBoolValue(const std::string& key, bool value);
         [self addSubview:_iconLabel];
 
         _nameLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(64, 7, 180, 18)];
-        _nameLabel.font = [NSFont fontWithName:@"Comic Sans MS" size:14] ?: [NSFont boldSystemFontOfSize:14];
+        _nameLabel.font = [NSFont fontWithName:@"Comic Sans MS" size:14] ?: [NSFont systemFontOfSize:14 weight:NSFontWeightSemibold];
         _nameLabel.textColor = [NSColor labelColor];
         _nameLabel.backgroundColor = [NSColor clearColor];
         _nameLabel.bordered = NO;
@@ -126,6 +127,13 @@ void s_setBoolValue(const std::string& key, bool value);
         _detailBtn.target = self;
         _detailBtn.action = @selector(openDetail:);
         [self addSubview:_detailBtn];
+
+        // Row separator
+        NSView* separator = [[NSView alloc] initWithFrame:NSMakeRect(8, 0, 660, 1)];
+        separator.wantsLayer = YES;
+        separator.layer.backgroundColor = [[NSColor separatorColor] CGColor];
+        separator.autoresizingMask = NSViewWidthSizable | NSViewMaxYMargin;
+        [self addSubview:separator];
     }
     return self;
 }
@@ -152,14 +160,17 @@ void s_setBoolValue(const std::string& key, bool value);
 
 static NSMutableArray* g_configItemsForAccess = nil;
 
+#define LIST_WIDTH 700
 #define DETAIL_WIDTH 680
-#define DETAIL_HEIGHT 380
+#define WINDOW_WIDTH (LIST_WIDTH + 1 + DETAIL_WIDTH)
+#define WINDOW_HEIGHT 830
+#define APPBAR_HEIGHT 38
+#define TABLE_HEIGHT (WINDOW_HEIGHT - APPBAR_HEIGHT)
 
 // Detail panel for individual behavior settings
 @interface BehaviorDetailView : NSView
 @property (nonatomic, strong) NSTextField* titleLabel;
 @property (nonatomic, strong) NSView* contentView;
-@property (nonatomic, strong) NSButton* closeBtn;
 @property (nonatomic, copy) NSString* configKey;
 - (void)configureForBehavior:(NSString*)key;
 @end
@@ -169,27 +180,15 @@ static NSMutableArray* g_configItemsForAccess = nil;
 - (instancetype)initWithFrame:(NSRect)frame {
     self = [super initWithFrame:frame];
     if (self) {
-        self.hidden = YES;
-        // Header area
-        _titleLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(14, frame.size.height - 28, frame.size.width - 60, 20)];
+        _titleLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(14, frame.size.height - 28, frame.size.width - 20, 20)];
         _titleLabel.font = [NSFont boldSystemFontOfSize:15];
         _titleLabel.textColor = [NSColor labelColor];
         _titleLabel.backgroundColor = [NSColor clearColor];
         _titleLabel.bordered = NO;
         _titleLabel.editable = NO;
-        _titleLabel.autoresizingMask = NSViewWidthSizable | NSViewMinYMargin;
         [self addSubview:_titleLabel];
 
-        _closeBtn = [[NSButton alloc] initWithFrame:NSMakeRect(frame.size.width - 28, frame.size.height - 28, 20, 20)];
-        _closeBtn.title = @"✕";
-        _closeBtn.bezelStyle = NSBezelStyleRounded;
-        _closeBtn.target = self;
-        _closeBtn.action = @selector(closeDetail:);
-        _closeBtn.autoresizingMask = NSViewMinXMargin | NSViewMinYMargin;
-        [self addSubview:_closeBtn];
-
         _contentView = [[NSView alloc] initWithFrame:NSMakeRect(0, 0, frame.size.width, frame.size.height - 36)];
-        _contentView.autoresizingMask = NSViewWidthSizable | NSViewHeightSizable;
         [self addSubview:_contentView];
     }
     return self;
@@ -198,12 +197,10 @@ static NSMutableArray* g_configItemsForAccess = nil;
 - (void)configureForBehavior:(NSString*)key {
     _configKey = key;
 
-    // Clear previous content
     for (NSView* subview in _contentView.subviews) {
         [subview removeFromSuperview];
     }
 
-    self.hidden = NO;
     _titleLabel.stringValue = [NSString stringWithFormat:@"Settings for %@", [key lastPathComponent]];
 
     float y = _contentView.bounds.size.height - 40;
@@ -263,9 +260,10 @@ static NSMutableArray* g_configItemsForAccess = nil;
         [self addSliderWithLabel:@"Duration (s)" min:1.0f max:60.0f value:g_config.behaviors.banish.duration atY:y key:@"behaviors.control.banish.duration"];
         y -= 35;
     } else if ([key isEqualToString:@"behaviors.info.nametag"]) {
-        _titleLabel.stringValue = @"Nametag Behavior";
+        _titleLabel.stringValue = @"Nametag & Geese";
         [self addSliderWithLabel:@"Font Size" min:8.0f max:40.0f value:g_config.behaviors.nametag.size atY:y key:@"behaviors.info.nametag.size"];
         y -= 35;
+        y = [self addGeeseListAtY:y];
     } else if ([key isEqualToString:@"behaviors.systems.health"]) {
         _titleLabel.stringValue = @"Health System";
         [self addSliderWithLabel:@"Opacity" min:0.2f max:1.0f value:g_config.behaviors.health.opacity atY:y key:@"behaviors.systems.health.opacity"];
@@ -403,10 +401,58 @@ static NSMutableArray* g_configItemsForAccess = nil;
     [self performSelector:@selector(refreshModels:) withObject:refreshBtn afterDelay:0.5];
 }
 
+- (float)addGeeseListAtY:(float)y {
+    NSTextField* sectionLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(12, y, 200, 16)];
+    sectionLabel.stringValue = @"Geese";
+    sectionLabel.font = [NSFont systemFontOfSize:12 weight:NSFontWeightSemibold];
+    sectionLabel.textColor = [NSColor labelColor];
+    sectionLabel.backgroundColor = [NSColor clearColor];
+    sectionLabel.bordered = NO;
+    sectionLabel.editable = NO;
+    [_contentView addSubview:sectionLabel];
+    y -= 24;
+
+    for (auto it = g_geese.begin(); it != g_geese.end(); ++it) {
+        NSTextField* idLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(16, y, 30, 20)];
+        idLabel.stringValue = [NSString stringWithFormat:@"#%d", it->id];
+        idLabel.font = [NSFont systemFontOfSize:11];
+        idLabel.textColor = [NSColor secondaryLabelColor];
+        idLabel.backgroundColor = [NSColor clearColor];
+        idLabel.bordered = NO;
+        idLabel.editable = NO;
+        idLabel.alignment = NSTextAlignmentRight;
+        [_contentView addSubview:idLabel];
+
+        NSTextField* nameField = [[NSTextField alloc] initWithFrame:NSMakeRect(52, y, DETAIL_WIDTH - 80, 22)];
+        nameField.stringValue = [NSString stringWithUTF8String:it->name.c_str()];
+        nameField.font = [NSFont systemFontOfSize:12];
+        nameField.bezelStyle = NSTextFieldRoundedBezel;
+        nameField.tag = it->id;
+        nameField.target = self;
+        nameField.action = @selector(gooseNameChanged:);
+        [_contentView addSubview:nameField];
+
+        y -= 28;
+    }
+
+    return y;
+}
+
+- (void)gooseNameChanged:(NSTextField*)sender {
+    int gooseId = (int)sender.tag;
+    std::string newName = std::string([sender.stringValue UTF8String]);
+    for (auto it = g_geese.begin(); it != g_geese.end(); ++it) {
+        if (it->id == gooseId) {
+            it->name = newName;
+            break;
+        }
+    }
+}
+
 - (void)addPromptDisplayAtY:(float)y {
     NSTextField* promptTitle = [[NSTextField alloc] initWithFrame:NSMakeRect(12, y, 200, 16)];
     promptTitle.stringValue = @"🧠 System Prompt:";
-    promptTitle.font = [NSFont fontWithName:@"Comic Sans MS" size:12] ?: [NSFont boldSystemFontOfSize:12];
+    promptTitle.font = [NSFont systemFontOfSize:12 weight:NSFontWeightSemibold];
     promptTitle.textColor = [NSColor labelColor];
     promptTitle.backgroundColor = [NSColor clearColor];
     promptTitle.bordered = NO;
@@ -416,7 +462,7 @@ static NSMutableArray* g_configItemsForAccess = nil;
     // Build the prompt text from the goose persona
     NSString* promptText = @"You are a mischievous Canadian goose. You live on\nthe user's desktop, steal things, and honk a lot.\nKeep responses short, sarcastic, and goose-like.";
     NSTextField* promptBody = [[NSTextField alloc] initWithFrame:NSMakeRect(12, y - 45, DETAIL_WIDTH - 24, 40)];
-    promptBody.font = [NSFont fontWithName:@"Comic Sans MS" size:11] ?: [NSFont systemFontOfSize:11];
+    promptBody.font = [NSFont systemFontOfSize:11];
     promptBody.textColor = [NSColor secondaryLabelColor];
     promptBody.backgroundColor = [NSColor clearColor];
     promptBody.bordered = NO;
@@ -568,7 +614,6 @@ static NSMutableArray* g_configItemsForAccess = nil;
 @property (nonatomic, strong) NSTableView* behaviorsTable;
 @property (nonatomic, strong) NSMutableArray* configItems;
 @property (nonatomic, strong) BehaviorDetailView* detailView;
-@property (nonatomic, strong) NSView* separatorLine;
 @property (nonatomic) NSWindow* parentWindow;
 + (NSMutableArray*)configItemsForAccess;
 @end
@@ -585,74 +630,67 @@ static NSMutableArray* g_configItemsForAccess = nil;
         g_configItemsForAccess = [NSMutableArray array];
         self.configItems = g_configItemsForAccess;
 
-        self.window = [[NSWindow alloc] initWithContentRect:NSMakeRect(0, 0, 700, 580)
-                                                 styleMask:NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskResizable
+        self.window = [[NSWindow alloc] initWithContentRect:NSMakeRect(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT)
+                                                 styleMask:NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskFullSizeContentView
                                                    backing:NSBackingStoreBuffered
                                                      defer:NO];
-        self.window.title = @"🇨🇦  Goose Config Dominion  🦆";
-        self.window.minSize = NSMakeSize(700, 400);
+        self.window.titleVisibility = NSWindowTitleHidden;
+        self.window.titlebarAppearsTransparent = YES;
+        self.window.title = @"Behaviors";
         [self.window center];
 
         NSView* contentView = self.window.contentView;
 
-        // Canadian flag glass backdrop
         NSVisualEffectView* glassView = [[NSVisualEffectView alloc] initWithFrame:contentView.bounds];
         glassView.material = NSVisualEffectMaterialDark;
         glassView.blendingMode = NSVisualEffectBlendingModeBehindWindow;
         glassView.state = NSVisualEffectStateActive;
-        glassView.autoresizingMask = NSViewWidthSizable | NSViewHeightSizable;
         [contentView addSubview:glassView positioned:NSWindowBelow relativeTo:nil];
 
-        // Maple leaf background label
-        NSTextField* flagBg = [[NSTextField alloc] initWithFrame:NSMakeRect(200, 150, 300, 300)];
-        flagBg.stringValue = @"🍁";
-        flagBg.font = [NSFont systemFontOfSize:200];
-        flagBg.textColor = [NSColor colorWithWhite:1.0 alpha:0.08];
-        flagBg.backgroundColor = [NSColor clearColor];
-        flagBg.bordered = NO;
-        flagBg.editable = NO;
-        flagBg.autoresizingMask = NSViewMinXMargin | NSViewMaxXMargin | NSViewMinYMargin | NSViewMaxYMargin;
-        [contentView addSubview:flagBg];
+        // Unified appbar extending into titlebar
+        NSView* appBar = [[NSView alloc] initWithFrame:NSMakeRect(0, WINDOW_HEIGHT - APPBAR_HEIGHT, WINDOW_WIDTH, APPBAR_HEIGHT)];
 
-        // Header
-        NSView* headerView = [[NSView alloc] initWithFrame:NSMakeRect(0, 532, 700, 48)];
-        headerView.autoresizingMask = NSViewWidthSizable | NSViewMinYMargin;
+        NSTextField* appTitle = [[NSTextField alloc] initWithFrame:NSMakeRect(72, 9, 200, 20)];
+        appTitle.stringValue = @"Behaviors";
+        appTitle.font = [NSFont systemFontOfSize:15 weight:NSFontWeightSemibold];
+        appTitle.textColor = [NSColor labelColor];
+        appTitle.backgroundColor = [NSColor clearColor];
+        appTitle.bordered = NO;
+        appTitle.editable = NO;
+        [appBar addSubview:appTitle];
 
-        NSTextField* titleLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(12, 14, 500, 24)];
-        titleLabel.stringValue = @"🍁  BEHAVIOR COMMAND CENTRE  🦆";
-        titleLabel.font = [NSFont fontWithName:@"Comic Sans MS" size:18] ?: [NSFont boldSystemFontOfSize:18];
-        titleLabel.textColor = [NSColor colorWithRed:0.9 green:0.1 blue:0.1 alpha:1.0];
-        titleLabel.backgroundColor = [NSColor clearColor];
-        titleLabel.bordered = NO;
-        titleLabel.editable = NO;
-        [headerView addSubview:titleLabel];
-
-        NSButton* toggleAllBtn = [[NSButton alloc] initWithFrame:NSMakeRect(500, 12, 108, 24)];
+        NSButton* toggleAllBtn = [[NSButton alloc] initWithFrame:NSMakeRect(LIST_WIDTH - 116, 7, 108, 24)];
         [toggleAllBtn setTitle:@"Toggle All"];
-        [contentView addSubview:headerView];
+        toggleAllBtn.target = self;
+        toggleAllBtn.action = @selector(toggleAll:);
+        [appBar addSubview:toggleAllBtn];
 
-        // Detail view area (offscreen until showDetailForBehavior expands window)
-        _detailView = [[BehaviorDetailView alloc] initWithFrame:NSMakeRect(700, 0, DETAIL_WIDTH, 580)];
-        _detailView.autoresizingMask = NSViewWidthSizable | NSViewHeightSizable;
+        [contentView addSubview:appBar];
+
+        // App bar bottom border
+        NSView* appBarBorder = [[NSView alloc] initWithFrame:NSMakeRect(0, WINDOW_HEIGHT - APPBAR_HEIGHT, WINDOW_WIDTH, 1)];
+        appBarBorder.wantsLayer = YES;
+        appBarBorder.layer.backgroundColor = [[NSColor separatorColor] CGColor];
+        [contentView addSubview:appBarBorder];
+
+        // Always-visible detail panel on the right
+        _detailView = [[BehaviorDetailView alloc] initWithFrame:NSMakeRect(LIST_WIDTH + 1, 0, DETAIL_WIDTH, TABLE_HEIGHT)];
         [contentView addSubview:_detailView];
 
-        // Separator between table and detail
-        NSView* separator = [[NSView alloc] initWithFrame:NSMakeRect(699, 0, 1, 529)];
-        separator.autoresizingMask = NSViewHeightSizable | NSViewMaxXMargin;
-        self.separatorLine = separator;
+        // Separator between list and detail
+        NSView* separator = [[NSView alloc] initWithFrame:NSMakeRect(LIST_WIDTH, 0, 1, TABLE_HEIGHT)];
+        separator.wantsLayer = YES;
+        separator.layer.backgroundColor = [[NSColor separatorColor] CGColor];
         [contentView addSubview:separator];
 
-        // Scrollable table (fixed width, doesn't stretch when window expands)
-        NSScrollView* scrollView = [[NSScrollView alloc] initWithFrame:NSMakeRect(0, 0, 700, 528)];
-        scrollView.hasVerticalScroller = YES;
-        scrollView.hasHorizontalScroller = NO;
+        // Behavior list (no scroll — all rows fit)
+        NSScrollView* scrollView = [[NSScrollView alloc] initWithFrame:NSMakeRect(0, 0, LIST_WIDTH, TABLE_HEIGHT)];
+        scrollView.hasVerticalScroller = NO;
         scrollView.borderType = NSNoBorder;
         scrollView.drawsBackground = NO;
-        scrollView.autoresizingMask = NSViewHeightSizable | NSViewMaxXMargin;
 
-        NSTableView* tableView = [[NSTableView alloc] initWithFrame:NSMakeRect(0, 0, 700, 528)];
+        NSTableView* tableView = [[NSTableView alloc] initWithFrame:NSMakeRect(0, 0, LIST_WIDTH, TABLE_HEIGHT)];
         tableView.headerView = nil;
-        tableView.rowHeight = 44;
         tableView.delegate = self;
         tableView.dataSource = self;
         tableView.selectionHighlightStyle = NSTableViewSelectionHighlightStyleNone;
@@ -660,36 +698,16 @@ static NSMutableArray* g_configItemsForAccess = nil;
         tableView.intercellSpacing = NSMakeSize(0, 0);
 
         NSTableColumn* column = [[NSTableColumn alloc] initWithIdentifier:@"main"];
-        column.width = 700;
-        column.minWidth = 400;
+        column.width = LIST_WIDTH;
         [tableView addTableColumn:column];
 
         self.behaviorsTable = tableView;
-
         scrollView.documentView = tableView;
         [contentView addSubview:scrollView];
 
-        // Bottom bar
-        NSView* bottomBar = [[NSView alloc] initWithFrame:NSMakeRect(0, 0, 700, 40)];
-        bottomBar.autoresizingMask = NSViewWidthSizable | NSViewMaxYMargin;
-        [contentView addSubview:bottomBar];
-
         [self loadConfigItems];
-
-        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(detailPanelClosed:) name:@"DetailPanelClosed" object:nil];
     }
     return self;
-}
-
-- (void)dealloc {
-    [[NSNotificationCenter defaultCenter] removeObserver:self];
-}
-
-- (void)detailPanelClosed:(NSNotification*)note {
-    [self.detailView setHidden:YES];
-    NSRect frame = self.window.frame;
-    frame.size.width = 700;
-    [self.window setFrame:frame display:YES animate:YES];
 }
 
 - (void)loadConfigItems {
@@ -777,13 +795,6 @@ void s_setBoolValue(const std::string& key, bool value) {
 
 - (void)showDetailForBehavior:(NSString*)key {
     [_detailView configureForBehavior:key];
-
-    NSRect frame = self.window.frame;
-    CGFloat targetWidth = 700 + DETAIL_WIDTH;
-    if (frame.size.width < targetWidth) {
-        frame.size.width = targetWidth;
-        [self.window setFrame:frame display:YES animate:YES];
-    }
 }
 
 - (CGFloat)tableView:(NSTableView*)tableView heightOfRow:(NSInteger)row {
@@ -808,18 +819,18 @@ void s_setBoolValue(const std::string& key, bool value) {
             label.backgroundColor = [NSColor clearColor];
             label.bordered = NO;
             label.editable = NO;
-            label.font = [NSFont fontWithName:@"Comic Sans MS" size:14] ?: [NSFont boldSystemFontOfSize:14];
+            label.font = [NSFont fontWithName:@"Comic Sans MS" size:14] ?: [NSFont systemFontOfSize:14 weight:NSFontWeightSemibold];
             label.textColor = [NSColor colorWithRed:0.9 green:0.1 blue:0.1 alpha:1.0];
         }
-        label.frame = NSMakeRect(12, 2, 700, 24);
-        label.stringValue = [NSString stringWithFormat:@"🇨🇦  %@", item[@"name"]];
+        label.frame = NSMakeRect(12, 2, LIST_WIDTH, 24);
+        label.stringValue = item[@"name"];
         return label;
     }
 
     if ([type isEqualToString:@"behavior"]) {
         BehaviorRowView* rowView = [tableView makeViewWithIdentifier:@"behaviorRow" owner:self];
         if (!rowView) {
-            rowView = [[BehaviorRowView alloc] initWithFrame:NSMakeRect(0, 0, 700, 44)];
+            rowView = [[BehaviorRowView alloc] initWithFrame:NSMakeRect(0, 0, LIST_WIDTH, 44)];
             rowView.identifier = @"behaviorRow";
         }
 

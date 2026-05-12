@@ -1,9 +1,3 @@
-// ===========================
-// behavior_breadcrumbs.cpp
-// Bread Crumbs Behavior - Leave trail at cursor position
-// Based on BreadCrumbs by Straaft
-// Reference: BreadCrumbs.dll decompiled
-// ===========================
 #include "behavior.h"
 #include "goose.h"
 #include "config.h"
@@ -13,63 +7,39 @@
 #include <CoreGraphics/CoreGraphics.h>
 #include <ApplicationServices/ApplicationServices.h>
 #include <TargetConditionals.h>
+#include <vector>
+#include <cmath>
 
 static bool s_enabled = true;
 static CGImageRef s_crumbImage = nullptr;
-static bool s_following = false;
-static Vector2 s_droppedPos{0, 0};
+static bool s_wasKeyDown = false;
 static double s_lastKeyCheck = 0;
+
+struct Crumbs {
+    Vector2 pos;
+    double time;
+    float lifetime;
+};
+static std::vector<Crumbs> s_crumbs;
 
 static int GetTriggerKeyCode() {
     const std::string& keyName = g_config.behaviors.breadCrumbs.triggerKey;
-
-    if (keyName == "RightShift") {
-#if defined(__APPLE__)
-        return 60;
-#elif defined(__linux__)
-        return 50;
-#endif
-    } else if (keyName == "LeftShift") {
-#if defined(__APPLE__)
-        return 56;
-#elif defined(__linux__)
-        return 50;
-#endif
-    }
-
-#if defined(__APPLE__)
+    if (keyName == "RightShift") return 60;
+    if (keyName == "LeftShift") return 56;
     return 60;
-#elif defined(__linux__)
-    return 50;
-#else
-    return 60;
-#endif
 }
 
-static short GetAsyncKeyState(int keyCode) {
-    CGEventSourceRef source = CGEventSourceCreate(kCGEventSourceStateHIDSystemState);
-    if (!source) return 0;
-
-    CGEventRef event = CGEventCreate(source);
-    if (!event) {
-        CFRelease(source);
-        return 0;
-    }
-
-    int64_t eventKey = CGEventGetIntegerValueField(event, kCGKeyboardEventKeycode);
-    short result = (eventKey == keyCode) ? -32767 : 0;
-
-    CFRelease(event);
-    CFRelease(source);
-    return result;
+static bool IsKeyDown(int keyCode) {
+    return CGEventSourceKeyState(kCGEventSourceStateHIDSystemState, (CGKeyCode)keyCode);
 }
 
 static void init(BehaviorContext& ctx) {
     if (!s_crumbImage) {
         s_crumbImage = g_assets.GetBehaviorImage("Assets/Images/OtherGfx/crumbs.png");
     }
-    s_following = false;
+    s_wasKeyDown = false;
     s_lastKeyCheck = 0;
+    s_crumbs.clear();
 }
 
 static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
@@ -82,50 +52,80 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
 
     Vector2 cursorPos = backend->GetCursorPos();
     int keyCode = GetTriggerKeyCode();
-    short keyState = GetAsyncKeyState(keyCode);
-    bool isPressed = (keyState != 0);
+    bool keyDown = IsKeyDown(keyCode);
 
-    if (isPressed && !s_following) {
-        s_following = true;
-        s_droppedPos = cursorPos;
+    if (keyDown && !s_wasKeyDown) {
+        s_wasKeyDown = true;
+        Crumbs crumb;
+        crumb.pos = cursorPos;
+        crumb.time = time;
+        crumb.lifetime = g_config.behaviors.breadCrumbs.lifetime;
+        s_crumbs.push_back(crumb);
         g_assets.Honk();
-    } else if (!isPressed && s_following) {
-        s_following = false;
+    } else if (!keyDown) {
+        s_wasKeyDown = false;
     }
 
-    if (s_following) {
-        s_droppedPos = cursorPos;
+    if (keyDown && s_crumbs.size() > 0) {
+        Crumbs& last = s_crumbs.back();
+        float dist = std::hypot(cursorPos.x - last.pos.x, cursorPos.y - last.pos.y);
+        if (dist >= g_config.behaviors.breadCrumbs.spawnDist) {
+            Crumbs crumb;
+            crumb.pos = cursorPos;
+            crumb.time = time;
+            crumb.lifetime = g_config.behaviors.breadCrumbs.lifetime;
+            s_crumbs.push_back(crumb);
+        }
+    }
+
+    int maxCrumbs = g_config.behaviors.breadCrumbs.maxCrumbs;
+    while ((int)s_crumbs.size() > maxCrumbs) {
+        s_crumbs.erase(s_crumbs.begin());
+    }
+
+    for (auto it = s_crumbs.begin(); it != s_crumbs.end(); ) {
+        if (time - it->time > it->lifetime) {
+            it = s_crumbs.erase(it);
+        } else {
+            ++it;
+        }
     }
 }
 
 static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
     if (!g_config.behaviors.fun.breadCrumbs) return;
-    if (!s_following) return;
+    if (s_crumbs.empty()) return;
 
     CGContextRef cg = (CGContextRef)renderCtx;
     if (!cg) return;
 
+    CGContextSaveGState(cg);
+
     if (!s_crumbImage) {
-        CGContextSetRGBFillColor(cg, 0.9f, 0.7f, 0.4f, 0.8f);
         float size = g_config.behaviors.breadCrumbs.size;
-        CGContextFillEllipseInRect(cg, CGRectMake(s_droppedPos.x - size/2, s_droppedPos.y - size/2, size, size));
-        return;
+        for (const auto& crumb : s_crumbs) {
+            float alpha = std::max(0.0f, 1.0f - (float)(ctx.time - crumb.time) / crumb.lifetime);
+            CGContextSetRGBFillColor(cg, 0.9f, 0.7f, 0.4f, alpha * 0.8f);
+            CGContextFillEllipseInRect(cg, CGRectMake(crumb.pos.x - size/2, crumb.pos.y - size/2, size, size));
+        }
+    } else {
+        float imgWidth = (float)CGImageGetWidth(s_crumbImage);
+        float imgHeight = (float)CGImageGetHeight(s_crumbImage);
+        for (const auto& crumb : s_crumbs) {
+            float alpha = std::max(0.0f, 1.0f - (float)(ctx.time - crumb.time) / crumb.lifetime);
+            CGContextSetAlpha(cg, alpha);
+            CGRect rect = CGRectMake(crumb.pos.x - imgWidth / 2.0f, crumb.pos.y - imgHeight / 2.0f, imgWidth, imgHeight);
+            CGContextDrawImage(cg, rect, s_crumbImage);
+        }
     }
 
-    float imgWidth = (float)CGImageGetWidth(s_crumbImage);
-    float imgHeight = (float)CGImageGetHeight(s_crumbImage);
-
-    float x = s_droppedPos.x - imgWidth / 2.0f;
-    float y = s_droppedPos.y - imgHeight / 2.0f;
-
-    CGRect rect = CGRectMake(x, y, imgWidth, imgHeight);
-    CGContextDrawImage(cg, rect, s_crumbImage);
+    CGContextRestoreGState(cg);
 }
 
 static Behavior g_breadcrumbBehavior = {
     .id = "breadcrumbs",
     .name = "Bread Crumbs",
-    .description = "Leave trail at cursor. Based on BreadCrumbs by Straaft",
+    .description = "Hold RightShift to drop breadcrumbs at cursor. Based on BreadCrumbs by Straaft",
     .enabledPtr = &s_enabled,
     .init = init,
     .tick = tick,

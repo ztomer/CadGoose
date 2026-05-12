@@ -1560,6 +1560,27 @@ TEST(FeetStability, ConsecutiveUpdatesNoNanFeet) {
     }
 }
 
+TEST(GoosePhysics, NoInternalDoubleUpdateGuard) {
+    // Regression test: goose.Update() MUST move the goose on every call.
+    // The double-update guard is external (in renderer.mm's isPrimary check),
+    // NOT inside goose.cpp. If someone re-adds an internal guard, this fails.
+    Goose g(600, "NoGuard", 1920, 1080);
+    g.pos = {500, 500};
+    g.target = {800, 500};
+    g.currentSpeed = 480.0f;
+    g.vel = {0, 0};
+
+    CursorState c;
+    c.caps = CAP_NONE;
+
+    // Three consecutive updates - each must move the goose (monotonic)
+    for (int i = 0; i < 3; i++) {
+        float before = g.pos.x;
+        g.Update(1.0/60.0, i / 60.0, 1920, 1080, c);
+        EXPECT_GT(g.pos.x, before) << "Update " << i << " must move goose (no internal guard)";
+    }
+}
+
 TEST(FeetStability, SolveFeetNanGuardRecovers) {
     Goose g(501, "FeetRecover", 1920, 1080);
     g.pos = {500, 500};

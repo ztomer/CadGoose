@@ -29,6 +29,49 @@ TEST(Rendering, YAxisFlip) {
     EXPECT_FLOAT_EQ(flippedY, 880.0f);
 }
 
+TEST(Rendering, IsFlippedReturnsYes) {
+    [GooseView resetPrimaryGuard];
+    GooseView* view = [[GooseView alloc] initWithFrame:NSMakeRect(0, 0, 100, 100)];
+    EXPECT_TRUE([view isFlipped]);
+}
+
+TEST(Rendering, PrimaryGuardFirstViewPrimary) {
+    [GooseView resetPrimaryGuard];
+    GooseView* v1 = [[GooseView alloc] initWithFrame:NSMakeRect(0, 0, 100, 100)];
+    EXPECT_TRUE(v1.isPrimary);
+}
+
+TEST(Rendering, PrimaryGuardSecondViewSecondary) {
+    [GooseView resetPrimaryGuard];
+    GooseView* v1 = [[GooseView alloc] initWithFrame:NSMakeRect(0, 0, 100, 100)];
+    EXPECT_TRUE(v1.isPrimary);
+
+    GooseView* v2 = [[GooseView alloc] initWithFrame:NSMakeRect(0, 0, 100, 100)];
+    EXPECT_FALSE(v2.isPrimary);
+}
+
+TEST(Rendering, PrimaryGuardThirdViewAlsoSecondary) {
+    [GooseView resetPrimaryGuard];
+    GooseView* v1 = [[GooseView alloc] initWithFrame:NSMakeRect(0, 0, 100, 100)];
+    EXPECT_TRUE(v1.isPrimary);
+
+    GooseView* v2 = [[GooseView alloc] initWithFrame:NSMakeRect(0, 0, 100, 100)];
+    EXPECT_FALSE(v2.isPrimary);
+
+    GooseView* v3 = [[GooseView alloc] initWithFrame:NSMakeRect(0, 0, 100, 100)];
+    EXPECT_FALSE(v3.isPrimary);
+}
+
+TEST(Rendering, PrimaryGuardResetWorks) {
+    [GooseView resetPrimaryGuard];
+    GooseView* v1 = [[GooseView alloc] initWithFrame:NSMakeRect(0, 0, 100, 100)];
+    EXPECT_TRUE(v1.isPrimary);
+
+    [GooseView resetPrimaryGuard];
+    GooseView* v2 = [[GooseView alloc] initWithFrame:NSMakeRect(0, 0, 100, 100)];
+    EXPECT_TRUE(v2.isPrimary);
+}
+
 TEST(Rendering, GooseViewInitialization) {
     NSRect frame = NSMakeRect(0, 0, 1920, 1080);
     GooseView* view = [[GooseView alloc] initWithFrame:frame];

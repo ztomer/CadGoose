@@ -313,7 +313,7 @@ struct BehaviorConfig {
   struct Fun {
     bool ball = false;
     bool breadCrumbs = false;
-    bool hats = false;
+        bool hats = false;
     bool rainbow = false;
     bool acid = false;
     bool anger = false;

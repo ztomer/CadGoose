@@ -1,9 +1,3 @@
-// ===========================
-// behavior_hats.cpp
-// Hats Behavior - Put hats on geese
-// Based on HatGoos by DaNike
-// Reference: nike4613/GoosMods.3/HatGoos
-// ===========================
 #include "behavior.h"
 #include "goose.h"
 #include "config.h"
@@ -22,7 +16,6 @@ static void init(BehaviorContext& ctx) {
 }
 
 static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
-    if (!g_config.behaviors.fun.hats) return;
 }
 
 static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
@@ -35,8 +28,8 @@ static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
     float hatSize = g_config.behaviors.hats.sizeX;
     float offsetX = g_config.behaviors.hats.offsetX;
     float offsetY = g_config.behaviors.hats.offsetY;
-    Vector2 headRel = goose->rig.neckHead;
     float dir = goose->dir;
+    float gs = ctx.globalScale;
 
     float imgWidth = (float)CGImageGetWidth(s_hatImage);
     float imgHeight = (float)CGImageGetHeight(s_hatImage);
@@ -45,14 +38,19 @@ static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
     float drawW = imgWidth * scale;
     float drawH = imgHeight * scale;
 
-    float screenH = (float)g_screenHeight;
-    float screenX = goose->pos.x + headRel.x + offsetX;
-    float screenY = screenH - (goose->pos.y - headRel.y + offsetY);
+    Vector2 headDevice = WorldCoord::RigNeckHead(*goose);
+    float screenX = headDevice.x + offsetX * gs;
+    float screenY = headDevice.y + offsetY * gs;
 
     CGContextSaveGState(cg);
 
     CGContextTranslateCTM(cg, screenX, screenY);
     CGContextRotateCTM(cg, -dir * M_PI / 180.0f);
+
+    bool facingLeft = (dir > 90.0f && dir < 270.0f);
+    if (facingLeft) {
+        CGContextScaleCTM(cg, -1.0, 1.0);
+    }
 
     CGRect rect = CGRectMake(-drawW / 2.0f, -drawH / 2.0f, drawW, drawH);
     CGContextSaveGState(cg);
