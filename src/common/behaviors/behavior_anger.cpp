@@ -12,6 +12,12 @@ static void init(BehaviorContext& ctx) {
     state->Reset();
 }
 
+// Export anger state so goose drawing can tint body red
+float Anger_GetLevel(int gooseId) {
+    auto* state = BehaviorStateManager::Instance().Get<AngerState>(gooseId, "anger");
+    return state ? state->angerLevel : 0.0f;
+}
+
 static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
     if (!g_config.behaviors.fun.anger) return;
 

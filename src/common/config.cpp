@@ -42,6 +42,13 @@ std::string Config_GetPath() {
     return (ConfigDirPath() / "config.toml").string();
 }
 
+std::filesystem::path Config_GetThemesDir() {
+    auto dir = ConfigDirPath() / "themes";
+    std::error_code ec;
+    std::filesystem::create_directories(dir, ec);
+    return dir;
+}
+
 static std::string Trim(const std::string& text) {
     const auto begin = std::find_if_not(text.begin(), text.end(), [](unsigned char c) {
         return std::isspace(c) != 0;

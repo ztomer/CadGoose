@@ -30,7 +30,11 @@ static int GetTriggerKeyCode() {
 }
 
 static bool IsKeyDown(int keyCode) {
-    return CGEventSourceKeyState(kCGEventSourceStateHIDSystemState, (CGKeyCode)keyCode);
+    return CGEventSourceKeyState(kCGEventSourceStateCombinedSessionState, (CGKeyCode)keyCode);
+}
+
+static void LogCrumb(const char* msg) {
+    fprintf(stderr, "[Breadcrumbs] %s\n", msg);
 }
 
 static void init(BehaviorContext& ctx) {
@@ -61,8 +65,10 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
         crumb.time = time;
         crumb.lifetime = g_config.behaviors.breadCrumbs.lifetime;
         s_crumbs.push_back(crumb);
+        LogCrumb("first crumb dropped");
         g_assets.Honk();
     } else if (!keyDown) {
+        if (s_wasKeyDown) LogCrumb("key released");
         s_wasKeyDown = false;
     }
 

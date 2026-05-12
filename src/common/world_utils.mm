@@ -27,12 +27,14 @@ void World_CleanupExpired(double currentTime) {
 }
 
 void World_TickLeafPiles(double currentTime, float dt, Goose* nearestGoose) {
+    if (!g_config.behaviors.fun.autumnLeaves) return;
     for (auto& pile : g_leafPiles) {
         pile.Tick(nearestGoose, currentTime, dt);
     }
 }
 
 void World_SpawnRandomLeafPile(float screenWidth, float screenHeight, double currentTime) {
+    if (!g_config.behaviors.fun.autumnLeaves) return;
     if (g_leafPiles.size() >= 10) return;
     LeafPile pile;
     pile.Init(Vector2{

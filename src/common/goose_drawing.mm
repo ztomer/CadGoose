@@ -31,6 +31,13 @@ static void DrawLine(CGContextRef ctx, Vector2 a, Vector2 b, float width, float 
 
 extern float Rainbow_GetHue(int gooseId);
 
+static bool IsDarkAppearance() {
+    if (g_config.general.appearanceMode == APPEARANCE_DARK) return true;
+    if (g_config.general.appearanceMode == APPEARANCE_LIGHT) return false;
+    if (g_config.general.appearanceMode == APPEARANCE_CUSTOM) return false;
+    return [[[NSApplication sharedApplication] effectiveAppearance] name] == NSAppearanceNameDarkAqua;
+}
+
 void DrawGoose(Goose* g, CGContextRef ctx) {
     if (!std::isfinite(g->pos.x) || !std::isfinite(g->pos.y)) return;
 
@@ -46,13 +53,18 @@ void DrawGoose(Goose* g, CGContextRef ctx) {
     float back = Clamp(-facing, 0.0f, 1.0f);
     bool facingBack = (back > g_config.render.facingBackThreshold);
 
-    float beakR = g_config.general.canadaGooseMode ? g_config.color.canadaBeak.r : g_config.color.beak.r;
-    float beakG = g_config.general.canadaGooseMode ? g_config.color.canadaBeak.g : g_config.color.beak.g;
-    float beakB = g_config.general.canadaGooseMode ? g_config.color.canadaBeak.b : g_config.color.beak.b;
-
-    float eyeR = g_config.general.canadaGooseMode ? g_config.color.canadaEye.r : g_config.color.eye.r;
-    float eyeG = g_config.general.canadaGooseMode ? g_config.color.canadaEye.g : g_config.color.eye.g;
-    float eyeB = g_config.general.canadaGooseMode ? g_config.color.canadaEye.b : g_config.color.eye.b;
+    float beakR, beakG, beakB;
+    float eyeR, eyeG, eyeB;
+    if (g_config.general.appearanceMode == APPEARANCE_CUSTOM) {
+        beakR = g_config.color.customBeak.r; beakG = g_config.color.customBeak.g; beakB = g_config.color.customBeak.b;
+        eyeR = g_config.color.customEye.r; eyeG = g_config.color.customEye.g; eyeB = g_config.color.customEye.b;
+    } else if (IsDarkAppearance()) {
+        beakR = g_config.color.canadaBeak.r; beakG = g_config.color.canadaBeak.g; beakB = g_config.color.canadaBeak.b;
+        eyeR = g_config.color.canadaEye.r; eyeG = g_config.color.canadaEye.g; eyeB = g_config.color.canadaEye.b;
+    } else {
+        beakR = g_config.color.beak.r; beakG = g_config.color.beak.g; beakB = g_config.color.beak.b;
+        eyeR = g_config.color.eye.r; eyeG = g_config.color.eye.g; eyeB = g_config.color.eye.b;
+    }
 
     DrawEllipse(ctx, g->pos + Vector2{g_config.render.shadowOffsetX, g_config.render.shadowOffsetY},
                 g_config.render.shadowWidth / 2, g_config.render.shadowHeight / 2,
@@ -79,7 +91,12 @@ void DrawGoose(Goose* g, CGContextRef ctx) {
         bodyColorG = headG = neckG = b;
         bodyColorB = headB = neckB = c;
         outlineR = outlineG = outlineB = 0.3f;
-    } else if (g_config.general.canadaGooseMode) {
+    } else if (g_config.general.appearanceMode == APPEARANCE_CUSTOM) {
+        headR = g_config.color.customHead.r; headG = g_config.color.customHead.g; headB = g_config.color.customHead.b;
+        neckR = g_config.color.customNeck.r; neckG = g_config.color.customNeck.g; neckB = g_config.color.customNeck.b;
+        bodyColorR = g_config.color.customBody.r; bodyColorG = g_config.color.customBody.g; bodyColorB = g_config.color.customBody.b;
+        outlineR = g_config.color.customOutline.r; outlineG = g_config.color.customOutline.g; outlineB = g_config.color.customOutline.b;
+    } else if (IsDarkAppearance()) {
         headR = g_config.color.canadaHead.r; headG = g_config.color.canadaHead.g; headB = g_config.color.canadaHead.b;
         neckR = g_config.color.canadaNeck.r; neckG = g_config.color.canadaNeck.g; neckB = g_config.color.canadaNeck.b;
         bodyColorR = g_config.color.canadaBody.r; bodyColorG = g_config.color.canadaBody.g; bodyColorB = g_config.color.canadaBody.b;
@@ -89,6 +106,22 @@ void DrawGoose(Goose* g, CGContextRef ctx) {
         neckR = bodyColorR; neckG = bodyColorG; neckB = bodyColorB;
         headR = bodyColorR; headG = bodyColorG; headB = bodyColorB;
         outlineR = 0.82f; outlineG = 0.82f; outlineB = 0.82f;
+    }
+
+    // Anger tint: blend body colors toward red when goose is angry
+    float angerLevel = Anger_GetLevel(g->id);
+    if (angerLevel > g_config.behaviors.anger.minVisualThreshold) {
+        float t = angerLevel / 100.0f;
+        auto lerp = [](float a, float b, float t) { return a + (b - a) * t; };
+        bodyColorR = lerp(bodyColorR, 1.0f, t * 0.5f);
+        bodyColorG = lerp(bodyColorG, 0.1f, t * 0.5f);
+        bodyColorB = lerp(bodyColorB, 0.0f, t * 0.5f);
+        headR = lerp(headR, 1.0f, t * 0.4f);
+        headG = lerp(headG, 0.1f, t * 0.4f);
+        headB = lerp(headB, 0.0f, t * 0.4f);
+        neckR = lerp(neckR, 1.0f, t * 0.4f);
+        neckG = lerp(neckG, 0.1f, t * 0.4f);
+        neckB = lerp(neckB, 0.0f, t * 0.4f);
     }
 
     DrawLine(ctx, bodyFront, bodyBack, g_config.render.bodyWidth + 2.0f, outlineR, outlineG, outlineB, 1.0f);
@@ -200,6 +233,7 @@ void DrawFootprints(CGContextRef ctx, const std::list<Footprint>& footprints, do
 }
 
 void DrawLeaves(CGContextRef ctx, const std::list<LeafPile>& leafPiles, double currentTime) {
+    if (!g_config.behaviors.fun.autumnLeaves) return;
 #ifdef __APPLE__
     struct ColorRGB { float r, g, b; };
     ColorRGB colors[4] = {

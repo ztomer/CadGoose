@@ -2,6 +2,7 @@
 #define CONFIG_H
 
 #include <string>
+#include <filesystem>
 #include <vector>
 #include <functional>
 #include <toml.hpp>
@@ -48,11 +49,18 @@ struct DebugConfig {
   bool visuals = false;
 };
 
+// Appearance modes: 0=Light (default goose), 1=Dark (Canada goose), 2=System (follow macOS), 3=Custom
+static const int APPEARANCE_LIGHT = 0;
+static const int APPEARANCE_DARK = 1;
+static const int APPEARANCE_SYSTEM = 2;
+static const int APPEARANCE_CUSTOM = 3;
+
 struct GeneralConfig {
   float globalScale = 1.0f;
   bool audioEnabled = true;
   bool memesEnabled = true;
-  bool canadaGooseMode = false;
+  bool canadaGooseMode = false; // deprecated, use appearanceMode
+  int appearanceMode = APPEARANCE_SYSTEM;
 };
 
 struct ScreenConfig {
@@ -307,6 +315,13 @@ struct ColorConfig {
   ColorRGB canadaOutline = {0.15f, 0.12f, 0.1f};
   ColorRGB canadaBeak = {0.22f, 0.22f, 0.22f};
   ColorRGB canadaEye = {0.1f, 0.1f, 0.1f};
+  // Custom appearance colors (used when appearanceMode == APPEARANCE_CUSTOM)
+  ColorRGB customBody = {0.82f, 0.82f, 0.82f};
+  ColorRGB customNeck = {0.82f, 0.82f, 0.82f};
+  ColorRGB customHead = {0.82f, 0.82f, 0.82f};
+  ColorRGB customBeak = {1.0f, 0.6f, 0.0f};
+  ColorRGB customEye = {0.1f, 0.1f, 0.1f};
+  ColorRGB customOutline = {0.82f, 0.82f, 0.82f};
 };
 
 struct BehaviorConfig {
@@ -317,6 +332,7 @@ struct BehaviorConfig {
     bool rainbow = false;
     bool acid = false;
     bool anger = false;
+    bool autumnLeaves = true;
   } fun;
 
   struct Control {
@@ -344,7 +360,7 @@ struct BehaviorConfig {
   struct HonckerConfig { int key = 0x03; float size = 40.0f; float cooldown = 0.5f; } honcker; // F key
   struct DragConfig { float radius = 45.0f; } drag;
   struct JailConfig { int keyO = 0x1F; int keyP = 0x23; float size = 150.0f; } jail; // O, P keys
-  struct BanishConfig { float duration = 30.0f; } banish;
+  struct BanishConfig { float duration = 30.0f; int key = 0x0B; } banish; // B key
   struct NametagConfig { float size = 14.0f; } nametag;
   struct PresenceConfig { float interval = 1.0f; } presence;
   struct HealthConfig { float opacity = 0.8f; float maxHealth = 100.0f; float regenRate = 0.5f; float damageCooldown = 2.0f; float damageSpeedThreshold = 200.0f; float damageAmount = 5.0f; } health;
@@ -415,6 +431,7 @@ struct Config {
     std::string osaurusModel = "llama3";
     std::string ollamaModel = "llama3";
     std::string keychainService;
+    float evilLevel = 0.5f;
   } ai;
   struct GooseManagerConfig {
     bool taskWander = true, taskFetch = true, taskChase = true, taskSnatch = true;
@@ -435,6 +452,7 @@ void Config_SaveAll();
 void Config_LoadAll();
 void Config_Load(const toml::basic_value<toml::type_config>& config);
 std::string Config_GetPath();
+std::filesystem::path Config_GetThemesDir();
 const ConfigOption *Config_FindOptionByKey(const std::string &key);
 bool Config_GetValueByKey(const std::string &key, std::string *valueOut,
                           std::string *errorOut = nullptr);

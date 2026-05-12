@@ -60,6 +60,7 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
     }
 
     if (state->phase == PomodoroPhase::Work && state->isAggressive) {
+        // Work phase: goose spins, honks, runs
         float rotationAmount = 90.0f * (float)dt;
         goose->dir += rotationAmount;
         state->accumulatedRotation += rotationAmount;
@@ -73,7 +74,20 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
             goose->currentSpeed = g_config.movement.baseRunSpeed * cfg.aggressiveSpeedMultiplier;
             state->speedMultiplierApplied = true;
         }
+    } else if (state->phase == PomodoroPhase::Break || state->phase == PomodoroPhase::LongBreak) {
+        // Break/LongBreak: goose rests in place
+        goose->target = goose->pos;
+        goose->vel = {0, 0};
+        if (state->accumulatedRotation > 0) {
+            goose->dir -= state->accumulatedRotation;
+            state->accumulatedRotation = 0;
+        }
+        if (state->speedMultiplierApplied) {
+            goose->currentSpeed = 0.0f;
+            state->speedMultiplierApplied = false;
+        }
     } else {
+        // Non-aggressive work: normal walking
         if (state->accumulatedRotation > 0) {
             goose->dir -= state->accumulatedRotation;
             state->accumulatedRotation = 0;

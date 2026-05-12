@@ -5,8 +5,8 @@ visuals = false
 [General]
 global_scale = 1.0
 audio_enabled = false
-canada_goose_mode = false
 memes_enabled = true
+appearance_mode = 2
 
 [Rig]
 neck_height_moving = 10.0
@@ -106,10 +106,40 @@ r = 0.22
 g = 0.22
 b = 0.22
 
+[color.customNeck]
+r = 0.82
+g = 0.82
+b = 0.82
+
 [color.canadaEye]
 r = 0.1
 g = 0.1
 b = 0.1
+
+[color.customBody]
+r = 0.82
+g = 0.82
+b = 0.82
+
+[color.customHead]
+r = 0.82
+g = 0.82
+b = 0.82
+
+[color.customBeak]
+r = 1.0
+g = 0.6
+b = 0.0
+
+[color.customEye]
+r = 0.1
+g = 0.1
+b = 0.1
+
+[color.customOutline]
+r = 0.82
+g = 0.82
+b = 0.82
 
 [Snatch]
 radius_range = 80.0

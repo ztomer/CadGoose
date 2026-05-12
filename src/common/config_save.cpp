@@ -46,6 +46,12 @@ void Config_SaveAll() {
     config["color"]["canadaOutline"] = toml::table{{"r", g_config.color.canadaOutline.r}, {"g", g_config.color.canadaOutline.g}, {"b", g_config.color.canadaOutline.b}};
     config["color"]["canadaBeak"] = toml::table{{"r", g_config.color.canadaBeak.r}, {"g", g_config.color.canadaBeak.g}, {"b", g_config.color.canadaBeak.b}};
     config["color"]["canadaEye"] = toml::table{{"r", g_config.color.canadaEye.r}, {"g", g_config.color.canadaEye.g}, {"b", g_config.color.canadaEye.b}};
+    config["color"]["customBody"] = toml::table{{"r", g_config.color.customBody.r}, {"g", g_config.color.customBody.g}, {"b", g_config.color.customBody.b}};
+    config["color"]["customNeck"] = toml::table{{"r", g_config.color.customNeck.r}, {"g", g_config.color.customNeck.g}, {"b", g_config.color.customNeck.b}};
+    config["color"]["customHead"] = toml::table{{"r", g_config.color.customHead.r}, {"g", g_config.color.customHead.g}, {"b", g_config.color.customHead.b}};
+    config["color"]["customBeak"] = toml::table{{"r", g_config.color.customBeak.r}, {"g", g_config.color.customBeak.g}, {"b", g_config.color.customBeak.b}};
+    config["color"]["customEye"] = toml::table{{"r", g_config.color.customEye.r}, {"g", g_config.color.customEye.g}, {"b", g_config.color.customEye.b}};
+    config["color"]["customOutline"] = toml::table{{"r", g_config.color.customOutline.r}, {"g", g_config.color.customOutline.g}, {"b", g_config.color.customOutline.b}};
 
     ofs << toml::value(config) << "\n";
     ofs.close();

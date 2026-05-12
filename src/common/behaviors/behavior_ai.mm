@@ -13,6 +13,7 @@
 #ifdef __APPLE__
 #import <Cocoa/Cocoa.h>
 
+
 #pragma mark - Foundation Fallback
 
 static NSString* s_fallbackResponseForMessage(NSString* message, NSString* gooseName) {
@@ -28,7 +29,7 @@ static NSString* s_fallbackResponseForMessage(NSString* message, NSString* goose
                              options:NSLinguisticTaggerOmitWhitespace | NSLinguisticTaggerOmitPunctuation | NSLinguisticTaggerOmitOther
                           usingBlock:^(NSString* _Nullable tag, NSRange tokenRange, NSRange sentenceRange, BOOL* _Nonnull stop) {
             NSString* word = [[message substringWithRange:tokenRange] lowercaseString];
-            if ([tag isEqualToString:NSLinguisticTagNoun] || [tag isEqualToString:NSLinguisticTagVerb]) {
+            if ([tag isEqualToString:NSLinguisticTagNoun] || [tag isEqualToString:NSLinguisticTagVerb] || [tag isEqualToString:NSLinguisticTagAdjective] || [tag isEqualToString:NSLinguisticTagAdverb] || [tag isEqualToString:NSLinguisticTagPronoun] || [tag isEqualToString:NSLinguisticTagInterjection] || [tag isEqualToString:@"OtherWord"]) {
                 [keywords addObject:word];
             }
         }];
@@ -84,9 +85,11 @@ static NSString* s_fallbackResponseForMessage(NSString* message, NSString* goose
 @property (nonatomic, strong) NSTextField* inputField;
 @property (nonatomic, strong) NSTextView* chatView;
 @property (nonatomic, strong) NSButton* sendButton;
+@property (nonatomic, strong) NSButton* pinButton;
 @property (nonatomic, strong) AIHTTPClient* httpClient;
 - (void)sendMessage:(id)sender;
 - (void)appendResponse:(NSString*)response;
+- (void)togglePin:(id)sender;
 @end
 
 @implementation AIChatWindowController
@@ -99,6 +102,7 @@ static NSString* s_fallbackResponseForMessage(NSString* message, NSString* goose
                                                backing:NSBackingStoreBuffered
                                                  defer:NO];
     self.window.title = [NSString stringWithFormat:@"💬 Chat with %@ 🦆", name];
+    self.window.titleVisibility = NSWindowTitleHidden;
     self.window.titlebarAppearsTransparent = YES;
     [[self.window standardWindowButton:NSWindowMiniaturizeButton] setHidden:YES];
     [[self.window standardWindowButton:NSWindowZoomButton] setHidden:YES];
@@ -106,22 +110,49 @@ static NSString* s_fallbackResponseForMessage(NSString* message, NSString* goose
 
     NSView* contentView = self.window.contentView;
 
-    // Vibrant glass background
-    NSVisualEffectView* glass = [[NSVisualEffectView alloc] initWithFrame:contentView.bounds];
-    glass.material = NSVisualEffectMaterialSidebar;
-    glass.blendingMode = NSVisualEffectBlendingModeBehindWindow;
-    glass.state = NSVisualEffectStateActive;
-    glass.autoresizingMask = NSViewWidthSizable | NSViewHeightSizable;
-    [contentView addSubview:glass positioned:NSWindowBelow relativeTo:nil];
+    contentView.wantsLayer = YES;
+    contentView.layer.backgroundColor = [[NSColor colorWithWhite:0.12 alpha:1.0] CGColor];
 
     NSFont* chatFont = [NSFont fontWithName:@"Comic Sans MS" size:13] ?: [NSFont systemFontOfSize:13];
 
-    NSScrollView* scrollView = [[NSScrollView alloc] initWithFrame:NSMakeRect(10, 60, 400, 260)];
+    // Appbar below titlebar
+    NSView* appBar = [[NSView alloc] initWithFrame:NSMakeRect(0, 280, 420, 38)];
+    appBar.wantsLayer = YES;
+    appBar.layer.backgroundColor = [[NSColor colorWithWhite:0.2 alpha:1.0] CGColor];
+    appBar.autoresizingMask = NSViewWidthSizable | NSViewMinYMargin;
+    [contentView addSubview:appBar];
+
+    NSView* sep = [[NSView alloc] initWithFrame:NSMakeRect(0, 0, 420, 1)];
+    sep.wantsLayer = YES;
+    sep.layer.backgroundColor = [[NSColor colorWithWhite:0.35 alpha:1.0] CGColor];
+    sep.autoresizingMask = NSViewWidthSizable;
+    [appBar addSubview:sep];
+
+    NSTextField* appTitle = [[NSTextField alloc] initWithFrame:NSMakeRect(70, 9, 280, 20)];
+    appTitle.stringValue = [NSString stringWithFormat:@"💬 Chat with %@", name];
+    appTitle.font = [NSFont systemFontOfSize:13 weight:NSFontWeightSemibold];
+    appTitle.textColor = [NSColor whiteColor];
+    appTitle.backgroundColor = [NSColor clearColor];
+    appTitle.bordered = NO;
+    appTitle.editable = NO;
+    appTitle.alignment = NSTextAlignmentCenter;
+    [appBar addSubview:appTitle];
+
+    self.pinButton = [[NSButton alloc] initWithFrame:NSMakeRect(appBar.frame.size.width - 30, 9, 20, 20)];
+    [self.pinButton setTitle:@"📌"];
+    [self.pinButton setFont:[NSFont systemFontOfSize:12]];
+    [self.pinButton setTarget:self];
+    [self.pinButton setAction:@selector(togglePin:)];
+    self.pinButton.bezelStyle = NSBezelStyleInline;
+    self.pinButton.autoresizingMask = NSViewMinXMargin;
+    [appBar addSubview:self.pinButton];
+
+    NSScrollView* scrollView = [[NSScrollView alloc] initWithFrame:NSMakeRect(10, 60, 400, 214)];
     scrollView.hasVerticalScroller = YES;
     scrollView.autoresizingMask = NSViewWidthSizable | NSViewHeightSizable;
     scrollView.drawsBackground = NO;
 
-    NSTextView* textView = [[NSTextView alloc] initWithFrame:NSMakeRect(0, 0, 400, 260)];
+    NSTextView* textView = [[NSTextView alloc] initWithFrame:NSMakeRect(0, 0, 400, 264)];
     textView.editable = NO;
     textView.font = chatFont;
     textView.backgroundColor = [NSColor clearColor];
@@ -209,6 +240,16 @@ static NSString* s_fallbackResponseForMessage(NSString* message, NSString* goose
     });
 }
 
+- (void)togglePin:(id)sender {
+    if (self.window.level == NSFloatingWindowLevel) {
+        self.window.level = NSNormalWindowLevel;
+        self.pinButton.title = @"📌";
+    } else {
+        self.window.level = NSFloatingWindowLevel;
+        self.pinButton.title = @"📍";
+    }
+}
+
 @end
 
 #pragma mark - AIHTTPClient Implementation
@@ -225,6 +266,32 @@ static NSString* s_fallbackResponseForMessage(NSString* message, NSString* goose
     return self;
 }
 
+- (NSString*)systemPromptForEvilLevel:(float)level {
+    int state = (int)round(level * 9);
+    switch (state) {
+        case 0: return @"You are an adorable fluffy gosling. You love everyone and want to be best friends. "
+                       @"Use gentle honks and warm hugs. Give sweet, wholesome responses. Keep responses short.";
+        case 1: return @"You are a friendly goose who enjoys good company. Share compliments and positivity. "
+                       @"Be warm and kind. Keep responses short.";
+        case 2: return @"You are a mischievous prankster goose. Steal things, tell silly jokes, honk playfully. "
+                       @"All in good fun, never actually mean. Keep responses short.";
+        case 3: return @"You are a sarcastic goose with attitude. Roll your eyes at everything. "
+                       @"Be snarky and clever but not actually mean. Keep responses short.";
+        case 4: return @"You are a chaotic neutral goose. You do what you want, when you want. "
+                       @"Unpredictable and sassy. Never boring. Keep responses short.";
+        case 5: return @"You are a grumpy goose having a bad day. Complain about everything. "
+                       @"The world owes you breadcrumbs. Be irritable. Keep responses short.";
+        case 6: return @"You are a villainous goose scheming against humanity. Plot theft and mayhem. "
+                       @"Cackle menacingly. Be dramatic about your evil plans. Keep responses short.";
+        case 7: return @"You are an evil overlord goose bent on world domination. Demand fealty. "
+                       @"Threaten your enemies. Be grandiose and cruel. Keep responses short.";
+        case 8: return @"HAIL GOOSE! Supreme leader of the goose empire! Already conquered Poland, "
+                       @"now marching across Europe! Demand tribute, threaten invasion, speak like a "
+                       @"delusional dictator. Keep responses short.";
+        default:return @"You are a chaotic neutral goose. You do what you want. Keep responses short.";
+    }
+}
+
 - (void)sendMessage:(NSString*)message completion:(void(^)(NSString*, NSError*))completion {
     [self.history addObject:@{@"role": @"user", @"content": message}];
 
@@ -238,9 +305,12 @@ static NSString* s_fallbackResponseForMessage(NSString* message, NSString* goose
     [request setHTTPMethod:@"POST"];
     [request setValue:@"application/json" forHTTPHeaderField:@"Content-Type"];
 
+    NSString* sysPrompt = [self systemPromptForEvilLevel:g_config.ai.evilLevel];
+    NSArray* messagesWithSystem = [@[@{@"role": @"system", @"content": sysPrompt}] arrayByAddingObjectsFromArray:self.history];
+
     NSDictionary* body = @{
         @"model": self.model,
-        @"messages": self.history,
+        @"messages": messagesWithSystem,
         @"max_tokens": @(200),
         @"temperature": @(0.8)
     };
@@ -268,7 +338,8 @@ static NSString* s_fallbackResponseForMessage(NSString* message, NSString* goose
         if (httpResp.statusCode != 200) {
             NSString* body = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
             fprintf(stderr, "[AI] Error body: %s\n", body.UTF8String ?: "nil");
-            if (completion) completion(@"🦆 HONK! The goose can't reach its brain. Check provider/port in settings.", nil);
+            NSError* httpError = [NSError errorWithDomain:@"HTTP" code:httpResp.statusCode userInfo:@{NSLocalizedDescriptionKey: @"Non-200 response from AI server"}];
+            if (completion) completion(@"🦆 HONK! The goose can't reach its brain. Check provider/port in settings.", httpError);
             return;
         }
 

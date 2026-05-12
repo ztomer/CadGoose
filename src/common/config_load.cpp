@@ -58,6 +58,18 @@ void Config_Load(const toml::basic_value<toml::type_config>& config) {
         g_config.color.canadaBeak.r, g_config.color.canadaBeak.g, g_config.color.canadaBeak.b);
     config_helpers::get_color_rgb(config, "color", "canadaEye", "canadaEye",
         g_config.color.canadaEye.r, g_config.color.canadaEye.g, g_config.color.canadaEye.b);
+    config_helpers::get_color_rgb(config, "color", "customBody", "customBody",
+        g_config.color.customBody.r, g_config.color.customBody.g, g_config.color.customBody.b);
+    config_helpers::get_color_rgb(config, "color", "customNeck", "customNeck",
+        g_config.color.customNeck.r, g_config.color.customNeck.g, g_config.color.customNeck.b);
+    config_helpers::get_color_rgb(config, "color", "customHead", "customHead",
+        g_config.color.customHead.r, g_config.color.customHead.g, g_config.color.customHead.b);
+    config_helpers::get_color_rgb(config, "color", "customBeak", "customBeak",
+        g_config.color.customBeak.r, g_config.color.customBeak.g, g_config.color.customBeak.b);
+    config_helpers::get_color_rgb(config, "color", "customEye", "customEye",
+        g_config.color.customEye.r, g_config.color.customEye.g, g_config.color.customEye.b);
+    config_helpers::get_color_rgb(config, "color", "customOutline", "customOutline",
+        g_config.color.customOutline.r, g_config.color.customOutline.g, g_config.color.customOutline.b);
 }
 
 void Config_LoadAll() {
