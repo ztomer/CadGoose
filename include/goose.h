@@ -111,6 +111,9 @@ public:
     // Behavior system enabled flag
     bool behaviorsEnabled = true;
 
+    // Frame duplicate guard (prevents 2 windows from updating same goose twice in the same frame)
+    double lastUpdateTime = -1.0;
+
     Goose(int _id, const std::string& _name, int screenW, int screenH);
 
     CursorAction Update(double dt, double time, int scrW, int scrH, const CursorState& cursor);
