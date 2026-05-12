@@ -21,21 +21,7 @@ static CGImageRef s_portalImages[2] = {nullptr, nullptr};
 enum PortalKey { P_KEY = 0x50, D1_KEY = 0x31, D2_KEY = 0x32, D0_KEY = 0x30 };
 
 static bool IsKeyHeld(int keyCode) {
-    CGEventSourceRef source = CGEventSourceCreate(kCGEventSourceStateHIDSystemState);
-    if (!source) return false;
-
-    CGEventRef event = CGEventCreate(source);
-    if (!event) {
-        CFRelease(source);
-        return false;
-    }
-
-    int64_t eventKey = CGEventGetIntegerValueField(event, kCGKeyboardEventKeycode);
-    bool pressed = (eventKey == keyCode);
-
-    CFRelease(event);
-    CFRelease(source);
-    return pressed;
+    return CGEventSourceKeyState(kCGEventSourceStateHIDSystemState, (CGKeyCode)keyCode);
 }
 
 static void init(BehaviorContext& ctx) {

@@ -33,16 +33,7 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
 
     bool mouseDown = false;
 #ifdef __APPLE__
-    CGEventSourceRef source = CGEventSourceCreate(kCGEventSourceStateHIDSystemState);
-    if (source) {
-        CGEventRef event = CGEventCreate(source);
-        if (event) {
-            CGEventType type = CGEventGetType(event);
-            mouseDown = (type == kCGEventLeftMouseDown || type == kCGEventLeftMouseDragged);
-            CFRelease(event);
-        }
-        CFRelease(source);
-    }
+    mouseDown = CGEventSourceButtonState(kCGEventSourceStateHIDSystemState, kCGMouseButtonLeft);
 #endif
 
     if (onGoose && mouseDown && goose->state != GooseState:: SNATCH_CURSOR) {

@@ -17,21 +17,7 @@ static bool s_wasPressed = false;
 static CGImageRef s_honkImage = nullptr;
 
 static bool IsKeyPressed(int keyCode) {
-    CGEventSourceRef source = CGEventSourceCreate(kCGEventSourceStateHIDSystemState);
-    if (!source) return false;
-
-    CGEventRef event = CGEventCreate(source);
-    if (!event) {
-        CFRelease(source);
-        return false;
-    }
-
-    int64_t eventKey = CGEventGetIntegerValueField(event, kCGKeyboardEventKeycode);
-    bool pressed = (eventKey == keyCode);
-
-    CFRelease(event);
-    CFRelease(source);
-    return pressed;
+    return CGEventSourceKeyState(kCGEventSourceStateHIDSystemState, (CGKeyCode)keyCode);
 }
 
 static void init(BehaviorContext& ctx) {

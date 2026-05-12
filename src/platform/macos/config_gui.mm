@@ -234,35 +234,37 @@ static NSMutableArray* g_configItemsForAccess = nil;
         y -= 35;
     } else if ([key isEqualToString:@"behaviors.control.honcker"]) {
         _titleLabel.stringValue = @"Honcker Behavior";
+        [self addInstructionLabel:@"🦆 Press F to honk at cursor location" atY:y];
+        y -= 25;
         [self addSliderWithLabel:@"Honk Cooldown" min:0.1f max:10.0f value:g_config.behaviors.honcker.cooldown atY:y key:@"behaviors.control.honcker.cooldown"];
         y -= 35;
     } else if ([key isEqualToString:@"behaviors.control.jail"]) {
         _titleLabel.stringValue = @"Jail Behavior";
+        [self addInstructionLabel:@"🔒 O = set cursor as jail position\n   P = toggle jail on/off" atY:y];
+        y -= 42;
         [self addSliderWithLabel:@"Jail Size" min:50.0f max:300.0f value:g_config.behaviors.jail.size atY:y key:@"behaviors.control.jail.size"];
         y -= 35;
     } else if ([key isEqualToString:@"behaviors.control.portals"]) {
         _titleLabel.stringValue = @"Portal Behavior";
+        [self addInstructionLabel:@"🌀 P+1 = place portal A\n   P+2 = place portal B\n   P+0 = toggle portals" atY:y];
+        y -= 60;
         [self addSliderWithLabel:@"Portal Width" min:30.0f max:200.0f value:g_config.portal.width atY:y key:@"behaviors.control.portals.width"];
         y -= 35;
     } else if ([key isEqualToString:@"behaviors.control.drag"]) {
         _titleLabel.stringValue = @"Drag Behavior";
+        [self addInstructionLabel:@"🖱️ Click and drag the goose" atY:y];
+        y -= 25;
         [self addSliderWithLabel:@"Drag Radius" min:50.0f max:300.0f value:g_config.behaviors.drag.radius atY:y key:@"behaviors.control.drag.radius"];
         y -= 35;
     } else if ([key isEqualToString:@"behaviors.control.banish"]) {
         _titleLabel.stringValue = @"Banish Behavior";
-        [self addSliderWithLabel:@"Duration (s)" min:1.0f max:30.0f value:g_config.behaviors.banish.duration atY:y key:@"behaviors.control.banish.duration"];
+        [self addInstructionLabel:@"👻 Ctrl+Alt+Middle Click to banish\n   Respawns after the duration" atY:y];
+        y -= 42;
+        [self addSliderWithLabel:@"Duration (s)" min:1.0f max:60.0f value:g_config.behaviors.banish.duration atY:y key:@"behaviors.control.banish.duration"];
         y -= 35;
     } else if ([key isEqualToString:@"behaviors.info.nametag"]) {
         _titleLabel.stringValue = @"Nametag Behavior";
         [self addSliderWithLabel:@"Font Size" min:8.0f max:40.0f value:g_config.behaviors.nametag.size atY:y key:@"behaviors.info.nametag.size"];
-        y -= 35;
-    } else if ([key isEqualToString:@"behaviors.info.presence"]) {
-        _titleLabel.stringValue = @"Presence Behavior";
-        [self addSliderWithLabel:@"Update Interval" min:1.0f max:60.0f value:g_config.behaviors.presence.interval atY:y key:@"behaviors.info.presence.interval"];
-        y -= 35;
-    } else if ([key isEqualToString:@"behaviors.info.gooseManager"]) {
-        _titleLabel.stringValue = @"Goose Manager";
-        [self addSliderWithLabel:@"Task Interval" min:1.0f max:60.0f value:g_config.behaviors.gooseManager.taskInterval atY:y key:@"behaviors.info.gooseManager.taskInterval"];
         y -= 35;
     } else if ([key isEqualToString:@"behaviors.systems.health"]) {
         _titleLabel.stringValue = @"Health System";
@@ -290,9 +292,21 @@ static NSMutableArray* g_configItemsForAccess = nil;
     }
 }
 
-- (void)closeDetail:(id)sender {
-    self.hidden = YES;
-    [[NSNotificationCenter defaultCenter] postNotificationName:@"DetailPanelClosed" object:nil];
+- (void)addInstructionLabel:(NSString*)text atY:(float)y {
+    NSTextField* label = [[NSTextField alloc] initWithFrame:NSMakeRect(12, y, DETAIL_WIDTH - 24, 40)];
+    label.font = [NSFont fontWithName:@"Comic Sans MS" size:12] ?: [NSFont systemFontOfSize:12];
+    label.textColor = [NSColor secondaryLabelColor];
+    label.backgroundColor = [NSColor clearColor];
+    label.bordered = NO;
+    label.editable = NO;
+    [_contentView addSubview:label];
+
+    // Set multi-line text by matching origin and size
+    NSMutableParagraphStyle* para = [[NSMutableParagraphStyle alloc] init];
+    para.lineSpacing = 2;
+    NSDictionary* attrs = @{NSFontAttributeName: label.font ?: [NSFont systemFontOfSize:12],
+                            NSParagraphStyleAttributeName: para};
+    label.attributedStringValue = [[NSAttributedString alloc] initWithString:text attributes:attrs];
 }
 
 - (void)addSliderWithLabel:(NSString*)label min:(float)min max:(float)max value:(float)value atY:(float)y key:(NSString*)key {
@@ -523,19 +537,8 @@ static NSMutableArray* g_configItemsForAccess = nil;
         titleLabel.editable = NO;
         [headerView addSubview:titleLabel];
 
-        NSButton* toggleAllBtn = [[NSButton alloc] initWithFrame:NSMakeRect(580, 12, 108, 24)];
+        NSButton* toggleAllBtn = [[NSButton alloc] initWithFrame:NSMakeRect(500, 12, 108, 24)];
         [toggleAllBtn setTitle:@"Toggle All"];
-        [toggleAllBtn setBezelStyle:NSBezelStyleRounded];
-        toggleAllBtn.target = self;
-        toggleAllBtn.action = @selector(toggleAll:);
-        [headerView addSubview:toggleAllBtn];
-
-        NSButton* reloadBtn = [[NSButton alloc] initWithFrame:NSMakeRect(460, 12, 100, 24)];
-        [reloadBtn setTitle:@"Reload"];
-        [reloadBtn setTarget:self];
-        [reloadBtn setAction:@selector(reloadConfig:)];
-        reloadBtn.bezelStyle = NSBezelStyleRounded;
-        [headerView addSubview:reloadBtn];
         [contentView addSubview:headerView];
 
         // Detail view area (offscreen until showDetailForBehavior expands window)
@@ -579,14 +582,6 @@ static NSMutableArray* g_configItemsForAccess = nil;
         // Bottom bar
         NSView* bottomBar = [[NSView alloc] initWithFrame:NSMakeRect(0, 0, 700, 40)];
         bottomBar.autoresizingMask = NSViewWidthSizable | NSViewMaxYMargin;
-
-        NSButton* closeBtn = [[NSButton alloc] initWithFrame:NSMakeRect(590, 6, 90, 28)];
-        [closeBtn setTitle:@"Close"];
-        [closeBtn setTarget:self];
-        [closeBtn setAction:@selector(closeWindow:)];
-        closeBtn.bezelStyle = NSBezelStyleRounded;
-        closeBtn.autoresizingMask = NSViewMinXMargin;
-        [bottomBar addSubview:closeBtn];
         [contentView addSubview:bottomBar];
 
         [self loadConfigItems];

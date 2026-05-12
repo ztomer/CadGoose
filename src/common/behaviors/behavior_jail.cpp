@@ -14,21 +14,7 @@ static Vector2 s_jailPos{-250.0f, -250.0f};
 static Vector2 s_jailPosition{300.0f, 400.0f};
 
 static bool IsKeyPressed(int keyCode) {
-    CGEventSourceRef source = CGEventSourceCreate(kCGEventSourceStateHIDSystemState);
-    if (!source) return false;
-
-    CGEventRef event = CGEventCreate(source);
-    if (!event) {
-        CFRelease(source);
-        return false;
-    }
-
-    CGKeyCode key = (CGKeyCode)keyCode;
-    bool pressed = CGEventGetIntegerValueField(event, kCGKeyboardEventKeycode) == key;
-
-    CFRelease(event);
-    CFRelease(source);
-    return pressed;
+    return CGEventSourceKeyState(kCGEventSourceStateHIDSystemState, (CGKeyCode)keyCode);
 }
 
 static void init(BehaviorContext& ctx) {
