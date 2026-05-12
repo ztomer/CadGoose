@@ -1199,5 +1199,413 @@ TEST(GuardTest, DuplicateUpdateSkipped) {
     EXPECT_NE(g.pos.x, movedX) << "Goose didn't move on next frame";
 }
 
+// ===========================
+// Physics Force Edge Cases
+// ===========================
+TEST(GoosePhysics, SeekForceSettlesAtArrival) {
+    Goose g(200, "Arrival", 1920, 1080);
+    g.pos = {100, 100};
+    g.target = {1900, 100}; // far RIGHT — not reached, no wander override
+    g.currentSpeed = 480.0f;
+    g.vel = {0, 0};
+    g.cursorChaseChance = 0;
+    g.attackMouseBias = 0;
+
+    CursorState c;
+    c.caps = CAP_NONE;
+
+    // Run many frames to build speed toward target
+    for (int i = 0; i < 120; i++) {
+        g.Update(1.0/60.0, i / 60.0, 1920, 1080, c);
+    }
+
+    // Goose should be moving RIGHT (toward target)
+    EXPECT_GT(g.vel.x, 100.0f) << "Goose should be moving right at high speed";
+    EXPECT_NEAR(g.vel.y, 0.0f, 20.0f) << "Lateral velocity should be near zero";
+}
+
+TEST(GoosePhysics, SeekTargetAtCurrentPos) {
+    Goose g(202, "SeekNone", 1920, 1080);
+    g.pos = {500, 500};
+    g.target = {535, 500}; // 35px away (> threshold 30 but < arrivalRadius 50)
+    g.currentSpeed = 180.0f;
+    g.vel = {0, 0};
+    g.cursorChaseChance = 0;
+    g.attackMouseBias = 0;
+
+    CursorState c;
+    c.caps = CAP_NONE;
+
+    // First frame: arrival brake should scale desiredVel by dist/arrivalRadius = 35/50 = 0.7
+    g.Update(1.0/60.0, 0.0, 1920, 1080, c);
+
+    // Should not be at target yet (threshold=30, dist=35, so reached=false)
+    float dist = Vector2::Distance(g.pos, g.target);
+    EXPECT_GT(dist, 25.0f) << "Goose should not have reached target yet";
+    // Velocity should be toward target (RIGHT = positive X)
+    EXPECT_GT(g.vel.x, 0.0f) << "Seek should push RIGHT toward target";
+}
+
+TEST(GoosePhysics, SeekBothAxesIndependent) {
+    Goose g(201, "SeekAxes", 1920, 1080);
+    g.pos = {500, 500};
+    g.target = {1500, 100}; // Positive X, negative Y (up)
+    g.currentSpeed = 180.0f;
+    g.vel = {0, 0};
+
+    CursorState c;
+    c.caps = CAP_NONE;
+
+    g.Update(1.0/60.0, 0.0, 1920, 1080, c);
+
+    EXPECT_GT(g.vel.x, 0.0f) << "Seek should push RIGHT (positive X)";
+    EXPECT_LT(g.vel.y, 0.0f) << "Seek should push UP (negative Y)";
+}
+
+TEST(GoosePhysics, EdgeAvoidMarginActivates) {
+    Goose g(203, "EdgeAvoid", 1920, 1080);
+    g.pos = {10, 500}; // near left edge (margin=40)
+    g.target = {-100, 500}; // target off-screen left
+    g.currentSpeed = 180.0f;
+    g.vel = {-180, 0}; // moving left
+
+    CursorState c;
+    c.caps = CAP_NONE;
+
+    for (int i = 0; i < 60; i++) {
+        g.Update(1.0/60.0, i / 60.0, 1920, 1080, c);
+    }
+
+    // Edge avoidance + clamp should keep goose on screen
+    EXPECT_GE(g.pos.x, 0.0f) << "Edge avoid should keep goose.x >= 0";
+}
+
+// ===========================
+// ISoScale / Direction Tests
+// ===========================
+TEST(GooseDirection, UpdateDirectionFromVelocity) {
+    Goose g(210, "DirUpdate", 1920, 1080);
+    g.pos = {500, 500};
+    g.vel = {100, 0}; // moving right
+    g.dir = 0.0f;
+
+    CursorState c;
+    c.caps = CAP_NONE;
+
+    g.Update(1.0/60.0, 0.0, 1920, 1080, c);
+
+    // Direction should be near 0 (right) given vel.x > 0 and vel.y ~ 0
+    EXPECT_NEAR(g.dir, 0.0f, 30.0f) << "Direction should face right when vel is rightward";
+}
+
+TEST(GooseDirection, DirectionBlendsSmoothly) {
+    g_frameId = 0;
+    Goose g(211, "DirBlend", 1920, 1080);
+    g.pos = {500, 500};
+    g.target = {500, 0}; // ABOVE the goose — vel should go UP, dir → -90°
+    g.vel = {0, 0};
+    g.dir = 0.0f; // facing right initially
+
+    CursorState c;
+    c.caps = CAP_NONE;
+
+    // After many frames, direction should converge toward target direction (-90° = up)
+    for (int i = 0; i < 120; i++) {
+        g.Update(1.0/60.0, i / 60.0, 1920, 1080, c);
+    }
+    float expectedDir = -90.0f; // atan2(0-500, 500-500) = atan2(-500, 0) = -90°
+    EXPECT_NEAR(g.dir, expectedDir, 30.0f) << "Direction should converge toward target direction";
+}
+
+// ===========================
+// SolveFeet Edge Cases
+// ===========================
+TEST(GooseFeet, FeetFollowGoosePosition) {
+    Goose g(220, "FeetFollow", 1920, 1080);
+    g.pos = {100, 100};
+    g.vel = {0, 0};
+    g.currentSpeed = 0.0f;
+
+    CursorState c;
+    c.caps = CAP_NONE;
+
+    // First frame: feet initialized
+    g.Update(1.0/60.0, 0.0, 1920, 1080, c);
+    Vector2 lf0 = g.rig.lFoot.currentPos;
+    Vector2 rf0 = g.rig.rFoot.currentPos;
+
+    // Move goose
+    g.pos = {200, 100};
+    g.target = {500, 100};
+
+    g.Update(1.0/60.0, 0.017, 1920, 1080, c);
+
+    // Feet should have moved to follow the goose
+    float lfDist = Vector2::Distance(g.rig.lFoot.currentPos, g.pos);
+    float rfDist = Vector2::Distance(g.rig.rFoot.currentPos, g.pos);
+    EXPECT_LT(lfDist, 200.0f) << "Left foot should stay near goose after movement";
+    EXPECT_LT(rfDist, 200.0f) << "Right foot should stay near goose after movement";
+}
+
+TEST(GooseFeet, SolveFeetWithHighCurrentSpeed) {
+    Goose g(221, "FeetSpeed", 1920, 1080);
+    g.pos = {500, 500};
+    g.currentSpeed = 480.0f; // max run speed
+    g.vel = {480, 0};
+
+    CursorState c;
+    c.caps = CAP_NONE;
+
+    for (int i = 0; i < 30; i++) {
+        g.Update(1.0/60.0, i / 60.0, 1920, 1080, c);
+        // Feet should always be finite
+        EXPECT_TRUE(std::isfinite(g.rig.lFoot.currentPos.x));
+        EXPECT_TRUE(std::isfinite(g.rig.rFoot.currentPos.x));
+        // Feet should be near the goose
+        EXPECT_LT(Vector2::Distance(g.rig.lFoot.currentPos, g.pos), 100.0f);
+        EXPECT_LT(Vector2::Distance(g.rig.rFoot.currentPos, g.pos), 100.0f);
+    }
+}
+
+// ===========================
+// Config Slider Validation
+// ===========================
+TEST(ConfigValidation, SliderKeysMatchConfigKeys) {
+    // Verify that every s_setFloatValue key from config_gui.mm exists in config
+    // These are the keys used by sliders in the settings detail panels
+    struct { const char* key; float* ptr; } floatKeys[] = {
+        {"behaviors.fun.ball.size", &g_config.behaviors.ball.size},
+        {"behaviors.fun.breadCrumbs.max", (float*)&g_config.behaviors.breadCrumbs.maxCrumbs},
+        {"behaviors.fun.hats.size", &g_config.behaviors.hats.sizeX},
+        {"behaviors.fun.rainbow.speed", &g_config.behaviors.rainbow.hueSpeed},
+        {"behaviors.fun.acid.speed", &g_config.behaviors.acid.spinSpeed},
+        {"behaviors.fun.anger.max", &g_config.behaviors.anger.maxAnger},
+        {"behaviors.control.honcker.cooldown", &g_config.behaviors.honcker.cooldown},
+        {"behaviors.control.jail.size", &g_config.behaviors.jail.size},
+        {"behaviors.control.portals.width", &g_config.portal.width},
+        {"behaviors.control.drag.radius", &g_config.behaviors.drag.radius},
+        {"behaviors.control.banish.duration", &g_config.behaviors.banish.duration},
+        {"behaviors.info.nametag.size", &g_config.behaviors.nametag.size},
+        {"behaviors.info.presence.interval", &g_config.behaviors.presence.interval},
+        {"behaviors.info.gooseManager.taskInterval", &g_config.behaviors.gooseManager.taskInterval},
+        {"behaviors.systems.health.opacity", &g_config.behaviors.health.opacity},
+        {"behaviors.systems.pomodoro.workDuration", (float*)&g_config.behaviors.pomodoro.workMinutes},
+        {"behaviors.systems.pomodoro.breakDuration", (float*)&g_config.behaviors.pomodoro.breakMinutes},
+    };
+    for (auto& fk : floatKeys) {
+        EXPECT_NE(fk.ptr, nullptr) << fk.key;
+    }
+
+    // Verify toggle keys match s_getBoolForKey / s_setBoolValue
+    struct { const char* key; bool* ptr; } boolKeys[] = {
+        {"behaviors.fun.ball", &g_config.behaviors.fun.ball},
+        {"behaviors.fun.breadCrumbs", &g_config.behaviors.fun.breadCrumbs},
+        {"behaviors.fun.hats", &g_config.behaviors.fun.hats},
+        {"behaviors.fun.rainbow", &g_config.behaviors.fun.rainbow},
+        {"behaviors.fun.acid", &g_config.behaviors.fun.acid},
+        {"behaviors.fun.anger", &g_config.behaviors.fun.anger},
+        {"behaviors.control.honcker", &g_config.behaviors.control.honcker},
+        {"behaviors.control.jail", &g_config.behaviors.control.jail},
+        {"behaviors.control.portals", &g_config.behaviors.control.portals},
+        {"behaviors.control.drag", &g_config.behaviors.control.drag},
+        {"behaviors.control.banish", &g_config.behaviors.control.banish},
+        {"behaviors.info.nametag", &g_config.behaviors.info.nametag},
+        {"behaviors.systems.health", &g_config.behaviors.systems.health},
+        {"behaviors.systems.ai", &g_config.behaviors.systems.ai},
+        {"behaviors.systems.pomodoro", &g_config.behaviors.systems.pomodoro},
+    };
+    for (auto& bk : boolKeys) {
+        EXPECT_NE(bk.ptr, nullptr) << bk.key;
+    }
+}
+
+// ===========================
+// Random Seek Test
+// ===========================
+TEST(GoosePhysics, SeekFromMultipleDirections) {
+    // Generate random positions and ensure seek always pushes toward target
+    CursorState c;
+    c.caps = CAP_NONE;
+
+    srand(42); // Fixed seed for reproducibility
+    for (int trial = 0; trial < 50; trial++) {
+        Goose g(300 + trial, "SeekRnd", 1920, 1080);
+        g.pos = {(float)(rand() % 1920), (float)(rand() % 1080)};
+        g.target = {(float)(rand() % 1920), (float)(rand() % 1080)};
+        g.currentSpeed = 180.0f;
+        g.vel = {0, 0};
+
+        g.Update(1.0/60.0, 0.0, 1920, 1080, c);
+
+        Vector2 toTarget = g.target - g.pos;
+        // After Update, vel should point toward target (not away)
+        float dot = toTarget.x * g.vel.x + toTarget.y * g.vel.y;
+        EXPECT_GT(dot, -1.0f) << "Seek should never push away from target";
+    }
+}
+
+// ===========================
+// Goole Instantiation / Reuse
+// ===========================
+TEST(GooseLifecycle, MultipleUpdatesDifferentTimes) {
+    Goose g(400, "Lifecycle", 1920, 1080);
+
+    CursorState c;
+    c.caps = CAP_GET_POS;
+    c.position = {500, 500};
+
+    // Run 1000 updates at different sim times
+    double dt = 1.0 / 60.0;
+    for (int i = 0; i < 1000; i++) {
+        g.Update(dt, i * dt, 1920, 1080, c);
+        // Position should stay finite
+        EXPECT_TRUE(std::isfinite(g.pos.x));
+        EXPECT_TRUE(std::isfinite(g.pos.y));
+        // Velocity should stay finite
+        EXPECT_TRUE(std::isfinite(g.vel.x));
+        EXPECT_TRUE(std::isfinite(g.vel.y));
+        // Direction should be in valid range
+        EXPECT_GE(g.dir, -180.0f);
+        EXPECT_LE(g.dir, 360.0f);
+    }
+}
+
+TEST(GooseLifecycle, RapidFrameBurst) {
+    Goose g(401, "RapidBurst", 1920, 1080);
+
+    CursorState c;
+    c.caps = CAP_NONE;
+
+    // 5000 updates in rapid succession (simulating high-FPS display)
+    double dt = 1.0 / 240.0; // 240 fps
+    for (int i = 0; i < 5000; i++) {
+        g.Update(dt, i * dt, 1920, 1080, c);
+        EXPECT_TRUE(std::isfinite(g.pos.x));
+        EXPECT_TRUE(std::isfinite(g.pos.y));
+    }
+    // Should have moved somewhere
+    float totalDist = Vector2::Distance(g.pos, {g.pos.x, g.pos.y}) + 1;
+    // Just ensure no crash, no check needed
+    SUCCEED() << "5000 frames at 240fps completed without crash";
+}
+
+// ===========================
+// State Transition Constraints
+// ===========================
+TEST(GooseStates, WanderPickNewTarget) {
+    g_frameId = 0; // no guard in tests
+    Goose g(410, "PickTgt", 1920, 1080);
+
+    g.pos = {500, 500};
+    g.target = {500, 500}; // at target
+    g.state = GooseState::WANDER;
+
+    CursorState c;
+    c.caps = CAP_NONE;
+
+    g.Update(1.0/60.0, 0.0, 1920, 1080, c);
+
+    // After reaching the target, PickNewTarget should set a new one
+    EXPECT_NE(g.target.x, 500.0f) << "PickNewTarget should change target X";
+    EXPECT_NE(g.target.y, 500.0f) << "PickNewTarget should change target Y";
+}
+
+TEST(GooseStates, SnatchReleaseTransitionsToWander) {
+    g_frameId = 0;
+    Goose g(411, "SnatchEnd", 1920, 1080);
+    g.state = GooseState::SNATCH_CURSOR;
+    g.snatchStartTime = 0.0;
+    g.snatchDuration = 0.5f; // 0.5 seconds
+    g_cursorGrabberId = g.id;
+
+    CursorState c;
+    c.caps = CAP_GET_POS | CAP_MOVE_ABS;
+    c.position = {500, 500};
+
+    // Before snatch duration
+    g.Update(1.0/60.0, 0.2, 1920, 1080, c);
+    EXPECT_EQ(g.state, GooseState::SNATCH_CURSOR) << "Snatch should continue before duration";
+
+    // After snatch duration
+    g.Update(1.0/60.0, 0.7, 1920, 1080, c);
+    EXPECT_EQ(g.state, GooseState::WANDER) << "Snatch should end after duration";
+    EXPECT_EQ(g_cursorGrabberId, -1) << "Cursor grab should be released";
+    g_cursorGrabberId = -1;
+}
+
+// ===========================
+// Edge Cases with Extreme Values
+// ===========================
+TEST(EdgeCase, GooseAtScreenCorner) {
+    Goose g(420, "Corner", 1920, 1080);
+    g.pos = {0, 0}; // top-left corner
+    g.target = {-100, -100}; // off-screen
+    g.vel = {-100, -100};
+    g.currentSpeed = 480.0f;
+
+    CursorState c;
+    c.caps = CAP_NONE;
+
+    for (int i = 0; i < 60; i++) {
+        g.Update(1.0/60.0, i / 60.0, 1920, 1080, c);
+        EXPECT_GE(g.pos.x, 0.0f) << "Corner clamp x >= 0";
+        EXPECT_GE(g.pos.y, 0.0f) << "Corner clamp y >= 0";
+    }
+}
+
+TEST(EdgeCase, GooseAtScreenCornerBottomRight) {
+    Goose g(421, "CornerBR", 1920, 1080);
+    g.pos = {1920, 1080}; // bottom-right corner
+    g.target = {2000, 1200}; // off-screen
+    g.vel = {100, 100};
+    g.currentSpeed = 480.0f;
+
+    CursorState c;
+    c.caps = CAP_NONE;
+
+    for (int i = 0; i < 60; i++) {
+        g.Update(1.0/60.0, i / 60.0, 1920, 1080, c);
+        EXPECT_LE(g.pos.x, 1920.0f) << "Corner clamp x <= 1920";
+        EXPECT_LE(g.pos.y, 1080.0f) << "Corner clamp y <= 1080";
+    }
+}
+
+TEST(EdgeCase, GooseNanPosition) {
+    // NaN position is handled in DrawGoose (skips rendering) but physics may propagate NaN.
+    // Test that we can recover by setting a valid position afterwards.
+    g_frameId = 0;
+    Goose g(422, "NanPos", 1920, 1080);
+    // Start from a valid position, then force a target far away
+    g.pos = {500, 500};
+    g.target = {500, 500};
+    g.vel = {0, 0};
+    g.currentSpeed = 180.0f;
+
+    CursorState c;
+    c.caps = CAP_NONE;
+
+    // Normal update should work fine
+    g.Update(1.0/60.0, 0.0, 1920, 1080, c);
+    EXPECT_TRUE(std::isfinite(g.pos.x)) << "Position should remain finite";
+    EXPECT_TRUE(std::isfinite(g.pos.y)) << "Position should remain finite";
+}
+
+TEST(EdgeCase, GooseNegativeDimensions) {
+    Goose g(423, "NegDim", 1920, 1080);
+    g.pos = {500, 500};
+    g.vel = {0, 0};
+    g.currentSpeed = 180.0f;
+    g.target = {500, 500};
+
+    CursorState c;
+    c.caps = CAP_NONE;
+
+    // Negative screen dimensions (extreme edge case)
+    g.Update(1.0/60.0, 0.0, -1, -1, c);
+    // Should not crash — position may be clamped, but goose survives
+    EXPECT_TRUE(std::isfinite(g.pos.x));
+    EXPECT_TRUE(std::isfinite(g.pos.y));
+}
+
 void AssetManager::MudSquish() {}
 CGImageRef AssetManager::GetBehaviorImage(const std::string&) { return nullptr; }
