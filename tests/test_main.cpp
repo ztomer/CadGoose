@@ -718,5 +718,37 @@ TEST(SoakTest, TenMinuteGoose) {
     EXPECT_LT(maxStuckDuration, 20.0) << "Goose was stuck for more than 20 seconds";
     EXPECT_GT(stateChanges, 5) << "Goose should change state at least 5 times in 10 minutes";
 }
+
+// ===========================
+// Multi-Window Duplicate Update Guard Test
+// ===========================
+extern int g_frameId;
+TEST(GuardTest, DuplicateUpdateSkipped) {
+    Goose g(99, "Guard", 1920, 1080);
+    CursorState c;
+    c.caps = CAP_GET_POS;
+    c.position = {500, 500};
+
+    // Simulate renderer running — it increments g_frameId to >0
+    g_frameId = 42;
+
+    // First update — should run normally
+    Vector2 posBefore = g.pos;
+    g.Update(1.0/60.0, 0.0, 1920, 1080, c);
+    Vector2 posAfter1 = g.pos;
+    EXPECT_NE(posAfter1.x, posBefore.x) << "Goose should move on first update";
+
+    // Second update at same g_frameId — guard should prevent double-move
+    // This simulates a second window's timer firing within the same tick cycle.
+    float movedX = g.pos.x;
+    g.Update(1.0/60.0, 0.001, 1920, 1080, c);
+    EXPECT_EQ(g.pos.x, movedX) << "Duplicate update was NOT skipped — double-move detected";
+
+    // Next real frame (renderer incremented g_frameId)
+    ++g_frameId;
+    g.Update(1.0/60.0, 0.017, 1920, 1080, c);
+    EXPECT_NE(g.pos.x, movedX) << "Goose didn't move on next frame";
+}
+
 void AssetManager::MudSquish() {}
 CGImageRef AssetManager::GetBehaviorImage(const std::string&) { return nullptr; }
