@@ -21,6 +21,7 @@ int g_screenWidth = 0;
 int g_screenHeight = 0;
 int g_selectedGooseId = 0;
 int g_cursorGrabberId = -1;
+int g_frameId = 0;
 
 void LeafPile::Init(Vector2 position, float radius, float height, double currentTime) {
     pos = position;

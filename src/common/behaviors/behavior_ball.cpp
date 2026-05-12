@@ -120,6 +120,11 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
     float dist = std::sqrt((cursorX - ballCenterX) * (cursorX - ballCenterX) +
                           (cursorY - ballCenterY) * (cursorY - ballCenterY));
 
+    // Continuously chase ball while it's moving
+    if (s_ballSpeed > SPEED_THRESHOLD && goose) {
+        goose->target = Vector2{ballCenterDevX, ballCenterDevY};
+    }
+
     if (dist < BALL_SIZE / 2.0f && s_ballSpeed <= SPEED_THRESHOLD) {
         s_ballSpeed = KICK_SPEED;
         Vector2 dir = Vector2{ballCenterX - cursorX, ballCenterY - cursorY};

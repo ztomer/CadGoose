@@ -314,8 +314,6 @@ static NSMutableArray* g_configItemsForAccess = nil;
 }
 
 - (void)addSliderWithLabel:(NSString*)label min:(float)min max:(float)max value:(float)value atY:(float)y key:(NSString*)key {
-    size_t hash = std::hash<std::string>{}([key UTF8String]);
-
     NSTextField* labelField = [[NSTextField alloc] initWithFrame:NSMakeRect(12, y, 150, 16)];
     labelField.font = [NSFont systemFontOfSize:12];
     labelField.textColor = [NSColor labelColor];
@@ -329,7 +327,7 @@ static NSMutableArray* g_configItemsForAccess = nil;
     slider.minValue = min;
     slider.maxValue = max;
     slider.doubleValue = value;
-    slider.tag = (NSInteger)hash;
+    slider.identifier = key;
     slider.target = self;
     slider.action = @selector(sliderChanged:);
     [_contentView addSubview:slider];
@@ -341,7 +339,7 @@ static NSMutableArray* g_configItemsForAccess = nil;
     valueField.bordered = NO;
     valueField.editable = YES;
     valueField.stringValue = [NSString stringWithFormat:@"%.2f", value];
-    valueField.tag = (NSInteger)hash;
+    valueField.identifier = key;
     valueField.target = self;
     valueField.action = @selector(valueFieldChanged:);
     [_contentView addSubview:valueField];
@@ -418,42 +416,32 @@ static NSMutableArray* g_configItemsForAccess = nil;
 
 - (void)sliderChanged:(NSSlider*)sender {
     float value = (float)sender.doubleValue;
-    std::string key = [[self keyForTag:(int)sender.tag] UTF8String];
-    if (!key.empty()) {
-        s_setFloatValue(key, value);
-    }
-    // Update value field
-    for (NSView* subview in _contentView.subviews) {
-        if ([subview isKindOfClass:[NSTextField class]] && ((NSTextField*)subview).tag == sender.tag) {
-            ((NSTextField*)subview).stringValue = [NSString stringWithFormat:@"%.2f", value];
-            break;
+    NSString* keyStr = sender.identifier;
+    if (keyStr) {
+        s_setFloatValue(std::string([keyStr UTF8String]), value);
+        // Update matching value field
+        for (NSView* subview in _contentView.subviews) {
+            if ([subview isKindOfClass:[NSTextField class]] && ![subview isEqualTo:sender] && [((NSTextField*)subview).identifier isEqualToString:keyStr]) {
+                ((NSTextField*)subview).stringValue = [NSString stringWithFormat:@"%.2f", value];
+                break;
+            }
         }
     }
 }
 
 - (void)valueFieldChanged:(NSTextField*)sender {
     float value = (float)sender.doubleValue;
-    std::string key = [[self keyForTag:(int)sender.tag] UTF8String];
-    if (!key.empty()) {
-        s_setFloatValue(key, value);
-    }
-    // Update slider
-    for (NSView* subview in _contentView.subviews) {
-        if ([subview isKindOfClass:[NSSlider class]] && ((NSSlider*)subview).tag == sender.tag) {
-            ((NSSlider*)subview).doubleValue = value;
-            break;
+    NSString* keyStr = sender.identifier;
+    if (keyStr) {
+        s_setFloatValue(std::string([keyStr UTF8String]), value);
+        // Update matching slider
+        for (NSView* subview in _contentView.subviews) {
+            if ([subview isKindOfClass:[NSSlider class]] && [((NSSlider*)subview).identifier isEqualToString:keyStr]) {
+                ((NSSlider*)subview).doubleValue = value;
+                break;
+            }
         }
     }
-}
-
-- (NSString*)keyForTag:(int)tag {
-    for (NSDictionary* item in g_configItemsForAccess) {
-        if (![item[@"type"] isEqualToString:@"behavior"]) continue;
-        NSString* key = item[@"key"];
-        size_t hash = std::hash<std::string>{}([key UTF8String]);
-        if ((int)hash == tag) return key;
-    }
-    return nil;
 }
 
 - (void)providerChanged:(NSPopUpButton*)sender {

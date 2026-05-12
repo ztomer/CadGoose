@@ -146,6 +146,9 @@ static void DrawLine(CGContextRef ctx, Vector2 a, Vector2 b, float width, float 
 }
 
 - (void)tick {
+    extern int g_frameId;
+    ++g_frameId;
+
     self.currentTime += g_config.render.frameDt;
     self.tickCount++;
 
