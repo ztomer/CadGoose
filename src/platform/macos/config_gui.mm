@@ -384,12 +384,23 @@ static NSMutableArray* g_configItemsForAccess = nil;
     modelLabel.editable = NO;
     [_contentView addSubview:modelLabel];
 
-    NSTextField* modelField = [[NSTextField alloc] initWithFrame:NSMakeRect(395, y, 140, 22)];
-    modelField.stringValue = [NSString stringWithUTF8String:(g_config.ai.useOsaurus ? g_config.ai.osaurusModel : g_config.ai.ollamaModel).c_str()];
-    modelField.tag = 101;
-    modelField.target = self;
-    modelField.action = @selector(modelChanged:);
-    [_contentView addSubview:modelField];
+    NSPopUpButton* modelPopup = [[NSPopUpButton alloc] initWithFrame:NSMakeRect(395, y, 140, 24)];
+    [modelPopup addItemWithTitle:[NSString stringWithUTF8String:(g_config.ai.useOsaurus ? g_config.ai.osaurusModel : g_config.ai.ollamaModel).c_str()]];
+    modelPopup.tag = 101;
+    modelPopup.target = self;
+    modelPopup.action = @selector(modelPopupChanged:);
+    [_contentView addSubview:modelPopup];
+
+    NSButton* refreshBtn = [[NSButton alloc] initWithFrame:NSMakeRect(540, y, 24, 24)];
+    [refreshBtn setTitle:@"🔄"];
+    [refreshBtn setFont:[NSFont systemFontOfSize:12]];
+    [refreshBtn setTarget:self];
+    [refreshBtn setAction:@selector(refreshModels:)];
+    refreshBtn.bezelStyle = NSBezelStyleRounded;
+    [_contentView addSubview:refreshBtn];
+
+    // Trigger initial model load
+    [self performSelector:@selector(refreshModels:) withObject:refreshBtn afterDelay:0.5];
 }
 
 - (void)addPromptDisplayAtY:(float)y {
@@ -449,15 +460,15 @@ static NSMutableArray* g_configItemsForAccess = nil;
     g_config.ai.useOsaurus = (idx == 0);
     g_config.ai.useOllama = (idx == 1);
 
-    // Update port and model fields for selected provider
+    // Update port field for selected provider
     for (NSView* subview in _contentView.subviews) {
         if ([subview isKindOfClass:[NSTextField class]] && subview.tag == 100) {
             ((NSTextField*)subview).integerValue = (idx == 0) ? g_config.ai.osaurusPort : g_config.ai.ollamaPort;
         }
-        if ([subview isKindOfClass:[NSTextField class]] && subview.tag == 101) {
-            ((NSTextField*)subview).stringValue = [NSString stringWithUTF8String:(idx == 0 ? g_config.ai.osaurusModel : g_config.ai.ollamaModel).c_str()];
-        }
     }
+
+    // Refresh model list for new provider
+    [self refreshModels:sender];
 }
 
 - (void)portChanged:(NSTextField*)sender {
@@ -471,19 +482,84 @@ static NSMutableArray* g_configItemsForAccess = nil;
     }
     if (provider == 0) g_config.ai.osaurusPort = port;
     else if (provider == 1) g_config.ai.ollamaPort = port;
+    [self refreshModels:sender];
 }
 
-- (void)modelChanged:(NSTextField*)sender {
-    std::string model = std::string([sender.stringValue UTF8String]);
+- (void)modelPopupChanged:(NSPopUpButton*)sender {
+    NSString* selected = [sender titleOfSelectedItem];
+    if (selected && ![selected hasPrefix:@"🌀"] && ![selected hasPrefix:@"❌"] && ![selected isEqualToString:@"(none)"]) {
+        std::string model = std::string([selected UTF8String]);
+        NSInteger provider = -1;
+        for (NSView* subview in _contentView.subviews) {
+            if ([subview isKindOfClass:[NSPopUpButton class]] && subview.tag != 101) {
+                provider = ((NSPopUpButton*)subview).indexOfSelectedItem;
+                break;
+            }
+        }
+        if (provider == 0) g_config.ai.osaurusModel = model;
+        else if (provider == 1) g_config.ai.ollamaModel = model;
+        else g_config.ai.ollamaModel = model;
+    }
+}
+
+- (void)refreshModels:(id)sender {
     NSInteger provider = -1;
+    int port = 0;
+    NSPopUpButton* modelPopup = nil;
     for (NSView* subview in _contentView.subviews) {
         if ([subview isKindOfClass:[NSPopUpButton class]]) {
-            provider = ((NSPopUpButton*)subview).indexOfSelectedItem;
-            break;
+            if (subview.tag == 101) modelPopup = (NSPopUpButton*)subview;
+            else provider = ((NSPopUpButton*)subview).indexOfSelectedItem;
+        }
+        if ([subview isKindOfClass:[NSTextField class]] && subview.tag == 100) {
+            port = (int)((NSTextField*)subview).integerValue;
         }
     }
-    if (provider == 0) g_config.ai.osaurusModel = model;
-    else if (provider == 1) g_config.ai.ollamaModel = model;
+    if (!modelPopup) return;
+
+    [modelPopup removeAllItems];
+    [modelPopup addItemWithTitle:@"🌀 Loading..."];
+
+    NSString* endpoint = (provider == 0) ? [NSString stringWithFormat:@"http://localhost:%d/v1/models", port]
+                                         : [NSString stringWithFormat:@"http://localhost:%d/api/tags", port];
+    if (provider == 2 || provider == -1) {
+        [modelPopup removeAllItems];
+        [modelPopup addItemWithTitle:@"(enter manually)"];
+        return;
+    }
+
+    NSURL* url = [NSURL URLWithString:endpoint];
+    if (!url) return;
+
+    __weak NSPopUpButton* weakPopup = modelPopup;
+    NSURLSessionDataTask* task = [[NSURLSession sharedSession] dataTaskWithURL:url completionHandler:^(NSData* data, NSURLResponse* response, NSError* error) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            NSPopUpButton* strongPopup = weakPopup;
+            if (!strongPopup) return;
+            [strongPopup removeAllItems];
+            if (error || !data) {
+                [strongPopup addItemWithTitle:[NSString stringWithFormat:@"❌ %@", error ? [error.localizedDescription substringToIndex:MIN(30,error.localizedDescription.length)] : @"no data"]];
+                return;
+            }
+            NSDictionary* json = [NSJSONSerialization JSONObjectWithData:data options:0 error:nil];
+            if (!json) { [strongPopup addItemWithTitle:@"(invalid response)"]; return; }
+            if ([json[@"data"] isKindOfClass:[NSArray class]]) {
+                for (NSDictionary* m in json[@"data"]) {
+                    [strongPopup addItemWithTitle:m[@"id"] ?: @"?"];
+                }
+            } else if ([json[@"models"] isKindOfClass:[NSArray class]]) {
+                for (NSDictionary* m in json[@"models"]) {
+                    [strongPopup addItemWithTitle:m[@"name"] ?: m[@"model"] ?: @"?"];
+                }
+            } else {
+                [strongPopup addItemWithTitle:@"(unknown format)"];
+            }
+            if (strongPopup.numberOfItems == 0) {
+                [strongPopup addItemWithTitle:@"(none found)"];
+            }
+        });
+    }];
+    [task resume];
 }
 
 @end
