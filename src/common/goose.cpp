@@ -155,6 +155,16 @@ void Goose::SolveFeet(double time) {
   float liftAmt = Lerp(g_config.step.liftWalk, g_config.step.liftRun, speed01);
 
   auto UpdateFoot = [&](FootState &f, Vector2 home) {
+    // NaN guard — recover corrupted foot positions
+    if (!std::isfinite(f.currentPos.x) || !std::isfinite(f.currentPos.y)) {
+      f.currentPos = home;
+      f.moveStartTime = -1.0;
+      return;
+    }
+    if (!std::isfinite(home.x) || !std::isfinite(home.y)) {
+      home = pos;
+    }
+
     if (f.moveStartTime < 0) {
       float dist = Vector2::Distance(f.currentPos, home);
 
