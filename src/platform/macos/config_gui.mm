@@ -95,7 +95,7 @@ void s_setBoolValue(const std::string& key, bool value) {
         NSFont* nameFont = [NSFont fontWithName:@"Comic Sans MS" size:14] ?: [NSFont systemFontOfSize:14 weight:NSFontWeightSemibold];
         NSFont* descFont = [NSFont fontWithName:@"Comic Sans MS" size:11] ?: [NSFont systemFontOfSize:11];
         CGFloat maxNW = [@"Autumn Leaves" sizeWithAttributes:@{NSFontAttributeName: nameFont}].width + 4;
-        CGFloat maxDW = [@"Create portals with P+1/2, teleport with P+0" sizeWithAttributes:@{NSFontAttributeName: descFont}].width + 4;
+        CGFloat maxDW = [@"Create portals with P+1/2, teleport with P+0" sizeWithAttributes:@{NSFontAttributeName: descFont}].width + 18;
         self.descLabelX = 64 + maxNW + 2;
         self.listWidth = self.descLabelX + maxDW + 12;
         fprintf(stderr, "[config] listWidth=%.0f descLabelX=%.0f maxNW=%.0f maxDW=%.0f\n",
@@ -317,7 +317,7 @@ void s_setBoolValue(const std::string& key, bool value) {
         rowView.nameLabel.stringValue = nameText;
         rowView.descLabel.stringValue = descText;
         NSFont* df = rowView.descLabel.font;
-        CGFloat dw = MIN([descText sizeWithAttributes:@{NSFontAttributeName: df}].width + 4, self.listWidth - self.descLabelX - 10);
+        CGFloat dw = MIN([descText sizeWithAttributes:@{NSFontAttributeName: df}].width + 18, self.listWidth - self.descLabelX - 10);
         rowView.descLabel.frame = NSMakeRect(self.descLabelX, 8, dw, 14);
         rowView.iconLabel.stringValue = [BehaviorRowView iconForConfigKey:item[@"key"]];
         rowView.target = self;
