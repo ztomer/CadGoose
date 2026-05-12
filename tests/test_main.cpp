@@ -1607,5 +1607,125 @@ TEST(EdgeCase, GooseNegativeDimensions) {
     EXPECT_TRUE(std::isfinite(g.pos.y));
 }
 
+// ===========================
+// Feet NaN / Double-Update Recovery Tests
+// ===========================
+TEST(FeetStability, ConsecutiveUpdatesNoNanFeet) {
+    // Simulate what happens when double-update occurs (both windows call Update)
+    g_frameId = 0;
+    Goose g(500, "FeetStress", 1920, 1080);
+    g.pos = {500, 500};
+    g.target = {800, 600};
+    g.currentSpeed = 180.0f;
+    g.vel = {0, 0};
+
+    CursorState c;
+    c.caps = CAP_NONE;
+
+    // Rapid consecutive updates simulate double-physics from 2 windows
+    for (int batch = 0; batch < 500; batch++) {
+        // Three rapid calls — simulates both windows + guard recovery
+        for (int call = 0; call < 3; call++) {
+            g.Update(1.0/60.0, batch / 60.0, 1920, 1080, c);
+
+            // FEET MUST BE FINITE after EVERY call
+            EXPECT_TRUE(std::isfinite(g.rig.lFoot.currentPos.x))
+                << "lFoot.x NaN at batch " << batch << " call " << call;
+            EXPECT_TRUE(std::isfinite(g.rig.lFoot.currentPos.y))
+                << "lFoot.y NaN at batch " << batch << " call " << call;
+            EXPECT_TRUE(std::isfinite(g.rig.rFoot.currentPos.x))
+                << "rFoot.x NaN at batch " << batch << " call " << call;
+            EXPECT_TRUE(std::isfinite(g.rig.rFoot.currentPos.y))
+                << "rFoot.y NaN at batch " << batch << " call " << call;
+
+            // Feet must be near the goose (within 200px)
+            EXPECT_LT(Vector2::Distance(g.rig.lFoot.currentPos, g.pos), 200.0f)
+                << "lFoot too far at batch " << batch;
+            EXPECT_LT(Vector2::Distance(g.rig.rFoot.currentPos, g.pos), 200.0f)
+                << "rFoot too far at batch " << batch;
+        }
+    }
+}
+
+TEST(FeetStability, SolveFeetNanGuardRecovers) {
+    g_frameId = 0;
+    Goose g(501, "FeetRecover", 1920, 1080);
+    g.pos = {500, 500};
+    g.target = {500, 500};
+    g.currentSpeed = 0.0f;
+    g.vel = {0, 0};
+
+    CursorState c;
+    c.caps = CAP_NONE;
+
+    // Force foot to NaN (simulating corruption from double-update)
+    g.rig.lFoot.currentPos = {NAN, NAN};
+    g.rig.rFoot.currentPos = {NAN, NAN};
+
+    // Update should call SolveFeet which should snap corrupted feet to home
+    g.Update(1.0/60.0, 0.0, 1920, 1080, c);
+
+    // After Update, feet must be finite
+    EXPECT_TRUE(std::isfinite(g.rig.lFoot.currentPos.x));
+    EXPECT_TRUE(std::isfinite(g.rig.lFoot.currentPos.y));
+    EXPECT_TRUE(std::isfinite(g.rig.rFoot.currentPos.x));
+    EXPECT_TRUE(std::isfinite(g.rig.rFoot.currentPos.y));
+
+    // Feet should be near the goose (within 100px)
+    EXPECT_LT(Vector2::Distance(g.rig.lFoot.currentPos, g.pos), 100.0f);
+    EXPECT_LT(Vector2::Distance(g.rig.rFoot.currentPos, g.pos), 100.0f);
+}
+
+// ===========================
+// Renderer Guard Integration Test
+// ===========================
+TEST(GuardIntegration, BatchGuardPreventsDoubleMove) {
+    // Simulates the renderer's batch guard: first tick updates, second skips
+    Goose g(502, "BatchGuard", 1920, 1080);
+    g_frameId = 0;
+
+    CursorState c;
+    c.caps = CAP_GET_POS;
+    c.position = {500, 500};
+
+    // First tick — should update
+    ++g_frameId; // simulates renderer incrementing on first tick
+    Vector2 pos1 = g.pos;
+    g.Update(1.0/60.0, 0.0, 1920, 1080, c);
+    EXPECT_NE(g.pos.x, pos1.x) << "First tick should move goose";
+
+    // Second tick — g_frameId unchanged, guard should fire
+    float posXafter1 = g.pos.x;
+    g.Update(1.0/60.0, 0.001, 1920, 1080, c);
+    EXPECT_EQ(g.pos.x, posXafter1) << "Second tick should be blocked by guard";
+
+    // Third tick — new g_frameId, should update again
+    ++g_frameId;
+    g.Update(1.0/60.0, 0.017, 1920, 1080, c);
+    EXPECT_NE(g.pos.x, posXafter1) << "Third tick should move goose again";
+}
+
+TEST(GuardIntegration, BatchGuardKeepsFeetFinite) {
+    // 1000 simulated frames with both windows calling Update
+    // Verifies no foot corruption over time
+    Goose g(503, "BatchStress", 1920, 1080);
+    g_frameId = 0;
+
+    CursorState c;
+    c.caps = CAP_GET_POS;
+    c.position = {960, 540};
+
+    for (int frame = 0; frame < 1000; frame++) {
+        ++g_frameId; // first window
+        g.Update(1.0/60.0, frame / 60.0, 1920, 1080, c);
+        g.Update(1.0/60.0, frame / 60.0 + 0.001, 1920, 1080, c); // second window — blocked by guard
+
+        EXPECT_TRUE(std::isfinite(g.rig.lFoot.currentPos.x));
+        EXPECT_TRUE(std::isfinite(g.rig.rFoot.currentPos.x));
+        EXPECT_LT(Vector2::Distance(g.rig.lFoot.currentPos, g.pos), 200.0f);
+        EXPECT_LT(Vector2::Distance(g.rig.rFoot.currentPos, g.pos), 200.0f);
+    }
+}
+
 void AssetManager::MudSquish() {}
 CGImageRef AssetManager::GetBehaviorImage(const std::string&) { return nullptr; }

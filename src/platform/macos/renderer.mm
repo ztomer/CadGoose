@@ -54,6 +54,8 @@ static void DrawLine(CGContextRef ctx, Vector2 a, Vector2 b, float width, float 
 }
 
 @interface GooseView ()
+@property (nonatomic, assign, class) BOOL hasPrimary;
+@property (nonatomic, assign) BOOL isPrimary;
 @property (nonatomic, assign) double currentTime;
 @property (nonatomic, assign) int tickCount;
 @property (nonatomic, strong) dispatch_source_t timer;
@@ -64,9 +66,8 @@ static void DrawLine(CGContextRef ctx, Vector2 a, Vector2 b, float width, float 
 
 @implementation GooseView
 
-- (BOOL)isFlipped {
-    return YES;
-}
++ (BOOL)hasPrimary { static BOOL s = NO; return s; }
++ (void)setHasPrimary:(BOOL)v { static BOOL s = NO; if(!s)s=v; }
 
 - (instancetype)initWithFrame:(NSRect)frameRect {
     DEBUG_LOG("GooseView initWithFrame START, frame=%s", NSStringFromRect(frameRect).UTF8String);
@@ -80,6 +81,15 @@ static void DrawLine(CGContextRef ctx, Vector2 a, Vector2 b, float width, float 
 
         self.layer.backgroundColor = [[NSColor clearColor] CGColor];
         DEBUG_LOG("  layer backgroundColor set");
+
+        if (!GooseView.hasPrimary) {
+            self.isPrimary = YES;
+            GooseView.hasPrimary = YES;
+            DEBUG_LOG("  PRIMARY GOOSE VIEW (will update geese)");
+        } else {
+            self.isPrimary = NO;
+            DEBUG_LOG("  SECONDARY GOOSE VIEW (display only)");
+        }
 
         _currentTime = 0.0;
         _tickCount = 0;
@@ -146,21 +156,6 @@ static void DrawLine(CGContextRef ctx, Vector2 a, Vector2 b, float width, float 
 }
 
 - (void)tick {
-    // Only the first timer callback in each batch runs goose updates.
-    // Both timers fire within the same runloop iteration on the serial main queue.
-    // Use a static flag that lets the first callback through, then blocks others.
-    static BOOL s_batchUpdated = NO;
-    BOOL shouldUpdate = !s_batchUpdated;
-    if (shouldUpdate) {
-        s_batchUpdated = YES;
-        extern int g_frameId;
-        ++g_frameId;
-    }
-    // Reset after this batch of timer callbacks completes on the serial queue
-    if (shouldUpdate) {
-        dispatch_async(dispatch_get_main_queue(), ^{ s_batchUpdated = NO; });
-    }
-
     self.currentTime += g_config.render.frameDt;
     self.tickCount++;
 
@@ -170,15 +165,15 @@ static void DrawLine(CGContextRef ctx, Vector2 a, Vector2 b, float width, float 
         cursor = g_cursorProvider->Read();
     }
 
-    if (shouldUpdate) {
+    if (self.isPrimary) {
         for (auto& g : g_geese) {
-            CursorAction a = g.Update(g_config.render.frameDt, self.currentTime, (int)self.bounds.size.width, (int)self.bounds.size.height, cursor);
-            if (!a.isNone()) action = a;
-            if (g_debugMode && self.tickCount % g_config.render.debugTickMod == 0) {
-                DEBUG_LOG("Goose %d pos: %.1f,%.1f speed: %.1f", g.id, g.pos.x, g.pos.y, g.currentSpeed);
+                CursorAction a = g.Update(g_config.render.frameDt, self.currentTime, (int)self.bounds.size.width, (int)self.bounds.size.height, cursor);
+                if (!a.isNone()) action = a;
+                if (g_debugMode && self.tickCount % g_config.render.debugTickMod == 0) {
+                    DEBUG_LOG("Goose %d pos: %.1f,%.1f speed: %.1f", g.id, g.pos.x, g.pos.y, g.currentSpeed);
+                }
             }
         }
-    }
 
     if (g_cursorProvider && !action.isNone()) {
         g_cursorProvider->Execute(action);
