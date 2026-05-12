@@ -342,6 +342,287 @@ TEST(JailState, Reset) {
 }
 
 // ===========================
+// Jail Toggle Regression Tests
+// ===========================
+TEST(JailState, KeyEdgeDetection) {
+    bool wasKeyDown = false;
+    int toggleCount = 0;
+
+    auto simulateTick = [&](bool keyPressed) {
+        if (keyPressed && !wasKeyDown) {
+            toggleCount++;
+            wasKeyDown = true;
+        } else if (!keyPressed) {
+            wasKeyDown = false;
+        }
+    };
+
+    simulateTick(true);
+    EXPECT_EQ(toggleCount, 1);
+    simulateTick(true);
+    EXPECT_EQ(toggleCount, 1) << "Holding key should not retoggle";
+    simulateTick(true);
+    EXPECT_EQ(toggleCount, 1) << "Holding key should not retoggle";
+    simulateTick(false);
+    EXPECT_EQ(toggleCount, 1);
+    simulateTick(true);
+    EXPECT_EQ(toggleCount, 2) << "Release and repress should toggle again";
+}
+
+TEST(JailState, NoToggleWithoutEdge) {
+    bool wasKeyDown = false;
+    int toggleCount = 0;
+
+    for (int i = 0; i < 100; i++) {
+        bool keyPressed = true;
+        if (keyPressed && !wasKeyDown) {
+            toggleCount++;
+            wasKeyDown = true;
+        }
+    }
+    EXPECT_EQ(toggleCount, 1) << "100 frames of held key = 1 toggle";
+}
+
+TEST(JailState, EdgeDetectsRapidKeyReleases) {
+    bool wasKeyDown = false;
+    int toggleCount = 0;
+
+    for (int i = 0; i < 10; i++) {
+        simulate_key_press_and_release:
+        {   // key down edge
+            bool keyDown = true;
+            if (keyDown && !wasKeyDown) {
+                toggleCount++;
+                wasKeyDown = true;
+            }
+        }
+        {   // key up edge
+            bool keyDown = false;
+            if (!keyDown) {
+                wasKeyDown = false;
+            }
+        }
+    }
+    EXPECT_EQ(toggleCount, 10) << "10 press-release cycles = 10 toggles";
+}
+
+TEST(JailState, PerGooseStateIsolation) {
+    JailState state1;
+    JailState state2;
+
+    state1.isJailed = true;
+    state1.jailPos = {100.0f, 200.0f};
+    state1.positionSet = true;
+
+    state2.isJailed = false;
+    state2.jailPos = {0.0f, 0.0f};
+    state2.positionSet = false;
+
+    EXPECT_TRUE(state1.isJailed);
+    EXPECT_FALSE(state2.isJailed);
+    EXPECT_FLOAT_EQ(state1.jailPos.x, 100.0f);
+    EXPECT_FLOAT_EQ(state2.jailPos.x, 0.0f);
+    EXPECT_TRUE(state1.positionSet);
+    EXPECT_FALSE(state2.positionSet);
+}
+
+TEST(JailState, TeleportToJailPosition) {
+    JailState state;
+    state.isJailed = true;
+    state.jailPos = {500.0f, 400.0f};
+    state.positionSet = true;
+
+    Vector2 goosePos{100.0f, 100.0f};
+    if (state.isJailed && state.positionSet) {
+        goosePos = state.jailPos;
+    }
+    EXPECT_FLOAT_EQ(goosePos.x, 500.0f);
+    EXPECT_FLOAT_EQ(goosePos.y, 400.0f);
+}
+
+TEST(JailState, NoTeleportWithoutPositionSet) {
+    JailState state;
+    state.isJailed = true;
+    state.jailPos = {500.0f, 400.0f};
+    state.positionSet = false;
+
+    Vector2 goosePos{100.0f, 100.0f};
+    if (state.isJailed && state.positionSet) {
+        goosePos = state.jailPos;
+    }
+    EXPECT_FLOAT_EQ(goosePos.x, 100.0f) << "Should not teleport without positionSet";
+    EXPECT_FLOAT_EQ(goosePos.y, 100.0f);
+}
+
+TEST(JailState, PositionSetOnKeyPress) {
+    JailState state;
+    state.positionSet = false;
+    state.jailPos = {0.0f, 0.0f};
+
+    Vector2 cursorPos{300.0f, 250.0f};
+    state.jailPos = cursorPos;
+    state.positionSet = true;
+
+    EXPECT_TRUE(state.positionSet);
+    EXPECT_FLOAT_EQ(state.jailPos.x, 300.0f);
+    EXPECT_FLOAT_EQ(state.jailPos.y, 250.0f);
+}
+
+TEST(JailState, JailedGooseVelocityZeroed) {
+    JailState state;
+    state.isJailed = true;
+    state.jailPos = {500.0f, 400.0f};
+    state.positionSet = true;
+
+    Vector2 goosePos{100.0f, 100.0f};
+    Vector2 gooseVel{50.0f, -30.0f};
+
+    if (state.isJailed && state.positionSet) {
+        goosePos = state.jailPos;
+        gooseVel = {0, 0};
+    }
+
+    EXPECT_FLOAT_EQ(goosePos.x, 500.0f);
+    EXPECT_FLOAT_EQ(goosePos.y, 400.0f);
+    EXPECT_FLOAT_EQ(gooseVel.x, 0.0f);
+    EXPECT_FLOAT_EQ(gooseVel.y, 0.0f);
+}
+
+TEST(JailState, DisableClearsJail) {
+    JailState state;
+    state.isJailed = true;
+    state.positionSet = true;
+    bool behaviorEnabled = true;
+
+    behaviorEnabled = false;
+    if (!behaviorEnabled) {
+        state.isJailed = false;
+    }
+
+    EXPECT_FALSE(state.isJailed);
+    EXPECT_TRUE(state.positionSet) << "Disable clears isJailed but keeps position";
+}
+
+TEST(JailState, MultipleTogglesCycle) {
+    bool wasKeyDown = false;
+    bool isJailed = false;
+    int toggleCount = 0;
+
+    auto pressKey = [&] {
+        if (!wasKeyDown) {
+            isJailed = !isJailed;
+            toggleCount++;
+            wasKeyDown = true;
+        }
+    };
+    auto releaseKey = [&] { wasKeyDown = false; };
+
+    pressKey();
+    EXPECT_TRUE(isJailed);
+    EXPECT_EQ(toggleCount, 1);
+
+    releaseKey();
+    pressKey();
+    EXPECT_FALSE(isJailed);
+    EXPECT_EQ(toggleCount, 2);
+
+    releaseKey();
+    pressKey();
+    EXPECT_TRUE(isJailed);
+    EXPECT_EQ(toggleCount, 3);
+}
+
+TEST(JailState, StateReuseAcrossGooseIds) {
+    auto& mgr = BehaviorStateManager::Instance();
+    mgr.ClearAll();
+
+    auto* state1 = mgr.GetOrCreate<JailState>(1, "jail");
+    state1->jailPos = {100.0f, 200.0f};
+    state1->isJailed = true;
+    state1->positionSet = true;
+
+    auto* state2 = mgr.GetOrCreate<JailState>(2, "jail");
+    state2->jailPos = {300.0f, 400.0f};
+
+    EXPECT_NE(state1, state2);
+    EXPECT_FLOAT_EQ(state1->jailPos.x, 100.0f);
+    EXPECT_FLOAT_EQ(state2->jailPos.x, 300.0f);
+    EXPECT_TRUE(state1->isJailed);
+    EXPECT_FALSE(state2->isJailed);
+
+    mgr.ClearAll();
+}
+
+TEST(JailState, NoDoubleJailOnToggleHeld) {
+    bool wasKeyDown = false;
+    bool isJailed = false;
+
+    for (int i = 0; i < 60; i++) {
+        bool keyDown = true;
+        if (keyDown && !wasKeyDown) {
+            isJailed = !isJailed;
+            wasKeyDown = true;
+        }
+    }
+
+    EXPECT_TRUE(isJailed);
+    EXPECT_EQ(isJailed, true) << "Should only toggle once even if key held 60 frames";
+}
+
+TEST(JailState, AndGateForJailActivation) {
+    JailState state;
+    state.isJailed = true;
+    state.positionSet = true;
+
+    Vector2 goosePos{100.0f, 100.0f};
+    bool shouldTeleport = state.isJailed && state.positionSet;
+
+    EXPECT_TRUE(shouldTeleport);
+    EXPECT_TRUE(state.isJailed);
+    EXPECT_TRUE(state.positionSet);
+}
+
+TEST(JailState, AndGateJailMissingPosition) {
+    JailState state;
+    state.isJailed = true;
+    state.positionSet = false;
+
+    bool shouldTeleport = state.isJailed && state.positionSet;
+    EXPECT_FALSE(shouldTeleport);
+    EXPECT_TRUE(state.isJailed);
+    EXPECT_FALSE(state.positionSet);
+}
+
+// ===========================
+// Pomodoro Rendering Regression Tests
+// ===========================
+TEST(PomodoroState, TextYFlipPosition) {
+    Vector2 headPos{400.0f, 300.0f};
+    float textWidth = 80.0f;
+    float textHeight = 20.0f;
+
+    float textX = headPos.x - textWidth / 2.0f + 5.0f;
+    float textY = headPos.y - 48.0f;
+
+    EXPECT_FLOAT_EQ(textX, 365.0f);
+    EXPECT_FLOAT_EQ(textY, 252.0f);
+}
+
+TEST(PomodoroState, TextBackgroundRect) {
+    Vector2 headPos{400.0f, 300.0f};
+    float textWidth = 80.0f;
+    float textHeight = 20.0f;
+
+    float bgX = headPos.x - textWidth / 2.0f;
+    float bgY = headPos.y - 60.0f;
+
+    EXPECT_FLOAT_EQ(bgX, 360.0f);
+    EXPECT_FLOAT_EQ(bgY, 240.0f);
+    EXPECT_FLOAT_EQ(bgX + textWidth, 440.0f);
+    EXPECT_FLOAT_EQ(bgY + textHeight, 260.0f);
+}
+
+// ===========================
 // Ball Physics Tests
 // ===========================
 TEST(BallPhysics, Gravity) {

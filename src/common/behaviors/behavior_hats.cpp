@@ -43,23 +43,18 @@ static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
     float screenY = headDevice.y + offsetY * gs;
 
     CGContextSaveGState(cg);
-
     CGContextTranslateCTM(cg, screenX, screenY);
-    CGContextRotateCTM(cg, -dir * M_PI / 180.0f);
 
     bool facingLeft = (dir > 90.0f && dir < 270.0f);
     if (facingLeft) {
         CGContextScaleCTM(cg, -1.0, 1.0);
     }
 
-    CGRect rect = CGRectMake(-drawW / 2.0f, -drawH / 2.0f, drawW, drawH);
-    CGContextSaveGState(cg);
-    CGContextTranslateCTM(cg, 0, drawH / 2.0f);
+    float halfW = drawW / 2.0f;
+    float halfH = drawH / 2.0f;
+    CGContextTranslateCTM(cg, -halfW, halfH);
     CGContextScaleCTM(cg, 1.0, -1.0);
-    CGContextTranslateCTM(cg, 0, drawH / 2.0f);
-    CGContextDrawImage(cg, rect, s_hatImage);
-    CGContextRestoreGState(cg);
-
+    CGContextDrawImage(cg, CGRectMake(0, 0, drawW, drawH), s_hatImage);
     CGContextRestoreGState(cg);
 }
 
