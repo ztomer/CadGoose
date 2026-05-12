@@ -40,35 +40,58 @@
 - (instancetype)initWithGooseName:(NSString*)name {
     self.gooseName = name;
 
-    self.window = [[NSWindow alloc] initWithContentRect:NSMakeRect(0, 0, 400, 300)
-                                             styleMask:NSWindowStyleMaskTitled | NSWindowStyleMaskClosable
+    self.window = [[NSWindow alloc] initWithContentRect:NSMakeRect(0, 0, 420, 360)
+                                             styleMask:NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskResizable
                                                backing:NSBackingStoreBuffered
                                                  defer:NO];
-    self.window.title = [NSString stringWithFormat:@"Chat with %@", name];
+    self.window.title = [NSString stringWithFormat:@"💬 Chat with %@ 🦆", name];
+    self.window.titlebarAppearsTransparent = YES;
+    [[self.window standardWindowButton:NSWindowMiniaturizeButton] setHidden:YES];
+    [[self.window standardWindowButton:NSWindowZoomButton] setHidden:YES];
     [self.window center];
 
     NSView* contentView = self.window.contentView;
-    [contentView setWantsLayer:YES];
 
-    NSScrollView* scrollView = [[NSScrollView alloc] initWithFrame:NSMakeRect(10, 50, 380, 200)];
+    // Vibrant glass background
+    NSVisualEffectView* glass = [[NSVisualEffectView alloc] initWithFrame:contentView.bounds];
+    glass.material = NSVisualEffectMaterialSidebar;
+    glass.blendingMode = NSVisualEffectBlendingModeBehindWindow;
+    glass.state = NSVisualEffectStateActive;
+    glass.autoresizingMask = NSViewWidthSizable | NSViewHeightSizable;
+    [contentView addSubview:glass positioned:NSWindowBelow relativeTo:nil];
+
+    NSFont* chatFont = [NSFont fontWithName:@"Comic Sans MS" size:13] ?: [NSFont systemFontOfSize:13];
+
+    NSScrollView* scrollView = [[NSScrollView alloc] initWithFrame:NSMakeRect(10, 60, 400, 260)];
     scrollView.hasVerticalScroller = YES;
+    scrollView.autoresizingMask = NSViewWidthSizable | NSViewHeightSizable;
+    scrollView.drawsBackground = NO;
 
-    NSTextView* textView = [[NSTextView alloc] initWithFrame:NSMakeRect(0, 0, 380, 200)];
+    NSTextView* textView = [[NSTextView alloc] initWithFrame:NSMakeRect(0, 0, 400, 260)];
     textView.editable = NO;
-    textView.font = [NSFont systemFontOfSize:13];
-    textView.string = [NSString stringWithFormat:@"%@: HONK! What do you want?\n", name];
+    textView.font = chatFont;
+    textView.backgroundColor = [NSColor clearColor];
+    textView.string = [NSString stringWithFormat:@"🦆 %@: HONK! What do you want?\n", name];
     self.chatView = textView;
     scrollView.documentView = textView;
     [contentView addSubview:scrollView];
 
-    self.inputField = [[NSTextField alloc] initWithFrame:NSMakeRect(10, 20, 310, 24)];
+    self.inputField = [[NSTextField alloc] initWithFrame:NSMakeRect(10, 18, 340, 28)];
     self.inputField.placeholderString = @"Type your message...";
+    self.inputField.font = [NSFont fontWithName:@"Comic Sans MS" size:13] ?: [NSFont systemFontOfSize:13];
+    [self.inputField setTarget:self];
+    [self.inputField setAction:@selector(sendMessage:)];
+    self.inputField.bezelStyle = NSTextFieldRoundedBezel;
+    self.inputField.autoresizingMask = NSViewWidthSizable;
     [contentView addSubview:self.inputField];
 
-    self.sendButton = [[NSButton alloc] initWithFrame:NSMakeRect(330, 18, 60, 28)];
-    [self.sendButton setTitle:@"Send"];
+    self.sendButton = [[NSButton alloc] initWithFrame:NSMakeRect(360, 16, 50, 28)];
+    [self.sendButton setTitle:@"🪿"];
+    [self.sendButton setFont:[NSFont systemFontOfSize:16]];
     [self.sendButton setTarget:self];
     [self.sendButton setAction:@selector(sendMessage:)];
+    self.sendButton.bezelStyle = NSBezelStyleRounded;
+    self.sendButton.autoresizingMask = NSViewMinXMargin;
     [contentView addSubview:self.sendButton];
 
     NSString* endpoint;
