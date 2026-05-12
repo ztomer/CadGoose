@@ -52,6 +52,7 @@ void s_setBoolValue(const std::string& key, bool value);
 
 @interface BehaviorRowView : NSView
 @property (nonatomic, strong) NSButton* toggle;
+@property (nonatomic, strong) NSTextField* iconLabel;
 @property (nonatomic, strong) NSTextField* nameLabel;
 @property (nonatomic, strong) NSTextField* descLabel;
 @property (nonatomic, strong) NSButton* detailBtn;
@@ -60,30 +61,61 @@ void s_setBoolValue(const std::string& key, bool value);
 @property (nonatomic) SEL detailAction;
 - (void)toggled:(id)sender;
 - (void)openDetail:(id)sender;
++ (NSString*)iconForConfigKey:(NSString*)key;
 @end
 
 @implementation BehaviorRowView
 
++ (NSString*)iconForConfigKey:(NSString*)key {
+    if ([key hasSuffix:@"ball"]) return @"⚽";
+    if ([key hasSuffix:@"breadCrumbs"]) return @"🍞";
+    if ([key hasSuffix:@"hats"]) return @"🎩";
+    if ([key hasSuffix:@"rainbow"]) return @"🌈";
+    if ([key hasSuffix:@"acid"]) return @"🧪";
+    if ([key hasSuffix:@"anger"]) return @"😠";
+    if ([key hasSuffix:@"honcker"]) return @"📯";
+    if ([key hasSuffix:@"jail"]) return @"🔒";
+    if ([key hasSuffix:@"portals"]) return @"🌀";
+    if ([key hasSuffix:@"drag"]) return @"🖱️";
+    if ([key hasSuffix:@"banish"]) return @"👻";
+    if ([key hasSuffix:@"nametag"]) return @"🏷️";
+    if ([key hasSuffix:@"presence"]) return @"👤";
+    if ([key hasSuffix:@"configGUI"]) return @"⚙️";
+    if ([key hasSuffix:@"gooseManager"]) return @"🦆";
+    if ([key hasSuffix:@"health"]) return @"❤️";
+    if ([key hasSuffix:@"ai"]) return @"🤖";
+    if ([key hasSuffix:@"pomodoro"]) return @"⏰";
+    return @"🦆";
+}
+
 - (instancetype)initWithFrame:(NSRect)frame {
     self = [super initWithFrame:frame];
     if (self) {
-        _toggle = [[NSButton alloc] initWithFrame:NSMakeRect(8, 4, 20, 20)];
+        _toggle = [[NSButton alloc] initWithFrame:NSMakeRect(8, 6, 20, 20)];
         _toggle.buttonType = NSButtonTypeSwitch;
         _toggle.title = @"";
         _toggle.target = self;
         _toggle.action = @selector(toggled:);
         [self addSubview:_toggle];
 
-        _nameLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(34, 6, 200, 16)];
-        _nameLabel.font = [NSFont boldSystemFontOfSize:13];
+        _iconLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(34, 4, 24, 22)];
+        _iconLabel.font = [NSFont systemFontOfSize:16];
+        _iconLabel.backgroundColor = [NSColor clearColor];
+        _iconLabel.bordered = NO;
+        _iconLabel.editable = NO;
+        _iconLabel.alignment = NSTextAlignmentCenter;
+        [self addSubview:_iconLabel];
+
+        _nameLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(64, 7, 180, 18)];
+        _nameLabel.font = [NSFont fontWithName:@"Comic Sans MS" size:14] ?: [NSFont boldSystemFontOfSize:14];
         _nameLabel.textColor = [NSColor labelColor];
         _nameLabel.backgroundColor = [NSColor clearColor];
         _nameLabel.bordered = NO;
         _nameLabel.editable = NO;
         [self addSubview:_nameLabel];
 
-        _descLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(240, 6, 380, 16)];
-        _descLabel.font = [NSFont systemFontOfSize:11];
+        _descLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(250, 8, 360, 14)];
+        _descLabel.font = [NSFont fontWithName:@"Comic Sans MS" size:11] ?: [NSFont systemFontOfSize:11];
         _descLabel.textColor = [NSColor secondaryLabelColor];
         _descLabel.backgroundColor = [NSColor clearColor];
         _descLabel.bordered = NO;
@@ -92,7 +124,7 @@ void s_setBoolValue(const std::string& key, bool value);
         [self addSubview:_descLabel];
 
         _detailBtn = [[NSButton alloc] initWithFrame:NSMakeRect(630, 6, 24, 24)];
-        [_detailBtn setTitle:@"…"];
+        [_detailBtn setTitle:@"⚙️"];
         [_detailBtn setBezelStyle:NSBezelStyleRounded];
         _detailBtn.target = self;
         _detailBtn.action = @selector(openDetail:);
@@ -456,19 +488,39 @@ static NSMutableArray* g_configItemsForAccess = nil;
                                                  styleMask:NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskResizable
                                                    backing:NSBackingStoreBuffered
                                                      defer:NO];
-        self.window.title = @"CadGoose Behavior Settings";
+        self.window.title = @"🇨🇦  Goose Config Dominion  🦆";
         self.window.minSize = NSMakeSize(700, 400);
         [self.window center];
 
         NSView* contentView = self.window.contentView;
 
+        // Canadian flag glass backdrop
+        NSVisualEffectView* glassView = [[NSVisualEffectView alloc] initWithFrame:contentView.bounds];
+        glassView.material = NSVisualEffectMaterialDark;
+        glassView.blendingMode = NSVisualEffectBlendingModeBehindWindow;
+        glassView.state = NSVisualEffectStateActive;
+        glassView.autoresizingMask = NSViewWidthSizable | NSViewHeightSizable;
+        [contentView addSubview:glassView positioned:NSWindowBelow relativeTo:nil];
+
+        // Maple leaf background label
+        NSTextField* flagBg = [[NSTextField alloc] initWithFrame:NSMakeRect(200, 150, 300, 300)];
+        flagBg.stringValue = @"🍁";
+        flagBg.font = [NSFont systemFontOfSize:200];
+        flagBg.textColor = [NSColor colorWithWhite:1.0 alpha:0.08];
+        flagBg.backgroundColor = [NSColor clearColor];
+        flagBg.bordered = NO;
+        flagBg.editable = NO;
+        flagBg.autoresizingMask = NSViewMinXMargin | NSViewMaxXMargin | NSViewMinYMargin | NSViewMaxYMargin;
+        [contentView addSubview:flagBg];
+
         // Header
         NSView* headerView = [[NSView alloc] initWithFrame:NSMakeRect(0, 532, 700, 48)];
         headerView.autoresizingMask = NSViewWidthSizable | NSViewMinYMargin;
-        NSTextField* titleLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(12, 14, 500, 20)];
-        titleLabel.stringValue = @"Behavior Settings";
-        titleLabel.font = [NSFont boldSystemFontOfSize:16];
-        titleLabel.textColor = [NSColor labelColor];
+
+        NSTextField* titleLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(12, 14, 500, 24)];
+        titleLabel.stringValue = @"🍁  BEHAVIOR COMMAND CENTRE  🦆";
+        titleLabel.font = [NSFont fontWithName:@"Comic Sans MS" size:18] ?: [NSFont boldSystemFontOfSize:18];
+        titleLabel.textColor = [NSColor colorWithRed:0.9 green:0.1 blue:0.1 alpha:1.0];
         titleLabel.backgroundColor = [NSColor clearColor];
         titleLabel.bordered = NO;
         titleLabel.editable = NO;
@@ -669,11 +721,11 @@ void s_setBoolValue(const std::string& key, bool value) {
             label.backgroundColor = [NSColor clearColor];
             label.bordered = NO;
             label.editable = NO;
-            label.font = [NSFont boldSystemFontOfSize:13];
-            label.textColor = [NSColor headerColor];
+            label.font = [NSFont fontWithName:@"Comic Sans MS" size:14] ?: [NSFont boldSystemFontOfSize:14];
+            label.textColor = [NSColor colorWithRed:0.9 green:0.1 blue:0.1 alpha:1.0];
         }
-        label.frame = NSMakeRect(8, 6, 700, 36);
-        label.stringValue = item[@"name"];
+        label.frame = NSMakeRect(12, 8, 700, 36);
+        label.stringValue = [NSString stringWithFormat:@"🇨🇦  %@", item[@"name"]];
         return label;
     }
 
@@ -687,6 +739,7 @@ void s_setBoolValue(const std::string& key, bool value) {
         rowView.configKey = item[@"key"];
         rowView.nameLabel.stringValue = item[@"label"];
         rowView.descLabel.stringValue = item[@"desc"] ?: @"";
+        rowView.iconLabel.stringValue = [BehaviorRowView iconForConfigKey:item[@"key"]];
 
         std::string key = std::string([item[@"key"] UTF8String]);
         bool val = s_getBoolForKey(key);
