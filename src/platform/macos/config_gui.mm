@@ -132,6 +132,7 @@ static NSMutableArray* g_configItemsForAccess = nil;
 @interface BehaviorDetailView : NSView
 @property (nonatomic, strong) NSTextField* titleLabel;
 @property (nonatomic, strong) NSView* contentView;
+@property (nonatomic, strong) NSButton* closeBtn;
 @property (nonatomic, copy) NSString* configKey;
 - (void)configureForBehavior:(NSString*)key;
 @end
@@ -142,16 +143,24 @@ static NSMutableArray* g_configItemsForAccess = nil;
     self = [super initWithFrame:frame];
     if (self) {
         self.wantsLayer = YES;
-        self.layer.backgroundColor = [NSColor windowBackgroundColor].CGColor;
+        self.layer.backgroundColor = [NSColor colorWithCalibratedWhite:0.95 alpha:1.0].CGColor;
         self.hidden = YES;
 
-        _titleLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(12, 8, DETAIL_WIDTH - 24, 20)];
+        _titleLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(12, 8, DETAIL_WIDTH - 60, 20)];
         _titleLabel.font = [NSFont boldSystemFontOfSize:15];
         _titleLabel.textColor = [NSColor labelColor];
         _titleLabel.backgroundColor = [NSColor clearColor];
         _titleLabel.bordered = NO;
         _titleLabel.editable = NO;
         [self addSubview:_titleLabel];
+
+        _closeBtn = [[NSButton alloc] initWithFrame:NSMakeRect(DETAIL_WIDTH - 28, 8, 20, 20)];
+        _closeBtn.title = @"✕";
+        _closeBtn.bezelStyle = NSBezelStyleRounded;
+        _closeBtn.target = self;
+        _closeBtn.action = @selector(closeDetail:);
+        _closeBtn.autoresizingMask = NSViewMinXMargin;
+        [self addSubview:_closeBtn];
 
         _contentView = [[NSView alloc] initWithFrame:NSMakeRect(0, 40, DETAIL_WIDTH, DETAIL_HEIGHT - 50)];
         _contentView.wantsLayer = YES;
@@ -254,6 +263,11 @@ static NSMutableArray* g_configItemsForAccess = nil;
         desc.stringValue = [NSString stringWithFormat:@"No settings for %@", [key lastPathComponent]];
         [_contentView addSubview:desc];
     }
+}
+
+- (void)closeDetail:(id)sender {
+    self.hidden = YES;
+    [[NSNotificationCenter defaultCenter] postNotificationName:@"DetailPanelClosed" object:nil];
 }
 
 - (void)addSliderWithLabel:(NSString*)label min:(float)min max:(float)max value:(float)value atY:(float)y key:(NSString*)key {
@@ -425,6 +439,7 @@ static NSMutableArray* g_configItemsForAccess = nil;
 @property (nonatomic, strong) NSTableView* behaviorsTable;
 @property (nonatomic, strong) NSMutableArray* configItems;
 @property (nonatomic, strong) BehaviorDetailView* detailView;
+@property (nonatomic, strong) NSView* separatorLine;
 @property (nonatomic) NSWindow* parentWindow;
 + (NSMutableArray*)configItemsForAccess;
 @end
@@ -446,6 +461,7 @@ static NSMutableArray* g_configItemsForAccess = nil;
                                                    backing:NSBackingStoreBuffered
                                                      defer:NO];
         self.window.title = @"CadGoose Behavior Settings";
+        self.window.minSize = NSMakeSize(700, 400);
         [self.window center];
 
         NSView* contentView = self.window.contentView;
@@ -453,6 +469,7 @@ static NSMutableArray* g_configItemsForAccess = nil;
 
         // Header
         NSView* headerView = [[NSView alloc] initWithFrame:NSMakeRect(0, 532, 700, 48)];
+        headerView.autoresizingMask = NSViewWidthSizable | NSViewMinYMargin;
         NSTextField* titleLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(12, 14, 500, 20)];
         titleLabel.stringValue = @"Behavior Settings";
         titleLabel.font = [NSFont boldSystemFontOfSize:16];
@@ -477,22 +494,25 @@ static NSMutableArray* g_configItemsForAccess = nil;
         [headerView addSubview:reloadBtn];
         [contentView addSubview:headerView];
 
-        // Detail view area
+        // Detail view area (offscreen until showDetailForBehavior expands window)
         _detailView = [[BehaviorDetailView alloc] initWithFrame:NSMakeRect(700, 0, DETAIL_WIDTH, 580)];
+        _detailView.autoresizingMask = NSViewWidthSizable | NSViewHeightSizable;
         [contentView addSubview:_detailView];
 
-        // Separator
-        NSView* separator = [[NSView alloc] initWithFrame:NSMakeRect(0, 529, 700, 1)];
+        // Separator between table and detail
+        NSView* separator = [[NSView alloc] initWithFrame:NSMakeRect(699, 0, 1, 529)];
         separator.wantsLayer = YES;
         separator.layer.backgroundColor = [NSColor separatorColor].CGColor;
+        separator.autoresizingMask = NSViewHeightSizable | NSViewMaxXMargin;
+        self.separatorLine = separator;
         [contentView addSubview:separator];
 
-        // Scrollable table
+        // Scrollable table (fixed width, doesn't stretch when window expands)
         NSScrollView* scrollView = [[NSScrollView alloc] initWithFrame:NSMakeRect(0, 0, 700, 528)];
         scrollView.hasVerticalScroller = YES;
         scrollView.hasHorizontalScroller = NO;
         scrollView.borderType = NSNoBorder;
-        scrollView.autoresizingMask = NSViewWidthSizable | NSViewHeightSizable;
+        scrollView.autoresizingMask = NSViewHeightSizable | NSViewMaxXMargin;
 
         NSTableView* tableView = [[NSTableView alloc] initWithFrame:NSMakeRect(0, 0, 700, 528)];
         tableView.headerView = nil;
@@ -504,6 +524,7 @@ static NSMutableArray* g_configItemsForAccess = nil;
 
         NSTableColumn* column = [[NSTableColumn alloc] initWithIdentifier:@"main"];
         column.width = 700;
+        column.minWidth = 400;
         [tableView addTableColumn:column];
 
         self.behaviorsTable = tableView;
@@ -511,17 +532,35 @@ static NSMutableArray* g_configItemsForAccess = nil;
         scrollView.documentView = tableView;
         [contentView addSubview:scrollView];
 
-        // Bottom buttons
+        // Bottom bar
+        NSView* bottomBar = [[NSView alloc] initWithFrame:NSMakeRect(0, 0, 700, 40)];
+        bottomBar.autoresizingMask = NSViewWidthSizable | NSViewMaxYMargin;
+
         NSButton* closeBtn = [[NSButton alloc] initWithFrame:NSMakeRect(590, 6, 90, 28)];
         [closeBtn setTitle:@"Close"];
         [closeBtn setTarget:self];
         [closeBtn setAction:@selector(closeWindow:)];
         closeBtn.bezelStyle = NSBezelStyleRounded;
-        [contentView addSubview:closeBtn];
+        closeBtn.autoresizingMask = NSViewMinXMargin;
+        [bottomBar addSubview:closeBtn];
+        [contentView addSubview:bottomBar];
 
         [self loadConfigItems];
+
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(detailPanelClosed:) name:@"DetailPanelClosed" object:nil];
     }
     return self;
+}
+
+- (void)dealloc {
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
+}
+
+- (void)detailPanelClosed:(NSNotification*)note {
+    [self.detailView setHidden:YES];
+    NSRect frame = self.window.frame;
+    frame.size.width = 700;
+    [self.window setFrame:frame display:YES animate:YES];
 }
 
 - (void)loadConfigItems {
@@ -614,9 +653,10 @@ void s_setBoolValue(const std::string& key, bool value) {
     [_detailView configureForBehavior:key];
 
     NSRect frame = self.window.frame;
-    if (frame.size.width < 900) {
-        frame.size.width = 900;
-        [self.window setFrame:frame display:YES];
+    CGFloat targetWidth = 700 + DETAIL_WIDTH;
+    if (frame.size.width < targetWidth) {
+        frame.size.width = targetWidth;
+        [self.window setFrame:frame display:YES animate:YES];
     }
 }
 
