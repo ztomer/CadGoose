@@ -112,6 +112,8 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
 
     float ballCenterX = s_ballPos.x + BALL_SIZE / 2.0f;
     float ballCenterY = s_ballPos.y + BALL_SIZE / 2.0f;
+    float ballCenterDevX = ballCenterX * ctx.globalScale;
+    float ballCenterDevY = ballCenterY * ctx.globalScale;
     float cursorX = cursorScreen.x / ctx.globalScale;
     float cursorY = cursorScreen.y / ctx.globalScale;
 
@@ -125,7 +127,7 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
         s_lastKickTime = time;
 
         if (goose) {
-            goose->target = Vector2{ballCenterX, ballCenterY};
+            goose->target = Vector2{ballCenterDevX, ballCenterDevY};
         }
     }
 
@@ -133,7 +135,7 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
         float distToTarget = Vector2::Distance(goose->pos, goose->target);
         if (distToTarget < 40.0f && time - s_lastKickTime > 1.0) {
             s_ballSpeed = KICK_SPEED;
-            Vector2 dir = Vector2{ballCenterX - goose->pos.x, ballCenterY - goose->pos.y};
+            Vector2 dir = Vector2{ballCenterX - (goose->pos.x / ctx.globalScale), ballCenterY - (goose->pos.y / ctx.globalScale)};
             s_ballVel = NormalizeVec(dir) * s_ballSpeed;
             s_lastKickTime = time;
             g_assets.Honk();

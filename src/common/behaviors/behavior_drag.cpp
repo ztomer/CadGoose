@@ -48,6 +48,8 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
     if (onGoose && mouseDown && goose->state != GooseState:: SNATCH_CURSOR) {
         goose->pos.x = cursorPos.x - 5.0f;
         goose->pos.y = cursorPos.y;
+        goose->vel.x = 0;
+        goose->vel.y = 0;
 
         goose->dir += (float)(rand() % 21 - 10);
     }
