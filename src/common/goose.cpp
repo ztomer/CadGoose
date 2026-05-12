@@ -234,7 +234,9 @@ void Goose::UpdateDirection() {
 
 CursorAction Goose::Update(double dt, double time, int w, int h,
                            const CursorState &cursor) {
-  // Guard against duplicate updates from multiple windows - handled in renderer.mm dispatch_async
+  // Guard against duplicate updates from multiple windows calling independently
+  if (time - lastUpdateTime < dt * 0.5) return {};
+  lastUpdateTime = time;
   if (state != prevState) {
     FILE *f = GetDebugLog();
     const char *stateNames[] = {"W", "F", "R", "C", "S"};
