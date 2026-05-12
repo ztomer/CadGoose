@@ -196,17 +196,31 @@
     }
     [request setHTTPBody:jsonData];
 
+    fprintf(stderr, "[AI] POST %s model=%s\n", self.endpoint.UTF8String, self.model.UTF8String);
+
     NSURLSession* session = [NSURLSession sharedSession];
     NSURLSessionDataTask* task = [session dataTaskWithRequest:request completionHandler:^(NSData* data, NSURLResponse* response, NSError* error) {
         if (error) {
-            if (completion) completion(@"HONK! Something went wrong.", error);
+            fprintf(stderr, "[AI] Request failed: %s\n", error.localizedDescription.UTF8String);
+            if (completion) completion(@"🦆 HONK! The brain is sleeping. Check if your AI server is running.", error);
+            return;
+        }
+
+        NSHTTPURLResponse* httpResp = (NSHTTPURLResponse*)response;
+        fprintf(stderr, "[AI] Response status: %ld\n", (long)httpResp.statusCode);
+        if (httpResp.statusCode != 200) {
+            NSString* body = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+            fprintf(stderr, "[AI] Error body: %s\n", body.UTF8String ?: "nil");
+            if (completion) completion(@"🦆 HONK! The goose can't reach its brain. Check provider/port in settings.", nil);
             return;
         }
 
         NSError* parseError;
         NSDictionary* json = [NSJSONSerialization JSONObjectWithData:data options:0 error:&parseError];
         if (parseError) {
-            if (completion) completion(@"HONK! Can't understand.", parseError);
+            NSString* body = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+            fprintf(stderr, "[AI] JSON parse error: %s body: %s\n", parseError.localizedDescription.UTF8String, body.UTF8String ?: "nil");
+            if (completion) completion(@"🦆 HONK! The goose speaks nonsense. Try a different model.", parseError);
             return;
         }
 

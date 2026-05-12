@@ -382,6 +382,7 @@ struct Behavior {
     const char* description;
 
     bool* enabledPtr;
+    bool* configPtr = nullptr; // optional config bool to sync with enabledPtr (socket toggle)
 
     using InitFunc = std::function<void(BehaviorContext&)>;
     using TickFunc = std::function<void(Goose*, BehaviorContext&, double dt, double time)>;

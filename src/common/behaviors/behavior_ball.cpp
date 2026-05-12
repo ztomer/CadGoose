@@ -1,9 +1,3 @@
-// ===========================
-// behavior_ball.cpp
-// Ball Behavior - Single ball that goose chases and kicks
-// Based on BallMod by TheOrlando
-// Reference: BallModv1.0.dll decompiled
-// ===========================
 #include "behavior.h"
 #include "goose.h"
 #include "config.h"
@@ -17,7 +11,6 @@
 static bool s_enabled = true;
 static CGImageRef s_ballImages[3] = {nullptr, nullptr, nullptr};
 
-static constexpr float BALL_SIZE = 40.0f;
 static constexpr float KICK_SPEED = 500.0f;
 static constexpr float DECELERATION = 3.0f;
 static constexpr float SPEED_THRESHOLD = 5.0f;
@@ -30,6 +23,10 @@ static float s_lastAnimateTime = 0.0f;
 static float s_animationGap = 0.0f;
 static int s_currentImage = 0;
 static bool s_ballActive = true;
+
+static float GetBallSize() {
+    return g_config.behaviors.ball.size;
+}
 
 static Vector2 NormalizeVec(Vector2 v) {
     float len = Vector2::Length(v);
@@ -55,6 +52,7 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
     if (!g_config.behaviors.fun.ball) return;
     if (!s_ballActive) return;
 
+    float ballSize = GetBallSize();
     float screenW = (float)g_screenWidth / ctx.globalScale;
     float screenH = (float)g_screenHeight / ctx.globalScale;
 
@@ -89,16 +87,16 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
             s_ballPos.x = 0;
             s_ballVel.x *= -1.0f;
         }
-        if (s_ballPos.x + BALL_SIZE > screenW) {
-            s_ballPos.x = screenW - BALL_SIZE;
+        if (s_ballPos.x + ballSize > screenW) {
+            s_ballPos.x = screenW - ballSize;
             s_ballVel.x *= -1.0f;
         }
         if (s_ballPos.y < 0) {
             s_ballPos.y = 0;
             s_ballVel.y *= -1.0f;
         }
-        if (s_ballPos.y + BALL_SIZE > screenH) {
-            s_ballPos.y = screenH - BALL_SIZE;
+        if (s_ballPos.y + ballSize > screenH) {
+            s_ballPos.y = screenH - ballSize;
             s_ballVel.y *= -1.0f;
         }
 
@@ -110,8 +108,8 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
         }
     }
 
-    float ballCenterX = s_ballPos.x + BALL_SIZE / 2.0f;
-    float ballCenterY = s_ballPos.y + BALL_SIZE / 2.0f;
+    float ballCenterX = s_ballPos.x + ballSize / 2.0f;
+    float ballCenterY = s_ballPos.y + ballSize / 2.0f;
     float ballCenterDevX = ballCenterX * ctx.globalScale;
     float ballCenterDevY = ballCenterY * ctx.globalScale;
     float cursorX = cursorScreen.x / ctx.globalScale;
@@ -120,12 +118,11 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
     float dist = std::sqrt((cursorX - ballCenterX) * (cursorX - ballCenterX) +
                           (cursorY - ballCenterY) * (cursorY - ballCenterY));
 
-    // Continuously chase ball while it's moving
     if (s_ballSpeed > SPEED_THRESHOLD && goose) {
         goose->target = Vector2{ballCenterDevX, ballCenterDevY};
     }
 
-    if (dist < BALL_SIZE / 2.0f && s_ballSpeed <= SPEED_THRESHOLD) {
+    if (dist < ballSize / 2.0f && s_ballSpeed <= SPEED_THRESHOLD) {
         s_ballSpeed = KICK_SPEED;
         Vector2 dir = Vector2{ballCenterX - cursorX, ballCenterY - cursorY};
         s_ballVel = NormalizeVec(dir) * s_ballSpeed;
@@ -140,10 +137,13 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
     }
 
     if (goose && goose->state == GooseState::CHASE_CURSOR) {
+        float kickThreshold = ballSize * ctx.globalScale * 0.5f;
         float distToTarget = Vector2::Distance(goose->pos, goose->target);
-        if (distToTarget < 40.0f && time - s_lastKickTime > 1.0) {
+        if (distToTarget < kickThreshold && time - s_lastKickTime > 1.0) {
             s_ballSpeed = KICK_SPEED;
-            Vector2 dir = Vector2{ballCenterX - (goose->pos.x / ctx.globalScale), ballCenterY - (goose->pos.y / ctx.globalScale)};
+            float gooseWorldX = goose->pos.x / ctx.globalScale;
+            float gooseWorldY = goose->pos.y / ctx.globalScale;
+            Vector2 dir = Vector2{ballCenterX - gooseWorldX, ballCenterY - gooseWorldY};
             s_ballVel = NormalizeVec(dir) * s_ballSpeed;
             s_lastKickTime = time;
             g_assets.Honk();
@@ -158,6 +158,8 @@ static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
     CGContextRef cg = (CGContextRef)renderCtx;
     if (!cg) return;
 
+    float ballSize = GetBallSize();
+
     CGImageRef img = s_ballImages[s_currentImage];
     if (img) {
         float w = (float)CGImageGetWidth(img) * ctx.globalScale;
@@ -166,7 +168,7 @@ static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
         CGContextDrawImage(cg, rect, img);
     } else {
         CGContextSetRGBFillColor(cg, 0.3f, 0.3f, 0.3f, 1.0f);
-        float size = BALL_SIZE * ctx.globalScale;
+        float size = ballSize * ctx.globalScale;
         CGContextFillEllipseInRect(cg, CGRectMake(s_ballPos.x * ctx.globalScale, s_ballPos.y * ctx.globalScale, size, size));
     }
 }

@@ -166,6 +166,7 @@ std::string AppActions_HandleCommand(const std::vector<std::string>& args) {
         if (!behavior) return "error unknown behavior: " + args[1] + "\n";
         if (behavior->enabledPtr) {
             *behavior->enabledPtr = true;
+            if (behavior->configPtr) *behavior->configPtr = true;
             return "ok enabled " + args[1] + "\n";
         }
         return "error behavior has no enabledPtr\n";
@@ -177,6 +178,7 @@ std::string AppActions_HandleCommand(const std::vector<std::string>& args) {
         if (!behavior) return "error unknown behavior: " + args[1] + "\n";
         if (behavior->enabledPtr) {
             *behavior->enabledPtr = false;
+            if (behavior->configPtr) *behavior->configPtr = false;
             return "ok disabled " + args[1] + "\n";
         }
         return "error behavior has no enabledPtr\n";

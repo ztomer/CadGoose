@@ -32,7 +32,7 @@ static double GetPhaseDuration(PomodoroPhase phase) {
 }
 
 static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
-    if (!g_config.behaviors.pomodoro.enabled) return;
+    if (!g_config.behaviors.systems.pomodoro) return;
 
     auto* state = BehaviorStateManager::Instance().GetOrCreate<PomodoroState>(goose->id, "pomodoro");
     const auto& cfg = g_config.behaviors.pomodoro;
@@ -86,7 +86,7 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
 }
 
 static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
-    if (!g_config.behaviors.pomodoro.enabled) return;
+    if (!g_config.behaviors.systems.pomodoro) return;
 
 #ifdef __APPLE__
     CGContextRef cg = (CGContextRef)renderCtx;

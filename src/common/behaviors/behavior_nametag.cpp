@@ -47,7 +47,8 @@ static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
     
     CGContextSetRGBFillColor(cg, 1.0f, 1.0f, 1.0f, 1.0f);
 
-    CTFontRef font = CTFontCreateWithName(CFSTR("Helvetica"), 12.0f, NULL);
+    float fontSize = g_config.behaviors.nametag.size;
+    CTFontRef font = CTFontCreateWithName(CFSTR("Helvetica"), fontSize, NULL);
     if (font) {
         CGColorRef white = CGColorCreateGenericRGB(1.0f, 1.0f, 1.0f, 1.0f);
         CFTypeRef keys[] = { kCTFontAttributeName, kCTForegroundColorAttributeName };

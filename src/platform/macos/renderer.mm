@@ -67,6 +67,8 @@ static BOOL s_hasPrimary = NO;
 
 @implementation GooseView
 
++ (void)resetPrimaryGuard { s_hasPrimary = NO; }
+
 - (BOOL)isFlipped {
     return YES;
 }
