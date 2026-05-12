@@ -74,6 +74,7 @@ extern std::vector<GtkWidget*> g_overlayCanvases;
 
 extern std::deque<std::string> g_uiLog;
 extern int g_cursorGrabberId; // id of goose currently dragging the cursor, -1 = none
+extern int g_frameId;          // incrementing frame counter for duplicate update guard
 
 class WorldCoord {
 public:
