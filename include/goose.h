@@ -111,8 +111,6 @@ public:
     // Behavior system enabled flag
     bool behaviorsEnabled = true;
 
-    // Frame duplicate guard (incremented by renderer each tick cycle)
-    int lastUpdateFrame = -1;
 
     Goose(int _id, const std::string& _name, int screenW, int screenH);
 

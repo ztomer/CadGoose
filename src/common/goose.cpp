@@ -3,7 +3,6 @@
 #include "config.h"
 #include "goose_math.h"
 #include "world.h"
-#include "behavior.h"
 #include <cmath>
 #include <cstdio>
 
@@ -244,10 +243,6 @@ void Goose::UpdateDirection() {
 
 CursorAction Goose::Update(double dt, double time, int w, int h,
                            const CursorState &cursor) {
-  // Guard using global frame counter (incremented by renderer once per tick cycle)
-  extern int g_frameId;
-  if (g_frameId > 0 && lastUpdateFrame == g_frameId) return {};
-  lastUpdateFrame = g_frameId;
   if (state != prevState) {
     FILE *f = GetDebugLog();
     const char *stateNames[] = {"W", "F", "R", "C", "S"};
@@ -265,6 +260,7 @@ CursorAction Goose::Update(double dt, double time, int w, int h,
     s_stateChanged = false;
   }
 
+  UpdateRig();
   CursorAction action = UpdateBehaviors(dt, time, w, h, cursor);
 
   float dist = Vector2::Length(target - pos);
@@ -299,7 +295,6 @@ CursorAction Goose::Update(double dt, double time, int w, int h,
   pos = pos + vel * (float)dt;
   ClampToScreen(w, h);
   UpdateDirection();
-  UpdateRig();
 
   if (debugSnatch && state == GooseState::SNATCH_CURSOR &&
       time - lastDebugLog > debugLogInterval) {
@@ -321,8 +316,6 @@ CursorAction Goose::Update(double dt, double time, int w, int h,
 
   SolveFeet(time);
   UpdateDrag(dt);
-
-  BehaviorRegistry::Instance().TickAll(this, dt, time);
 
   return action;
 }

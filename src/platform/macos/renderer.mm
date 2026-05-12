@@ -54,7 +54,6 @@ static void DrawLine(CGContextRef ctx, Vector2 a, Vector2 b, float width, float 
 }
 
 @interface GooseView ()
-@property (nonatomic, assign, class) BOOL hasPrimary;
 @property (nonatomic, assign) BOOL isPrimary;
 @property (nonatomic, assign) double currentTime;
 @property (nonatomic, assign) int tickCount;
@@ -64,10 +63,13 @@ static void DrawLine(CGContextRef ctx, Vector2 a, Vector2 b, float width, float 
 - (void)handleKeyDown:(NSEvent*)event;
 @end
 
+static BOOL s_hasPrimary = NO;
+
 @implementation GooseView
 
-+ (BOOL)hasPrimary { static BOOL s = NO; return s; }
-+ (void)setHasPrimary:(BOOL)v { static BOOL s = NO; if(!s)s=v; }
+- (BOOL)isFlipped {
+    return YES;
+}
 
 - (instancetype)initWithFrame:(NSRect)frameRect {
     DEBUG_LOG("GooseView initWithFrame START, frame=%s", NSStringFromRect(frameRect).UTF8String);
@@ -82,9 +84,9 @@ static void DrawLine(CGContextRef ctx, Vector2 a, Vector2 b, float width, float 
         self.layer.backgroundColor = [[NSColor clearColor] CGColor];
         DEBUG_LOG("  layer backgroundColor set");
 
-        if (!GooseView.hasPrimary) {
+        if (!s_hasPrimary) {
             self.isPrimary = YES;
-            GooseView.hasPrimary = YES;
+            s_hasPrimary = YES;
             DEBUG_LOG("  PRIMARY GOOSE VIEW (will update geese)");
         } else {
             self.isPrimary = NO;
@@ -172,6 +174,12 @@ static void DrawLine(CGContextRef ctx, Vector2 a, Vector2 b, float width, float 
                 if (g_debugMode && self.tickCount % g_config.render.debugTickMod == 0) {
                     DEBUG_LOG("Goose %d pos: %.1f,%.1f speed: %.1f", g.id, g.pos.x, g.pos.y, g.currentSpeed);
                 }
+
+                BehaviorContext ctx;
+                ctx.goose = &g;
+                ctx.time = self.currentTime;
+                ctx.isJailed = false;
+                BehaviorRegistry::Instance().TickAll(&g, g_config.render.frameDt, self.currentTime);
             }
         }
 
