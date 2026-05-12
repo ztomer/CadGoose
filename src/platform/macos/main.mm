@@ -78,7 +78,12 @@ extern "C" void AI_OpenChat(const char* gooseName);
 - (void)setupMenubar {
     self.statusItem = [[NSStatusBar systemStatusBar] statusItemWithLength:NSSquareStatusItemLength];
 
-    self.statusItem.button.title = g_config.general.canadaGooseMode ? @"\U0001F341" : @"\U0001FABF";
+    {
+        bool darkAppearance = (g_config.general.appearanceMode == APPEARANCE_DARK) ||
+            (g_config.general.appearanceMode == APPEARANCE_SYSTEM &&
+             [[[NSApplication sharedApplication] effectiveAppearance] name] == NSAppearanceNameDarkAqua);
+        self.statusItem.button.title = darkAppearance ? @"\U0001F341" : @"\U0001FABF";
+    }
 
     NSMenu* menu = [[NSMenu alloc] init];
 
@@ -251,7 +256,15 @@ extern "C" void AI_OpenChat(const char* gooseName);
     LOG("Window setup complete, count: %lu", (unsigned long)windows.count);
 
     std::string error;
-    if (!CommandSocket_StartServer(AppActions_HandleCommand, &error) && !error.empty()) {
+    // Wrapper to add macOS-specific socket commands
+    auto cmdHandler = [](const std::vector<std::string>& args) -> std::string {
+        if (!args.empty() && (args[0] == "prefs" || args[0] == "openprefs")) {
+            dispatch_async(dispatch_get_main_queue(), ^{ ConfigGUI_ShowWindow(); });
+            return "ok\n";
+        }
+        return AppActions_HandleCommand(args);
+    };
+    if (!CommandSocket_StartServer(cmdHandler, &error) && !error.empty()) {
         DEBUG_LOG("Socket error: %s", error.c_str());
     }
 

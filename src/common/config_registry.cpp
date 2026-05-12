@@ -16,9 +16,9 @@ void RegisterCommon(std::vector<ConfigOption>& r) {
     r.push_back(CONFIG_BOOL_EX("General", "memes_enabled", "Memes Enabled",
         "Allow picking up images and text as items",
         &g_config.general.memesEnabled, OnConfigChange));
-    r.push_back(CONFIG_BOOL_EX("General", "canada_goose_mode", "Canada Goose Mode",
-        "Use black and white goose colors with black neck",
-        &g_config.general.canadaGooseMode, OnConfigChange));
+    r.push_back(CONFIG_INT_EX("General", "appearance_mode", "Appearance Mode",
+        "0=Light, 1=Dark, 2=System (follow macOS), 3=Custom",
+        &g_config.general.appearanceMode, 0, 3, OnConfigChange));
     r.push_back(CONFIG_INT("Screen", "default_width", "Default Width",
         &g_config.screen.defaultWidth, 0, 10000, OnConfigChange));
     r.push_back(CONFIG_INT("Screen", "default_height", "Default Height",

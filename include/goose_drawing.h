@@ -19,4 +19,7 @@ void DrawLeaves(CGContextRef ctx, const std::list<LeafPile>& leafPiles, double c
 void DrawDroppedItem(CGContextRef ctx, const DroppedItem& item, float viewHeight);
 void DrawDebugOverlay(CGContextRef ctx, const std::list<Goose>& geese);
 
+// Anger tint - defined in behavior_anger.cpp
+float Anger_GetLevel(int gooseId);
+
 #endif

@@ -180,6 +180,7 @@ if(APPLE OR LINUX)
         tests/common/test_behavior_breadcrumbs.cpp
         tests/common/test_behavior_hats.cpp
         tests/common/test_config.cpp
+        tests/common/test_behavior_ai.mm
         tests/common/presence_stub.cpp
         src/common/app_actions.cpp
         src/common/app_cli.cpp

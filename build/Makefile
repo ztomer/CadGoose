@@ -1400,6 +1400,38 @@ src/platform/macos/config_gui.mm.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/platform/macos/config_gui.mm.o
 .PHONY : src/platform/macos/config_gui.mm.o
 
+src/platform/macos/config_gui_ai.o: src/platform/macos/config_gui_ai.mm.o
+.PHONY : src/platform/macos/config_gui_ai.o
+
+# target to build an object file
+src/platform/macos/config_gui_ai.mm.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/platform/macos/config_gui_ai.mm.o
+.PHONY : src/platform/macos/config_gui_ai.mm.o
+
+src/platform/macos/config_gui_colors.o: src/platform/macos/config_gui_colors.mm.o
+.PHONY : src/platform/macos/config_gui_colors.o
+
+# target to build an object file
+src/platform/macos/config_gui_colors.mm.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/platform/macos/config_gui_colors.mm.o
+.PHONY : src/platform/macos/config_gui_colors.mm.o
+
+src/platform/macos/config_gui_detail.o: src/platform/macos/config_gui_detail.mm.o
+.PHONY : src/platform/macos/config_gui_detail.o
+
+# target to build an object file
+src/platform/macos/config_gui_detail.mm.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/platform/macos/config_gui_detail.mm.o
+.PHONY : src/platform/macos/config_gui_detail.mm.o
+
+src/platform/macos/config_gui_views.o: src/platform/macos/config_gui_views.mm.o
+.PHONY : src/platform/macos/config_gui_views.o
+
+# target to build an object file
+src/platform/macos/config_gui_views.mm.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/platform/macos/config_gui_views.mm.o
+.PHONY : src/platform/macos/config_gui_views.mm.o
+
 src/platform/macos/cursor_backend.o: src/platform/macos/cursor_backend.mm.o
 .PHONY : src/platform/macos/cursor_backend.o
 
@@ -1490,6 +1522,14 @@ tests/common/test_behavior.s: tests/common/test_behavior.cpp.s
 tests/common/test_behavior.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/tests/common/test_behavior.cpp.s
 .PHONY : tests/common/test_behavior.cpp.s
+
+tests/common/test_behavior_ai.o: tests/common/test_behavior_ai.mm.o
+.PHONY : tests/common/test_behavior_ai.o
+
+# target to build an object file
+tests/common/test_behavior_ai.mm.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/tests/common/test_behavior_ai.mm.o
+.PHONY : tests/common/test_behavior_ai.mm.o
 
 tests/common/test_behavior_ball.o: tests/common/test_behavior_ball.cpp.o
 .PHONY : tests/common/test_behavior_ball.o
@@ -1829,6 +1869,10 @@ help:
 	@echo "... src/platform/macos/command_socket.i"
 	@echo "... src/platform/macos/command_socket.s"
 	@echo "... src/platform/macos/config_gui.o"
+	@echo "... src/platform/macos/config_gui_ai.o"
+	@echo "... src/platform/macos/config_gui_colors.o"
+	@echo "... src/platform/macos/config_gui_detail.o"
+	@echo "... src/platform/macos/config_gui_views.o"
 	@echo "... src/platform/macos/cursor_backend.o"
 	@echo "... src/platform/macos/main.o"
 	@echo "... src/platform/macos/renderer.o"
@@ -1840,6 +1884,7 @@ help:
 	@echo "... tests/common/test_behavior.o"
 	@echo "... tests/common/test_behavior.i"
 	@echo "... tests/common/test_behavior.s"
+	@echo "... tests/common/test_behavior_ai.o"
 	@echo "... tests/common/test_behavior_ball.o"
 	@echo "... tests/common/test_behavior_ball.i"
 	@echo "... tests/common/test_behavior_ball.s"

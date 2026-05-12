@@ -14,14 +14,35 @@ static bool s_banished = false;
 static double s_banishTime = 0.0;
 static constexpr float FADE_DURATION = 0.5f;
 static constexpr float RESPAWN_DELAY = 30.0f;
+static bool s_bKeyWasDown = false;
+
+static bool IsKeyHeld(int keyCode) {
+    return CGEventSourceKeyState(kCGEventSourceStateCombinedSessionState, (CGKeyCode)keyCode);
+}
 
 static bool IsMiddleMouseDown() {
-    return CGEventSourceButtonState(kCGEventSourceStateHIDSystemState, kCGMouseButtonCenter);
+    return CGEventSourceButtonState(kCGEventSourceStateCombinedSessionState, kCGMouseButtonCenter);
 }
 
 static bool AreModifiersPressed() {
-    CGEventFlags flags = CGEventSourceFlagsState(kCGEventSourceStateHIDSystemState);
+    CGEventFlags flags = CGEventSourceFlagsState(kCGEventSourceStateCombinedSessionState);
     return (flags & kCGEventFlagMaskControl) && (flags & kCGEventFlagMaskAlternate);
+}
+
+static bool IsBanishActive() {
+    // Banish key (default 'B' = 0x0B) or Ctrl+Alt+MiddleClick
+    bool keyPressed = IsKeyHeld(g_config.behaviors.banish.key);
+    bool edgeDetected = keyPressed && !s_bKeyWasDown;
+    s_bKeyWasDown = keyPressed;
+    if (edgeDetected) {
+        fprintf(stderr, "[Banish] Key trigger (keyCode=%d)\n", g_config.behaviors.banish.key);
+        return true;
+    }
+    if (AreModifiersPressed() && IsMiddleMouseDown()) {
+        fprintf(stderr, "[Banish] Ctrl+Alt+MiddleClick trigger\n");
+        return true;
+    }
+    return false;
 }
 
 static void init(BehaviorContext& ctx) {
@@ -37,7 +58,7 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
 
     auto* state = BehaviorStateManager::Instance().GetOrCreate<BanishState>(goose->id, "banish");
 
-    if (AreModifiersPressed() && IsMiddleMouseDown() && !s_banished) {
+    if (IsBanishActive() && !s_banished) {
         state->originalPos = goose->pos;
         s_banishTime = time;
         s_banished = true;
@@ -82,7 +103,7 @@ static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
 static Behavior g_banishBehavior = {
     .id = "banish",
     .name = "Banish",
-    .description = "Press Ctrl+Alt+Middle Click to banish goose to the shadow realm. Respawns after 30s.",
+    .description = "Press B (or Ctrl+Alt+MiddleClick) to banish goose to the shadow realm. Respawns after 30s.",
     .enabledPtr = &s_enabled,
     .init = init,
     .tick = tick,

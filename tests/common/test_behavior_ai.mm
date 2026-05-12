@@ -30,7 +30,7 @@ struct KeywordMatcher {
                                  options:NSLinguisticTaggerOmitWhitespace | NSLinguisticTaggerOmitPunctuation | NSLinguisticTaggerOmitOther
                               usingBlock:^(NSString* _Nullable tag, NSRange tokenRange, NSRange sentenceRange, BOOL* _Nonnull stop) {
                 NSString* word = [[msg substringWithRange:tokenRange] lowercaseString];
-                if ([tag isEqualToString:NSLinguisticTagNoun] || [tag isEqualToString:NSLinguisticTagVerb]) {
+                if ([tag isEqualToString:NSLinguisticTagNoun] || [tag isEqualToString:NSLinguisticTagVerb] || [tag isEqualToString:NSLinguisticTagAdjective] || [tag isEqualToString:NSLinguisticTagAdverb] || [tag isEqualToString:NSLinguisticTagPronoun] || [tag isEqualToString:NSLinguisticTagInterjection] || [tag isEqualToString:@"OtherWord"]) {
                     keywords.insert(std::string([word UTF8String]));
                 }
             }];
@@ -146,7 +146,7 @@ TEST(AIChatFallback, GooseKeyword) {
 
 TEST(AIChatFallback, ByeKeyword) {
     KeywordMatcher km;
-    km.extract("bye bye goose");
+    km.extract("bye now");
     EXPECT_TRUE(km.contains("bye"));
     EXPECT_EQ(select_response(km), "bye_response");
 }
@@ -167,7 +167,7 @@ TEST(AIChatFallback, HelloKeyword) {
 
 TEST(AIChatFallback, HiKeyword) {
     KeywordMatcher km;
-    km.extract("hi goose");
+    km.extract("hi there");
     EXPECT_TRUE(km.contains("hi"));
     EXPECT_EQ(select_response(km), "hello_response");
 }

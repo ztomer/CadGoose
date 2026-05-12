@@ -2,7 +2,7 @@
 // behavior_portal.cpp
 // Portal Behavior - User-controlled portal placement
 // Based on PortalGoos by Moonaliss1
-// Reference: P+1 places portal 1, P+2 places portal 2, P+0 toggles portals on/off
+// Reference: 1 places portal 1, 2 places portal 2, 0 toggles portals on/off
 // Uses p1.png and p2.png images
 // ===========================
 #include "behavior.h"
@@ -18,7 +18,7 @@ static bool s_portalsOn = true;
 static bool s_p0Pressed = false;
 static CGImageRef s_portalImages[2] = {nullptr, nullptr};
 
-enum PortalKey { P_KEY = 0x50, D1_KEY = 0x31, D2_KEY = 0x32, D0_KEY = 0x30 };
+enum PortalKey { D1_KEY = 0x31, D2_KEY = 0x32, D0_KEY = 0x30 };
 
 static bool IsKeyHeld(int keyCode) {
     return CGEventSourceKeyState(kCGEventSourceStateHIDSystemState, (CGKeyCode)keyCode);
@@ -74,41 +74,44 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
         }
     }
 
-    bool pHeld = IsKeyHeld(0x50);
-
-    if (pHeld) {
-        CGEventSourceRef source = CGEventSourceCreate(kCGEventSourceStateHIDSystemState);
-        if (source) {
-            CGEventRef event = CGEventCreate(source);
-            CFRelease(source);
-            if (event) {
-                CGPoint mousePos = CGEventGetLocation(event);
-                CFRelease(event);
-
-                bool d1Pressed = IsKeyHeld(0x31);
-                bool d2Pressed = IsKeyHeld(0x32);
-                bool d0Pressed = IsKeyHeld(0x30);
-
-                if (d1Pressed) {
-                    state->portalA.x = (float)mousePos.x;
-                    state->portalA.y = (float)mousePos.y;
-                    state->portalA.active = true;
-                    state->portalA.portalId = 1;
-                }
-                if (d2Pressed) {
-                    state->portalB.x = (float)mousePos.x;
-                    state->portalB.y = (float)mousePos.y;
-                    state->portalB.active = true;
-                    state->portalB.portalId = 2;
-                }
-                if (d0Pressed && !s_p0Pressed) {
-                    s_portalsOn = !s_portalsOn;
-                    s_p0Pressed = true;
-                } else if (!d0Pressed) {
-                    s_p0Pressed = false;
-                }
-            }
+    // Get cursor position once
+    CGEventSourceRef source = CGEventSourceCreate(kCGEventSourceStateCombinedSessionState);
+    CGPoint mousePos = {0, 0};
+    bool haveMouse = false;
+    if (source) {
+        CGEventRef event = CGEventCreate(source);
+        if (event) {
+            mousePos = CGEventGetLocation(event);
+            haveMouse = true;
+            CFRelease(event);
         }
+        CFRelease(source);
+    }
+
+    bool d1Pressed = IsKeyHeld(D1_KEY);
+    bool d2Pressed = IsKeyHeld(D2_KEY);
+    bool d0Pressed = IsKeyHeld(D0_KEY);
+
+    if (d1Pressed) {
+        state->portalA.x = haveMouse ? (float)mousePos.x : goose->pos.x;
+        state->portalA.y = haveMouse ? (float)mousePos.y : goose->pos.y;
+        state->portalA.active = true;
+        state->portalA.portalId = 1;
+        fprintf(stderr, "[Portal] Portal 1 placed at (%.0f, %.0f)\n", state->portalA.x, state->portalA.y);
+    }
+    if (d2Pressed) {
+        state->portalB.x = haveMouse ? (float)mousePos.x : goose->pos.x;
+        state->portalB.y = haveMouse ? (float)mousePos.y : goose->pos.y;
+        state->portalB.active = true;
+        state->portalB.portalId = 2;
+        fprintf(stderr, "[Portal] Portal 2 placed at (%.0f, %.0f)\n", state->portalB.x, state->portalB.y);
+    }
+    if (d0Pressed && !s_p0Pressed) {
+        s_portalsOn = !s_portalsOn;
+        s_p0Pressed = true;
+        fprintf(stderr, "[Portal] Portals %s\n", s_portalsOn ? "ON" : "OFF");
+    } else if (!d0Pressed) {
+        s_p0Pressed = false;
     }
 }
 
@@ -138,7 +141,7 @@ static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
 static Behavior g_portalBehavior = {
     .id = "portal",
     .name = "Portal",
-    .description = "Hold P + 1/2 to place portals, P+0 to toggle. Based on PortalGoos by Moonaliss1",
+    .description = "Press 1/2 to place portals at cursor, 0 to toggle. Based on PortalGoos by Moonaliss1",
     .enabledPtr = &s_enabled,
     .init = init,
     .tick = tick,
