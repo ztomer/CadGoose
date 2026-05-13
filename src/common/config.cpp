@@ -19,6 +19,9 @@ static std::string ToLower(std::string s) {
 }
 
 std::filesystem::path ConfigDirPath() {
+    if (const char* envDir = std::getenv("CADGOOSE_CONFIG_DIR")) {
+        return fs::path(envDir);
+    }
     if (fs::exists(fs::current_path() / "config" / "config.toml")) {
         return fs::current_path() / "config";
     }

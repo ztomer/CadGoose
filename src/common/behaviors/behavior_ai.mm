@@ -12,6 +12,8 @@
 
 #ifdef __APPLE__
 #import <Cocoa/Cocoa.h>
+#import <sys/socket.h>
+#import <sys/un.h>
 
 
 #pragma mark - Foundation Fallback
@@ -75,6 +77,7 @@ static NSString* s_fallbackResponseForMessage(NSString* message, NSString* goose
 - (instancetype)init;
 - (NSString*)currentEndpoint;
 - (NSString*)currentModel;
+- (const struct BuiltinProfile*)currentProfile;
 - (void)sendMessage:(NSString*)message completion:(void(^)(NSString* response, NSError* error))completion;
 @end
 
@@ -305,6 +308,47 @@ static NSString* s_fallbackResponseForMessage(NSString* message, NSString* goose
 
 #pragma mark - AIHTTPClient Implementation
 
+#pragma mark - Model Profiles
+
+struct BuiltinProfile {
+    const char* pattern;
+    float temperature;
+    int maxTokens;
+    int timeoutSecs;
+    bool hasReasoningContent;
+    bool prependJsonTrigger;
+};
+
+static BuiltinProfile s_profiles[] = {
+    {"qwen*",       0.9, 300, 120, true,  true},
+    {"foundation*", 0.8, 200, 60,  false, false},
+    {"gemma*",      0.7, 200, 60,  false, false},
+    {"nemotron*",   0.7, 200, 60,  false, false},
+    {"laguna*",     0.8, 200, 60,  false, false},
+    {"minimax*",    0.8, 200, 60,  false, false},
+    {"llama*",      0.7, 200, 60,  false, false},
+    {nullptr,       0.8, 200, 30,  false, false}, // default (sentinel)
+};
+
+static const BuiltinProfile* DefaultProfile() {
+    int count = sizeof(s_profiles) / sizeof(s_profiles[0]);
+    return &s_profiles[count - 1]; // last entry (sentinel with nullptr pattern)
+}
+
+static const BuiltinProfile* MatchProfile(const char* modelName) {
+    if (!modelName) return DefaultProfile();
+    NSString* name = [NSString stringWithUTF8String:modelName];
+    for (int i = 0; s_profiles[i].pattern; i++) {
+        NSString* pat = [NSString stringWithUTF8String:s_profiles[i].pattern];
+        if ([pat hasSuffix:@"*"]) {
+            NSString* prefix = [pat substringToIndex:pat.length - 1];
+            if ([name hasPrefix:prefix])
+                return &s_profiles[i];
+        }
+    }
+    return DefaultProfile();
+}
+
 @implementation AIHTTPClient
 
 - (instancetype)init {
@@ -316,19 +360,27 @@ static NSString* s_fallbackResponseForMessage(NSString* message, NSString* goose
 }
 
 - (NSString*)currentEndpoint {
-    if (g_config.ai.useOsaurus)
-        return [NSString stringWithFormat:@"http://localhost:%d/v1/chat/completions", g_config.ai.osaurusPort];
-    else if (g_config.ai.useOllama)
-        return [NSString stringWithFormat:@"http://localhost:%d/v1/chat/completions", g_config.ai.ollamaPort];
-    return @"http://localhost:1337/v1/chat/completions";
+    if (g_config.ai.useUnixSocket)
+        return [NSString stringWithUTF8String:g_config.ai.unixSocketPath.c_str()];
+    switch (g_config.ai.providerType) {
+        case 0: return [NSString stringWithFormat:@"http://localhost:%d/v1/chat/completions", g_config.ai.osaurusPort];
+        case 1: return [NSString stringWithFormat:@"http://localhost:%d/v1/chat/completions", g_config.ai.ollamaPort];
+        case 2: return [NSString stringWithUTF8String:g_config.ai.customEndpoint.c_str()];
+        default: return @"http://localhost:1337/v1/chat/completions";
+    }
 }
 
 - (NSString*)currentModel {
-    if (g_config.ai.useOsaurus)
-        return [NSString stringWithUTF8String:g_config.ai.osaurusModel.c_str()];
-    else if (g_config.ai.useOllama)
-        return [NSString stringWithUTF8String:g_config.ai.ollamaModel.c_str()];
-    return @"llama3";
+    switch (g_config.ai.providerType) {
+        case 0: return [NSString stringWithUTF8String:g_config.ai.osaurusModel.c_str()];
+        case 1: return [NSString stringWithUTF8String:g_config.ai.ollamaModel.c_str()];
+        case 2: return [NSString stringWithUTF8String:g_config.ai.customModel.c_str()];
+        default: return @"foundation";
+    }
+}
+
+- (const BuiltinProfile*)currentProfile {
+    return MatchProfile([self currentModel].UTF8String);
 }
 
 - (NSString*)systemPromptForEvilLevel:(float)level {
@@ -358,9 +410,15 @@ case 8: return @"You are an absurdly eloquent goose dictator. You have conquered
 - (void)sendMessage:(NSString*)message completion:(void(^)(NSString*, NSError*))completion {
     [self.history addObject:@{@"role": @"user", @"content": message}];
 
-    NSString* endpoint = [self currentEndpoint];
     NSString* model = [self currentModel];
+    const BuiltinProfile* profile = [self currentProfile];
 
+    if (g_config.ai.useUnixSocket) {
+        [self sendMessageViaUnixSocket:model profile:profile completion:completion];
+        return;
+    }
+
+    NSString* endpoint = [self currentEndpoint];
     NSURL* url = [NSURL URLWithString:endpoint];
     if (!url) {
         if (completion) completion(@"HONK! Can't reach the brain.", nil);
@@ -370,15 +428,19 @@ case 8: return @"You are an absurdly eloquent goose dictator. You have conquered
     NSMutableURLRequest* request = [NSMutableURLRequest requestWithURL:url];
     [request setHTTPMethod:@"POST"];
     [request setValue:@"application/json" forHTTPHeaderField:@"Content-Type"];
+    request.timeoutInterval = profile->timeoutSecs;
 
     NSString* sysPrompt = [self systemPromptForEvilLevel:g_config.ai.evilLevel];
+    if (profile->prependJsonTrigger) {
+        sysPrompt = [NSString stringWithFormat:@"Output JSON now.\n\n%@", sysPrompt];
+    }
     NSArray* messagesWithSystem = [@[@{@"role": @"system", @"content": sysPrompt}] arrayByAddingObjectsFromArray:self.history];
 
     NSDictionary* body = @{
         @"model": model,
         @"messages": messagesWithSystem,
-        @"max_tokens": @(200),
-        @"temperature": @(0.8)
+        @"max_tokens": @(profile->maxTokens),
+        @"temperature": @(profile->temperature)
     };
 
     NSError* jsonError;
@@ -389,7 +451,8 @@ case 8: return @"You are an absurdly eloquent goose dictator. You have conquered
     }
     [request setHTTPBody:jsonData];
 
-    fprintf(stderr, "[AI] POST %s model=%s\n", endpoint.UTF8String, model.UTF8String);
+    fprintf(stderr, "[AI] POST %s model=%s temp=%.1f max_tokens=%d\n",
+            endpoint.UTF8String, model.UTF8String, profile->temperature, profile->maxTokens);
 
     NSURLSession* session = [NSURLSession sharedSession];
     NSURLSessionDataTask* task = [session dataTaskWithRequest:request completionHandler:^(NSData* data, NSURLResponse* response, NSError* error) {
@@ -424,16 +487,179 @@ case 8: return @"You are an absurdly eloquent goose dictator. You have conquered
         if (choices && choices.count > 0) {
             NSDictionary* msg = choices[0][@"message"];
             NSString* content = msg[@"content"];
-            if (content) {
+            if (content && content.length > 0) {
                 [self.history addObject:@{@"role": @"assistant", @"content": content}];
                 if (completion) completion(content, nil);
                 return;
+            }
+            if (profile->hasReasoningContent) {
+                NSString* reasoning = msg[@"reasoning_content"];
+                if (reasoning && reasoning.length > 0) {
+                    fprintf(stderr, "[AI] Empty content, using reasoning_content (%lu chars)\n",
+                            (unsigned long)reasoning.length);
+                    [self.history addObject:@{@"role": @"assistant", @"content": reasoning}];
+                    if (completion) completion(reasoning, nil);
+                    return;
+                }
             }
         }
 
         if (completion) completion(@"HONK! No answer from brain.", nil);
     }];
     [task resume];
+}
+
+#pragma mark - Unix Socket Transport
+
+- (void)sendMessageViaUnixSocket:(NSString*)model profile:(const BuiltinProfile*)profile completion:(void(^)(NSString*, NSError*))completion {
+    NSString* pathString = [NSString stringWithUTF8String:g_config.ai.unixSocketPath.c_str()];
+    const char* socketPath = pathString.UTF8String;
+
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        int sock = socket(AF_UNIX, SOCK_STREAM, 0);
+        if (sock < 0) {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                if (completion) completion(@"HONK! Can't create socket.", [NSError errorWithDomain:@"UnixSocket" code:-1 userInfo:@{NSLocalizedDescriptionKey: @"socket() failed"}]);
+            });
+            return;
+        }
+
+        struct sockaddr_un addr;
+        memset(&addr, 0, sizeof(addr));
+        addr.sun_family = AF_UNIX;
+        strncpy(addr.sun_path, socketPath, sizeof(addr.sun_path) - 1);
+
+        if (connect(sock, (struct sockaddr*)&addr, sizeof(addr)) < 0) {
+            close(sock);
+            dispatch_async(dispatch_get_main_queue(), ^{
+                if (completion) completion(@"HONK! Can't connect to socket.", [NSError errorWithDomain:@"UnixSocket" code:-2 userInfo:@{NSLocalizedDescriptionKey: @"connect() failed"}]);
+            });
+            return;
+        }
+
+        NSString* sysPrompt = [self systemPromptForEvilLevel:g_config.ai.evilLevel];
+        if (profile->prependJsonTrigger) {
+            sysPrompt = [NSString stringWithFormat:@"Output JSON now.\n\n%@", sysPrompt];
+        }
+        NSArray* messagesWithSystem = [@[@{@"role": @"system", @"content": sysPrompt}] arrayByAddingObjectsFromArray:self.history];
+
+        NSDictionary* bodyDict = @{
+            @"model": model,
+            @"messages": messagesWithSystem,
+            @"max_tokens": @(profile->maxTokens),
+            @"temperature": @(profile->temperature)
+        };
+        NSError* jsonError;
+        NSData* jsonData = [NSJSONSerialization dataWithJSONObject:bodyDict options:0 error:&jsonError];
+        if (jsonError) {
+            close(sock);
+            dispatch_async(dispatch_get_main_queue(), ^{
+                if (completion) completion(@"HONK! Brain scrambled.", jsonError);
+            });
+            return;
+        }
+
+        NSString* httpBody = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
+        NSString* httpRequest = [NSString stringWithFormat:
+            @"POST /v1/chat/completions HTTP/1.1\r\n"
+            @"Host: localhost\r\n"
+            @"Content-Type: application/json\r\n"
+            @"Content-Length: %lu\r\n"
+            @"Connection: close\r\n"
+            @"\r\n"
+            @"%@",
+            (unsigned long)httpBody.length,
+            httpBody];
+
+        NSData* requestData = [httpRequest dataUsingEncoding:NSUTF8StringEncoding];
+        ssize_t sent = send(sock, requestData.bytes, requestData.length, 0);
+        if (sent != (ssize_t)requestData.length) {
+            close(sock);
+            dispatch_async(dispatch_get_main_queue(), ^{
+                if (completion) completion(@"HONK! Failed to send.", [NSError errorWithDomain:@"UnixSocket" code:-3 userInfo:@{NSLocalizedDescriptionKey: @"send() failed"}]);
+            });
+            return;
+        }
+
+        struct timeval tv;
+        tv.tv_sec = profile->timeoutSecs;
+        tv.tv_usec = 0;
+        setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
+
+        NSMutableData* responseData = [NSMutableData data];
+        char buf[4096];
+        ssize_t n;
+        while ((n = recv(sock, buf, sizeof(buf), 0)) > 0) {
+            [responseData appendBytes:buf length:n];
+        }
+        close(sock);
+
+        NSString* responseStr = [[NSString alloc] initWithData:responseData encoding:NSUTF8StringEncoding];
+        if (!responseStr) {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                if (completion) completion(@"HONK! No answer from brain.", nil);
+            });
+            return;
+        }
+
+        NSRange headerEnd = [responseStr rangeOfString:@"\r\n\r\n"];
+        if (headerEnd.location == NSNotFound) {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                if (completion) completion(@"HONK! Bad response.", nil);
+            });
+            return;
+        }
+        NSString* body = [responseStr substringFromIndex:headerEnd.location + 4];
+
+        NSRange firstLineEnd = [responseStr rangeOfString:@"\r\n"];
+        if (firstLineEnd.location != NSNotFound) {
+            NSString* statusLine = [responseStr substringToIndex:firstLineEnd.location];
+            NSArray* parts = [statusLine componentsSeparatedByString:@" "];
+            if (parts.count >= 2) {
+                int statusCode = [parts[1] intValue];
+                if (statusCode != 200) {
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        if (completion) completion([NSString stringWithFormat:@"🦆 HONK! The goose can't reach its brain. Check provider/port in settings. (HTTP %d)", statusCode], nil);
+                    });
+                    return;
+                }
+            }
+        }
+
+        NSData* bodyData = [body dataUsingEncoding:NSUTF8StringEncoding];
+        NSError* parseError;
+        NSDictionary* json = [NSJSONSerialization JSONObjectWithData:bodyData options:0 error:&parseError];
+        if (!json) {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                if (completion) completion(@"🦆 HONK! The goose speaks nonsense.", parseError);
+            });
+            return;
+        }
+
+        NSArray* choices = json[@"choices"];
+        NSString* reply = nil;
+        if (choices && choices.count > 0) {
+            NSDictionary* msg = choices[0][@"message"];
+            NSString* content = msg[@"content"];
+            if (content && content.length > 0) {
+                reply = content;
+            } else if (profile->hasReasoningContent) {
+                NSString* reasoning = msg[@"reasoning_content"];
+                if (reasoning && reasoning.length > 0) {
+                    reply = reasoning;
+                }
+            }
+        }
+
+        dispatch_async(dispatch_get_main_queue(), ^{
+            if (reply) {
+                [self.history addObject:@{@"role": @"assistant", @"content": reply}];
+                if (completion) completion(reply, nil);
+            } else {
+                if (completion) completion(@"HONK! No answer from brain.", nil);
+            }
+        });
+    });
 }
 
 @end

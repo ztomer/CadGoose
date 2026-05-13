@@ -432,20 +432,31 @@ struct Config {
   ColorConfig color;
   BehaviorConfig behaviors;
 
+  enum ProviderType { kProviderOsaurus = 0, kProviderOllama = 1, kProviderCustom = 2 };
   struct PortalConfig { float p1Width = 80.0f; float p1Height = 80.0f; float p2Width = 80.0f; float p2Height = 80.0f; float width = 80.0f; } portal;
+  struct ModelProfile {
+    std::string pattern;           // glob match on model name (e.g. "qwen*", "gemma*")
+    float temperature = 0.8f;
+    int maxTokens = 200;
+    int timeoutSecs = 30;
+    bool hasReasoningContent = false;  // model outputs thinking via reasoning_content
+    bool prependJsonTrigger = false;   // prepend "Output JSON now." to system prompt
+  };
   struct AIConfig {
-    bool useOsaurus = true;
-    bool useOllama = false;
+    int providerType = 0; // ProviderType enum (stored as int for config registry)
     int osaurusPort = 1337;
     int ollamaPort = 11434;
-    std::string osaurusEndpoint;
-    std::string ollamaEndpoint;
-    std::string osaurusModel = "llama3";
+    int customPort = 1337;
+    std::string osaurusModel = "foundation";
     std::string ollamaModel = "llama3";
+    std::string customEndpoint = "http://localhost:1337/v1/chat/completions";
+    std::string customModel = "foundation";
     std::string keychainService;
     float evilLevel = 0.5f;
     bool showStatusBar = true;
     bool enableMCP = false;
+    bool useUnixSocket = false;
+    std::string unixSocketPath = "/tmp/desktop-goose-ai.sock";
   } ai;
   struct GooseManagerConfig {
     bool taskWander = true, taskFetch = true, taskChase = true, taskSnatch = true;
