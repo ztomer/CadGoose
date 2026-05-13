@@ -71,25 +71,31 @@ static NSString* s_fallbackResponseForMessage(NSString* message, NSString* goose
 #pragma mark - AIHTTPClient
 
 @interface AIHTTPClient : NSObject
-@property (nonatomic, copy) NSString* endpoint;
-@property (nonatomic, copy) NSString* model;
 @property (nonatomic, strong) NSMutableArray* history;
-- (instancetype)initWithEndpoint:(NSString*)endpoint model:(NSString*)model;
+- (instancetype)init;
+- (NSString*)currentEndpoint;
+- (NSString*)currentModel;
 - (void)sendMessage:(NSString*)message completion:(void(^)(NSString* response, NSError* error))completion;
 @end
 
 #pragma mark - AIChatWindowController
 
-@interface AIChatWindowController : NSWindowController
+@interface AIChatWindowController : NSWindowController <NSWindowDelegate>
 @property (nonatomic, copy) NSString* gooseName;
 @property (nonatomic, strong) NSTextField* inputField;
 @property (nonatomic, strong) NSTextView* chatView;
 @property (nonatomic, strong) NSButton* sendButton;
 @property (nonatomic, strong) NSButton* pinButton;
+@property (nonatomic, strong) NSPopUpButton* goosePopup;
+@property (nonatomic, strong) NSTextField* statusBar;
+@property (nonatomic, strong) NSProgressIndicator* spinner;
 @property (nonatomic, strong) AIHTTPClient* httpClient;
 - (void)sendMessage:(id)sender;
 - (void)appendResponse:(NSString*)response;
 - (void)togglePin:(id)sender;
+- (void)gooseSelected:(id)sender;
+- (void)populateGoosePopup;
+- (void)updateModelDisplay;
 @end
 
 @implementation AIChatWindowController
@@ -98,7 +104,7 @@ static NSString* s_fallbackResponseForMessage(NSString* message, NSString* goose
     self.gooseName = name;
 
     self.window = [[NSWindow alloc] initWithContentRect:NSMakeRect(0, 0, 420, 360)
-                                             styleMask:NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskResizable
+                                             styleMask:NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskResizable | NSWindowStyleMaskFullSizeContentView
                                                backing:NSBackingStoreBuffered
                                                  defer:NO];
     self.window.title = [NSString stringWithFormat:@"💬 Chat with %@ 🦆", name];
@@ -115,8 +121,8 @@ static NSString* s_fallbackResponseForMessage(NSString* message, NSString* goose
 
     NSFont* chatFont = [NSFont fontWithName:@"Comic Sans MS" size:13] ?: [NSFont systemFontOfSize:13];
 
-    // Appbar below titlebar
-    NSView* appBar = [[NSView alloc] initWithFrame:NSMakeRect(0, 280, 420, 38)];
+    // Appbar: [traffic lights | goose selector | pin]
+    NSView* appBar = [[NSView alloc] initWithFrame:NSMakeRect(0, 322, 420, 38)];
     appBar.wantsLayer = YES;
     appBar.layer.backgroundColor = [[NSColor colorWithWhite:0.2 alpha:1.0] CGColor];
     appBar.autoresizingMask = NSViewWidthSizable | NSViewMinYMargin;
@@ -128,16 +134,17 @@ static NSString* s_fallbackResponseForMessage(NSString* message, NSString* goose
     sep.autoresizingMask = NSViewWidthSizable;
     [appBar addSubview:sep];
 
-    NSTextField* appTitle = [[NSTextField alloc] initWithFrame:NSMakeRect(70, 9, 280, 20)];
-    appTitle.stringValue = [NSString stringWithFormat:@"💬 Chat with %@", name];
-    appTitle.font = [NSFont systemFontOfSize:13 weight:NSFontWeightSemibold];
-    appTitle.textColor = [NSColor whiteColor];
-    appTitle.backgroundColor = [NSColor clearColor];
-    appTitle.bordered = NO;
-    appTitle.editable = NO;
-    appTitle.alignment = NSTextAlignmentCenter;
-    [appBar addSubview:appTitle];
+    // Goose selector popup (replaces centered title)
+    self.goosePopup = [[NSPopUpButton alloc] initWithFrame:NSMakeRect(70, 7, appBar.frame.size.width - 70 - 70, 24)];
+    self.goosePopup.font = [NSFont fontWithName:@"Comic Sans MS" size:13] ?: [NSFont systemFontOfSize:13 weight:NSFontWeightSemibold];
+    self.goosePopup.bezelStyle = NSBezelStyleRounded;
+    self.goosePopup.target = self;
+    self.goosePopup.action = @selector(gooseSelected:);
+    self.goosePopup.autoresizingMask = NSViewWidthSizable | NSViewMaxXMargin;
+    [self populateGoosePopup];
+    [appBar addSubview:self.goosePopup];
 
+    // Pin button (far right)
     self.pinButton = [[NSButton alloc] initWithFrame:NSMakeRect(appBar.frame.size.width - 30, 9, 20, 20)];
     [self.pinButton setTitle:@"📌"];
     [self.pinButton setFont:[NSFont systemFontOfSize:12]];
@@ -147,6 +154,7 @@ static NSString* s_fallbackResponseForMessage(NSString* message, NSString* goose
     self.pinButton.autoresizingMask = NSViewMinXMargin;
     [appBar addSubview:self.pinButton];
 
+    // Chat scrollview
     NSScrollView* scrollView = [[NSScrollView alloc] initWithFrame:NSMakeRect(10, 60, 400, 214)];
     scrollView.hasVerticalScroller = YES;
     scrollView.autoresizingMask = NSViewWidthSizable | NSViewHeightSizable;
@@ -160,6 +168,24 @@ static NSString* s_fallbackResponseForMessage(NSString* message, NSString* goose
     self.chatView = textView;
     scrollView.documentView = textView;
     [contentView addSubview:scrollView];
+
+    // Spinner: shown during AI request
+    self.spinner = [[NSProgressIndicator alloc] initWithFrame:NSMakeRect(3, 2, 12, 12)];
+    self.spinner.style = NSProgressIndicatorStyleSpinning;
+    self.spinner.controlSize = NSControlSizeSmall;
+    self.spinner.hidden = YES;
+    self.spinner.autoresizingMask = NSViewMaxXMargin;
+    [contentView addSubview:self.spinner];
+
+    // Status bar: model name between chat and input
+    self.statusBar = [[NSTextField alloc] initWithFrame:NSMakeRect(18, 2, contentView.frame.size.width - 30, 12)];
+    self.statusBar.font = [NSFont fontWithName:@"Comic Sans MS" size:10] ?: [NSFont systemFontOfSize:10];
+    self.statusBar.textColor = [NSColor colorWithWhite:0.5 alpha:1.0];
+    self.statusBar.backgroundColor = [NSColor clearColor];
+    self.statusBar.bordered = NO;
+    self.statusBar.editable = NO;
+    self.statusBar.autoresizingMask = NSViewWidthSizable;
+    [contentView addSubview:self.statusBar];
 
     self.inputField = [[NSTextField alloc] initWithFrame:NSMakeRect(10, 18, 340, 28)];
     self.inputField.placeholderString = @"Type your message...";
@@ -179,21 +205,9 @@ static NSString* s_fallbackResponseForMessage(NSString* message, NSString* goose
     self.sendButton.autoresizingMask = NSViewMinXMargin;
     [contentView addSubview:self.sendButton];
 
-    NSString* endpoint;
-    NSString* model;
-
-    if (g_config.ai.useOsaurus) {
-        endpoint = [NSString stringWithFormat:@"http://localhost:%d/v1/chat/completions", g_config.ai.osaurusPort];
-        model = [NSString stringWithUTF8String:g_config.ai.osaurusModel.c_str()];
-    } else if (g_config.ai.useOllama) {
-        endpoint = [NSString stringWithFormat:@"http://localhost:%d/v1/chat/completions", g_config.ai.ollamaPort];
-        model = [NSString stringWithUTF8String:g_config.ai.ollamaModel.c_str()];
-    } else {
-        endpoint = @"http://localhost:1337/v1/chat/completions";
-        model = @"llama3";
-    }
-
-    self.httpClient = [[AIHTTPClient alloc] initWithEndpoint:endpoint model:model];
+    self.httpClient = [[AIHTTPClient alloc] init];
+    self.window.delegate = self;
+    [self updateModelDisplay];
 
     return self;
 }
@@ -208,6 +222,8 @@ static NSString* s_fallbackResponseForMessage(NSString* message, NSString* goose
     self.chatView.string = [self.chatView.string stringByAppendingString:@"Goose: HONK...\n"];
 
     self.sendButton.enabled = NO;
+    [self.spinner startAnimation:nil];
+    self.spinner.hidden = NO;
 
     __weak AIChatWindowController* weakSelf = self;
     [self.httpClient sendMessage:message completion:^(NSString* response, NSError* error) {
@@ -223,6 +239,9 @@ static NSString* s_fallbackResponseForMessage(NSString* message, NSString* goose
             } else {
                 [strong appendResponse:response];
             }
+            [strong.spinner stopAnimation:nil];
+            strong.spinner.hidden = YES;
+            [strong updateModelDisplay];
         });
     }];
 
@@ -250,24 +269,70 @@ static NSString* s_fallbackResponseForMessage(NSString* message, NSString* goose
     }
 }
 
+- (void)populateGoosePopup {
+    [self.goosePopup removeAllItems];
+    for (const auto& g : g_geese) {
+        NSString* gName = [NSString stringWithUTF8String:g.name.c_str()];
+        [self.goosePopup addItemWithTitle:gName];
+        if ([gName isEqualToString:self.gooseName]) {
+            [self.goosePopup selectItemAtIndex:self.goosePopup.numberOfItems - 1];
+        }
+    }
+    if (self.goosePopup.numberOfItems == 0) {
+        [self.goosePopup addItemWithTitle:self.gooseName ?: @"Goose"];
+        [self.goosePopup selectItemAtIndex:0];
+    }
+}
+
+- (void)gooseSelected:(id)sender {
+    NSString* selected = [self.goosePopup titleOfSelectedItem];
+    if (selected) {
+        self.gooseName = selected;
+    }
+}
+
+- (void)updateModelDisplay {
+    NSString* model = [self.httpClient currentModel];
+    self.statusBar.stringValue = [NSString stringWithFormat:@"\u2699 %@", model];
+    self.statusBar.hidden = !g_config.ai.showStatusBar;
+}
+
+- (void)windowDidBecomeKey:(NSNotification*)notification {
+    [self updateModelDisplay];
+}
+
 @end
 
 #pragma mark - AIHTTPClient Implementation
 
 @implementation AIHTTPClient
 
-- (instancetype)initWithEndpoint:(NSString*)endpoint model:(NSString*)model {
+- (instancetype)init {
     self = [super init];
     if (self) {
-        _endpoint = endpoint;
-        _model = model;
         _history = [NSMutableArray array];
     }
     return self;
 }
 
+- (NSString*)currentEndpoint {
+    if (g_config.ai.useOsaurus)
+        return [NSString stringWithFormat:@"http://localhost:%d/v1/chat/completions", g_config.ai.osaurusPort];
+    else if (g_config.ai.useOllama)
+        return [NSString stringWithFormat:@"http://localhost:%d/v1/chat/completions", g_config.ai.ollamaPort];
+    return @"http://localhost:1337/v1/chat/completions";
+}
+
+- (NSString*)currentModel {
+    if (g_config.ai.useOsaurus)
+        return [NSString stringWithUTF8String:g_config.ai.osaurusModel.c_str()];
+    else if (g_config.ai.useOllama)
+        return [NSString stringWithUTF8String:g_config.ai.ollamaModel.c_str()];
+    return @"llama3";
+}
+
 - (NSString*)systemPromptForEvilLevel:(float)level {
-    int state = (int)round(level * 9);
+    int state = MIN((int)round(level * 9), 8);
     switch (state) {
         case 0: return @"You are an adorable fluffy gosling. You love everyone and want to be best friends. "
                        @"Use gentle honks and warm hugs. Give sweet, wholesome responses. Keep responses short.";
@@ -293,7 +358,10 @@ case 8: return @"You are an absurdly eloquent goose dictator. You have conquered
 - (void)sendMessage:(NSString*)message completion:(void(^)(NSString*, NSError*))completion {
     [self.history addObject:@{@"role": @"user", @"content": message}];
 
-    NSURL* url = [NSURL URLWithString:self.endpoint];
+    NSString* endpoint = [self currentEndpoint];
+    NSString* model = [self currentModel];
+
+    NSURL* url = [NSURL URLWithString:endpoint];
     if (!url) {
         if (completion) completion(@"HONK! Can't reach the brain.", nil);
         return;
@@ -307,7 +375,7 @@ case 8: return @"You are an absurdly eloquent goose dictator. You have conquered
     NSArray* messagesWithSystem = [@[@{@"role": @"system", @"content": sysPrompt}] arrayByAddingObjectsFromArray:self.history];
 
     NSDictionary* body = @{
-        @"model": self.model,
+        @"model": model,
         @"messages": messagesWithSystem,
         @"max_tokens": @(200),
         @"temperature": @(0.8)
@@ -321,7 +389,7 @@ case 8: return @"You are an absurdly eloquent goose dictator. You have conquered
     }
     [request setHTTPBody:jsonData];
 
-    fprintf(stderr, "[AI] POST %s model=%s\n", self.endpoint.UTF8String, self.model.UTF8String);
+    fprintf(stderr, "[AI] POST %s model=%s\n", endpoint.UTF8String, model.UTF8String);
 
     NSURLSession* session = [NSURLSession sharedSession];
     NSURLSessionDataTask* task = [session dataTaskWithRequest:request completionHandler:^(NSData* data, NSURLResponse* response, NSError* error) {
@@ -333,6 +401,8 @@ case 8: return @"You are an absurdly eloquent goose dictator. You have conquered
 
         NSHTTPURLResponse* httpResp = (NSHTTPURLResponse*)response;
         fprintf(stderr, "[AI] Response status: %ld\n", (long)httpResp.statusCode);
+        NSString* rawBody = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+        fprintf(stderr, "[AI] Response body: %s\n", rawBody.UTF8String ?: "nil");
         if (httpResp.statusCode != 200) {
             NSString* body = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
             fprintf(stderr, "[AI] Error body: %s\n", body.UTF8String ?: "nil");
@@ -400,6 +470,14 @@ extern "C" void AI_OpenChat(const char* gooseName) {
     });
 #else
     fprintf(stderr, "[AI] Chat UI not implemented on this platform\n");
+#endif
+}
+
+extern "C" void AI_RefreshModelDisplay() {
+#ifdef __APPLE__
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [g_chatController updateModelDisplay];
+    });
 #endif
 }
 

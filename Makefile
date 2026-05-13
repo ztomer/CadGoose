@@ -1304,6 +1304,30 @@ src/common/items.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/src/common/items.cpp.s
 .PHONY : src/common/items.cpp.s
 
+src/common/mcp_server.o: src/common/mcp_server.cpp.o
+.PHONY : src/common/mcp_server.o
+
+# target to build an object file
+src/common/mcp_server.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/common/mcp_server.cpp.o
+.PHONY : src/common/mcp_server.cpp.o
+
+src/common/mcp_server.i: src/common/mcp_server.cpp.i
+.PHONY : src/common/mcp_server.i
+
+# target to preprocess a source file
+src/common/mcp_server.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/common/mcp_server.cpp.i
+.PHONY : src/common/mcp_server.cpp.i
+
+src/common/mcp_server.s: src/common/mcp_server.cpp.s
+.PHONY : src/common/mcp_server.s
+
+# target to generate assembly for a file
+src/common/mcp_server.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/common/mcp_server.cpp.s
+.PHONY : src/common/mcp_server.cpp.s
+
 src/common/world.o: src/common/world.cpp.o
 .PHONY : src/common/world.o
 
@@ -1858,6 +1882,9 @@ help:
 	@echo "... src/common/items.o"
 	@echo "... src/common/items.i"
 	@echo "... src/common/items.s"
+	@echo "... src/common/mcp_server.o"
+	@echo "... src/common/mcp_server.i"
+	@echo "... src/common/mcp_server.s"
 	@echo "... src/common/world.o"
 	@echo "... src/common/world.i"
 	@echo "... src/common/world.s"

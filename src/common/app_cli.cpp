@@ -67,7 +67,10 @@ int AppCli_HandleCommand(int argc, char** argv, int* appArgc) {
     for (int i = 1; i < argc; i++) {
         if (std::string(argv[i]) == "--debug") {
             g_debugMode = true;
-            // Note: debug log initializing is handled in the main platform code
+        }
+        if (std::string(argv[i]) == "--mcp") {
+            *appArgc = 1;
+            return -1;
         }
     }
 
@@ -90,6 +93,7 @@ int AppCli_HandleCommand(int argc, char** argv, int* appArgc) {
             << "Desktop Goose commands:\n"
             << "  CadGoose\n"
             << "  CadGoose --debug\n"
+            << "  CadGoose --mcp (run MCP stdio server)\n"
             << "  CadGoose start\n"
             << "  CadGoose start --foreground\n"
             << "  CadGoose spawn [name]\n"

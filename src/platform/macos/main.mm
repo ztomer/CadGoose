@@ -11,6 +11,7 @@
 #include "cursor_backend.h"
 #include "world.h"
 #include "command_socket.h"
+#include "mcp_server.h"
 #include "app_actions.h"
 #include "app_cli.h"
 #include "window.h"
@@ -18,6 +19,7 @@
 #include "audio.h"
 
 extern bool g_debugMode;
+static bool g_mcpMode = false;
 FILE* g_logFile = nullptr;
 
 void OpenLogFile() {
@@ -63,6 +65,7 @@ void LogWrite(const char* level, const char* fmt, ...) {
 } while(0)
 
 extern "C" void AI_OpenChat(const char* gooseName);
+extern "C" void AI_SendMessage(const char* message);
 
 bool Config_IsSystemDarkTheme();
 
@@ -103,8 +106,9 @@ bool Config_IsSystemDarkTheme();
     NSMenuItem* prefsItem = [menu addItemWithTitle:@"Preferences..." action:@selector(openPreferences:) keyEquivalent:@","];
     prefsItem.target = self;
 
-    NSMenuItem* chatItem = [menu addItemWithTitle:@"AI Chat" action:@selector(openAIChat:) keyEquivalent:@""];
+    NSMenuItem* chatItem = [menu addItemWithTitle:@"AI Chat" action:@selector(openAIChat:) keyEquivalent:@";"];
     chatItem.target = self;
+    chatItem.keyEquivalentModifierMask = NSEventModifierFlagControl | NSEventModifierFlagOption | NSEventModifierFlagShift;
 
     [menu addItem:[NSMenuItem separatorItem]];
 
@@ -211,7 +215,22 @@ bool Config_IsSystemDarkTheme();
     DEBUG_LOG("App launching...");
 
     Config_Init();
+    Config_LoadAll();
     DEBUG_LOG("Config init done");
+    if (g_config.ai.enableMCP && !g_mcpMode) {
+        MCP_StartInternalServer();
+    }
+
+    if (g_mcpMode) {
+        DEBUG_LOG("Starting MCP stdio server...");
+        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+            MCP_RunStdioServer();
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [[NSApplication sharedApplication] terminate:nil];
+            });
+        });
+        return;
+    }
 
     g_assets.Init();
     DEBUG_LOG("Assets init done");
@@ -263,6 +282,14 @@ bool Config_IsSystemDarkTheme();
             dispatch_async(dispatch_get_main_queue(), ^{ ConfigGUI_ShowWindow(); });
             return "ok\n";
         }
+        if (!args.empty() && args[0] == "honk") {
+            dispatch_async(dispatch_get_main_queue(), ^{ Audio_Init(); Audio_PlayHonk(); });
+            return "ok honk\n";
+        }
+        if (!args.empty() && args[0] == "send" && args.size() > 1) {
+            dispatch_async(dispatch_get_main_queue(), ^{ AI_SendMessage(args[1].c_str()); });
+            return "ok message sent\n";
+        }
         return AppActions_HandleCommand(args);
     };
     if (!CommandSocket_StartServer(cmdHandler, &error) && !error.empty()) {
@@ -300,6 +327,7 @@ bool Config_IsSystemDarkTheme();
 }
 
 - (void)applicationWillTerminate:(NSNotification*)aNotification {
+    MCP_StopInternalServer();
     CommandSocket_StopServer();
 }
 
@@ -354,6 +382,13 @@ int main(int argc, char** argv) {
     const int cliStatus = AppCli_HandleCommand(argc, argv, &runArgc);
     fprintf(stderr, "[DEBUG] AppCli_HandleCommand returned %d\n", cliStatus);
     if (cliStatus >= 0) return cliStatus;
+
+    for (int i = 0; i < argc; i++) {
+        if (std::string(argv[i]) == "--mcp") {
+            g_mcpMode = true;
+            break;
+        }
+    }
 
     @autoreleasepool {
         NSApplication* app = [NSApplication sharedApplication];
