@@ -605,6 +605,7 @@ TEST(Integration, Goose_DropItem) {
 
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
+    setenv("CADGOOSE_CONFIG_DIR", "/tmp/cadgoose-test-config", 1);
     return RUN_ALL_TESTS();
 }
 

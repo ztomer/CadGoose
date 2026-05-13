@@ -9,9 +9,59 @@ extern "C" void AI_RefreshModelDisplay();
 @interface AITabView ()
 @property (nonatomic, strong) NSTextField* statusLabel;
 @property (nonatomic, strong) NSTextField* promptBody;
+@property (nonatomic, strong) NSTextField* endpointField;
+@property (nonatomic, strong) NSTextField* customModelField;
+@property (nonatomic, strong) NSTextField* portLabel;
+@property (nonatomic, strong) NSTextField* portField;
+@property (nonatomic, strong) NSTextField* modelLabel;
+@property (nonatomic, strong) NSPopUpButton* modelPopup;
+@property (nonatomic, strong) NSButton* refreshBtn;
+@property (nonatomic, strong) NSButton* unixSocketToggle;
+@property (nonatomic, strong) NSTextField* socketPathField;
 @end
 
 @implementation AITabView
+
+- (NSInteger)currentProvider {
+    return g_config.ai.providerType;
+}
+
+- (void)setProvider:(NSInteger)idx {
+    g_config.ai.providerType = (int)idx;
+}
+
+- (int)currentPort {
+    switch ([self currentProvider]) {
+        case 0: return g_config.ai.osaurusPort;
+        case 1: return g_config.ai.ollamaPort;
+        default: return g_config.ai.customPort;
+    }
+}
+
+- (void)setPort:(int)port {
+    switch ([self currentProvider]) {
+        case 0: g_config.ai.osaurusPort = port; break;
+        case 1: g_config.ai.ollamaPort = port; break;
+        default: g_config.ai.customPort = port; break;
+    }
+}
+
+- (NSString*)currentModelName {
+    switch ([self currentProvider]) {
+        case 0: return [NSString stringWithUTF8String:g_config.ai.osaurusModel.c_str()];
+        case 1: return [NSString stringWithUTF8String:g_config.ai.ollamaModel.c_str()];
+        default: return [NSString stringWithUTF8String:g_config.ai.customModel.c_str()];
+    }
+}
+
+- (void)setModelName:(NSString*)name {
+    std::string s = std::string([name UTF8String]);
+    switch ([self currentProvider]) {
+        case 0: g_config.ai.osaurusModel = s; break;
+        case 1: g_config.ai.ollamaModel = s; break;
+        default: g_config.ai.customModel = s; break;
+    }
+}
 
 - (instancetype)initWithFrame:(NSRect)frame {
     self = [super initWithFrame:frame];
@@ -24,63 +74,91 @@ extern "C" void AI_RefreshModelDisplay();
 - (void)setupUI {
     float y = self.bounds.size.height - 30;
     CGFloat w = self.bounds.size.width;
+    NSInteger prov = [self currentProvider];
 
     // Provider selector
-    NSPopUpButton* popup = [[NSPopUpButton alloc] initWithFrame:NSMakeRect(12, y, 200, 24)];
+    NSPopUpButton* popup = [[NSPopUpButton alloc] initWithFrame:NSMakeRect(12, y, 150, 24)];
     [popup addItemWithTitle:@"Osaurus"];
     [popup addItemWithTitle:@"Ollama"];
     [popup addItemWithTitle:@"Custom"];
-
-    if (g_config.ai.useOsaurus) [popup selectItemAtIndex:0];
-    else if (g_config.ai.useOllama) [popup selectItemAtIndex:1];
-    else [popup selectItemAtIndex:2];
-
+    [popup selectItemAtIndex:prov];
     popup.target = self;
     popup.action = @selector(providerChanged:);
     [self addSubview:popup];
 
-    NSTextField* portLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(220, y + 2, 40, 16)];
-    portLabel.stringValue = @"Port:";
-    portLabel.font = [NSFont fontWithName:@"Comic Sans MS" size:11] ?: [NSFont systemFontOfSize:11];
-    portLabel.textColor = [NSColor whiteColor];
-    portLabel.backgroundColor = [NSColor clearColor];
-    portLabel.bordered = NO;
-    portLabel.editable = NO;
-    [self addSubview:portLabel];
+    // Port
+    _portLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(170, y + 2, 40, 16)];
+    _portLabel.stringValue = @"Port:";
+    _portLabel.font = [NSFont fontWithName:@"Comic Sans MS" size:11] ?: [NSFont systemFontOfSize:11];
+    _portLabel.textColor = [NSColor whiteColor];
+    _portLabel.backgroundColor = [NSColor clearColor];
+    _portLabel.bordered = NO;
+    _portLabel.editable = NO;
+    [self addSubview:_portLabel];
 
-    NSTextField* portField = [[NSTextField alloc] initWithFrame:NSMakeRect(255, y, 50, 22)];
-    portField.integerValue = g_config.ai.useOsaurus ? g_config.ai.osaurusPort : g_config.ai.ollamaPort;
-    portField.tag = 100;
-    portField.target = self;
-    portField.action = @selector(portChanged:);
-    [self addSubview:portField];
+    _portField = [[NSTextField alloc] initWithFrame:NSMakeRect(205, y, 50, 22)];
+    _portField.integerValue = [self currentPort];
+    _portField.tag = 100;
+    _portField.target = self;
+    _portField.action = @selector(portChanged:);
+    [self addSubview:_portField];
 
-    NSTextField* modelLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(310, y + 2, 40, 16)];
-    modelLabel.stringValue = @"Model:";
-    modelLabel.font = [NSFont fontWithName:@"Comic Sans MS" size:11] ?: [NSFont systemFontOfSize:11];
-    modelLabel.textColor = [NSColor whiteColor];
-    modelLabel.backgroundColor = [NSColor clearColor];
-    modelLabel.bordered = NO;
-    modelLabel.editable = NO;
-    [self addSubview:modelLabel];
+    // Model label + popup
+    _modelLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(260, y + 2, 40, 16)];
+    _modelLabel.stringValue = @"Model:";
+    _modelLabel.font = [NSFont fontWithName:@"Comic Sans MS" size:11] ?: [NSFont systemFontOfSize:11];
+    _modelLabel.textColor = [NSColor whiteColor];
+    _modelLabel.backgroundColor = [NSColor clearColor];
+    _modelLabel.bordered = NO;
+    _modelLabel.editable = NO;
+    [self addSubview:_modelLabel];
 
-    NSPopUpButton* modelPopup = [[NSPopUpButton alloc] initWithFrame:NSMakeRect(350, y, 100, 24)];
-    [modelPopup addItemWithTitle:[NSString stringWithUTF8String:(g_config.ai.useOsaurus ? g_config.ai.osaurusModel : g_config.ai.ollamaModel).c_str()]];
-    modelPopup.tag = 101;
-    modelPopup.target = self;
-    modelPopup.action = @selector(modelPopupChanged:);
-    [self addSubview:modelPopup];
+    _modelPopup = [[NSPopUpButton alloc] initWithFrame:NSMakeRect(300, y, 130, 24)];
+    [_modelPopup addItemWithTitle:[self currentModelName]];
+    _modelPopup.tag = 101;
+    _modelPopup.target = self;
+    _modelPopup.action = @selector(modelPopupChanged:);
+    [self addSubview:_modelPopup];
 
-    NSButton* refreshBtn = [[NSButton alloc] initWithFrame:NSMakeRect(454, y, 24, 24)];
-    [refreshBtn setTitle:@"🔄"];
-    [refreshBtn setFont:[NSFont fontWithName:@"Comic Sans MS" size:12] ?: [NSFont systemFontOfSize:12]];
-    [refreshBtn setTarget:self];
-    [refreshBtn setAction:@selector(refreshModels:)];
-    refreshBtn.bezelStyle = NSBezelStyleRounded;
-    [self addSubview:refreshBtn];
+    _refreshBtn = [[NSButton alloc] initWithFrame:NSMakeRect(434, y, 24, 24)];
+    [_refreshBtn setTitle:@"🔄"];
+    [_refreshBtn setFont:[NSFont fontWithName:@"Comic Sans MS" size:12] ?: [NSFont systemFontOfSize:12]];
+    [_refreshBtn setTarget:self];
+    [_refreshBtn setAction:@selector(refreshModels:)];
+    _refreshBtn.bezelStyle = NSBezelStyleRounded;
+    [self addSubview:_refreshBtn];
 
-    y -= 40;
+    y -= 30;
 
+    // Custom endpoint URL field (only shown for Custom provider)
+    _endpointField = [[NSTextField alloc] initWithFrame:NSMakeRect(12, y, w - 24, 22)];
+    _endpointField.stringValue = [NSString stringWithUTF8String:g_config.ai.customEndpoint.c_str()];
+    _endpointField.placeholderString = @"http://localhost:1337/v1/chat/completions";
+    _endpointField.font = [NSFont fontWithName:@"Comic Sans MS" size:11] ?: [NSFont systemFontOfSize:11];
+    _endpointField.bezelStyle = NSTextFieldRoundedBezel;
+    _endpointField.target = self;
+    _endpointField.action = @selector(endpointChanged:);
+    _endpointField.hidden = (prov != 2);
+    _endpointField.autoresizingMask = NSViewWidthSizable;
+    [self addSubview:_endpointField];
+
+    // Custom model name field (only shown for Custom provider)
+    _customModelField = [[NSTextField alloc] initWithFrame:NSMakeRect(12, y - 26, w - 24, 22)];
+    _customModelField.stringValue = [NSString stringWithUTF8String:g_config.ai.customModel.c_str()];
+    _customModelField.placeholderString = @"Model name";
+    _customModelField.font = [NSFont fontWithName:@"Comic Sans MS" size:11] ?: [NSFont systemFontOfSize:11];
+    _customModelField.bezelStyle = NSTextFieldRoundedBezel;
+    _customModelField.target = self;
+    _customModelField.action = @selector(customModelChanged:);
+    _customModelField.hidden = (prov != 2);
+    _customModelField.autoresizingMask = NSViewWidthSizable;
+    [self addSubview:_customModelField];
+
+    if (prov == 2) y -= 56;
+
+    y -= 10;
+
+    // Test Connection + status
     NSButton* testBtn = [[NSButton alloc] initWithFrame:NSMakeRect(12, y, 100, 22)];
     [testBtn setTitle:@"Test Conn"];
     [testBtn setFont:[NSFont fontWithName:@"Comic Sans MS" size:11] ?: [NSFont systemFontOfSize:11]];
@@ -101,6 +179,7 @@ extern "C" void AI_RefreshModelDisplay();
 
     y -= 65;
 
+    // Evil slider
     NSTextField* evilTitle = [[NSTextField alloc] initWithFrame:NSMakeRect(12, y + 2, 80, 16)];
     evilTitle.stringValue = @"😇 Cuddly";
     evilTitle.font = [NSFont fontWithName:@"Comic Sans MS" size:13] ?: [NSFont systemFontOfSize:13 weight:NSFontWeightSemibold];
@@ -146,6 +225,8 @@ extern "C" void AI_RefreshModelDisplay();
     evilValue.tag = 200;
     [self addSubview:evilValue];
 
+    y -= 24;
+
     NSTextField* promptTitle = [[NSTextField alloc] initWithFrame:NSMakeRect(12, y, 200, 16)];
     promptTitle.stringValue = @"🧠 System Prompt:";
     promptTitle.font = [NSFont fontWithName:@"Comic Sans MS" size:12] ?: [NSFont systemFontOfSize:12 weight:NSFontWeightSemibold];
@@ -188,35 +269,60 @@ extern "C" void AI_RefreshModelDisplay();
     [mcpBtn setAction:@selector(mcpToggled:)];
     [self addSubview:mcpBtn];
 
-    [self performSelector:@selector(refreshModels:) withObject:refreshBtn afterDelay:0.5];
+    y -= 22;
+
+    _unixSocketToggle = [[NSButton alloc] initWithFrame:NSMakeRect(12, y, 200, 18)];
+    [_unixSocketToggle setButtonType:NSButtonTypeSwitch];
+    [_unixSocketToggle setTitle:@"Use Unix Socket"];
+    [_unixSocketToggle setFont:[NSFont fontWithName:@"Comic Sans MS" size:11] ?: [NSFont systemFontOfSize:11]];
+    [_unixSocketToggle setState:g_config.ai.useUnixSocket ? NSControlStateValueOn : NSControlStateValueOff];
+    [_unixSocketToggle setTarget:self];
+    [_unixSocketToggle setAction:@selector(unixSocketToggled:)];
+    [self addSubview:_unixSocketToggle];
+
+    y -= 22;
+
+    _socketPathField = [[NSTextField alloc] initWithFrame:NSMakeRect(24, y, w - 36, 22)];
+    _socketPathField.stringValue = [NSString stringWithUTF8String:g_config.ai.unixSocketPath.c_str()];
+    _socketPathField.placeholderString = @"/tmp/desktop-goose-ai.sock";
+    _socketPathField.font = [NSFont fontWithName:@"Comic Sans MS" size:11] ?: [NSFont systemFontOfSize:11];
+    _socketPathField.bezelStyle = NSTextFieldRoundedBezel;
+    _socketPathField.target = self;
+    _socketPathField.action = @selector(socketPathChanged:);
+    _socketPathField.hidden = !g_config.ai.useUnixSocket;
+    _socketPathField.autoresizingMask = NSViewWidthSizable;
+    [self addSubview:_socketPathField];
+
+    [self performSelector:@selector(refreshModels:) withObject:_refreshBtn afterDelay:0.5];
+}
+
+- (void)updateCustomVisibility {
+    NSInteger prov = [self currentProvider];
+    BOOL isCustom = (prov == 2);
+    BOOL useSocket = g_config.ai.useUnixSocket;
+    _endpointField.hidden = isCustom ? useSocket : YES;
+    _customModelField.hidden = !isCustom;
+    _portLabel.hidden = isCustom || useSocket;
+    _portField.hidden = isCustom || useSocket;
+    _modelLabel.hidden = isCustom;
+    _modelPopup.hidden = isCustom;
+    _refreshBtn.hidden = isCustom;
+    _socketPathField.hidden = !useSocket;
 }
 
 - (void)providerChanged:(NSPopUpButton*)sender {
     NSInteger idx = sender.indexOfSelectedItem;
-    g_config.ai.useOsaurus = (idx == 0);
-    g_config.ai.useOllama = (idx == 1);
-
-    for (NSView* subview in self.subviews) {
-        if ([subview isKindOfClass:[NSTextField class]] && subview.tag == 100) {
-            ((NSTextField*)subview).integerValue = (idx == 0) ? g_config.ai.osaurusPort : g_config.ai.ollamaPort;
-        }
-    }
-
+    [self setProvider:idx];
+    _portField.integerValue = [self currentPort];
+    [_modelPopup removeAllItems];
+    [_modelPopup addItemWithTitle:[self currentModelName]];
+    [self updateCustomVisibility];
     Config_SaveAll();
     [self refreshModels:sender];
 }
 
 - (void)portChanged:(NSTextField*)sender {
-    int port = (int)sender.integerValue;
-    NSInteger provider = -1;
-    for (NSView* subview in self.subviews) {
-        if ([subview isKindOfClass:[NSPopUpButton class]]) {
-            provider = ((NSPopUpButton*)subview).indexOfSelectedItem;
-            break;
-        }
-    }
-    if (provider == 0) g_config.ai.osaurusPort = port;
-    else if (provider == 1) g_config.ai.ollamaPort = port;
+    [self setPort:(int)sender.integerValue];
     Config_SaveAll();
     [self refreshModels:sender];
 }
@@ -224,55 +330,42 @@ extern "C" void AI_RefreshModelDisplay();
 - (void)modelPopupChanged:(NSPopUpButton*)sender {
     NSString* selected = [sender titleOfSelectedItem];
     if (selected && ![selected hasPrefix:@"🌀"] && ![selected hasPrefix:@"❌"] && ![selected isEqualToString:@"(none)"]) {
-        std::string model = std::string([selected UTF8String]);
-        NSInteger provider = -1;
-        for (NSView* subview in self.subviews) {
-            if ([subview isKindOfClass:[NSPopUpButton class]] && subview.tag != 101) {
-                provider = ((NSPopUpButton*)subview).indexOfSelectedItem;
-                break;
-            }
-        }
-        if (provider == 0) g_config.ai.osaurusModel = model;
-        else if (provider == 1) g_config.ai.ollamaModel = model;
-        else g_config.ai.ollamaModel = model;
+        [self setModelName:selected];
         Config_SaveAll();
     }
 }
 
+- (void)endpointChanged:(NSTextField*)sender {
+    g_config.ai.customEndpoint = std::string([sender.stringValue UTF8String]);
+    Config_SaveAll();
+}
+
+- (void)customModelChanged:(NSTextField*)sender {
+    g_config.ai.customModel = std::string([sender.stringValue UTF8String]);
+    Config_SaveAll();
+}
+
 - (void)refreshModels:(id)sender {
-    NSInteger provider = -1;
-    int port = 0;
-    NSPopUpButton* modelPopup = nil;
-    for (NSView* subview in self.subviews) {
-        if ([subview isKindOfClass:[NSPopUpButton class]]) {
-            if (subview.tag == 101) modelPopup = (NSPopUpButton*)subview;
-            else provider = ((NSPopUpButton*)subview).indexOfSelectedItem;
-        }
-        if ([subview isKindOfClass:[NSTextField class]] && subview.tag == 100) {
-            port = (int)((NSTextField*)subview).integerValue;
-        }
-    }
-    if (!modelPopup) return;
+    NSInteger prov = [self currentProvider];
+    if (prov == 2) return; // no model list for custom
 
-    [modelPopup removeAllItems];
-    [modelPopup addItemWithTitle:@"🌀 Loading..."];
+    int port = [self currentPort];
 
-    NSString* endpoint = (provider == 0) ? [NSString stringWithFormat:@"http://localhost:%d/v1/models", port]
-                                         : [NSString stringWithFormat:@"http://localhost:%d/api/tags", port];
-    if (provider == 2 || provider == -1) {
-        [modelPopup removeAllItems];
-        [modelPopup addItemWithTitle:@"(enter manually)"];
-        return;
-    }
+    [_modelPopup removeAllItems];
+    [_modelPopup addItemWithTitle:@"🌀 Loading..."];
 
+    NSString* endpoint = (prov == 0) ? [NSString stringWithFormat:@"http://localhost:%d/v1/models", port]
+                                     : [NSString stringWithFormat:@"http://localhost:%d/api/tags", port];
     NSURL* url = [NSURL URLWithString:endpoint];
     if (!url) return;
 
-    __weak NSPopUpButton* weakPopup = modelPopup;
+    __weak NSPopUpButton* weakPopup = _modelPopup;
+    __weak AITabView* weakSelf = self;
     NSURLSessionDataTask* task = [[NSURLSession sharedSession] dataTaskWithURL:url completionHandler:^(NSData* data, NSURLResponse* response, NSError* error) {
         dispatch_async(dispatch_get_main_queue(), ^{
             NSPopUpButton* strongPopup = weakPopup;
-            if (!strongPopup) return;
+            AITabView* strongSelf = weakSelf;
+            if (!strongPopup || !strongSelf) return;
             [strongPopup removeAllItems];
             if (error || !data) {
                 [strongPopup addItemWithTitle:[NSString stringWithFormat:@"❌ %@", error ? [error.localizedDescription substringToIndex:MIN(30,error.localizedDescription.length)] : @"no data"]];
@@ -294,9 +387,9 @@ extern "C" void AI_RefreshModelDisplay();
             if (strongPopup.numberOfItems == 0) {
                 [strongPopup addItemWithTitle:@"(none found)"];
             }
-            // Restore saved model selection after refresh
-            if (provider == 0 || provider == 1) {
-                std::string savedModel = (provider == 0) ? g_config.ai.osaurusModel : g_config.ai.ollamaModel;
+            // Restore saved model selection
+            if (prov == 0 || prov == 1) {
+                std::string savedModel = (prov == 0) ? g_config.ai.osaurusModel : g_config.ai.ollamaModel;
                 if (!savedModel.empty()) {
                     NSString* savedName = [NSString stringWithUTF8String:savedModel.c_str()];
                     NSInteger idx = [strongPopup indexOfItemWithTitle:savedName];
@@ -308,31 +401,20 @@ extern "C" void AI_RefreshModelDisplay();
     [task resume];
 }
 
+- (NSString*)modelsEndpointForTest {
+    NSInteger prov = [self currentProvider];
+    if (prov == 2) return [NSString stringWithUTF8String:g_config.ai.customEndpoint.c_str()];
+    return (prov == 0) ? [NSString stringWithFormat:@"http://localhost:%d/v1/models", [self currentPort]]
+                       : [NSString stringWithFormat:@"http://localhost:%d/api/tags", [self currentPort]];
+}
+
 - (void)testConnection:(id)sender {
-    NSInteger provider = -1;
-    int port = 0;
-    for (NSView* subview in self.subviews) {
-        if ([subview isKindOfClass:[NSPopUpButton class]] && subview.tag != 101) {
-            provider = ((NSPopUpButton*)subview).indexOfSelectedItem;
-        }
-        if ([subview isKindOfClass:[NSTextField class]] && subview.tag == 100) {
-            port = (int)((NSTextField*)subview).integerValue;
-        }
-    }
-
     if (!_statusLabel) return;
-
-    if (provider == 2 || provider == -1) {
-        _statusLabel.stringValue = @"❌ Custom provider — enter endpoint manually";
-        _statusLabel.textColor = [NSColor systemOrangeColor];
-        return;
-    }
 
     _statusLabel.stringValue = @"🌀 Testing...";
     _statusLabel.textColor = [NSColor colorWithWhite:0.85 alpha:1.0];
 
-    NSString* endpoint = (provider == 0) ? [NSString stringWithFormat:@"http://localhost:%d/v1/models", port]
-                                         : [NSString stringWithFormat:@"http://localhost:%d/api/tags", port];
+    NSString* endpoint = [self modelsEndpointForTest];
     NSURL* url = [NSURL URLWithString:endpoint];
     if (!url) { _statusLabel.stringValue = @"❌ Invalid URL"; _statusLabel.textColor = [NSColor systemRedColor]; return; }
 
@@ -393,6 +475,17 @@ extern "C" void AI_RefreshModelDisplay();
 - (void)showStatusBarToggled:(NSButton*)sender {
     g_config.ai.showStatusBar = (sender.state == NSControlStateValueOn);
     AI_RefreshModelDisplay();
+    Config_SaveAll();
+}
+
+- (void)unixSocketToggled:(NSButton*)sender {
+    g_config.ai.useUnixSocket = (sender.state == NSControlStateValueOn);
+    [self updateCustomVisibility];
+    Config_SaveAll();
+}
+
+- (void)socketPathChanged:(NSTextField*)sender {
+    g_config.ai.unixSocketPath = std::string([sender.stringValue UTF8String]);
     Config_SaveAll();
 }
 

@@ -285,6 +285,14 @@ static bool SaveThemeToFile(const std::string& path, const std::string& desc) {
     [saveThemeBtn setAction:@selector(saveTheme:)];
     saveThemeBtn.bezelStyle = NSBezelStyleRounded;
     [self addSubview:saveThemeBtn];
+
+    NSButton* openThemeBtn = [[NSButton alloc] initWithFrame:NSMakeRect(190, y, 140, 24)];
+    [openThemeBtn setTitle:@"Open Themes Folder"];
+    [openThemeBtn setFont:[NSFont fontWithName:@"Comic Sans MS" size:11] ?: [NSFont systemFontOfSize:11]];
+    [openThemeBtn setTarget:self];
+    [openThemeBtn setAction:@selector(openThemesFolder:)];
+    openThemeBtn.bezelStyle = NSBezelStyleRounded;
+    [self addSubview:openThemeBtn];
     y -= 30;
 
     PreviewGooseView* preview = [[PreviewGooseView alloc] initWithFrame:NSMakeRect(12, 10, 400, 100)];
@@ -507,6 +515,11 @@ static bool SaveThemeToFile(const std::string& path, const std::string& desc) {
             }
         }
     }
+}
+
+- (void)openThemesFolder:(id)sender {
+    NSString* path = [NSString stringWithUTF8String:Config_GetThemesDir().c_str()];
+    [[NSWorkspace sharedWorkspace] openURL:[NSURL fileURLWithPath:path]];
 }
 
 @end
