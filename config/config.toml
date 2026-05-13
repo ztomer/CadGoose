@@ -34,7 +34,7 @@ neck_base_x = 15.0
 stride_max = 15.0
 step_lift_height = 3.0
 foot_offset_y = 2.0
-head_forward_bias = 2.0
+head_forward_bias = 1.0
 
 [Asset]
 meme_placeholder_w = 200
@@ -147,7 +147,7 @@ b = 0.82
 radius_range = 80.0
 tier3_min_delta = 1.0
 angular_speed_base = 1.5
-tier3_max_step = 500.0
+tier3_max_step = 50.0
 speed_multiplier = 1.25
 offset_max = 120.0
 forward_bias_scale = 0.25
@@ -155,9 +155,9 @@ duration = 3.0
 lateral_bias_limit = 0.75
 forward_bias_min = -0.35
 forward_bias_max = 0.15
-pull_distance = 140.0
+pull_distance = 100.0
 radius_base = 40.0
-angular_speed_random_range = 200.0
+angular_speed_random_range = 5.0
 
 [Render]
 eye_offset_x_back = -3.0
@@ -215,9 +215,9 @@ corner_margin = 100.0
 drag_min_dt = 0.001
 drag_velocity_threshold = 10.0
 direction_rotate_min_vel = 1.0
-direction_reverse_multiplier = -1.0
+direction_reverse_multiplier = 0.0
 snap_distance = 1.0
-drag_rotation_speed = 12.0
+drag_rotation_speed = 10.0
 screen_margin = 50.0
 edge_avoid_force = 3.0
 screen_clamp_tight = 20.0
@@ -238,7 +238,7 @@ curve_fade_min_vel = 10.0
 [Spawn]
 target_reached_threshold_return = 60.0
 fetch_edge_margin = 40.0
-separation_min_distance = 0.1
+separation_min_distance = 1.0
 margin_x = 200.0
 random_target_margin_x = 100.0
 target_reached_threshold_normal = 30.0
@@ -254,7 +254,7 @@ catch_threshold_base = 22.0
 wander_target_offset = 200.0
 catch_threshold_min = 15.0
 wander_target_margin = 400.0
-max_fetching_geese = 1077936128
+max_fetching_geese = 100
 separation_max_distance = 70.0
 
 [Screen]
@@ -286,6 +286,17 @@ arrival_radius = 50.0
 max_force = 350.0
 direction_blend_rate = 0.15
 
+[AI]
+use_ollama = false
+ollama_port = 11434
+use_osaurus = true
+osaurus_port = 1337
+osaurus_model = "qwen3.6-27b-mxfp4"
+ollama_model = "llama3"
+enable_mcp = true
+evil_level = 0.5
+show_status_bar = true
+
 [Step]
 lift_run = 7.0
 step_trigger_walk = 5.0
@@ -298,9 +309,9 @@ overshoot_walk = 1.5
 time_snatch = 0.12
 lift_walk = 3.0
 duration_run = 0.085
-snap_distance = 90.0
+snap_distance = 50.0
 min_duration = 0.001
-dist_factor_base = 22.0
+dist_factor_base = 10.0
 dist_factor_min = 0.9
 dist_factor_max = 1.45
 duration_min = 0.055

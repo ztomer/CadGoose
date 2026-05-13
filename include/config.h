@@ -444,6 +444,8 @@ struct Config {
     std::string ollamaModel = "llama3";
     std::string keychainService;
     float evilLevel = 0.5f;
+    bool showStatusBar = true;
+    bool enableMCP = false;
   } ai;
   struct GooseManagerConfig {
     bool taskWander = true, taskFetch = true, taskChase = true, taskSnatch = true;

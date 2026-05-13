@@ -2,6 +2,9 @@
 // AITabView — standalone view for AI configuration tab
 #import "config_gui_helpers.h"
 #include "config.h"
+#include "mcp_server.h"
+
+extern "C" void AI_RefreshModelDisplay();
 
 @interface AITabView ()
 @property (nonatomic, strong) NSTextField* statusLabel;
@@ -38,7 +41,7 @@
 
     NSTextField* portLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(220, y + 2, 40, 16)];
     portLabel.stringValue = @"Port:";
-    portLabel.font = [NSFont systemFontOfSize:11];
+    portLabel.font = [NSFont fontWithName:@"Comic Sans MS" size:11] ?: [NSFont systemFontOfSize:11];
     portLabel.textColor = [NSColor whiteColor];
     portLabel.backgroundColor = [NSColor clearColor];
     portLabel.bordered = NO;
@@ -54,7 +57,7 @@
 
     NSTextField* modelLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(310, y + 2, 40, 16)];
     modelLabel.stringValue = @"Model:";
-    modelLabel.font = [NSFont systemFontOfSize:11];
+    modelLabel.font = [NSFont fontWithName:@"Comic Sans MS" size:11] ?: [NSFont systemFontOfSize:11];
     modelLabel.textColor = [NSColor whiteColor];
     modelLabel.backgroundColor = [NSColor clearColor];
     modelLabel.bordered = NO;
@@ -70,7 +73,7 @@
 
     NSButton* refreshBtn = [[NSButton alloc] initWithFrame:NSMakeRect(454, y, 24, 24)];
     [refreshBtn setTitle:@"🔄"];
-    [refreshBtn setFont:[NSFont systemFontOfSize:12]];
+    [refreshBtn setFont:[NSFont fontWithName:@"Comic Sans MS" size:12] ?: [NSFont systemFontOfSize:12]];
     [refreshBtn setTarget:self];
     [refreshBtn setAction:@selector(refreshModels:)];
     refreshBtn.bezelStyle = NSBezelStyleRounded;
@@ -80,7 +83,7 @@
 
     NSButton* testBtn = [[NSButton alloc] initWithFrame:NSMakeRect(12, y, 100, 22)];
     [testBtn setTitle:@"Test Conn"];
-    [testBtn setFont:[NSFont systemFontOfSize:11]];
+    [testBtn setFont:[NSFont fontWithName:@"Comic Sans MS" size:11] ?: [NSFont systemFontOfSize:11]];
     [testBtn setTarget:self];
     [testBtn setAction:@selector(testConnection:)];
     testBtn.bezelStyle = NSBezelStyleRounded;
@@ -88,7 +91,7 @@
     [self addSubview:testBtn];
 
     _statusLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(120, y, w - 140, 22)];
-    _statusLabel.font = [NSFont systemFontOfSize:11];
+    _statusLabel.font = [NSFont fontWithName:@"Comic Sans MS" size:11] ?: [NSFont systemFontOfSize:11];
     _statusLabel.textColor = [NSColor colorWithWhite:0.85 alpha:1.0];
     _statusLabel.backgroundColor = [NSColor clearColor];
     _statusLabel.bordered = NO;
@@ -100,7 +103,7 @@
 
     NSTextField* evilTitle = [[NSTextField alloc] initWithFrame:NSMakeRect(12, y + 2, 80, 16)];
     evilTitle.stringValue = @"😇 Cuddly";
-    evilTitle.font = [NSFont systemFontOfSize:13 weight:NSFontWeightSemibold];
+    evilTitle.font = [NSFont fontWithName:@"Comic Sans MS" size:13] ?: [NSFont systemFontOfSize:13 weight:NSFontWeightSemibold];
     evilTitle.textColor = [NSColor whiteColor];
     evilTitle.backgroundColor = [NSColor clearColor];
     evilTitle.bordered = NO;
@@ -110,7 +113,7 @@
 
     NSTextField* polandLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(w - 110, y + 2, 100, 16)];
     polandLabel.stringValue = @"😈 Invade Poland";
-    polandLabel.font = [NSFont systemFontOfSize:13 weight:NSFontWeightSemibold];
+    polandLabel.font = [NSFont fontWithName:@"Comic Sans MS" size:13] ?: [NSFont systemFontOfSize:13 weight:NSFontWeightSemibold];
     polandLabel.textColor = [NSColor whiteColor];
     polandLabel.backgroundColor = [NSColor clearColor];
     polandLabel.bordered = NO;
@@ -133,7 +136,7 @@
 
     NSTextField* evilValue = [[NSTextField alloc] initWithFrame:NSMakeRect(w - 46, y - 2, 40, 14)];
     evilValue.stringValue = [NSString stringWithFormat:@"%.0f%%", g_config.ai.evilLevel * 100];
-    evilValue.font = [NSFont systemFontOfSize:10];
+    evilValue.font = [NSFont fontWithName:@"Comic Sans MS" size:10] ?: [NSFont systemFontOfSize:10];
     evilValue.textColor = [NSColor colorWithWhite:0.85 alpha:1.0];
     evilValue.backgroundColor = [NSColor clearColor];
     evilValue.bordered = NO;
@@ -143,11 +146,9 @@
     evilValue.tag = 200;
     [self addSubview:evilValue];
 
-    y -= 34;
-
     NSTextField* promptTitle = [[NSTextField alloc] initWithFrame:NSMakeRect(12, y, 200, 16)];
     promptTitle.stringValue = @"🧠 System Prompt:";
-    promptTitle.font = [NSFont systemFontOfSize:12 weight:NSFontWeightSemibold];
+    promptTitle.font = [NSFont fontWithName:@"Comic Sans MS" size:12] ?: [NSFont systemFontOfSize:12 weight:NSFontWeightSemibold];
     promptTitle.textColor = [NSColor whiteColor];
     promptTitle.backgroundColor = [NSColor clearColor];
     promptTitle.bordered = NO;
@@ -157,13 +158,35 @@
     y -= 50;
 
     _promptBody = [[NSTextField alloc] initWithFrame:NSMakeRect(12, y, w - 24, 40)];
-    _promptBody.font = [NSFont systemFontOfSize:11];
+    _promptBody.font = [NSFont fontWithName:@"Comic Sans MS" size:11] ?: [NSFont systemFontOfSize:11];
     _promptBody.textColor = [NSColor colorWithWhite:0.85 alpha:1.0];
     _promptBody.backgroundColor = [NSColor clearColor];
     _promptBody.bordered = NO;
     _promptBody.editable = NO;
     _promptBody.stringValue = [self promptPreviewForEvilLevel:g_config.ai.evilLevel];
     [self addSubview:_promptBody];
+
+    y -= 22;
+
+    NSButton* showStatusBtn = [[NSButton alloc] initWithFrame:NSMakeRect(12, y, 200, 18)];
+    [showStatusBtn setButtonType:NSButtonTypeSwitch];
+    [showStatusBtn setTitle:@"Show debug status bar"];
+    [showStatusBtn setFont:[NSFont fontWithName:@"Comic Sans MS" size:11] ?: [NSFont systemFontOfSize:11]];
+    [showStatusBtn setState:g_config.ai.showStatusBar ? NSControlStateValueOn : NSControlStateValueOff];
+    [showStatusBtn setTarget:self];
+    [showStatusBtn setAction:@selector(showStatusBarToggled:)];
+    [self addSubview:showStatusBtn];
+
+    y -= 22;
+
+    NSButton* mcpBtn = [[NSButton alloc] initWithFrame:NSMakeRect(12, y, 200, 18)];
+    [mcpBtn setButtonType:NSButtonTypeSwitch];
+    [mcpBtn setTitle:@"Enable MCP Server"];
+    [mcpBtn setFont:[NSFont fontWithName:@"Comic Sans MS" size:11] ?: [NSFont systemFontOfSize:11]];
+    [mcpBtn setState:g_config.ai.enableMCP ? NSControlStateValueOn : NSControlStateValueOff];
+    [mcpBtn setTarget:self];
+    [mcpBtn setAction:@selector(mcpToggled:)];
+    [self addSubview:mcpBtn];
 
     [self performSelector:@selector(refreshModels:) withObject:refreshBtn afterDelay:0.5];
 }
@@ -179,6 +202,7 @@
         }
     }
 
+    Config_SaveAll();
     [self refreshModels:sender];
 }
 
@@ -193,6 +217,7 @@
     }
     if (provider == 0) g_config.ai.osaurusPort = port;
     else if (provider == 1) g_config.ai.ollamaPort = port;
+    Config_SaveAll();
     [self refreshModels:sender];
 }
 
@@ -210,6 +235,7 @@
         if (provider == 0) g_config.ai.osaurusModel = model;
         else if (provider == 1) g_config.ai.ollamaModel = model;
         else g_config.ai.ollamaModel = model;
+        Config_SaveAll();
     }
 }
 
@@ -267,6 +293,15 @@
             }
             if (strongPopup.numberOfItems == 0) {
                 [strongPopup addItemWithTitle:@"(none found)"];
+            }
+            // Restore saved model selection after refresh
+            if (provider == 0 || provider == 1) {
+                std::string savedModel = (provider == 0) ? g_config.ai.osaurusModel : g_config.ai.ollamaModel;
+                if (!savedModel.empty()) {
+                    NSString* savedName = [NSString stringWithUTF8String:savedModel.c_str()];
+                    NSInteger idx = [strongPopup indexOfItemWithTitle:savedName];
+                    if (idx >= 0) [strongPopup selectItemAtIndex:idx];
+                }
             }
         });
     }];
@@ -327,7 +362,7 @@
 }
 
 - (NSString*)promptPreviewForEvilLevel:(float)level {
-    int state = (int)round(level * 9);
+    int state = MIN((int)round(level * 9), 8);
     switch (state) {
         case 0: return @"You are an adorable fluffy gosling. You love everyone and want to\nbe best friends. Use gentle honks and warm hugs.";
         case 1: return @"You are a friendly goose who enjoys good company.\nShare compliments and positivity with everyone.";
@@ -352,6 +387,23 @@
     if (_promptBody) {
         _promptBody.stringValue = [self promptPreviewForEvilLevel:g_config.ai.evilLevel];
     }
+    Config_SaveAll();
+}
+
+- (void)showStatusBarToggled:(NSButton*)sender {
+    g_config.ai.showStatusBar = (sender.state == NSControlStateValueOn);
+    AI_RefreshModelDisplay();
+    Config_SaveAll();
+}
+
+- (void)mcpToggled:(NSButton*)sender {
+    g_config.ai.enableMCP = (sender.state == NSControlStateValueOn);
+    if (g_config.ai.enableMCP) {
+        MCP_StartInternalServer();
+    } else {
+        MCP_StopInternalServer();
+    }
+    Config_SaveAll();
 }
 
 @end
