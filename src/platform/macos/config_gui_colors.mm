@@ -5,12 +5,64 @@
 #include <toml.hpp>
 #include <fstream>
 
+#pragma mark - ColorSwatchView with click -> NSColorPanel
+
 @implementation ColorSwatchView
-- (void)drawRect:(NSRect)dirtyRect {
-    [_color setFill];
-    NSRectFill(dirtyRect);
-    [[NSColor colorWithWhite:0.5 alpha:0.5] setStroke];
-    NSFrameRectWithWidth(self.bounds, 1);
+
+- (void)setColor:(NSColor*)color {
+    _color = color;
+    self.wantsLayer = YES;
+    self.layer.backgroundColor = color.CGColor;
+    self.layer.borderWidth = 1.0;
+    self.layer.borderColor = [[NSColor colorWithWhite:0.5 alpha:0.5] CGColor];
+}
+
+- (void)mouseUp:(NSEvent*)event {
+    [[NSColorPanel sharedColorPanel] setColor:self.color];
+    [[NSColorPanel sharedColorPanel] setTarget:self];
+    [[NSColorPanel sharedColorPanel] setAction:@selector(colorPickDone:)];
+    [[NSColorPanel sharedColorPanel] orderFront:nil];
+}
+
+- (void)colorPickDone:(NSColorPanel*)sender {
+    if (!self.colorPrefix) return;
+    NSColor* c = [sender.color colorUsingColorSpace:[NSColorSpace sRGBColorSpace]];
+    CGFloat r, g, b, a;
+    [c getRed:&r green:&g blue:&b alpha:&a];
+
+    NSString* prefix = self.colorPrefix;
+    NSString* rId = [prefix stringByAppendingString:@"R"];
+    NSString* gId = [prefix stringByAppendingString:@"G"];
+    NSString* bId = [prefix stringByAppendingString:@"B"];
+
+    for (NSView* sv in self.superview.subviews) {
+        if ([sv.identifier isEqualToString:rId]) {
+            if ([sv isKindOfClass:[NSSlider class]]) {
+                [(NSSlider*)sv setDoubleValue:r];
+                [(id)sv sendActionOn:NSEventTypeLeftMouseUp];
+                [(NSSlider*)sv sendAction:((NSSlider*)sv).action to:((NSSlider*)sv).target];
+            } else if ([sv isKindOfClass:[NSTextField class]]) {
+                [(NSTextField*)sv setStringValue:[NSString stringWithFormat:@"%.2f", r]];
+            }
+        } else if ([sv.identifier isEqualToString:gId]) {
+            if ([sv isKindOfClass:[NSSlider class]]) {
+                [(NSSlider*)sv setDoubleValue:g];
+                [(id)sv sendActionOn:NSEventTypeLeftMouseUp];
+                [(NSSlider*)sv sendAction:((NSSlider*)sv).action to:((NSSlider*)sv).target];
+            } else if ([sv isKindOfClass:[NSTextField class]]) {
+                [(NSTextField*)sv setStringValue:[NSString stringWithFormat:@"%.2f", g]];
+            }
+        } else if ([sv.identifier isEqualToString:bId]) {
+            if ([sv isKindOfClass:[NSSlider class]]) {
+                [(NSSlider*)sv setDoubleValue:b];
+                [(id)sv sendActionOn:NSEventTypeLeftMouseUp];
+                [(NSSlider*)sv sendAction:((NSSlider*)sv).action to:((NSSlider*)sv).target];
+            } else if ([sv isKindOfClass:[NSTextField class]]) {
+                [(NSTextField*)sv setStringValue:[NSString stringWithFormat:@"%.2f", b]];
+            }
+        }
+    }
+    self.color = [NSColor colorWithRed:r green:g blue:b alpha:1];
 }
 @end
 
@@ -76,7 +128,6 @@ static bool SaveThemeToFile(const std::string& path, const std::string& desc) {
 
 @interface AppearanceTabView ()
 @property (nonatomic, strong) NSPopUpButton* themePopup;
-@property (nonatomic, strong) NSTextField* themeDescField;
 @property (nonatomic, strong) NSMutableArray* themePaths;
 - (void)refreshThemeList;
 @end
@@ -95,7 +146,7 @@ static bool SaveThemeToFile(const std::string& path, const std::string& desc) {
     float y = self.bounds.size.height - 30;
     CGFloat w = self.bounds.size.width;
 
-    // Appearance mode selector
+    // --- Appearance mode row ---
     NSTextField* appearanceLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(12, y + 2, 80, 20)];
     appearanceLabel.stringValue = @"Appearance:";
     appearanceLabel.font = [NSFont systemFontOfSize:13];
@@ -105,68 +156,115 @@ static bool SaveThemeToFile(const std::string& path, const std::string& desc) {
     appearanceLabel.editable = NO;
     [self addSubview:appearanceLabel];
 
-    NSPopUpButton* appearancePopup = [[NSPopUpButton alloc] initWithFrame:NSMakeRect(96, y - 2, 130, 24)];
-    [appearancePopup addItemWithTitle:@"Light"];
-    [appearancePopup addItemWithTitle:@"Dark"];
-    [appearancePopup addItemWithTitle:@"System"];
-    [appearancePopup addItemWithTitle:@"Custom"];
-    [appearancePopup selectItemAtIndex:g_config.general.appearanceMode];
-    appearancePopup.target = self;
-    appearancePopup.action = @selector(appearanceChanged:);
-    [self addSubview:appearancePopup];
+    NSSegmentedControl* modeControl = [[NSSegmentedControl alloc] initWithFrame:NSMakeRect(96, y - 2, 180, 24)];
+    modeControl.segmentCount = 3;
+    [modeControl setLabel:@"System" forSegment:0];
+    [modeControl setLabel:@"Dark" forSegment:1];
+    [modeControl setLabel:@"Light" forSegment:2];
+    int mode = g_config.general.appearanceMode;
+    modeControl.selectedSegment = (mode == APPEARANCE_LIGHT) ? 2 :
+                                  (mode == APPEARANCE_DARK)  ? 1 : 0;
+    modeControl.target = self;
+    modeControl.action = @selector(modeChanged:);
+    [self addSubview:modeControl];
 
-    y -= 40;
+    _themePopup = [[NSPopUpButton alloc] initWithFrame:NSMakeRect(284, y - 2, 164, 24)];
+    _themePopup.target = self;
+    _themePopup.action = @selector(themeSelected:);
+    [self addSubview:_themePopup];
+
+    y -= 32;
 
     // Description
     NSTextField* desc = [[NSTextField alloc] initWithFrame:NSMakeRect(12, y, w - 24, 20)];
-    desc.stringValue = @"🎨 Customize goose colors for Custom appearance mode";
-    desc.font = [NSFont fontWithName:@"Comic Sans MS" size:12] ?: [NSFont systemFontOfSize:12];
+    desc.stringValue = @"Edit custom colors below; use themes to save/load color presets.";
+    desc.font = [NSFont systemFontOfSize:12];
     desc.textColor = [NSColor colorWithWhite:0.85 alpha:1.0];
     desc.backgroundColor = [NSColor clearColor];
     desc.bordered = NO;
     desc.editable = NO;
     [self addSubview:desc];
 
-    y -= 10;
+    y -= 20;
 
-    y = [self addColorTripleWithLabel:@"Body" atY:y
-                                rPtr:&g_config.color.customBody.r
-                                gPtr:&g_config.color.customBody.g
-                                bPtr:&g_config.color.customBody.b
-                              prefix:@"customBody"];
+    // --- RGB column headers (positioned above first color row) ---
+    float headerY = y + 2;
+    float labelW = 44;
+    float colW = 128; // slider(90) + value(36) + gap(2)
+    float sliderW = 90;
+    float valW = 36;
+    float col1X = 60;
+    float col2X = col1X + colW;
+    float col3X = col2X + colW;
+    float swatchX = col3X + colW + 4;
 
-    y = [self addColorTripleWithLabel:@"Neck" atY:y
-                                rPtr:&g_config.color.customNeck.r
-                                gPtr:&g_config.color.customNeck.g
-                                bPtr:&g_config.color.customNeck.b
-                              prefix:@"customNeck"];
+    auto addColHeader = [&](float x, NSString* title, NSColor* color) {
+        NSTextField* h = [[NSTextField alloc] initWithFrame:NSMakeRect(x, headerY, colW, 14)];
+        h.stringValue = title; h.font = [NSFont systemFontOfSize:10 weight:NSFontWeightSemibold];
+        h.textColor = color; h.backgroundColor = [NSColor clearColor];
+        h.bordered = NO; h.editable = NO; h.alignment = NSTextAlignmentCenter;
+        [self addSubview:h];
+    };
+    addColHeader(col1X, @"R", [NSColor colorWithRed:1 green:0.4 blue:0.4 alpha:1]);
+    addColHeader(col2X, @"G", [NSColor colorWithRed:0.4 green:1 blue:0.4 alpha:1]);
+    addColHeader(col3X, @"B", [NSColor colorWithRed:0.4 green:0.4 blue:1 alpha:1]);
 
-    y = [self addColorTripleWithLabel:@"Head" atY:y
-                                rPtr:&g_config.color.customHead.r
-                                gPtr:&g_config.color.customHead.g
-                                bPtr:&g_config.color.customHead.b
-                              prefix:@"customHead"];
+    y -= 22;
 
-    y = [self addColorTripleWithLabel:@"Beak" atY:y
-                                rPtr:&g_config.color.customBeak.r
-                                gPtr:&g_config.color.customBeak.g
-                                bPtr:&g_config.color.customBeak.b
-                              prefix:@"customBeak"];
+    // --- Color editor rows ---
+    auto addColorRow = [&](NSString* label, float* rPtr, float* gPtr, float* bPtr, NSString* prefix, float yPos) -> float {
+        NSTextField* lf = [[NSTextField alloc] initWithFrame:NSMakeRect(12, yPos, labelW, 16)];
+        lf.font = [NSFont systemFontOfSize:11];
+        lf.textColor = [NSColor whiteColor];
+        lf.backgroundColor = [NSColor clearColor];
+        lf.bordered = NO; lf.editable = NO;
+        lf.stringValue = label;
+        lf.alignment = NSTextAlignmentRight;
+        [self addSubview:lf];
 
-    y = [self addColorTripleWithLabel:@"Eyes" atY:y
-                                rPtr:&g_config.color.customEye.r
-                                gPtr:&g_config.color.customEye.g
-                                bPtr:&g_config.color.customEye.b
-                              prefix:@"customEye"];
+        auto addSlider = [&](float colX, float* ptr, NSString* sid) {
+            NSSlider* sl = [[NSSlider alloc] initWithFrame:NSMakeRect(colX, yPos, sliderW, 16)];
+            sl.minValue = 0; sl.maxValue = 1; sl.doubleValue = *ptr;
+            sl.identifier = sid;
+            sl.target = self; sl.action = @selector(colorSliderChanged:);
+            [self addSubview:sl];
 
-    y = [self addColorTripleWithLabel:@"Outline" atY:y
-                                rPtr:&g_config.color.customOutline.r
-                                gPtr:&g_config.color.customOutline.g
-                                bPtr:&g_config.color.customOutline.b
-                              prefix:@"customOutline"];
+            NSTextField* vf = [[NSTextField alloc] initWithFrame:NSMakeRect(colX + sliderW + 2, yPos, valW, 16)];
+            vf.font = [NSFont systemFontOfSize:9];
+            vf.stringValue = [NSString stringWithFormat:@"%.2f", *ptr];
+            vf.textColor = [NSColor whiteColor];
+            vf.backgroundColor = [NSColor colorWithWhite:0.15 alpha:1.0];
+            vf.bordered = NO; vf.editable = YES;
+            vf.identifier = sid;
+            vf.target = self; vf.action = @selector(colorFieldChanged:);
+            [self addSubview:vf];
+        };
 
-    y -= 16;
-    AppBarBorderView* themeSep = [[AppBarBorderView alloc] initWithFrame:NSMakeRect(12, y, w - 24, 1)];
+        addSlider(col1X, rPtr, [prefix stringByAppendingString:@"R"]);
+        addSlider(col2X, gPtr, [prefix stringByAppendingString:@"G"]);
+        addSlider(col3X, bPtr, [prefix stringByAppendingString:@"B"]);
+
+        ColorSwatchView* swatch = [[ColorSwatchView alloc] initWithFrame:NSMakeRect(swatchX, yPos + 1, 14, 14)];
+        swatch.color = [NSColor colorWithRed:*rPtr green:*gPtr blue:*bPtr alpha:1];
+        swatch.colorPrefix = prefix;
+        swatch.identifier = [@"swatch" stringByAppendingString:prefix];
+        [self addSubview:swatch];
+
+        return yPos - 26;
+    };
+
+    y = addColorRow(@"Body",    &g_config.color.customBody.r,    &g_config.color.customBody.g,    &g_config.color.customBody.b,    @"customBody",    y);
+    y = addColorRow(@"Neck",    &g_config.color.customNeck.r,    &g_config.color.customNeck.g,    &g_config.color.customNeck.b,    @"customNeck",    y);
+    y = addColorRow(@"Head",    &g_config.color.customHead.r,    &g_config.color.customHead.g,    &g_config.color.customHead.b,    @"customHead",    y);
+    y = addColorRow(@"Beak",    &g_config.color.customBeak.r,    &g_config.color.customBeak.g,    &g_config.color.customBeak.b,    @"customBeak",    y);
+    y = addColorRow(@"Eyes",    &g_config.color.customEye.r,     &g_config.color.customEye.g,     &g_config.color.customEye.b,     @"customEye",     y);
+    y = addColorRow(@"Outline", &g_config.color.customOutline.r, &g_config.color.customOutline.g, &g_config.color.customOutline.b, @"customOutline", y);
+    y -= 6;
+
+    // --- Themes section separator ---
+    NSView* themeSep = [[NSView alloc] initWithFrame:NSMakeRect(12, y, w - 24, 1)];
+    themeSep.wantsLayer = YES;
+    themeSep.layer.backgroundColor = [[NSColor separatorColor] CGColor];
     [self addSubview:themeSep];
     y -= 22;
 
@@ -178,101 +276,33 @@ static bool SaveThemeToFile(const std::string& path, const std::string& desc) {
     themeLabel.bordered = NO;
     themeLabel.editable = NO;
     [self addSubview:themeLabel];
-    y -= 24;
-
-    _themeDescField = [[NSTextField alloc] initWithFrame:NSMakeRect(12, y, w - 24, 22)];
-    _themeDescField.font = [NSFont systemFontOfSize:11];
-    _themeDescField.textColor = [NSColor whiteColor];
-    _themeDescField.backgroundColor = [NSColor clearColor];
-    _themeDescField.bordered = NO;
-    _themeDescField.editable = YES;
-    _themeDescField.bezelStyle = NSTextFieldRoundedBezel;
-    _themeDescField.appearance = [NSAppearance appearanceNamed:NSAppearanceNameDarkAqua];
-    _themeDescField.placeholderString = @"Theme description";
-    _themeDescField.target = self;
-    _themeDescField.action = @selector(themeDescChanged:);
-    [self addSubview:_themeDescField];
     y -= 28;
 
-    _themePopup = [[NSPopUpButton alloc] initWithFrame:NSMakeRect(12, y, 200, 24)];
-    _themePopup.target = self;
-    _themePopup.action = @selector(themeSelected:);
-    [self addSubview:_themePopup];
-
-    NSButton* saveThemeBtn = [[NSButton alloc] initWithFrame:NSMakeRect(220, y, 110, 24)];
-    [saveThemeBtn setTitle:@"Save As..."];
+    NSButton* saveThemeBtn = [[NSButton alloc] initWithFrame:NSMakeRect(12, y, 170, 24)];
+    [saveThemeBtn setTitle:@"Save Current as Theme\u2026"];
     [saveThemeBtn setFont:[NSFont systemFontOfSize:11]];
     [saveThemeBtn setTarget:self];
     [saveThemeBtn setAction:@selector(saveTheme:)];
     saveThemeBtn.bezelStyle = NSBezelStyleRounded;
     [self addSubview:saveThemeBtn];
+    y -= 30;
 
-    [self refreshThemeList];
-
-    PreviewGooseView* preview = [[PreviewGooseView alloc] initWithFrame:NSMakeRect(12, 10, 400, 80)];
+    PreviewGooseView* preview = [[PreviewGooseView alloc] initWithFrame:NSMakeRect(12, 10, 400, 100)];
     preview.identifier = @"goosePreview";
     [self addSubview:preview];
+
+    [self refreshThemeList];
+    Config_UpdateActiveTheme();
+    [self updateSwatches];
+    [self redrawGoosePreview];
 }
 
-- (void)appearanceChanged:(NSPopUpButton*)sender {
-    g_config.general.appearanceMode = (int)sender.indexOfSelectedItem;
-}
-
-- (float)addColorTripleWithLabel:(NSString*)label atY:(float)y
-                            rPtr:(float*)rPtr gPtr:(float*)gPtr bPtr:(float*)bPtr
-                          prefix:(NSString*)prefix {
-    NSTextField* labelField = [[NSTextField alloc] initWithFrame:NSMakeRect(12, y, 44, 16)];
-    labelField.font = [NSFont systemFontOfSize:11];
-    labelField.textColor = [NSColor whiteColor];
-    labelField.backgroundColor = [NSColor clearColor];
-    labelField.bordered = NO;
-    labelField.editable = NO;
-    labelField.stringValue = label;
-    labelField.alignment = NSTextAlignmentRight;
-    [self addSubview:labelField];
-
-    NSSlider* rSlider = [[NSSlider alloc] initWithFrame:NSMakeRect(60, y, 90, 16)];
-    rSlider.minValue = 0; rSlider.maxValue = 1; rSlider.doubleValue = *rPtr;
-    rSlider.identifier = [prefix stringByAppendingString:@"R"];
-    rSlider.target = self; rSlider.action = @selector(colorSliderChanged:);
-    [self addSubview:rSlider];
-
-    NSTextField* rVal = [[NSTextField alloc] initWithFrame:NSMakeRect(150, y, 30, 16)];
-    rVal.font = [NSFont systemFontOfSize:9]; rVal.stringValue = [NSString stringWithFormat:@"%.2f", *rPtr];
-    rVal.textColor = [NSColor whiteColor]; rVal.backgroundColor = [NSColor colorWithWhite:0.15 alpha:1.0]; rVal.bordered = NO; rVal.editable = YES;
-    rVal.identifier = rSlider.identifier; rVal.target = self; rVal.action = @selector(colorFieldChanged:);
-    [self addSubview:rVal];
-
-    NSSlider* gSlider = [[NSSlider alloc] initWithFrame:NSMakeRect(184, y, 90, 16)];
-    gSlider.minValue = 0; gSlider.maxValue = 1; gSlider.doubleValue = *gPtr;
-    gSlider.identifier = [prefix stringByAppendingString:@"G"];
-    gSlider.target = self; gSlider.action = @selector(colorSliderChanged:);
-    [self addSubview:gSlider];
-
-    NSTextField* gVal = [[NSTextField alloc] initWithFrame:NSMakeRect(274, y, 30, 16)];
-    gVal.font = [NSFont systemFontOfSize:9]; gVal.stringValue = [NSString stringWithFormat:@"%.2f", *gPtr];
-    gVal.textColor = [NSColor whiteColor]; gVal.backgroundColor = [NSColor colorWithWhite:0.15 alpha:1.0]; gVal.bordered = NO; gVal.editable = YES;
-    gVal.identifier = gSlider.identifier; gVal.target = self; gVal.action = @selector(colorFieldChanged:);
-    [self addSubview:gVal];
-
-    NSSlider* bSlider = [[NSSlider alloc] initWithFrame:NSMakeRect(308, y, 90, 16)];
-    bSlider.minValue = 0; bSlider.maxValue = 1; bSlider.doubleValue = *bPtr;
-    bSlider.identifier = [prefix stringByAppendingString:@"B"];
-    bSlider.target = self; bSlider.action = @selector(colorSliderChanged:);
-    [self addSubview:bSlider];
-
-    NSTextField* bVal = [[NSTextField alloc] initWithFrame:NSMakeRect(398, y, 30, 16)];
-    bVal.font = [NSFont systemFontOfSize:9]; bVal.stringValue = [NSString stringWithFormat:@"%.2f", *bPtr];
-    bVal.textColor = [NSColor whiteColor]; bVal.backgroundColor = [NSColor colorWithWhite:0.15 alpha:1.0]; bVal.bordered = NO; bVal.editable = YES;
-    bVal.identifier = bSlider.identifier; bVal.target = self; bVal.action = @selector(colorFieldChanged:);
-    [self addSubview:bVal];
-
-    ColorSwatchView* swatch = [[ColorSwatchView alloc] initWithFrame:NSMakeRect(434, y + 1, 14, 14)];
-    swatch.color = [NSColor colorWithRed:*rPtr green:*gPtr blue:*bPtr alpha:1];
-    swatch.identifier = [@"swatch" stringByAppendingString:prefix];
-    [self addSubview:swatch];
-
-    return y - 28;
+- (void)modeChanged:(NSSegmentedControl*)sender {
+    NSInteger idx = sender.selectedSegment;
+    int mode = (idx == 2) ? APPEARANCE_LIGHT : (idx == 1) ? APPEARANCE_DARK : APPEARANCE_SYSTEM;
+    g_config.general.appearanceMode = mode;
+    Config_UpdateActiveTheme();
+    [self redrawGoosePreview];
 }
 
 - (void)colorSliderChanged:(NSSlider*)sender {
@@ -280,21 +310,21 @@ static bool SaveThemeToFile(const std::string& path, const std::string& desc) {
     if (!ident) return;
     float val = (float)sender.doubleValue;
 
-    if      ([ident isEqualToString:@"customBodyR"]) g_config.color.customBody.r = val;
-    else if ([ident isEqualToString:@"customBodyG"]) g_config.color.customBody.g = val;
-    else if ([ident isEqualToString:@"customBodyB"]) g_config.color.customBody.b = val;
-    else if ([ident isEqualToString:@"customNeckR"]) g_config.color.customNeck.r = val;
-    else if ([ident isEqualToString:@"customNeckG"]) g_config.color.customNeck.g = val;
-    else if ([ident isEqualToString:@"customNeckB"]) g_config.color.customNeck.b = val;
-    else if ([ident isEqualToString:@"customHeadR"]) g_config.color.customHead.r = val;
-    else if ([ident isEqualToString:@"customHeadG"]) g_config.color.customHead.g = val;
-    else if ([ident isEqualToString:@"customHeadB"]) g_config.color.customHead.b = val;
-    else if ([ident isEqualToString:@"customBeakR"]) g_config.color.customBeak.r = val;
-    else if ([ident isEqualToString:@"customBeakG"]) g_config.color.customBeak.g = val;
-    else if ([ident isEqualToString:@"customBeakB"]) g_config.color.customBeak.b = val;
-    else if ([ident isEqualToString:@"customEyeR"]) g_config.color.customEye.r = val;
-    else if ([ident isEqualToString:@"customEyeG"]) g_config.color.customEye.g = val;
-    else if ([ident isEqualToString:@"customEyeB"]) g_config.color.customEye.b = val;
+    if      ([ident isEqualToString:@"customBodyR"])    g_config.color.customBody.r = val;
+    else if ([ident isEqualToString:@"customBodyG"])    g_config.color.customBody.g = val;
+    else if ([ident isEqualToString:@"customBodyB"])    g_config.color.customBody.b = val;
+    else if ([ident isEqualToString:@"customNeckR"])    g_config.color.customNeck.r = val;
+    else if ([ident isEqualToString:@"customNeckG"])    g_config.color.customNeck.g = val;
+    else if ([ident isEqualToString:@"customNeckB"])    g_config.color.customNeck.b = val;
+    else if ([ident isEqualToString:@"customHeadR"])    g_config.color.customHead.r = val;
+    else if ([ident isEqualToString:@"customHeadG"])    g_config.color.customHead.g = val;
+    else if ([ident isEqualToString:@"customHeadB"])    g_config.color.customHead.b = val;
+    else if ([ident isEqualToString:@"customBeakR"])    g_config.color.customBeak.r = val;
+    else if ([ident isEqualToString:@"customBeakG"])    g_config.color.customBeak.g = val;
+    else if ([ident isEqualToString:@"customBeakB"])    g_config.color.customBeak.b = val;
+    else if ([ident isEqualToString:@"customEyeR"])     g_config.color.customEye.r = val;
+    else if ([ident isEqualToString:@"customEyeG"])     g_config.color.customEye.g = val;
+    else if ([ident isEqualToString:@"customEyeB"])     g_config.color.customEye.b = val;
     else if ([ident isEqualToString:@"customOutlineR"]) g_config.color.customOutline.r = val;
     else if ([ident isEqualToString:@"customOutlineG"]) g_config.color.customOutline.g = val;
     else if ([ident isEqualToString:@"customOutlineB"]) g_config.color.customOutline.b = val;
@@ -307,8 +337,7 @@ static bool SaveThemeToFile(const std::string& path, const std::string& desc) {
         }
     }
 
-    [self updateColorSwatches];
-    [self redrawGoosePreview];
+    [self applyCustomToPreview];
 }
 
 - (void)colorFieldChanged:(NSTextField*)sender {
@@ -316,21 +345,21 @@ static bool SaveThemeToFile(const std::string& path, const std::string& desc) {
     if (!ident) return;
     float val = (float)sender.doubleValue;
 
-    if      ([ident isEqualToString:@"customBodyR"]) g_config.color.customBody.r = val;
-    else if ([ident isEqualToString:@"customBodyG"]) g_config.color.customBody.g = val;
-    else if ([ident isEqualToString:@"customBodyB"]) g_config.color.customBody.b = val;
-    else if ([ident isEqualToString:@"customNeckR"]) g_config.color.customNeck.r = val;
-    else if ([ident isEqualToString:@"customNeckG"]) g_config.color.customNeck.g = val;
-    else if ([ident isEqualToString:@"customNeckB"]) g_config.color.customNeck.b = val;
-    else if ([ident isEqualToString:@"customHeadR"]) g_config.color.customHead.r = val;
-    else if ([ident isEqualToString:@"customHeadG"]) g_config.color.customHead.g = val;
-    else if ([ident isEqualToString:@"customHeadB"]) g_config.color.customHead.b = val;
-    else if ([ident isEqualToString:@"customBeakR"]) g_config.color.customBeak.r = val;
-    else if ([ident isEqualToString:@"customBeakG"]) g_config.color.customBeak.g = val;
-    else if ([ident isEqualToString:@"customBeakB"]) g_config.color.customBeak.b = val;
-    else if ([ident isEqualToString:@"customEyeR"]) g_config.color.customEye.r = val;
-    else if ([ident isEqualToString:@"customEyeG"]) g_config.color.customEye.g = val;
-    else if ([ident isEqualToString:@"customEyeB"]) g_config.color.customEye.b = val;
+    if      ([ident isEqualToString:@"customBodyR"])    g_config.color.customBody.r = val;
+    else if ([ident isEqualToString:@"customBodyG"])    g_config.color.customBody.g = val;
+    else if ([ident isEqualToString:@"customBodyB"])    g_config.color.customBody.b = val;
+    else if ([ident isEqualToString:@"customNeckR"])    g_config.color.customNeck.r = val;
+    else if ([ident isEqualToString:@"customNeckG"])    g_config.color.customNeck.g = val;
+    else if ([ident isEqualToString:@"customNeckB"])    g_config.color.customNeck.b = val;
+    else if ([ident isEqualToString:@"customHeadR"])    g_config.color.customHead.r = val;
+    else if ([ident isEqualToString:@"customHeadG"])    g_config.color.customHead.g = val;
+    else if ([ident isEqualToString:@"customHeadB"])    g_config.color.customHead.b = val;
+    else if ([ident isEqualToString:@"customBeakR"])    g_config.color.customBeak.r = val;
+    else if ([ident isEqualToString:@"customBeakG"])    g_config.color.customBeak.g = val;
+    else if ([ident isEqualToString:@"customBeakB"])    g_config.color.customBeak.b = val;
+    else if ([ident isEqualToString:@"customEyeR"])     g_config.color.customEye.r = val;
+    else if ([ident isEqualToString:@"customEyeG"])     g_config.color.customEye.g = val;
+    else if ([ident isEqualToString:@"customEyeB"])     g_config.color.customEye.b = val;
     else if ([ident isEqualToString:@"customOutlineR"]) g_config.color.customOutline.r = val;
     else if ([ident isEqualToString:@"customOutlineG"]) g_config.color.customOutline.g = val;
     else if ([ident isEqualToString:@"customOutlineB"]) g_config.color.customOutline.b = val;
@@ -341,24 +370,36 @@ static bool SaveThemeToFile(const std::string& path, const std::string& desc) {
             ((NSSlider*)subview).doubleValue = val;
         }
     }
-    [self updateColorSwatches];
+    [self applyCustomToPreview];
+}
+
+- (void)applyCustomToPreview {
+    g_config.color.currentBody    = g_config.color.customBody;
+    g_config.color.currentNeck    = g_config.color.customNeck;
+    g_config.color.currentHead    = g_config.color.customHead;
+    g_config.color.currentBeak    = g_config.color.customBeak;
+    g_config.color.currentEye     = g_config.color.customEye;
+    g_config.color.currentOutline = g_config.color.customOutline;
+    [self updateSwatches];
     [self redrawGoosePreview];
 }
 
-- (void)updateColorSwatches {
-    NSDictionary* swatchMap = @{
-        @"swatchcustomBody":    [NSColor colorWithRed:g_config.color.customBody.r green:g_config.color.customBody.g blue:g_config.color.customBody.b alpha:1],
-        @"swatchcustomNeck":    [NSColor colorWithRed:g_config.color.customNeck.r green:g_config.color.customNeck.g blue:g_config.color.customNeck.b alpha:1],
-        @"swatchcustomHead":    [NSColor colorWithRed:g_config.color.customHead.r green:g_config.color.customHead.g blue:g_config.color.customHead.b alpha:1],
-        @"swatchcustomBeak":    [NSColor colorWithRed:g_config.color.customBeak.r green:g_config.color.customBeak.g blue:g_config.color.customBeak.b alpha:1],
-        @"swatchcustomEye":     [NSColor colorWithRed:g_config.color.customEye.r green:g_config.color.customEye.g blue:g_config.color.customEye.b alpha:1],
-        @"swatchcustomOutline": [NSColor colorWithRed:g_config.color.customOutline.r green:g_config.color.customOutline.g blue:g_config.color.customOutline.b alpha:1],
-    };
-    for (NSView* subview in self.subviews) {
-        NSColor* color = swatchMap[subview.identifier];
-        if (color && [subview isKindOfClass:[ColorSwatchView class]]) {
-            ((ColorSwatchView*)subview).color = color;
-            [subview setNeedsDisplay:YES];
+- (void)updateSwatches {
+    for (NSView* sv in self.subviews) {
+        NSString* ident = sv.identifier;
+        if ([ident hasPrefix:@"swatch"]) {
+            NSString* prefix = [ident substringFromIndex:6];
+            ColorRGB* c = nullptr;
+            if      ([prefix isEqualToString:@"customBody"])    c = &g_config.color.customBody;
+            else if ([prefix isEqualToString:@"customNeck"])    c = &g_config.color.customNeck;
+            else if ([prefix isEqualToString:@"customHead"])    c = &g_config.color.customHead;
+            else if ([prefix isEqualToString:@"customBeak"])    c = &g_config.color.customBeak;
+            else if ([prefix isEqualToString:@"customEye"])     c = &g_config.color.customEye;
+            else if ([prefix isEqualToString:@"customOutline"]) c = &g_config.color.customOutline;
+            if (c && [sv isKindOfClass:[ColorSwatchView class]]) {
+                ((ColorSwatchView*)sv).color = [NSColor colorWithRed:c->r green:c->g blue:c->b alpha:1];
+                [sv setNeedsDisplay:YES];
+            }
         }
     }
 }
@@ -366,7 +407,7 @@ static bool SaveThemeToFile(const std::string& path, const std::string& desc) {
 - (void)redrawGoosePreview {
     for (NSView* subview in self.subviews) {
         if ([subview.identifier isEqualToString:@"goosePreview"] && [subview isKindOfClass:[PreviewGooseView class]]) {
-            [subview setNeedsDisplay:YES];
+            [(PreviewGooseView*)subview updatePreview];
             break;
         }
     }
@@ -379,15 +420,20 @@ static bool SaveThemeToFile(const std::string& path, const std::string& desc) {
     [_themePaths removeAllObjects];
     [_themePopup removeAllItems];
 
-    std::string dir = Config_GetThemesDir().string();
-    for (auto& entry : std::filesystem::directory_iterator(Config_GetThemesDir())) {
+    std::error_code ec;
+    if (!std::filesystem::exists(Config_GetThemesDir(), ec)) return;
+
+    for (auto& entry : std::filesystem::directory_iterator(Config_GetThemesDir(), ec)) {
         if (entry.path().extension() == ".toml") {
-            NSString* desc = ThemeDescriptionForFile(entry.path().string());
             NSString* name = [NSString stringWithUTF8String:entry.path().stem().c_str()];
-            NSString* label = desc.length > 0 ? [NSString stringWithFormat:@"%@ — %@", name, desc] : name;
-            [_themePopup addItemWithTitle:label];
+            [_themePopup addItemWithTitle:name];
             [_themePaths addObject:[NSString stringWithUTF8String:entry.path().c_str()]];
         }
+    }
+
+    if (_themePaths.count == 0) {
+        [_themePopup addItemWithTitle:@"No themes"];
+        [[[_themePopup menu] itemAtIndex:[[_themePopup menu] numberOfItems] - 1] setEnabled:NO];
     }
 }
 
@@ -397,7 +443,7 @@ static bool SaveThemeToFile(const std::string& path, const std::string& desc) {
     NSString* path = _themePaths[idx];
     if (!LoadThemeFromFile(std::string([path UTF8String]))) return;
 
-    _themeDescField.stringValue = ThemeDescriptionForFile(std::string([path UTF8String]));
+    // Update all sliders and value fields from loaded custom* values
     for (NSView* sv in self.subviews) {
         NSString* ident = sv.identifier;
         if (![ident hasPrefix:@"custom"] || ident.length < 10) continue;
@@ -425,28 +471,42 @@ static bool SaveThemeToFile(const std::string& path, const std::string& desc) {
         if ([sv isKindOfClass:[NSTextField class]] && ![sv isKindOfClass:[ColorSwatchView class]])
             ((NSTextField*)sv).stringValue = [NSString stringWithFormat:@"%.2f", val];
     }
-    [self updateColorSwatches];
-    [self redrawGoosePreview];
+    [self applyCustomToPreview];
 }
 
 - (void)saveTheme:(id)sender {
-    NSSavePanel* panel = [NSSavePanel savePanel];
-    panel.title = @"Save Color Theme";
-    panel.nameFieldStringValue = @"my_theme.toml";
-    panel.directoryURL = [NSURL fileURLWithPath:@(Config_GetThemesDir().c_str())];
-    panel.allowedFileTypes = @[@"toml"];
+    NSAlert* alert = [[NSAlert alloc] init];
+    alert.messageText = @"Save Color Theme";
+    alert.informativeText = @"Enter a name for this theme:";
+    [alert addButtonWithTitle:@"Save"];
+    [alert addButtonWithTitle:@"Cancel"];
 
-    if ([panel runModal] == NSModalResponseOK) {
-        NSString* path = panel.URL.path;
-        NSString* desc = _themeDescField.stringValue ?: @"";
-        if (SaveThemeToFile(std::string([path UTF8String]), std::string([desc UTF8String]))) {
-            [self refreshThemeList];
+    NSTextField* nameField = [[NSTextField alloc] initWithFrame:NSMakeRect(0, 0, 250, 22)];
+    nameField.stringValue = @"my_theme";
+    [alert setAccessoryView:nameField];
+
+    if ([alert runModal] != NSAlertFirstButtonReturn) return;
+
+    NSString* themeName = nameField.stringValue ?: @"untitled";
+    NSString* safeName = [[themeName componentsSeparatedByCharactersInSet:
+                           [[NSCharacterSet alphanumericCharacterSet] invertedSet]]
+                          componentsJoinedByString:@"_"];
+    if (safeName.length == 0) safeName = @"theme";
+
+    // Save directly to themes directory (NSSavePanel directoryURL is unreliable on modern macOS)
+    auto themesDir = Config_GetThemesDir();
+    auto filePath = themesDir / (std::string([safeName UTF8String]) + ".toml");
+    if (SaveThemeToFile(filePath.string(), std::string([themeName UTF8String]))) {
+        [self refreshThemeList];
+        // Auto-select the newly saved theme
+        for (NSInteger i = 0; i < (NSInteger)_themePaths.count; i++) {
+            std::string p{[(NSString*)_themePaths[i] UTF8String]};
+            if (p == filePath.string()) {
+                [_themePopup selectItemAtIndex:i];
+                break;
+            }
         }
     }
-}
-
-- (void)themeDescChanged:(NSTextField*)sender {
-    // Description is stored in file on next save; changes are held in memory
 }
 
 @end

@@ -26,6 +26,11 @@ void Config_Load(const toml::basic_value<toml::type_config>& config) {
                 val = std::clamp(val, opt.min, opt.max);
                 *(float*)opt.ptr = val;
             }
+        } else if (opt.type == CFG_STRING) {
+            std::string val;
+            if (config_helpers::get_string(config, opt.section, opt.key, val)) {
+                *(std::string*)opt.ptr = val;
+            }
         }
     }
 
@@ -83,10 +88,100 @@ void Config_LoadAll() {
             try {
                 auto parsed = toml::parse(path.string());
                 Config_Load(parsed);
+                Config_UpdateActiveTheme();
                 return;
             } catch (const std::exception&) {
                 continue;
             }
         }
     }
+    Config_UpdateActiveTheme(); // Fallback if no config file loaded
+}
+
+bool Config_LoadThemeColors(const std::string& themeName, ColorRGB& body, ColorRGB& neck, ColorRGB& head, ColorRGB& beak, ColorRGB& eye, ColorRGB& outline) {
+    if (themeName.empty() || themeName == "Default") return false;
+    
+    // Convert to filename: "Default Light" -> "default_light.toml" or exact matches
+    std::string filename = themeName;
+    std::transform(filename.begin(), filename.end(), filename.begin(), [](unsigned char c){ return std::tolower(c); });
+    std::replace(filename.begin(), filename.end(), ' ', '_');
+    if (filename.find(".toml") == std::string::npos) filename += ".toml";
+    
+    fs::path themePath = Config_GetThemesDir() / filename;
+    if (!fs::exists(themePath)) {
+        // Fallback: search through all .toml files to match 'name' in [theme]
+        bool found = false;
+        for (const auto& entry : fs::directory_iterator(Config_GetThemesDir())) {
+            if (entry.path().extension() == ".toml") {
+                try {
+                    auto data = toml::parse(entry.path().string());
+                    if (toml::find_or<std::string>(data, "theme", "name", "") == themeName) {
+                        themePath = entry.path();
+                        found = true;
+                        break;
+                    }
+                } catch (...) {}
+            }
+        }
+        if (!found) return false;
+    }
+    
+    try {
+        auto data = toml::parse(themePath.string());
+        if (!data.contains("colors")) return false;
+        
+        config_helpers::get_color_rgb_flat(data, "colors", "body", body.r, body.g, body.b);
+        config_helpers::get_color_rgb_flat(data, "colors", "neck", neck.r, neck.g, neck.b);
+        config_helpers::get_color_rgb_flat(data, "colors", "head", head.r, head.g, head.b);
+        config_helpers::get_color_rgb_flat(data, "colors", "beak", beak.r, beak.g, beak.b);
+        config_helpers::get_color_rgb_flat(data, "colors", "eye", eye.r, eye.g, eye.b);
+        config_helpers::get_color_rgb_flat(data, "colors", "outline", outline.r, outline.g, outline.b);
+        return true;
+    } catch (...) {
+        return false;
+    }
+}
+
+extern bool Config_IsSystemDarkTheme();
+
+void Config_UpdateActiveTheme() {
+    int mode = g_config.general.appearanceMode;
+    
+    // 0=Light, 1=Dark, 2=System, 3=Custom
+    if (mode == 2) {
+        mode = Config_IsSystemDarkTheme() ? 1 : 0;
+    }
+
+    if (mode == 3) { // Custom
+        g_config.color.currentBody = g_config.color.customBody;
+        g_config.color.currentNeck = g_config.color.customNeck;
+        g_config.color.currentHead = g_config.color.customHead;
+        g_config.color.currentBeak = g_config.color.customBeak;
+        g_config.color.currentEye = g_config.color.customEye;
+        g_config.color.currentOutline = g_config.color.customOutline;
+        return;
+    }
+    
+    std::string roleTheme = (mode == 1) ? g_config.general.darkThemeRole : g_config.general.lightThemeRole;
+    
+    // Default fallback values if theme fails to load
+    if (mode == 1) { // Dark (Canadian) fallback
+        g_config.color.currentBody = g_config.color.canadaBody;
+        g_config.color.currentNeck = g_config.color.canadaNeck;
+        g_config.color.currentHead = g_config.color.canadaHead;
+        g_config.color.currentBeak = g_config.color.canadaBeak;
+        g_config.color.currentEye = g_config.color.canadaEye;
+        g_config.color.currentOutline = g_config.color.canadaOutline;
+    } else { // Light fallback
+        g_config.color.currentBody = g_config.color.goose;
+        g_config.color.currentNeck = g_config.color.goose;
+        g_config.color.currentHead = g_config.color.goose;
+        g_config.color.currentBeak = g_config.color.beak;
+        g_config.color.currentEye = g_config.color.eye;
+        g_config.color.currentOutline = {0.82f, 0.82f, 0.82f};
+    }
+    
+    Config_LoadThemeColors(roleTheme, 
+        g_config.color.currentBody, g_config.color.currentNeck, g_config.color.currentHead, 
+        g_config.color.currentBeak, g_config.color.currentEye, g_config.color.currentOutline);
 }

@@ -63,14 +63,42 @@ inline bool get_float(const toml::basic_value<toml::type_config>& config, const 
     }
 }
 
+inline bool get_string(const toml::basic_value<toml::type_config>& config, const std::string& section, const std::string& key, std::string& dest) {
+    auto& tbl = config.as_table();
+    auto section_it = find_case_insensitive(tbl, section);
+    if (section_it == tbl.end()) return false;
+    auto& section_tbl = section_it->second.as_table();
+    auto key_it = find_case_insensitive(section_tbl, key);
+    if (key_it == section_tbl.end()) return false;
+    try {
+        dest = toml::get<std::string>(key_it->second);
+        return true;
+    } catch (...) {
+        return false;
+    }
+}
+
 inline bool get_color_rgb(const toml::basic_value<toml::type_config>& config, const std::string& section, const std::string& subgroup, const std::string& colorName, float& r, float& g, float& b) {
     try {
         auto& section_tbl = toml::get<toml::table>(config.at(section));
         auto& subgroup_tbl = toml::get<toml::table>(section_tbl.at(subgroup));
         auto& color_tbl = toml::get<toml::table>(subgroup_tbl.at(colorName));
-        r = toml::get<float>(color_tbl.at("r"));
-        g = toml::get<float>(color_tbl.at("g"));
-        b = toml::get<float>(color_tbl.at("b"));
+        if (color_tbl.at("r").is_integer()) r = static_cast<float>(toml::get<int>(color_tbl.at("r"))); else r = toml::get<float>(color_tbl.at("r"));
+        if (color_tbl.at("g").is_integer()) g = static_cast<float>(toml::get<int>(color_tbl.at("g"))); else g = toml::get<float>(color_tbl.at("g"));
+        if (color_tbl.at("b").is_integer()) b = static_cast<float>(toml::get<int>(color_tbl.at("b"))); else b = toml::get<float>(color_tbl.at("b"));
+        return true;
+    } catch (...) {
+        return false;
+    }
+}
+
+inline bool get_color_rgb_flat(const toml::basic_value<toml::type_config>& config, const std::string& section, const std::string& colorName, float& r, float& g, float& b) {
+    try {
+        auto& section_tbl = toml::get<toml::table>(config.at(section));
+        auto& color_tbl = toml::get<toml::table>(section_tbl.at(colorName));
+        if (color_tbl.at("r").is_integer()) r = static_cast<float>(toml::get<int>(color_tbl.at("r"))); else r = toml::get<float>(color_tbl.at("r"));
+        if (color_tbl.at("g").is_integer()) g = static_cast<float>(toml::get<int>(color_tbl.at("g"))); else g = toml::get<float>(color_tbl.at("g"));
+        if (color_tbl.at("b").is_integer()) b = static_cast<float>(toml::get<int>(color_tbl.at("b"))); else b = toml::get<float>(color_tbl.at("b"));
         return true;
     } catch (...) {
         return false;

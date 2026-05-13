@@ -177,7 +177,7 @@
     NSTextField* sectionLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(12, y, 200, 16)];
     sectionLabel.stringValue = @"Geese";
     sectionLabel.font = [NSFont systemFontOfSize:12 weight:NSFontWeightSemibold];
-    sectionLabel.textColor = [NSColor labelColor];
+    sectionLabel.textColor = [NSColor whiteColor];
     sectionLabel.backgroundColor = [NSColor clearColor];
     sectionLabel.bordered = NO;
     sectionLabel.editable = NO;
@@ -188,7 +188,7 @@
         NSTextField* idLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(16, y, 30, 20)];
         idLabel.stringValue = [NSString stringWithFormat:@"#%d", it->id];
         idLabel.font = [NSFont systemFontOfSize:11];
-        idLabel.textColor = [NSColor secondaryLabelColor];
+        idLabel.textColor = [NSColor colorWithWhite:0.85 alpha:1.0];
         idLabel.backgroundColor = [NSColor clearColor];
         idLabel.bordered = NO;
         idLabel.editable = NO;

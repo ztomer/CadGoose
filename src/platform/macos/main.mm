@@ -64,6 +64,8 @@ void LogWrite(const char* level, const char* fmt, ...) {
 
 extern "C" void AI_OpenChat(const char* gooseName);
 
+bool Config_IsSystemDarkTheme();
+
 @interface AppDelegate : NSObject <NSApplicationDelegate>
 @property (nonatomic, strong) NSStatusItem* statusItem;
 - (void)setupMenubar;
@@ -80,8 +82,7 @@ extern "C" void AI_OpenChat(const char* gooseName);
 
     {
         bool darkAppearance = (g_config.general.appearanceMode == APPEARANCE_DARK) ||
-            (g_config.general.appearanceMode == APPEARANCE_SYSTEM &&
-             [[[NSApplication sharedApplication] effectiveAppearance] name] == NSAppearanceNameDarkAqua);
+            (g_config.general.appearanceMode == APPEARANCE_SYSTEM && Config_IsSystemDarkTheme());
         self.statusItem.button.title = darkAppearance ? @"\U0001F341" : @"\U0001FABF";
     }
 

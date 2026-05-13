@@ -30,6 +30,9 @@ enum ConfigType { CFG_BOOL, CFG_INT, CFG_FLOAT, CFG_STRING };
 #define CONFIG_FLOAT_EX(section, key, label, explanation, memberPtr, minVal, maxVal, stepVal, onChangeCb) \
     { section, key, label, explanation, CFG_FLOAT, memberPtr, minVal, maxVal, stepVal, "", onChangeCb }
 
+#define CONFIG_STRING(section, key, label, memberPtr, onChangeCb) \
+    { section, key, label, "", CFG_STRING, memberPtr, 0.0f, 0.0f, 0.0f, "", onChangeCb }
+
 struct ConfigOption {
   const char *section;
   const char *key;
@@ -61,6 +64,8 @@ struct GeneralConfig {
   bool memesEnabled = true;
   bool canadaGooseMode = false; // deprecated, use appearanceMode
   int appearanceMode = APPEARANCE_SYSTEM;
+  std::string lightThemeRole = "Default";
+  std::string darkThemeRole = "Canadian";
 };
 
 struct ScreenConfig {
@@ -322,6 +327,13 @@ struct ColorConfig {
   ColorRGB customBeak = {1.0f, 0.6f, 0.0f};
   ColorRGB customEye = {0.1f, 0.1f, 0.1f};
   ColorRGB customOutline = {0.82f, 0.82f, 0.82f};
+  // Active theme colors (dynamically updated)
+  ColorRGB currentBody = {0.82f, 0.82f, 0.82f};
+  ColorRGB currentNeck = {0.82f, 0.82f, 0.82f};
+  ColorRGB currentHead = {0.82f, 0.82f, 0.82f};
+  ColorRGB currentBeak = {1.0f, 0.6f, 0.0f};
+  ColorRGB currentEye = {0.1f, 0.1f, 0.1f};
+  ColorRGB currentOutline = {0.82f, 0.82f, 0.82f};
 };
 
 struct BehaviorConfig {
@@ -459,5 +471,8 @@ bool Config_GetValueByKey(const std::string &key, std::string *valueOut,
 bool Config_SetValueByKey(const std::string &key, const std::string &value,
                           std::string *errorOut = nullptr);
 bool Config_SaveNow(std::string *errorOut = nullptr);
+
+void Config_UpdateActiveTheme();
+bool Config_LoadThemeColors(const std::string& themeName, ColorRGB& body, ColorRGB& neck, ColorRGB& head, ColorRGB& beak, ColorRGB& eye, ColorRGB& outline);
 
 #endif // CONFIG_H

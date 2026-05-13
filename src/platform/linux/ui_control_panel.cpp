@@ -143,6 +143,22 @@ void activate_control_panel(GtkApplication* app) {
     gtk_box_append(GTK_BOX(globalInner), make_section("Movement & Scale", &movBox));
     PopulateConfigSection(movBox, "Movement");
 
+    GtkWidget* genBox = nullptr;
+    gtk_box_append(GTK_BOX(globalInner), make_section("General", &genBox));
+    PopulateConfigSection(genBox, "General");
+
+    GtkWidget* curBox = nullptr;
+    gtk_box_append(GTK_BOX(globalInner), make_section("Cursor", &curBox));
+    PopulateConfigSection(curBox, "Cursor");
+
+    GtkWidget* aiBox = nullptr;
+    gtk_box_append(GTK_BOX(globalInner), make_section("AI Settings", &aiBox));
+    PopulateConfigSection(aiBox, "AI");
+
+    GtkWidget* colorBox = nullptr;
+    gtk_box_append(GTK_BOX(globalInner), make_section("Colors", &colorBox));
+    PopulateConfigSection(colorBox, "Colors");
+
     gtk_notebook_append_page(GTK_NOTEBOOK(notebook), scrollGlobal, gtk_label_new("Global"));
 
     // PAGE 3: ENGINE

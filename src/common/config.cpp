@@ -130,6 +130,8 @@ bool Config_SetValueByKey(const std::string& key, const std::string& value, std:
 }
 
 void OnConfigChange() {
+    Config_UpdateActiveTheme();
+    // (Rest of the function will just save, so we put it before saving)
     Config_SaveAll();
 }
 
