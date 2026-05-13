@@ -1,0 +1,12 @@
+[theme]
+name = "Default Light"
+description = "The classic white goose"
+role = "light"
+
+[colors]
+body = { r = 0.82, g = 0.82, b = 0.82 }
+neck = { r = 0.82, g = 0.82, b = 0.82 }
+head = { r = 0.82, g = 0.82, b = 0.82 }
+beak = { r = 1.0, g = 0.6, b = 0.0 }
+eye = { r = 0.1, g = 0.1, b = 0.1 }
+outline = { r = 0.82, g = 0.82, b = 0.82 }

@@ -103,9 +103,13 @@ elseif(LINUX)
         "${CMAKE_CURRENT_BINARY_DIR}/wlr-virtual-pointer-unstable-v1-client-protocol.h"
     )
 
-    file(GLOB_RECURSE COMMON_SOURCES "src/common/*.cpp")
-    file(GLOB_recurSE PLATFORM_SOURCES "src/platform/linux/*.cpp")
+    file(GLOB_RECURSE COMMON_SOURCES "src/common/*.cpp" "src/common/*.mm")
+    file(GLOB_RECURSE PLATFORM_SOURCES "src/platform/linux/*.cpp")
     set(SOURCES ${COMMON_SOURCES} ${PLATFORM_SOURCES} ${GENERATED_SOURCES})
+
+    if(NOT APPLE)
+        set_source_files_properties(${COMMON_SOURCES} PROPERTIES LANGUAGE CXX)
+    endif()
 
     find_package(X11 REQUIRED)
     if(X11_FOUND)

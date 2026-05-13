@@ -19,6 +19,10 @@ void RegisterCommon(std::vector<ConfigOption>& r) {
     r.push_back(CONFIG_INT_EX("General", "appearance_mode", "Appearance Mode",
         "0=Light, 1=Dark, 2=System (follow macOS), 3=Custom",
         &g_config.general.appearanceMode, 0, 3, OnConfigChange));
+    r.push_back(CONFIG_STRING("General", "light_theme_role", "Light Theme Role",
+        &g_config.general.lightThemeRole, OnConfigChange));
+    r.push_back(CONFIG_STRING("General", "dark_theme_role", "Dark Theme Role",
+        &g_config.general.darkThemeRole, OnConfigChange));
     r.push_back(CONFIG_INT("Screen", "default_width", "Default Width",
         &g_config.screen.defaultWidth, 0, 10000, OnConfigChange));
     r.push_back(CONFIG_INT("Screen", "default_height", "Default Height",

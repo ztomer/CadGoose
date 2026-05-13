@@ -111,8 +111,7 @@ CadGoose includes a comprehensive behavior system inspired by Desktop Goose Reso
 - **Nametag**: Shows goose name above head
 - **Debugoose**: Debug overlay with state info
 - **Presence**: Shows goose state in menu bar
-- **Config GUI**: Open behavior settings window
-- **Color Picker**: Change goose color via color panel
+- **Config GUI**: Preferences window with Behaviors, Appearance, and AI tabs
 - **Clicker**: Random cursor clicks
 - **GooseManager**: Control goose tasks and speeds
 
@@ -140,7 +139,11 @@ Selected keys:
 | `mud_lifetime` | `15` | Default footprint lifetime in seconds |
 | `debug_visuals` | `0` | Draw debug hitboxes and state labels |
 
-Settings are edited through `~/.config/desktop-goose/config.toml`. There is no settings UI and no CLI settings editor.
+Settings are edited through the preferences window (right-click the status bar icon → Preferences) or directly in `~/.config/desktop-goose/config.toml`. The preferences window provides three tabs:
+
+- **Behaviors**: Enable/disable behaviors, configure behavior-specific settings (ball size, breadcrumb count, jail size, etc.) via a split-panel list + detail view
+- **Appearance**: Select light/dark/system/custom appearance mode; edit RGB colors for Body, Neck, Head, Beak, Eyes, and Outline with live goose preview; save and load color themes as `.toml` files
+- **AI**: Enable AI chat, select provider (Osaurus/Ollama/Custom), configure port, pick model, test connection, and view/edit system prompt with evil level slider
 
 ---
 

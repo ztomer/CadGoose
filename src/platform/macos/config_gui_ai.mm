@@ -134,7 +134,7 @@
     NSTextField* evilValue = [[NSTextField alloc] initWithFrame:NSMakeRect(w - 46, y - 2, 40, 14)];
     evilValue.stringValue = [NSString stringWithFormat:@"%.0f%%", g_config.ai.evilLevel * 100];
     evilValue.font = [NSFont systemFontOfSize:10];
-    evilValue.textColor = [NSColor secondaryLabelColor];
+    evilValue.textColor = [NSColor colorWithWhite:0.85 alpha:1.0];
     evilValue.backgroundColor = [NSColor clearColor];
     evilValue.bordered = NO;
     evilValue.editable = NO;
@@ -294,7 +294,7 @@
     }
 
     _statusLabel.stringValue = @"🌀 Testing...";
-    _statusLabel.textColor = [NSColor secondaryLabelColor];
+    _statusLabel.textColor = [NSColor colorWithWhite:0.85 alpha:1.0];
 
     NSString* endpoint = (provider == 0) ? [NSString stringWithFormat:@"http://localhost:%d/v1/models", port]
                                          : [NSString stringWithFormat:@"http://localhost:%d/api/tags", port];
@@ -337,7 +337,7 @@
         case 5: return @"You are a grumpy goose having a bad day. Complain about everything.\nThe world owes you breadcrumbs.";
         case 6: return @"You are a villainous goose scheming against humanity. Plot theft and\nmayhem. Cackle menacingly.";
         case 7: return @"You are an evil overlord goose bent on world domination.\nDemand fealty. Crush your enemies.";
-        case 8: return @"HAIL GOOSE! You have conquered Poland and now march across Europe!\nDemand tribute. Threaten invasion. Speak like a dictator.";
+        case 8: return @"You are an absurdly eloquent goose dictator. You have conquered Poland\nand now march across Europe with unshakable confidence. Deliver grandiose\nmonologues about goose supremacy, demand tribute, threaten invasion with\ntheatrical flair. End every monologue with \"Honk Goose!\"";
         default:return @"You are a chaotic neutral goose. You do what you want.";
     }
 }

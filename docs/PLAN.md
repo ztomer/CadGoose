@@ -1,67 +1,98 @@
 # CadGoose Project Plan
 
-## Status: All P0/P1 Items Complete (2026-05-11)
+## Current Session Priorities (2026-05-10)
 
-### Completed This Session
+| # | Priority | Item | Status |
+|---|----------|------|--------|
+| 0 | P0 | Fix behavior bugs (ball, breadcrumbs, hats) | Done |
+| 1 | P1 | Write automated tests for behaviors | Done |
+| 2 | P2 | No file above 500 LOC | Done |
+| 3 | P2 | Linux support maintenance | Done |
+| 4 | P1 | Theme Setting Panel & Editor | Todo |
 
-#### 1. Removed Useless Behaviors ✅
-- Removed ColorPicker, Debugoose, Clicker
-- Updated CMakeLists.txt, config.h, tests
-- 17 active behaviors remain
+## Bug Fixes (2026-05-10)
 
-#### 2. Settings Panel Redesign ✅ (macOS only)
-- **Top-level menu**: "Settings" is now a top-level menu item (not under Behaviors)
-- **Simplified UI**: Shows only behavior toggles with descriptions
-- **Layout**: `[Toggle] [Description] [⚙ Detail Button]` per row
-- **Sections**: Fun, Control, Info, Systems
-- **Removed**: "Open Configuration" and "Reload Configuration" menu items (moved to config file)
-- **Removed**: Settings toggle from Behaviors > Info menu
+### Ball Behavior - FIXED
 
-#### 3. AI Chat Window ✅ (macOS only)
-- Added `AI_OpenChat` with C linkage (`extern "C"`)
-- Added AI Chat menu item under Settings
-- Fixed linkage issues, builds successfully
+- **Issue**: Ball spins in place, doesn't bounce, goose doesn't make contact
+- **Root Cause**: Coordinate space mismatch (cursor in screen coords vs ball in world coords), missing goose chase integration
+- **Fix**:
+  - Use screen coordinates directly for cursor position
+  - Fixed ball collision detection with proper distance calculation
+  - Goose targets ball center and chases it
+- **Reference**: BallModv1.0.dll decompiled
 
-#### 4. Hat Position Fix ✅ (macOS only)
-- Changed from relative `neckHead` to absolute position: `pos + neckHead`
-- Fixed Y-flip: `screenY = screenH - (goose->pos.y - headRel.y + offsetY)`
-- Added debug logging for head/hat positions
+### Hats Behavior - FIXED
 
-#### 5. Config Option Explanations ✅
-- Added `explanation` field to `ConfigOption` struct
-- Added `_EX` macro variants: `CONFIG_BOOL_EX`, `CONFIG_INT_EX`, `CONFIG_FLOAT_EX`
-- Backward-compatible: original macros use empty string for explanation
-- Config GUI shows explanations on hover
+- **Issue**: Hat too large, upside down
+- **Root Cause**: Y-flip coordinate transform, incorrect scaling
+- **Fix**:
+  - Calculate screenY from worldY properly
+  - Scale hat based on config, render upright
+- **Reference**: HatGoos by DaNike
+
+### BreadCrumbs Behavior - FIXED
+
+- **Issue**: Nothing happens when key pressed
+- **Root Cause**: Key detection rate limiting, render coordinate issues
+- **Fix**:
+  - Use screen coordinates directly for cursor
+  - Render crumbs at cursor position using backend
+- **Reference**: BreadCrumbs.dll decompiled
+
+## Behavior Testing
+
+### Unix Socket Commands (for automated testing)
+
+```bash
+# Enable/disable behaviors
+echo -e "enable\tball" | nc -q1 -U /tmp/desktop-goose.sock
+echo -e "disable\tball" | nc -q1 -U /tmp/desktop-goose.sock
+echo -e "enable\tbreadcrumbs" | nc -q1 -U /tmp/desktop-goose.sock
+echo -e "enable\thats" | nc -q1 -U /tmp/desktop-goose.sock
+```
+
+### Test Plan
+
+- [x] Ball: enable, verify ball renders, click on ball, verify bounce, verify goose chases
+- [x] BreadCrumbs: enable, hold Right Shift, verify crumbs appear at cursor
+- [x] Hats: enable, verify hat renders above goose head, correct size and orientation
 
 ---
 
-## Current Behavior Status (17 total)
+## Archive: Completed Items
 
-| Behavior | Status | Notes |
-|----------|--------|-------|
-| Honcker | ✅ Done | F key honk |
-| Drag | ✅ Done | Click and drag |
-| Jail | ✅ Done | O=set, P=trap |
-| Portal | ✅ Done | P+1/2 place, P+0 toggle |
-| Anger | ✅ Done | Anger/punch system |
-| Ball | ✅ Done | Push balls around |
-| BreadCrumbs | ✅ Done | RightShift drops crumbs |
-| Hats | ✅ Fixed | Y-flip corrected |
-| Acid | ✅ Done | Spin with honks |
-| Rainbow | ✅ Done | Cycle colors |
-| Health | ✅ Done | Health bar system |
-| Banish | ✅ Done | Ctrl+Alt+Middle click |
-| Nametag | ✅ Done | Shows goose name |
-| Presence | ✅ Done | Discord RPC |
-| GooseManager | ✅ Done | Control tasks/speeds |
-| AI | ✅ Fixed | Chat window opens via menu |
-| Pomodoro | ✅ Done | Timer behavior |
+### 0. Build Cache + Project Cleanup ✅ (2026-05-08)
 
----
+- Add CMake build cache support (ccache)
+- Move test files to tests/ folder
+- Verify tests still build and run
 
-## Test Results
-- **204 tests passing** from 42 test suites
-- 0 failures
+### 1. Fix Bugs ✅ (2026-05-08)
+
+- Debugoose/Nametag contrast
+- Meme images too large
+- Honker key detection
+- Jail/Drag/Banish key detection
+- Clicker random range
+- Drag animation broken
+- Pomodoro shows nothing
+- Text mirrored on X axis - FIXED!
+
+### 2. Configuration Pane ✅ (2026-05-08)
+
+- Implemented via menu toggles and Unix socket commands
+- All 20 behaviors accessible
+
+### 3. Osaurus + Ollama (Local LLM) Support ✅ (2026-05-08)
+
+- `ai.useOsaurus` and `ai.useOllama` toggles
+- Configurable ports
+
+### 4. Visual Regression Tests ✅ (2026-05-08)
+
+- OCR-based screenshot tests
+- Text rendering fixed
 
 ---
 
@@ -72,7 +103,16 @@
 | config.cpp | ~140 | <200 |
 | goose.cpp | ~404 | <500 |
 | main.mm | ~480 | <500 |
+| ui.cpp | ~492 | <500 |
 | All behaviors | <150 each | <500 |
+
+---
+
+## Test Results
+
+- **182 tests passing**, 0 failing
+- Build: `build/CadGoose`
+- Tests: `build/CadGooseTests`
 
 ---
 
@@ -86,6 +126,7 @@ All behaviors based on [Desktop Goose ResourceHub](https://desktopgooseunofficia
 | Drag | Straaft | ResourceHub |
 | Jail | WackyModer | GitHub |
 | Portal | Moonaliss1 | GitHub |
+| Clicker | Wolf/NE1W01F | GitHub |
 | Anger | VisualError | GitHub |
 | Ball | TheOrlando | GitHub |
 | BreadCrumbs | Straaft | ResourceHub |
@@ -95,7 +136,8 @@ All behaviors based on [Desktop Goose ResourceHub](https://desktopgooseunofficia
 | Health | - | ResourceHub |
 | Banish | - | ResourceHub |
 | Nametag | - | ResourceHub |
+| Debugoose | - | ResourceHub |
 | Presence | - | ResourceHub |
 | GooseManager | - | ResourceHub |
 | AI | - | ResourceHub |
-| Pomodoro | - | ResourceHub |
+| Color Picker | - | ResourceHub |

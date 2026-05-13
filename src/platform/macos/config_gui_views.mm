@@ -46,7 +46,7 @@
 
         _nameLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(64, 7, 140, 18)];
         _nameLabel.font = [NSFont fontWithName:@"Comic Sans MS" size:14] ?: [NSFont systemFontOfSize:14 weight:NSFontWeightSemibold];
-        _nameLabel.textColor = [NSColor labelColor];
+        _nameLabel.textColor = [NSColor whiteColor];
         _nameLabel.backgroundColor = [NSColor clearColor];
         _nameLabel.bordered = NO;
         _nameLabel.editable = NO;
@@ -54,7 +54,7 @@
 
         _descLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(230, 8, 200, 14)];
         _descLabel.font = [NSFont fontWithName:@"Comic Sans MS" size:11] ?: [NSFont systemFontOfSize:11];
-        _descLabel.textColor = [NSColor secondaryLabelColor];
+        _descLabel.textColor = [NSColor colorWithWhite:0.85 alpha:1.0];
         _descLabel.backgroundColor = [NSColor clearColor];
         _descLabel.bordered = NO;
         _descLabel.editable = NO;
@@ -112,20 +112,41 @@
 
 @implementation PreviewGooseView
 
-- (void)drawRect:(NSRect)dirtyRect {
-    [super drawRect:dirtyRect];
+- (instancetype)initWithFrame:(NSRect)frame {
+    self = [super initWithFrame:frame];
+    if (self) {
+        self.wantsLayer = YES;
+    }
+    return self;
+}
+
+- (void)updatePreview {
+    if (!self.layer) return;
+    NSSize size = self.bounds.size;
+    if (size.width <= 0 || size.height <= 0) return;
+
+    NSImage* img = [[NSImage alloc] initWithSize:size];
+    [img lockFocus];
     CGContextRef ctx = [[NSGraphicsContext currentContext] CGContext];
-    if (!ctx) return;
+    if (ctx) [self renderGooseInContext:ctx size:size];
+    [img unlockFocus];
+    self.layer.contents = img;
+}
 
-    CGFloat cx = self.bounds.size.width / 2;
-    CGFloat cy = self.bounds.size.height / 2 + 10;
+- (void)viewDidMoveToWindow {
+    [self updatePreview];
+}
 
-    ColorRGB& body = g_config.color.customBody;
-    ColorRGB& neck = g_config.color.customNeck;
-    ColorRGB& head = g_config.color.customHead;
-    ColorRGB& beak = g_config.color.customBeak;
-    ColorRGB& eye = g_config.color.customEye;
-    ColorRGB& outline = g_config.color.customOutline;
+- (void)renderGooseInContext:(CGContextRef)ctx size:(NSSize)size {
+    CGFloat cx = size.width / 2;
+    CGFloat cy = size.height / 2 + 10;
+
+    ColorRGB& body = g_config.color.currentBody;
+    ColorRGB& neck = g_config.color.currentNeck;
+    ColorRGB& head = g_config.color.currentHead;
+    ColorRGB& beak = g_config.color.currentBeak;
+    ColorRGB& eye = g_config.color.currentEye;
+    ColorRGB& outline = g_config.color.currentOutline;
 
     CGContextSetRGBFillColor(ctx, 0, 0, 0, 0.15);
     CGContextFillEllipseInRect(ctx, CGRectMake(cx - 28, cy - 4, 56, 18));

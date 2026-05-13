@@ -17,6 +17,7 @@ extern NSMutableArray* g_configItemsForAccess;
 
 @interface ColorSwatchView : NSView
 @property (nonatomic, strong) NSColor* color;
+@property (nonatomic, copy) NSString* colorPrefix;
 @end
 
 @interface BehaviorRowView : NSView
@@ -33,6 +34,7 @@ extern NSMutableArray* g_configItemsForAccess;
 @end
 
 @interface PreviewGooseView : NSView
+- (void)updatePreview;
 @end
 
 @interface BehaviorDetailView : NSView
@@ -62,9 +64,11 @@ extern NSMutableArray* g_configItemsForAccess;
 @property (nonatomic, strong) NSView* behaviorsContainer;
 @property (nonatomic, strong) AppearanceTabView* appearanceView;
 @property (nonatomic, strong) AITabView* aiView;
+@property (nonatomic, strong) NSSegmentedControl* tabControl;
 @property (nonatomic) NSWindow* parentWindow;
 @property (nonatomic) NSInteger selectedRowIndex;
 @property (nonatomic) CGFloat listWidth;
 @property (nonatomic) CGFloat descLabelX;
+- (void)prepareForDisplay;
 + (NSMutableArray*)configItemsForAccess;
 @end

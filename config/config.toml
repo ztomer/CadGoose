@@ -6,7 +6,9 @@ visuals = false
 global_scale = 1.0
 audio_enabled = false
 memes_enabled = true
+light_theme_role = "Default"
 appearance_mode = 2
+dark_theme_role = "Canadian"
 
 [Rig]
 neck_height_moving = 10.0

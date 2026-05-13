@@ -31,13 +31,6 @@ static void DrawLine(CGContextRef ctx, Vector2 a, Vector2 b, float width, float 
 
 extern float Rainbow_GetHue(int gooseId);
 
-static bool IsDarkAppearance() {
-    if (g_config.general.appearanceMode == APPEARANCE_DARK) return true;
-    if (g_config.general.appearanceMode == APPEARANCE_LIGHT) return false;
-    if (g_config.general.appearanceMode == APPEARANCE_CUSTOM) return false;
-    return [[[NSApplication sharedApplication] effectiveAppearance] name] == NSAppearanceNameDarkAqua;
-}
-
 void DrawGoose(Goose* g, CGContextRef ctx) {
     if (!std::isfinite(g->pos.x) || !std::isfinite(g->pos.y)) return;
 
@@ -55,16 +48,8 @@ void DrawGoose(Goose* g, CGContextRef ctx) {
 
     float beakR, beakG, beakB;
     float eyeR, eyeG, eyeB;
-    if (g_config.general.appearanceMode == APPEARANCE_CUSTOM) {
-        beakR = g_config.color.customBeak.r; beakG = g_config.color.customBeak.g; beakB = g_config.color.customBeak.b;
-        eyeR = g_config.color.customEye.r; eyeG = g_config.color.customEye.g; eyeB = g_config.color.customEye.b;
-    } else if (IsDarkAppearance()) {
-        beakR = g_config.color.canadaBeak.r; beakG = g_config.color.canadaBeak.g; beakB = g_config.color.canadaBeak.b;
-        eyeR = g_config.color.canadaEye.r; eyeG = g_config.color.canadaEye.g; eyeB = g_config.color.canadaEye.b;
-    } else {
-        beakR = g_config.color.beak.r; beakG = g_config.color.beak.g; beakB = g_config.color.beak.b;
-        eyeR = g_config.color.eye.r; eyeG = g_config.color.eye.g; eyeB = g_config.color.eye.b;
-    }
+    beakR = g_config.color.currentBeak.r; beakG = g_config.color.currentBeak.g; beakB = g_config.color.currentBeak.b;
+    eyeR = g_config.color.currentEye.r; eyeG = g_config.color.currentEye.g; eyeB = g_config.color.currentEye.b;
 
     DrawEllipse(ctx, g->pos + Vector2{g_config.render.shadowOffsetX, g_config.render.shadowOffsetY},
                 g_config.render.shadowWidth / 2, g_config.render.shadowHeight / 2,
@@ -91,21 +76,11 @@ void DrawGoose(Goose* g, CGContextRef ctx) {
         bodyColorG = headG = neckG = b;
         bodyColorB = headB = neckB = c;
         outlineR = outlineG = outlineB = 0.3f;
-    } else if (g_config.general.appearanceMode == APPEARANCE_CUSTOM) {
-        headR = g_config.color.customHead.r; headG = g_config.color.customHead.g; headB = g_config.color.customHead.b;
-        neckR = g_config.color.customNeck.r; neckG = g_config.color.customNeck.g; neckB = g_config.color.customNeck.b;
-        bodyColorR = g_config.color.customBody.r; bodyColorG = g_config.color.customBody.g; bodyColorB = g_config.color.customBody.b;
-        outlineR = g_config.color.customOutline.r; outlineG = g_config.color.customOutline.g; outlineB = g_config.color.customOutline.b;
-    } else if (IsDarkAppearance()) {
-        headR = g_config.color.canadaHead.r; headG = g_config.color.canadaHead.g; headB = g_config.color.canadaHead.b;
-        neckR = g_config.color.canadaNeck.r; neckG = g_config.color.canadaNeck.g; neckB = g_config.color.canadaNeck.b;
-        bodyColorR = g_config.color.canadaBody.r; bodyColorG = g_config.color.canadaBody.g; bodyColorB = g_config.color.canadaBody.b;
-        outlineR = g_config.color.canadaOutline.r; outlineG = g_config.color.canadaOutline.g; outlineB = g_config.color.canadaOutline.b;
     } else {
-        bodyColorR = g_config.color.goose.r; bodyColorG = g_config.color.goose.g; bodyColorB = g_config.color.goose.b;
-        neckR = bodyColorR; neckG = bodyColorG; neckB = bodyColorB;
-        headR = bodyColorR; headG = bodyColorG; headB = bodyColorB;
-        outlineR = 0.82f; outlineG = 0.82f; outlineB = 0.82f;
+        headR = g_config.color.currentHead.r; headG = g_config.color.currentHead.g; headB = g_config.color.currentHead.b;
+        neckR = g_config.color.currentNeck.r; neckG = g_config.color.currentNeck.g; neckB = g_config.color.currentNeck.b;
+        bodyColorR = g_config.color.currentBody.r; bodyColorG = g_config.color.currentBody.g; bodyColorB = g_config.color.currentBody.b;
+        outlineR = g_config.color.currentOutline.r; outlineG = g_config.color.currentOutline.g; outlineB = g_config.color.currentOutline.b;
     }
 
     // Anger tint: blend body colors toward red when goose is angry

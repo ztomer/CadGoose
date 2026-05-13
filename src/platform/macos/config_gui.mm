@@ -128,16 +128,16 @@ void s_setBoolValue(const std::string& key, bool value) {
         // Appbar with tab control
         NSView* appBar = [[NSView alloc] initWithFrame:NSMakeRect(0, WINDOW_HEIGHT - APPBAR_HEIGHT, windowWidth, APPBAR_HEIGHT)];
 
-        NSSegmentedControl* tabControl = [[NSSegmentedControl alloc] initWithFrame:NSMakeRect((windowWidth - 260) / 2, 7, 260, 24)];
-        tabControl.segmentCount = 3;
-        [tabControl setLabel:@"Behaviors" forSegment:0];
-        [tabControl setLabel:@"Appearance" forSegment:1];
-        [tabControl setLabel:@"AI" forSegment:2];
-        tabControl.target = self;
-        tabControl.action = @selector(tabChanged:);
-        tabControl.selectedSegment = 0;
-        tabControl.autoresizingMask = NSViewMinXMargin | NSViewMaxXMargin;
-        [appBar addSubview:tabControl];
+        _tabControl = [[NSSegmentedControl alloc] initWithFrame:NSMakeRect((windowWidth - 260) / 2, 7, 260, 24)];
+        _tabControl.segmentCount = 3;
+        [_tabControl setLabel:@"Behaviors" forSegment:0];
+        [_tabControl setLabel:@"Appearance" forSegment:1];
+        [_tabControl setLabel:@"AI" forSegment:2];
+        _tabControl.target = self;
+        _tabControl.action = @selector(tabChanged:);
+        _tabControl.selectedSegment = 0;
+        _tabControl.autoresizingMask = NSViewMinXMargin | NSViewMaxXMargin;
+        [appBar addSubview:_tabControl];
 
         [contentView addSubview:appBar];
 
@@ -182,16 +182,18 @@ void s_setBoolValue(const std::string& key, bool value) {
         [_behaviorsContainer addSubview:scrollView];
         [_contentContainer addSubview:_behaviorsContainer];
 
-        // --- Appearance tab ---
-        _appearanceView = [[AppearanceTabView alloc] initWithFrame:_contentContainer.bounds];
-        _appearanceView.appearance = [NSAppearance appearanceNamed:NSAppearanceNameDarkAqua];
-        _appearanceView.hidden = YES;
+// --- Appearance tab (wantsLayer to avoid gray bg in layer-shared compositing) ---
+         _appearanceView = [[AppearanceTabView alloc] initWithFrame:_contentContainer.bounds];
+         _appearanceView.wantsLayer = YES;
+         _appearanceView.layer.backgroundColor = [[NSColor clearColor] CGColor];
+         _appearanceView.appearance = [NSAppearance appearanceNamed:NSAppearanceNameDarkAqua];
+         _appearanceView.hidden = YES;
         [_contentContainer addSubview:_appearanceView];
 
-        // --- AI tab ---
-        _aiView = [[AITabView alloc] initWithFrame:_contentContainer.bounds];
-        _aiView.appearance = [NSAppearance appearanceNamed:NSAppearanceNameDarkAqua];
-        _aiView.hidden = YES;
+// --- AI tab ---
+         _aiView = [[AITabView alloc] initWithFrame:_contentContainer.bounds];
+         _aiView.appearance = [NSAppearance appearanceNamed:NSAppearanceNameDarkAqua];
+         _aiView.hidden = YES;
         [_contentContainer addSubview:_aiView];
 
         [self loadConfigItems];
@@ -245,13 +247,21 @@ void s_setBoolValue(const std::string& key, bool value) {
     [self.behaviorsTable reloadData];
 }
 
+- (void)prepareForDisplay {
+    // Reset to Behaviors tab on every window open to avoid stale layer state
+    // in Appearance/AI views (wantsLayer=YES subviews) causing mutex re-lock
+    // on window layer tree rebuild after close+reopen.
+    [_tabControl setSelectedSegment:0];
+    _behaviorsContainer.hidden = NO;
+    _appearanceView.hidden = YES;
+    _aiView.hidden = YES;
+}
+
 - (void)tabChanged:(NSSegmentedControl*)sender {
     NSInteger idx = sender.selectedSegment;
     _behaviorsContainer.hidden = (idx != 0);
     _appearanceView.hidden = (idx != 1);
     _aiView.hidden = (idx != 2);
-    _appearanceView.appearance = [NSAppearance appearanceNamed:NSAppearanceNameDarkAqua];
-    _aiView.appearance = [NSAppearance appearanceNamed:NSAppearanceNameDarkAqua];
 }
 
 - (void)showDetailForBehavior:(NSString*)key {
@@ -342,6 +352,7 @@ void ConfigGUI_ShowWindow() {
     if (!g_configGuiController) {
         g_configGuiController = [[ConfigGUIWindowController alloc] init];
     }
+    [g_configGuiController prepareForDisplay];
     [g_configGuiController.window makeKeyAndOrderFront:nil];
     [[NSApplication sharedApplication] activateIgnoringOtherApps:YES];
 }

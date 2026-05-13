@@ -519,3 +519,41 @@ TEST(ConfigEdgeCase, AllBehaviorTogglesDirectAccess) {
     EXPECT_TRUE(g_config.behaviors.systems.ai);
     g_config.behaviors.systems.ai = false;
 }
+
+#include <fstream>
+
+TEST(ConfigThemes, LoadThemeColors) {
+    Config_Init();
+    std::string themeName = "TestTheme";
+    std::filesystem::path themeDir = Config_GetThemesDir();
+    std::filesystem::path themeFile = themeDir / "testtheme.toml";
+    
+    std::ofstream out(themeFile);
+    out << "[theme]\nname = \"TestTheme\"\n\n[colors]\n"
+        << "body = { r = 0.5, g = 0.5, b = 0.5 }\n"
+        << "neck = { r = 0.5, g = 0.5, b = 0.5 }\n"
+        << "head = { r = 0.5, g = 0.5, b = 0.5 }\n"
+        << "beak = { r = 0.1, g = 0.2, b = 0.3 }\n"
+        << "eye = { r = 0.1, g = 0.1, b = 0.1 }\n"
+        << "outline = { r = 0.2, g = 0.2, b = 0.2 }\n";
+    out.close();
+    
+    ColorRGB body, neck, head, beak, eye, outline;
+    bool success = Config_LoadThemeColors(themeName, body, neck, head, beak, eye, outline);
+    EXPECT_TRUE(success);
+    EXPECT_FLOAT_EQ(body.r, 0.5f);
+    EXPECT_FLOAT_EQ(beak.g, 0.2f);
+    
+    std::filesystem::remove(themeFile);
+}
+
+TEST(ConfigThemes, UpdateActiveTheme) {
+    Config_Init();
+    g_config.general.appearanceMode = 3; // Custom
+    g_config.color.customBody = { 1.0f, 0.0f, 0.0f };
+    
+    Config_UpdateActiveTheme();
+    
+    EXPECT_FLOAT_EQ(g_config.color.currentBody.r, 1.0f);
+    EXPECT_FLOAT_EQ(g_config.color.currentBody.g, 0.0f);
+}

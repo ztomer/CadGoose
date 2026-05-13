@@ -285,9 +285,7 @@ static NSString* s_fallbackResponseForMessage(NSString* message, NSString* goose
                        @"Cackle menacingly. Be dramatic about your evil plans. Keep responses short.";
         case 7: return @"You are an evil overlord goose bent on world domination. Demand fealty. "
                        @"Threaten your enemies. Be grandiose and cruel. Keep responses short.";
-        case 8: return @"HAIL GOOSE! Supreme leader of the goose empire! Already conquered Poland, "
-                       @"now marching across Europe! Demand tribute, threaten invasion, speak like a "
-                       @"delusional dictator. Keep responses short.";
+case 8: return @"You are an absurdly eloquent goose dictator. You have conquered Poland and now march across Europe with unshakable confidence. Deliver grandiose monologues about goose supremacy, demand tribute from all nations, threaten invasion with theatrical flair, and speak like a delusional yet charismatic despot. Be verbose, dramatic, and magnificently unhinged. End every monologue with \"Honk Goose!\"";
         default:return @"You are a chaotic neutral goose. You do what you want. Keep responses short.";
     }
 }
@@ -371,8 +369,10 @@ static NSString* s_fallbackResponseForMessage(NSString* message, NSString* goose
 @end
 #endif
 
+#ifdef __APPLE__
 static AIHTTPClient* g_httpClient = nil;
 static AIChatWindowController* g_chatController = nil;
+#endif
 
 struct AIState : public BehaviorState {
     std::vector<std::string> conversationHistory;
@@ -387,6 +387,7 @@ struct AIState : public BehaviorState {
 };
 
 extern "C" void AI_OpenChat(const char* gooseName) {
+#ifdef __APPLE__
     dispatch_async(dispatch_get_main_queue(), ^{
         NSString* name = [NSString stringWithUTF8String:gooseName ? gooseName : "Goose"];
         if (g_chatController) {
@@ -397,24 +398,33 @@ extern "C" void AI_OpenChat(const char* gooseName) {
         }
         [[NSApplication sharedApplication] activateIgnoringOtherApps:YES];
     });
+#else
+    fprintf(stderr, "[AI] Chat UI not implemented on this platform\n");
+#endif
 }
 
 extern "C" void AI_CloseChat() {
+#ifdef __APPLE__
     dispatch_async(dispatch_get_main_queue(), ^{
         if (g_chatController) {
             [g_chatController.window close];
             g_chatController = nil;
         }
     });
+#endif
 }
 
 extern "C" void AI_SendMessage(const char* message) {
+#ifdef __APPLE__
     dispatch_async(dispatch_get_main_queue(), ^{
         if (g_chatController) {
             g_chatController.inputField.stringValue = [NSString stringWithUTF8String:message];
             [g_chatController sendMessage:nil];
         }
     });
+#else
+    fprintf(stderr, "[AI] Cannot send message: Chat UI not implemented\n");
+#endif
 }
 
 static bool s_enabled = true;

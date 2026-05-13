@@ -95,3 +95,11 @@ void MoveItemToFront(DroppedItem* item) {
 bool ShouldAcceptMouseEvents() {
     return !g_droppedItems.empty();
 }
+
+bool Config_IsSystemDarkTheme() {
+#ifdef __APPLE__
+    return [[[NSApplication sharedApplication] effectiveAppearance] name] == NSAppearanceNameDarkAqua;
+#else
+    return false;
+#endif
+}
