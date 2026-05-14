@@ -15,6 +15,9 @@
 static bool s_enabled = true;
 static bool s_oWasKeyDown = false;
 static bool s_pWasKeyDown = false;
+static std::vector<Vector2> s_jails;
+static bool s_jailsActive = false;
+static double s_lastInputTime = 0;
 
 static bool IsKeyPressed(int keyCode) {
     return CGEventSourceKeyState(kCGEventSourceStateHIDSystemState, (CGKeyCode)keyCode);
@@ -26,99 +29,122 @@ static void init(BehaviorContext& ctx) {
 }
 
 static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
+    auto* state = BehaviorStateManager::Instance().GetOrCreate<JailState>(goose->id, "jail");
+
     if (!g_config.behaviors.control.jail) {
-        auto* state = BehaviorStateManager::Instance().Get<JailState>(goose->id, "jail");
-        if (state) state->isJailed = false;
+        state->isJailed = false;
+        s_jailsActive = false;
+        s_jails.clear();
         return;
     }
 
-    auto* state = BehaviorStateManager::Instance().GetOrCreate<JailState>(goose->id, "jail");
+    if (time > s_lastInputTime) {
+        s_lastInputTime = time;
 
-    Vector2 cursorPos{-1, -1};
-    if (g_cursorProvider) {
-        CursorState cs = g_cursorProvider->Read();
-        if (cs.hasPos()) {
-            cursorPos = cs.position;
+        Vector2 cursorPos{-1, -1};
+        if (g_cursorProvider) {
+            CursorState cs = g_cursorProvider->Read();
+            if (cs.hasPos()) {
+                cursorPos = cs.position;
+            }
         }
+
+        bool oDown = IsKeyPressed(KeyNameToKeyCode(g_config.behaviors.jail.hotkeyO));
+        if (oDown && !s_oWasKeyDown) {
+            if (s_jailsActive) {
+                // Reset functionality: if active, placing a new trap clears the old ones
+                s_jails.clear();
+                s_jailsActive = false;
+            }
+            s_jails.push_back(cursorPos);
+            if (s_jails.size() > 10) s_jails.erase(s_jails.begin()); // Limit to 10 jails
+        }
+        s_oWasKeyDown = oDown;
+
+        bool pDown = IsKeyPressed(KeyNameToKeyCode(g_config.behaviors.jail.hotkeyP));
+        if (pDown && !s_pWasKeyDown && !s_jails.empty()) {
+            s_jailsActive = !s_jailsActive;
+            g_assets.Honk();
+        }
+        s_pWasKeyDown = pDown;
     }
 
-    bool oDown = IsKeyPressed(KeyNameToKeyCode(g_config.behaviors.jail.hotkeyO));
-    if (oDown && !s_oWasKeyDown) {
-        state->jailPos = cursorPos;
-        state->positionSet = true;
-    }
-    s_oWasKeyDown = oDown;
+    state->isJailed = s_jailsActive && !s_jails.empty();
+    ctx.isJailed = state->isJailed;
 
-    bool pDown = IsKeyPressed(KeyNameToKeyCode(g_config.behaviors.jail.hotkeyP));
-    if (pDown && !s_pWasKeyDown) {
-        state->isJailed = !state->isJailed;
-        goose->state = GooseState::WANDER;
-        g_assets.Honk();
-    }
-    s_pWasKeyDown = pDown;
-
-    if (state->isJailed && state->positionSet) {
-        goose->target = state->jailPos;
-        goose->pos = state->jailPos;
+    if (state->isJailed) {
+        // Find nearest trap
+        Vector2 nearest = s_jails[0];
+        float minDist = Vector2::Distance(goose->pos, nearest);
+        for (size_t i = 1; i < s_jails.size(); ++i) {
+            float d = Vector2::Distance(goose->pos, s_jails[i]);
+            if (d < minDist) {
+                minDist = d;
+                nearest = s_jails[i];
+            }
+        }
+        
+        goose->target = nearest;
+        goose->pos = nearest;
         goose->vel = {0, 0};
+        goose->state = GooseState::WANDER;
     }
 }
 
 static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
     if (!g_config.behaviors.control.jail) return;
 
-    auto* state = BehaviorStateManager::Instance().Get<JailState>(goose->id, "jail");
-    if (!state || !state->positionSet) return;
+    // Only render jails once per frame. We can cheat by only drawing them for goose id 0
+    if (goose->id != 0 || s_jails.empty()) return;
 
 #ifdef __APPLE__
     CGContextRef cg = (CGContextRef)renderCtx;
     if (!cg) return;
 
     float jailSize = g_config.behaviors.jail.size;
-    CGRect rect = CGRectMake(state->jailPos.x - jailSize/2, state->jailPos.y - jailSize/2, jailSize, jailSize);
-
-    // Pulsing alpha for visibility
     float pulse = 0.6f + 0.4f * sin(ctx.time * 3.0f);
-    bool jailed = state->isJailed;
+    bool jailed = s_jailsActive;
 
-    // Draw cage
-    CGContextSetRGBStrokeColor(cg, 1.0f, 0.6f, 0.0f, jailed ? 1.0f : pulse * 0.6f);
-    CGContextSetLineWidth(cg, jailed ? 4.0f : 2.0f);
-    CGContextStrokeRect(cg, rect);
+    for (const auto& jailPos : s_jails) {
+        CGRect rect = CGRectMake(jailPos.x - jailSize/2, jailPos.y - jailSize/2, jailSize, jailSize);
 
-    CGContextSetRGBFillColor(cg, 1.0f, 0.6f, 0.0f, jailed ? 0.2f : 0.05f);
-    CGContextFillRect(cg, rect);
+        CGContextSetRGBStrokeColor(cg, 1.0f, 0.6f, 0.0f, jailed ? 1.0f : pulse * 0.6f);
+        CGContextSetLineWidth(cg, jailed ? 4.0f : 2.0f);
+        CGContextStrokeRect(cg, rect);
 
-    // Draw "JAIL" or "SET" label
-    const char* label = jailed ? "JAIL" : "SET";
-    CTFontRef font = CTFontCreateWithName(CFSTR("Helvetica-Bold"), 14.0f, NULL);
-    if (font) {
-        CGColorRef textColor = CGColorCreateGenericRGB(1.0f, 0.6f, 0.0f, jailed ? 1.0f : pulse * 0.6f);
-        CFTypeRef keys[] = { kCTFontAttributeName, kCTForegroundColorAttributeName };
-        CFTypeRef values[] = { font, textColor };
-        CFDictionaryRef attributes = CFDictionaryCreate(NULL, (const void**)keys, (const void**)values, 2, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
+        CGContextSetRGBFillColor(cg, 1.0f, 0.6f, 0.0f, jailed ? 0.2f : 0.05f);
+        CGContextFillRect(cg, rect);
 
-        CFStringRef string = CFStringCreateWithBytes(NULL, (const UInt8*)label, strlen(label), kCFStringEncodingUTF8, false);
-        CFAttributedStringRef attrStr = CFAttributedStringCreate(NULL, string, attributes);
-        CTLineRef line = CTLineCreateWithAttributedString(attrStr);
+        const char* label = jailed ? "JAIL" : "SET";
+        CTFontRef font = CTFontCreateWithName(CFSTR("Helvetica-Bold"), 14.0f, NULL);
+        if (font) {
+            CGColorRef textColor = CGColorCreateGenericRGB(1.0f, 0.6f, 0.0f, jailed ? 1.0f : pulse * 0.6f);
+            CFTypeRef keys[] = { kCTFontAttributeName, kCTForegroundColorAttributeName };
+            CFTypeRef values[] = { font, textColor };
+            CFDictionaryRef attributes = CFDictionaryCreate(NULL, (const void**)keys, (const void**)values, 2, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
 
-        if (line) {
-            float textX = state->jailPos.x - jailSize/2;
-            float textY = state->jailPos.y - jailSize/2 - 20.0f;
-            CGContextSaveGState(cg);
-            CGContextTranslateCTM(cg, textX, textY);
-            CGContextScaleCTM(cg, 1.0, -1.0);
-            CGContextSetTextPosition(cg, 0, 0);
-            CTLineDraw(line, cg);
-            CGContextRestoreGState(cg);
-            CFRelease(line);
+            CFStringRef string = CFStringCreateWithBytes(NULL, (const UInt8*)label, strlen(label), kCFStringEncodingUTF8, false);
+            CFAttributedStringRef attrStr = CFAttributedStringCreate(NULL, string, attributes);
+            CTLineRef line = CTLineCreateWithAttributedString(attrStr);
+
+            if (line) {
+                float textX = jailPos.x - jailSize/2;
+                float textY = jailPos.y - jailSize/2 - 20.0f;
+                CGContextSaveGState(cg);
+                CGContextTranslateCTM(cg, textX, textY);
+                CGContextScaleCTM(cg, 1.0, -1.0);
+                CGContextSetTextPosition(cg, 0, 0);
+                CTLineDraw(line, cg);
+                CGContextRestoreGState(cg);
+                CFRelease(line);
+            }
+
+            CFRelease(attrStr);
+            CFRelease(string);
+            CFRelease(attributes);
+            CGColorRelease(textColor);
+            CFRelease(font);
         }
-
-        CFRelease(attrStr);
-        CFRelease(string);
-        CFRelease(attributes);
-        CGColorRelease(textColor);
-        CFRelease(font);
     }
 #endif
 }

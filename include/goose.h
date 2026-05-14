@@ -110,6 +110,7 @@ public:
 
     // Behavior system enabled flag
     bool behaviorsEnabled = true;
+    bool isResting = false;
 
 
     Goose(int _id, const std::string& _name, int screenW, int screenH);

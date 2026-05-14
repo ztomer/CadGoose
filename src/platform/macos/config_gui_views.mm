@@ -45,7 +45,7 @@
         [self addSubview:_iconLabel];
 
         _nameLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(64, 7, 140, 18)];
-        _nameLabel.font = [NSFont fontWithName:@"Comic Sans MS" size:14] ?: [NSFont systemFontOfSize:14 weight:NSFontWeightSemibold];
+        _nameLabel.font = [NSFont fontWithName:@"Maple Mono" size:14] ?: [NSFont systemFontOfSize:14 weight:NSFontWeightSemibold];
         _nameLabel.textColor = [NSColor whiteColor];
         _nameLabel.backgroundColor = [NSColor clearColor];
         _nameLabel.bordered = NO;
@@ -53,7 +53,7 @@
         [self addSubview:_nameLabel];
 
         _descLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(230, 8, 200, 14)];
-        _descLabel.font = [NSFont fontWithName:@"Comic Sans MS" size:11] ?: [NSFont systemFontOfSize:11];
+        _descLabel.font = [NSFont fontWithName:@"Maple Mono" size:11] ?: [NSFont systemFontOfSize:11];
         _descLabel.textColor = [NSColor colorWithWhite:0.85 alpha:1.0];
         _descLabel.backgroundColor = [NSColor clearColor];
         _descLabel.bordered = NO;

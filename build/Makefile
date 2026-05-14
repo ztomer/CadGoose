@@ -1934,30 +1934,6 @@ tests/common/test_behavior_registry.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/tests/common/test_behavior_registry.cpp.s
 .PHONY : tests/common/test_behavior_registry.cpp.s
 
-tests/common/test_behavior_sim.o: tests/common/test_behavior_sim.cpp.o
-.PHONY : tests/common/test_behavior_sim.o
-
-# target to build an object file
-tests/common/test_behavior_sim.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/tests/common/test_behavior_sim.cpp.o
-.PHONY : tests/common/test_behavior_sim.cpp.o
-
-tests/common/test_behavior_sim.i: tests/common/test_behavior_sim.cpp.i
-.PHONY : tests/common/test_behavior_sim.i
-
-# target to preprocess a source file
-tests/common/test_behavior_sim.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/tests/common/test_behavior_sim.cpp.i
-.PHONY : tests/common/test_behavior_sim.cpp.i
-
-tests/common/test_behavior_sim.s: tests/common/test_behavior_sim.cpp.s
-.PHONY : tests/common/test_behavior_sim.s
-
-# target to generate assembly for a file
-tests/common/test_behavior_sim.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/tests/common/test_behavior_sim.cpp.s
-.PHONY : tests/common/test_behavior_sim.cpp.s
-
 tests/common/test_behavior_states.o: tests/common/test_behavior_states.cpp.o
 .PHONY : tests/common/test_behavior_states.o
 
@@ -2133,30 +2109,6 @@ tests/common/test_hotkey.s: tests/common/test_hotkey.cpp.s
 tests/common/test_hotkey.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/tests/common/test_hotkey.cpp.s
 .PHONY : tests/common/test_hotkey.cpp.s
-
-tests/common/test_jail_state.o: tests/common/test_jail_state.cpp.o
-.PHONY : tests/common/test_jail_state.o
-
-# target to build an object file
-tests/common/test_jail_state.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/tests/common/test_jail_state.cpp.o
-.PHONY : tests/common/test_jail_state.cpp.o
-
-tests/common/test_jail_state.i: tests/common/test_jail_state.cpp.i
-.PHONY : tests/common/test_jail_state.i
-
-# target to preprocess a source file
-tests/common/test_jail_state.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/tests/common/test_jail_state.cpp.i
-.PHONY : tests/common/test_jail_state.cpp.i
-
-tests/common/test_jail_state.s: tests/common/test_jail_state.cpp.s
-.PHONY : tests/common/test_jail_state.s
-
-# target to generate assembly for a file
-tests/common/test_jail_state.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/tests/common/test_jail_state.cpp.s
-.PHONY : tests/common/test_jail_state.cpp.s
 
 tests/common/test_mcp_config.o: tests/common/test_mcp_config.cpp.o
 .PHONY : tests/common/test_mcp_config.o
@@ -2592,9 +2544,6 @@ help:
 	@echo "... tests/common/test_behavior_registry.o"
 	@echo "... tests/common/test_behavior_registry.i"
 	@echo "... tests/common/test_behavior_registry.s"
-	@echo "... tests/common/test_behavior_sim.o"
-	@echo "... tests/common/test_behavior_sim.i"
-	@echo "... tests/common/test_behavior_sim.s"
 	@echo "... tests/common/test_behavior_states.o"
 	@echo "... tests/common/test_behavior_states.i"
 	@echo "... tests/common/test_behavior_states.s"
@@ -2617,9 +2566,6 @@ help:
 	@echo "... tests/common/test_hotkey.o"
 	@echo "... tests/common/test_hotkey.i"
 	@echo "... tests/common/test_hotkey.s"
-	@echo "... tests/common/test_jail_state.o"
-	@echo "... tests/common/test_jail_state.i"
-	@echo "... tests/common/test_jail_state.s"
 	@echo "... tests/common/test_mcp_config.o"
 	@echo "... tests/common/test_mcp_config.i"
 	@echo "... tests/common/test_mcp_config.s"

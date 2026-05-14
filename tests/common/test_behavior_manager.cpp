@@ -25,7 +25,6 @@ TEST(BehaviorStateManager, GetOrCreateNew) {
     auto* state = mgr.GetOrCreate<JailState>(1, "jail");
     ASSERT_NE(state, nullptr);
     EXPECT_FALSE(state->isJailed);
-    EXPECT_FALSE(state->positionSet);
 
     mgr.ClearAll();
 }
@@ -35,14 +34,10 @@ TEST(BehaviorStateManager, GetOrCreateExisting) {
     mgr.ClearAll();
 
     auto* state1 = mgr.GetOrCreate<JailState>(1, "jail");
-    state1->jailPos.x = 100.0f;
-    state1->jailPos.y = 200.0f;
     state1->isJailed = true;
 
     auto* state2 = mgr.GetOrCreate<JailState>(1, "jail");
     EXPECT_EQ(state1, state2);
-    EXPECT_FLOAT_EQ(state2->jailPos.x, 100.0f);
-    EXPECT_FLOAT_EQ(state2->jailPos.y, 200.0f);
     EXPECT_TRUE(state2->isJailed);
 
     mgr.ClearAll();
@@ -56,14 +51,14 @@ TEST(BehaviorStateManager, MultipleGooseIds) {
     auto* state2 = mgr.GetOrCreate<JailState>(2, "jail");
 
     EXPECT_NE(state1, state2);
-    state1->jailPos.x = 100.0f;
-    state2->jailPos.x = 200.0f;
+    state1->isJailed = true;
+    state2->isJailed = false;
 
     auto* state1Again = mgr.Get<JailState>(1, "jail");
     auto* state2Again = mgr.Get<JailState>(2, "jail");
 
-    EXPECT_FLOAT_EQ(state1Again->jailPos.x, 100.0f);
-    EXPECT_FLOAT_EQ(state2Again->jailPos.x, 200.0f);
+    EXPECT_TRUE(state1Again->isJailed);
+    EXPECT_FALSE(state2Again->isJailed);
 
     mgr.ClearAll();
 }

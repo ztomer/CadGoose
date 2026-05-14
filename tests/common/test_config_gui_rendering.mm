@@ -24,8 +24,8 @@
     window.appearance = [NSAppearance appearanceNamed:NSAppearanceNameDarkAqua];
     
     NSView* contentView = window.contentView;
-    contentView.wantsLayer = YES;
-    contentView.layer.backgroundColor = [[NSColor colorWithWhite:0.12 alpha:1.0] CGColor];
+    NSVisualEffectView* visualEffectView = [[NSVisualEffectView alloc] initWithFrame:contentView.bounds];
+    [contentView addSubview:visualEffectView];
     
     // Content container (no wantsLayer, like committed version)
     NSView* contentContainer = [[NSView alloc] initWithFrame:NSMakeRect(0, 0, 800, 792)];

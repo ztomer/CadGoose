@@ -138,26 +138,6 @@ void BehaviorRegistry::Clear() {
 }
 
 // ===========================
-// Jail Constraint
-// ===========================
-void ApplyJailConstraint(Goose* goose, JailState* state) {
-    if (!state || !state->isJailed || !state->positionSet) return;
-    if (!goose) return;
-
-    float dx = goose->pos.x - state->jailPos.x;
-    float dy = goose->pos.y - state->jailPos.y;
-    float dist = std::hypot(dx, dy);
-
-    if (dist > state->jailRadius) {
-        float scale = state->jailRadius / dist;
-        goose->pos.x = state->jailPos.x + dx * scale;
-        goose->pos.y = state->jailPos.y + dy * scale;
-        goose->vel.x = 0;
-        goose->vel.y = 0;
-    }
-}
-
-// ===========================
 // Ball Physics
 // ===========================
 void UpdateBallPhysics(BallState::Ball& ball, float screenWidth, float screenHeight,

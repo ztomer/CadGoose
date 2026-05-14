@@ -37,18 +37,10 @@ struct BehaviorState {
 };
 
 struct JailState : public BehaviorState {
-    Vector2 jailPos{0, 0};
-    float jailRadius = 80.0f;
     bool isJailed = false;
-    bool positionSet = false;
-    double lastJailAttempt = 0;
 
     void Reset() override {
-        jailPos = {0, 0};
-        jailRadius = 80.0f;
         isJailed = false;
-        positionSet = false;
-        lastJailAttempt = 0;
     }
 };
 

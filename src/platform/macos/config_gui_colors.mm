@@ -32,7 +32,7 @@ bool SaveThemeToFile(const std::string& path, const std::string& desc);
     // --- Appearance mode row ---
     NSTextField* appearanceLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(12, y + 2, 80, 20)];
     appearanceLabel.stringValue = @"Appearance:";
-    appearanceLabel.font = [NSFont fontWithName:@"Comic Sans MS" size:13] ?: [NSFont systemFontOfSize:13];
+    appearanceLabel.font = [NSFont fontWithName:@"Maple Mono" size:13] ?: [NSFont systemFontOfSize:13];
     appearanceLabel.textColor = [NSColor whiteColor];
     appearanceLabel.backgroundColor = [NSColor clearColor];
     appearanceLabel.bordered = NO;
@@ -61,7 +61,7 @@ bool SaveThemeToFile(const std::string& path, const std::string& desc);
     // Description
     NSTextField* desc = [[NSTextField alloc] initWithFrame:NSMakeRect(12, y, w - 24, 20)];
     desc.stringValue = @"Edit custom colors below; use themes to save/load color presets.";
-    desc.font = [NSFont fontWithName:@"Comic Sans MS" size:12] ?: [NSFont systemFontOfSize:12];
+    desc.font = [NSFont fontWithName:@"Maple Mono" size:12] ?: [NSFont systemFontOfSize:12];
     desc.textColor = [NSColor colorWithWhite:0.85 alpha:1.0];
     desc.backgroundColor = [NSColor clearColor];
     desc.bordered = NO;
@@ -83,7 +83,7 @@ bool SaveThemeToFile(const std::string& path, const std::string& desc);
 
     auto addColHeader = [&](float x, NSString* title, NSColor* color) {
         NSTextField* h = [[NSTextField alloc] initWithFrame:NSMakeRect(x, headerY, colW, 14)];
-        h.stringValue = title; h.font = [NSFont fontWithName:@"Comic Sans MS" size:10] ?: [NSFont systemFontOfSize:10 weight:NSFontWeightSemibold];
+        h.stringValue = title; h.font = [NSFont fontWithName:@"Maple Mono" size:10] ?: [NSFont systemFontOfSize:10 weight:NSFontWeightSemibold];
         h.textColor = color; h.backgroundColor = [NSColor clearColor];
         h.bordered = NO; h.editable = NO; h.alignment = NSTextAlignmentCenter;
         [self addSubview:h];
@@ -97,7 +97,7 @@ bool SaveThemeToFile(const std::string& path, const std::string& desc);
     // --- Color editor rows ---
     auto addColorRow = [&](NSString* label, float* rPtr, float* gPtr, float* bPtr, NSString* prefix, float yPos) -> float {
         NSTextField* lf = [[NSTextField alloc] initWithFrame:NSMakeRect(12, yPos, labelW, 16)];
-        lf.font = [NSFont fontWithName:@"Comic Sans MS" size:11] ?: [NSFont systemFontOfSize:11];
+        lf.font = [NSFont fontWithName:@"Maple Mono" size:11] ?: [NSFont systemFontOfSize:11];
         lf.textColor = [NSColor whiteColor];
         lf.backgroundColor = [NSColor clearColor];
         lf.bordered = NO; lf.editable = NO;
@@ -113,7 +113,7 @@ bool SaveThemeToFile(const std::string& path, const std::string& desc);
             [self addSubview:sl];
 
             NSTextField* vf = [[NSTextField alloc] initWithFrame:NSMakeRect(colX + sliderW + 2, yPos, valW, 16)];
-            vf.font = [NSFont fontWithName:@"Comic Sans MS" size:9] ?: [NSFont systemFontOfSize:9];
+            vf.font = [NSFont fontWithName:@"Maple Mono" size:9] ?: [NSFont systemFontOfSize:9];
             vf.stringValue = [NSString stringWithFormat:@"%.2f", *ptr];
             vf.textColor = [NSColor whiteColor];
             vf.backgroundColor = [NSColor colorWithWhite:0.15 alpha:1.0];
@@ -142,7 +142,7 @@ bool SaveThemeToFile(const std::string& path, const std::string& desc);
     y = addColorRow(@"Beak",    &g_config.color.customBeak.r,    &g_config.color.customBeak.g,    &g_config.color.customBeak.b,    @"customBeak",    y);
     y = addColorRow(@"Eyes",    &g_config.color.customEye.r,     &g_config.color.customEye.g,     &g_config.color.customEye.b,     @"customEye",     y);
     y = addColorRow(@"Outline", &g_config.color.customOutline.r, &g_config.color.customOutline.g, &g_config.color.customOutline.b, @"customOutline", y);
-    y -= 6;
+    y -= 10;
 
     // --- Themes section separator ---
     NSView* themeSep = [[NSView alloc] initWithFrame:NSMakeRect(12, y, w - 24, 1)];
@@ -153,7 +153,7 @@ bool SaveThemeToFile(const std::string& path, const std::string& desc);
 
     NSTextField* themeLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(12, y, 60, 16)];
     themeLabel.stringValue = @"Themes";
-    themeLabel.font = [NSFont fontWithName:@"Comic Sans MS" size:13] ?: [NSFont systemFontOfSize:13 weight:NSFontWeightSemibold];
+    themeLabel.font = [NSFont fontWithName:@"Maple Mono" size:13] ?: [NSFont systemFontOfSize:13 weight:NSFontWeightSemibold];
     themeLabel.textColor = [NSColor whiteColor];
     themeLabel.backgroundColor = [NSColor clearColor];
     themeLabel.bordered = NO;
@@ -163,7 +163,7 @@ bool SaveThemeToFile(const std::string& path, const std::string& desc);
 
     NSButton* saveThemeBtn = [[NSButton alloc] initWithFrame:NSMakeRect(12, y, 170, 24)];
     [saveThemeBtn setTitle:@"Save Current as Theme\u2026"];
-    [saveThemeBtn setFont:[NSFont fontWithName:@"Comic Sans MS" size:11] ?: [NSFont systemFontOfSize:11]];
+    [saveThemeBtn setFont:[NSFont fontWithName:@"Maple Mono" size:11] ?: [NSFont systemFontOfSize:11]];
     [saveThemeBtn setTarget:self];
     [saveThemeBtn setAction:@selector(saveTheme:)];
     saveThemeBtn.bezelStyle = NSBezelStyleRounded;
@@ -171,7 +171,7 @@ bool SaveThemeToFile(const std::string& path, const std::string& desc);
 
     NSButton* openThemeBtn = [[NSButton alloc] initWithFrame:NSMakeRect(190, y, 140, 24)];
     [openThemeBtn setTitle:@"Open Themes Folder"];
-    [openThemeBtn setFont:[NSFont fontWithName:@"Comic Sans MS" size:11] ?: [NSFont systemFontOfSize:11]];
+    [openThemeBtn setFont:[NSFont fontWithName:@"Maple Mono" size:11] ?: [NSFont systemFontOfSize:11]];
     [openThemeBtn setTarget:self];
     [openThemeBtn setAction:@selector(openThemesFolder:)];
     openThemeBtn.bezelStyle = NSBezelStyleRounded;

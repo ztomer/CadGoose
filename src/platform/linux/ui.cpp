@@ -63,28 +63,7 @@ void UpdateInputRegion(GtkWindow* window, const MonitorInfo& m) {
     cairo_region_destroy(region);
 }
 
-// --- Drawing (see ui_drawing.cpp) -----------------------------------------
-void draw_overlay(GtkDrawingArea* area, cairo_t* cr, int width, int height, gpointer data) {
-    MonitorInfo* m = (MonitorInfo*)data;
-    if (!m || cairo_status(cr) != CAIRO_STATUS_SUCCESS) return;
-
-    // Respect multi-monitor toggle: if disabled, only draw on the primary monitor (0,0)
-    if (!g_config.multiMonitorEnabled && (m->x != 0 || m->y != 0)) {
-        // Clear surface just in case
-        cairo_save(cr);
-        cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
-        cairo_paint(cr);
-        cairo_restore(cr);
-        return;
-    }
-
-    cairo_save(cr); 
-
-    // Translation for multi-monitor: move everything by negative monitor offset
-    // so world coordinates are drawn correctly in monitor-local window.
-    cairo_translate(cr, -m->x, -m->y);
-
-    // Draw mud footprints
+static void DrawFootprints(cairo_t* cr) {
     for (auto& fp : g_footprints) {
         double age = g_time - fp.timeSpawned;
         float alpha = 0.5f;
@@ -99,10 +78,8 @@ void draw_overlay(GtkDrawingArea* area, cairo_t* cr, int width, int height, gpoi
         cairo_scale(cr, g_config.globalScale, g_config.globalScale);
         cairo_rotate(cr, fp.dir * G_PI / 180.0);
         
-        // Use a brown-ish mud color
         cairo_set_source_rgba(cr, 0.45, 0.25, 0.1, alpha);
         
-        // Simple foot shape from three ellipses
         cairo_save(cr);
         cairo_scale(cr, 6, 8);
         cairo_arc(cr, 0, 0, 1.0, 0, 2*G_PI);
@@ -125,8 +102,9 @@ void draw_overlay(GtkDrawingArea* area, cairo_t* cr, int width, int height, gpoi
 
         cairo_restore(cr);
     }
+}
 
-    // Draw Dropped Items
+static void DrawDroppedItems(cairo_t* cr) {
     for (auto& item : g_droppedItems) {
         if (!std::isfinite(item.pos.x) || !std::isfinite(item.pos.y) || !std::isfinite(item.rotation)) {
             continue; // Skip corrupted items
@@ -188,6 +166,26 @@ void draw_overlay(GtkDrawingArea* area, cairo_t* cr, int width, int height, gpoi
             cairo_restore(cr);
         }
     }
+}
+
+// --- Drawing (see ui_drawing.cpp) -----------------------------------------
+void draw_overlay(GtkDrawingArea* area, cairo_t* cr, int width, int height, gpointer data) {
+    MonitorInfo* m = (MonitorInfo*)data;
+    if (!m || cairo_status(cr) != CAIRO_STATUS_SUCCESS) return;
+
+    if (!g_config.multiMonitorEnabled && (m->x != 0 || m->y != 0)) {
+        cairo_save(cr);
+        cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
+        cairo_paint(cr);
+        cairo_restore(cr);
+        return;
+    }
+
+    cairo_save(cr); 
+    cairo_translate(cr, -m->x, -m->y);
+
+    DrawFootprints(cr);
+    DrawDroppedItems(cr);
 
     // Draw Geese
     for (auto& g : g_geese) {

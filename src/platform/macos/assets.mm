@@ -43,6 +43,11 @@ AssetManager::~AssetManager() {
 void AssetManager::Init() {
     ASSET_ROOT = ".";
 
+#if defined(__APPLE__)
+    NSURL *fontDirURL = [NSURL fileURLWithPath:@"Assets/Text/MapleMono" isDirectory:YES];
+    CTFontManagerRegisterFontsForURL((__bridge CFURLRef)fontDirURL, kCTFontManagerScopeProcess, NULL);
+#endif
+
     ScanFolder("Assets/Images/Memes", memePaths, {".png", ".jpg", ".jpeg"});
     ScanFolder("Assets/Text/NotepadMessages", textPaths, {".txt"});
 

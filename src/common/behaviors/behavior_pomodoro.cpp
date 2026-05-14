@@ -88,6 +88,7 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
         }
     } else {
         // Non-aggressive break: normal walking
+        goose->isResting = false;
         if (state->accumulatedRotation > 0) {
             goose->dir -= state->accumulatedRotation;
             state->accumulatedRotation = 0;

@@ -140,7 +140,7 @@
 
 - (void)addInstructionLabel:(NSString*)text atY:(float)y {
     NSTextField* label = [[NSTextField alloc] initWithFrame:NSMakeRect(12, y, self.bounds.size.width - 24, 40)];
-    label.font = [NSFont fontWithName:@"Comic Sans MS" size:12] ?: [NSFont systemFontOfSize:12];
+    label.font = [NSFont fontWithName:@"Maple Mono" size:12] ?: [NSFont systemFontOfSize:12];
     label.textColor = [NSColor colorWithWhite:0.85 alpha:1.0];
     label.backgroundColor = [NSColor clearColor];
     label.bordered = NO;

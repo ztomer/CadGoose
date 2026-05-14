@@ -43,9 +43,13 @@ static const char* StateName(GooseState s) {
 
 static void apply_goose_transform(cairo_t* cr, const Goose& g) {
     cairo_translate(cr, g.pos.x, g.pos.y);
-    double facing = g.vel.Magnitude() > 0.1f ? std::atan2(g.vel.y, g.vel.x) : g.facing;
-    cairo_rotate(cr, facing);
-    cairo_scale(cr, g.scale, g.scale);
+    // facing might not be updated correctly when resting
+    cairo_rotate(cr, g.dir * (M_PI / 180.0));
+    if (g.isResting) {
+        cairo_scale(cr, g_config.general.globalScale, g_config.general.globalScale * 0.5); // Flatten
+    } else {
+        cairo_scale(cr, g_config.general.globalScale, g_config.general.globalScale);
+    }
 }
 
 static void draw_goose_sprite(cairo_t* cr, const Goose& g, const char* base_name, float alpha) {
