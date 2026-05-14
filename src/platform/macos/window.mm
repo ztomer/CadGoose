@@ -82,8 +82,30 @@ extern bool g_debugMode;
     self = [super init];
     if (self) {
         _windows = [NSMutableArray array];
+        [[NSNotificationCenter defaultCenter] addObserver:self
+                                                 selector:@selector(screenParametersChanged:)
+                                                     name:NSApplicationDidChangeScreenParametersNotification
+                                                   object:nil];
     }
     return self;
+}
+
+- (void)dealloc {
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
+}
+
+- (void)screenParametersChanged:(NSNotification*)notification {
+    DEBUG_LOG("Screen parameters changed, re-evaluating windows...");
+    // Very simple implementation: close old, create new.
+    for (GooseWindow* w in _windows) {
+        [w close];
+    }
+    [_windows removeAllObjects];
+    [self createWindowsForAllScreens];
+    for (GooseWindow* w in _windows) {
+        [w.gooseView startAnimation];
+        [w orderFront:nil];
+    }
 }
 
 - (void)createWindowsForAllScreens {

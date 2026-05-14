@@ -1,6 +1,6 @@
 # CadGoose
 
-![alt text](Assets/Images/OtherGfx/CadGoose.png)
+![alt text](Assets/Images/OtherGfx/CadGooseEvil.jpeg)
 
 CadGoose is the more polite, publicly health-insured cousin of the Desktop Goose.
 
@@ -24,10 +24,32 @@ See [docs/README_LINUX.md](docs/README_LINUX.md) for Linux platform details.
 ## Documentation
 
 - [docs/MCP.md](docs/MCP.md) - MCP protocol & AI chat command reference
-- [docs/ARCH.md](docs/ARCH.md) - Internal Architecture (State Machine, Project Structure)
+- [docs/ARCH.md](docs/ARCH.md) - Internal Architecture (State Machine, Project Structure, Bundle)
 - [docs/PLAN.md](docs/PLAN.md) - Current project priorities and status
 - [docs/COMPLETED_TASKS.md](docs/COMPLETED_TASKS.md) - Historical completed items
 - [docs/README_LINUX.md](docs/README_LINUX.md) - Linux build instructions
+- [scripts/create_bundle.sh](scripts/create_bundle.sh) - macOS .app bundle builder
+- [.github/workflows/build_and_release.yml](.github/workflows/build_and_release.yml) - GitHub Actions CI/CD
+
+---
+
+## macOS Bundle Notes
+
+On **macOS 26.5+** with ad-hoc code signing, the `.app` bundle may crash on launch with a Metal JIT error:
+
+```
+Unable to reach MTLCompilerService. The process is unavailable because the compiler is no longer active.
+```
+
+This is a known limitation: Metal shader JIT compilation requires properly signed binaries, which ad-hoc signing (`codesign --sign -`) cannot provide.
+
+**Workaround:** Run the binary directly instead of the bundle:
+
+```bash
+./build/CadGoose
+```
+
+The GitHub Actions macOS runners have proper signing infrastructure where the bundle works correctly.
 
 ---
 
@@ -35,14 +57,19 @@ See [docs/README_LINUX.md](docs/README_LINUX.md) for Linux platform details.
 
 - [CadGoose](#cadgoose)
   - [Platforms](#platforms)
+  - [Documentation](#documentation)
   - [Table of Contents](#table-of-contents)
   - [Overview](#overview)
   - [Features](#features)
   - [Configuration](#configuration)
   - [Assets](#assets)
-  - [Known Limitations](#known-limitations)
+    - [Meme images](#meme-images)
+    - [Notepad messages](#notepad-messages)
+    - [Sound effects](#sound-effects)
   - [Contributing](#contributing)
   - [License](#license)
+  - [Mod Attribution](#mod-attribution)
+  - [Open Source Acknowledgements](#open-source-acknowledgements)
 
 ---
 
@@ -93,6 +120,7 @@ The application supports multiple simultaneous geese, each with its own name and
 CadGoose includes a comprehensive behavior system inspired by Desktop Goose ResourceHub mods. Behaviors are organized into four categories:
 
 **Fun Behaviors:**
+
 - **Ball**: Push balls around the screen (soccer, beach, generic)
 - **BreadCrumbs**: Leave a trail of breadcrumbs
 - **Hats**: Put hats on geese
@@ -100,6 +128,7 @@ CadGoose includes a comprehensive behavior system inspired by Desktop Goose Reso
 - **Acid**: Spin wildly with honks
 
 **Control Behaviors:**
+
 - **Honcker**: Press F to make the goose honk
 - **Jail**: Press O to set position, P to trap
 - **Portals**: Hold P + 1/2 to place portals
@@ -107,6 +136,7 @@ CadGoose includes a comprehensive behavior system inspired by Desktop Goose Reso
 - **Banish**: Ctrl+Alt+Middle Click to banish goose
 
 **Info Behaviors:**
+
 - **Nametag**: Shows goose name above head
 - **Debugoose**: Debug overlay with state info
 - **Presence**: Shows goose state in menu bar
@@ -115,6 +145,7 @@ CadGoose includes a comprehensive behavior system inspired by Desktop Goose Reso
 - **GooseManager**: Control goose tasks and speeds
 
 **Systems Behaviors:**
+
 - **Health**: Health bar system for geese
 - **AI**: Chat with the goose (requires API configuration)
 - **Pomodoro**: Work/rest timer mode
@@ -212,6 +243,7 @@ Original mod sources preserved in `references/mods/`. See `references/MOD_IMPLEM
 > **Note**: Some original mod repositories have been deleted. DLLs were decompiled for reference purposes only.
 
 ## Open Source Acknowledgements
+
 - **[Maple Mono](https://github.com/subframe7536/maple-font)**: Bundled UI font (SIL Open Font License 1.1).
 - **[toml11](https://github.com/ToruNiina/toml11)**: C++ TOML parser used for configuration (MIT License).
 IT License).

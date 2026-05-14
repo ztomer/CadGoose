@@ -60,17 +60,40 @@ static bool SendHyprCommand(const std::string& cmd, std::string* out) {
     // Tell compositor we’re done writing; then read the reply
     ::shutdown(fd, SHUT_WR);
 
+    // Make socket non-blocking
+    int flags = ::fcntl(fd, F_GETFL, 0);
+    ::fcntl(fd, F_SETFL, flags | O_NONBLOCK);
+
+    struct pollfd pfd;
+    pfd.fd = fd;
+    pfd.events = POLLIN;
+
     if (out) {
         char buf[4096];
         while (true) {
-            ssize_t n = ::recv(fd, buf, sizeof(buf), 0);
-            if (n <= 0) break;
-            out->append(buf, buf + n);
+            int ret = ::poll(&pfd, 1, 100); // 100ms timeout
+            if (ret <= 0) break; // timeout or error
+
+            if (pfd.revents & POLLIN) {
+                ssize_t n = ::recv(fd, buf, sizeof(buf), 0);
+                if (n <= 0) break; // EOF or error
+                out->append(buf, buf + n);
+            } else {
+                break; // HUP or ERR
+            }
         }
     } else {
         // Drain quickly anyway
         char buf[256];
-        while (::recv(fd, buf, sizeof(buf), 0) > 0) {}
+        while (true) {
+            int ret = ::poll(&pfd, 1, 100);
+            if (ret <= 0) break;
+            if (pfd.revents & POLLIN) {
+                if (::recv(fd, buf, sizeof(buf), 0) <= 0) break;
+            } else {
+                break;
+            }
+        }
     }
 
     ::close(fd);

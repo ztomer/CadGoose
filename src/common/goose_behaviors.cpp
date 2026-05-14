@@ -316,6 +316,51 @@ static bool isTargetReached(Goose& g, float threshold) {
 CursorAction Goose::UpdateBehaviors(double dt, double time, int w, int h, const CursorState& cursor) {
     initHonkState(honkState, time);
 
+    // --- Joy Suggestions (Petting & Dodging) ---
+    if (cursor.hasPos() && state != GooseState::SNATCH_CURSOR) {
+        Vector2 headPos = GetBeakTipDevice();
+        float distToHead = Vector2::Distance(cursor.position, headPos);
+        float cursorSpeed = Vector2::Distance(cursor.position, lastCursorPos) / (dt > 0.001 ? dt : 0.016);
+        
+        // 1. Petting
+        if (distToHead < 60.0f) {
+            cursorWiggleAmount += cursorSpeed * dt;
+            if (cursorWiggleAmount > 600.0f && !isPetted) {
+                isPetted = true;
+                pettedTime = time;
+                g_assets.Honk(); // Purr
+                vel = {0, 0};    // Stop to enjoy the pets
+            }
+        } else {
+            cursorWiggleAmount *= 0.95f; // Decay
+        }
+        
+        // 2. Cursor Avoidance (Dodging)
+        if (cursorSpeed > 2500.0f && distToHead < 200.0f && !isSurprised && !isPetted) {
+            Vector2 cursorVel = cursor.position - lastCursorPos;
+            Vector2 toGoose = headPos - cursor.position;
+            if (Vector2::Length(cursorVel) > 0 && Vector2::Length(toGoose) > 0) {
+                if (Dot(Vector2::Normalize(cursorVel), Vector2::Normalize(toGoose)) > 0.8f) {
+                    isSurprised = true;
+                    surprisedTime = time;
+                    target = pos + Vector2::Normalize(pos - cursor.position) * 400.0f;
+                    state = GooseState::WANDER;
+                }
+            }
+        }
+        
+        lastCursorPos = cursor.position;
+    }
+    
+    if (isPetted && time - pettedTime > 2.0) {
+        isPetted = false;
+        cursorWiggleAmount = 0.0f;
+    }
+    if (isSurprised && time - surprisedTime > 1.5) {
+        isSurprised = false;
+    }
+    // ---------------------------------------------
+
     if (heldItem != nullptr && state == GooseState::WANDER) {
         state = GooseState::RETURNING;
         if (target.x < 0 || target.x > w || target.y < 0 || target.y > h) {
