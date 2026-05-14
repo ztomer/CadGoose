@@ -243,6 +243,7 @@ void Goose::UpdateDirection() {
 
 CursorAction Goose::Update(double dt, double time, int w, int h,
                            const CursorState &cursor) {
+  lastUpdateTime = time;
   if (state != prevState) {
     FILE *f = GetDebugLog();
     const char *stateNames[] = {"W", "F", "R", "C", "S"};

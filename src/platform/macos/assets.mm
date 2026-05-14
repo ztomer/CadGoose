@@ -244,6 +244,7 @@ ItemData* AssetManager::CreateTextItem(const std::string& text) {
     data->w = g_config.asset.textPlaceholderW;
     data->h = g_config.asset.textPlaceholderH;
     data->textContent = std::make_shared<std::string>(text);
+    data->isAIGenerated = true;
     return data;
 }
 

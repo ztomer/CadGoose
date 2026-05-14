@@ -8,6 +8,7 @@
 #include "config.h"
 #include "goose_math.h"
 #include "behavior.h"
+#include <cmath>
 
 #ifdef __APPLE__
 #import <Foundation/Foundation.h>
@@ -119,7 +120,30 @@ void DrawGoose(Goose* g, CGContextRef ctx) {
     float beakW = std::min(g_config.render.beakWidth, g_config.render.beakMaxWidth);
     Vector2 beakBase = g->rig.neckHead + fwd * g_config.rig.beakBaseOffset;
     Vector2 beakTip = beakBase + fwd * g_config.rig.beakLen;
-    DrawLine(ctx, beakBase, beakTip, beakW, beakR, beakG, beakB, 1.0f);
+
+    const double kChewDuration = 0.4;
+    float beakOpen = 0.0f;
+    if (g->isChewing) {
+        double elapsed = g->lastUpdateTime - g->chewingStartTime;
+        if (elapsed >= kChewDuration) {
+            g->isChewing = false;
+        } else {
+            double phase = elapsed * 10.0 * 2.0 * M_PI;
+            float rawOsc = 0.5f * (1.0f - std::cos(phase));
+            float decay = 1.0f - (float)(elapsed / kChewDuration);
+            beakOpen = rawOsc * decay * 6.0f;
+        }
+    }
+
+    if (beakOpen > 0.5f) {
+        Vector2 perp = Vector2::Normalize(Vector2{-fwd.y, fwd.x});
+        Vector2 upperTip = beakTip + perp * beakOpen;
+        Vector2 lowerTip = beakTip - perp * beakOpen;
+        DrawLine(ctx, beakBase, upperTip, beakW * 0.7f, beakR, beakG, beakB, 1.0f);
+        DrawLine(ctx, beakBase, lowerTip, beakW * 0.7f, beakR, beakG, beakB, 1.0f);
+    } else {
+        DrawLine(ctx, beakBase, beakTip, beakW, beakR, beakG, beakB, 1.0f);
+    }
 
     CGContextRestoreGState(ctx);
 
@@ -178,11 +202,19 @@ void DrawHeldItem(Goose* g, CGContextRef ctx) {
         CGContextSetRGBFillColor(ctx, 0.8f, 0.8f, 0.8f, 1.0f);
         CGContextFillRect(ctx, CGRectMake(0, 0, g->heldItem->w, g->heldItem->h));
     } else if (g->heldItem->type == ItemData::TEXT) {
-        CGContextSetRGBFillColor(ctx, 1, 1, 0.9f, 1.0f);
-        CGContextFillRect(ctx, CGRectMake(0, 0, g->heldItem->w, g->heldItem->h));
-        CGContextSetRGBStrokeColor(ctx, 0, 0, 0, 1.0f);
-        CGContextSetLineWidth(ctx, 2);
-        CGContextStrokeRect(ctx, CGRectMake(0, 0, g->heldItem->w, g->heldItem->h));
+        if (g->heldItem->isAIGenerated) {
+            CGContextSetRGBFillColor(ctx, 0.96f, 0.94f, 0.88f, 1.0f);
+            CGContextFillRect(ctx, CGRectMake(0, 0, g->heldItem->w, g->heldItem->h));
+            CGContextSetRGBStrokeColor(ctx, 0.6f, 0.5f, 0.4f, 1.0f);
+            CGContextSetLineWidth(ctx, 1);
+            CGContextStrokeRect(ctx, CGRectMake(0, 0, g->heldItem->w, g->heldItem->h));
+        } else {
+            CGContextSetRGBFillColor(ctx, 1, 1, 0.9f, 1.0f);
+            CGContextFillRect(ctx, CGRectMake(0, 0, g->heldItem->w, g->heldItem->h));
+            CGContextSetRGBStrokeColor(ctx, 0, 0, 0, 1.0f);
+            CGContextSetLineWidth(ctx, 2);
+            CGContextStrokeRect(ctx, CGRectMake(0, 0, g->heldItem->w, g->heldItem->h));
+        }
 
         if (g->heldItem->textContent) {
 #ifdef __APPLE__
@@ -262,8 +294,16 @@ void DrawDroppedItem(CGContextRef ctx, const DroppedItem& item, float viewHeight
     float y = -item.data->h / 2.0f;
 
     if (item.data->type == ItemData::TEXT) {
-        CGContextSetRGBFillColor(ctx, 1.0, 1.0, 0.8, 1.0);
-        CGContextFillRect(ctx, CGRectMake(x, y, item.data->w, item.data->h));
+        if (item.data->isAIGenerated) {
+            CGContextSetRGBFillColor(ctx, 0.96f, 0.94f, 0.88f, 1.0f);
+            CGContextFillRect(ctx, CGRectMake(x, y, item.data->w, item.data->h));
+            CGContextSetRGBStrokeColor(ctx, 0.6f, 0.5f, 0.4f, 1.0f);
+            CGContextSetLineWidth(ctx, 1);
+            CGContextStrokeRect(ctx, CGRectMake(x, y, item.data->w, item.data->h));
+        } else {
+            CGContextSetRGBFillColor(ctx, 1.0, 1.0, 0.8, 1.0);
+            CGContextFillRect(ctx, CGRectMake(x, y, item.data->w, item.data->h));
+        }
 
 #ifdef __APPLE__
         static NSDictionary* textAttrs = nil;
@@ -280,6 +320,18 @@ void DrawDroppedItem(CGContextRef ctx, const DroppedItem& item, float viewHeight
         float textW = item.data->w - g_config.render.textNotePadding * 2;
         float textH = item.data->h - g_config.render.textNotePadding * 2;
         [text drawInRect:NSMakeRect(textX, textY, textW, textH) withAttributes:textAttrs];
+
+        if (item.data->isAIGenerated) {
+            NSString* aiLabel = @"AI";
+            NSDictionary* labelAttrs = @{
+                NSFontAttributeName: [NSFont systemFontOfSize:8.0],
+                NSForegroundColorAttributeName: [NSColor colorWithRed:0.5 green:0.4 blue:0.3 alpha:0.6]
+            };
+            CGSize labelSize = [aiLabel sizeWithAttributes:labelAttrs];
+            float labelX = x + item.data->w - labelSize.width - 4;
+            float labelY = y + 2;
+            [aiLabel drawAtPoint:NSMakePoint(labelX, labelY) withAttributes:labelAttrs];
+        }
 #endif
     } else if (item.data->type == ItemData::MEME) {
         if (item.data->image) {

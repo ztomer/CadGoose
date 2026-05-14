@@ -1,31 +1,48 @@
 # Plan
 
-## PHASE 1: Memory Growth ✅ DONE
-- **Fixes**: @autoreleasepool in tick, CoreText object caching (pomodoro/nametag/jail), hat bitmap caching
-- **Results**: CoreAnimation dirty 3.9MB→192KB (95%↓), allocation count 306K→124K (60%↓), RSS stable
+> **Note**: This plan is historical. See [AGENTS.md](/AGENTS.md) for current project state and active context.
 
-## PHASE 2: CI/CD Pipeline ✅ DONE
-- Created `.github/workflows/pr_check.yml` — PR build check (Linux + macOS, builds + runs tests)
-- Updated `build_and_release.yml` — graceful bundle skip, test step, caveat comments
+## DONE ✅
+- Memory growth fixes (@autoreleasepool, CoreText caching, hat bitmap caching)
+- CI/CD pipeline (PR check + build/release workflows)
+- macOS bundle crash documentation
+- Fetch loop stuck fix (edge margin > screen clamp)
+- AI text meme generator (paper canvas, cooldown fix, timeout 30→60s)
+- Breadcrumbs render order (two-pass ground/overlay)
+- Breadcrumbs eating mechanic (goose proximity removes crumbs + chewing animation)
+- RightShift reference file fix
+- Ring buffer for all unbounded containers
+- Local CoreML LLM (direct MLModel integration)
+- Two-pool text system (AI + file pool)
+- Local LLM API contract tests (11 tests)
+- Chewing/swallowing animation (split-beak open/close)
 
-## PHASE 3: macOS Bundle Crash (LOW PRIORITY)
-Bundled `.app` crashes with "Unable to reach MTLCompilerService" on macOS 26.5 (M4 Max) — likely ad-hoc signing limitation. Non-bundled `./build/CadGoose` runs fine.
+## BACKLOG
 
-## OPEN QUESTIONS (user feedback needed)
+### Joy & Delight Features (from docs/JOY_SUGGESTIONS.md)
+- **Pet the goose**: Wiggle cursor over head → closed eyes, heart, purr sound
+- **Cursor avoidance**: Fast cursor toward goose → surprised reaction, dodge
+- **Nighttime mode**: After 11 PM → slower walking, sleepy animations (yawn, nightcap)
+- **Weekend vibes**: Friday afternoon → boombox, sunglasses
+- **Idle preening**: No interaction for a few minutes → feather cleaning
+- **Boredom sigh**: 10+ min idle → dramatic sigh, lie down
+- **Window peeking**: At monitor edge → peek head around bezel
+- **Custom affirmations**: Configurable positive message drops
+- **Interactive drops**: Puddles that splash, flowers that grow
+- **AI typing sounds**: Pitch-shifted honk noises per evil level during chat
 
-### Memory Allocator Investigation (LOW)
-Evaluate mimalloc/tcmalloc vs system malloc for reduced fragmentation.
+### All-Behavior Profile (MEM)
+Rerun vmmap + sample with all 16 behaviors enabled. Verify no growth.
 
-### All-Plugins Performance Profile (MED)
-Rerun memory & CPU profiles with all 16 behaviors enabled.
+### AI Text Meme — Full Integration Test
+- Start Osaurus server, enable text meme, verify generated texts appear in queue
+- Cycle through all available models
 
-### Breadcrumbs Interaction (MED)
-Crumbs are purely visual markers — goose doesn't interact. RightShift vs `i` key mapping issue. Needs user clarification: what behavior is desired?
+### Memory Allocator Investigation
+Evaluate mimalloc/tcmalloc vs system malloc.
 
-### Unwired Joy Features (HIGH)
-Audit features/config toggles vs actual behavior code paths. Some may be registered but not producing observable effects.
+### Unwired Joy Features Audit
+Audit features/config toggles vs actual behavior code paths.
 
-### Fetch stopped working (FIXED)
-**Root cause**: `fetchEdgeMargin=80` > `screenClampExpanded=50` — goose clamped before reaching off-screen fetch target, permanently stuck in FETCHING.
-**Fixes**: ClampToScreen now uses `max(screenClampExpanded, fetchEdgeMargin)`, plus FETCHING timeout safety net.
-**Tests**: 3 new regression tests in `test_goose_behavior.cpp`.
+### MTLCompilerService Bundle Crash
+Only fixable with Apple Developer signing + hardened runtime + JIT entitlement.

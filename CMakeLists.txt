@@ -37,6 +37,7 @@ if(MACOS)
     find_library(COREAUDIO_LIBRARY CoreAudio)
     find_library(APPLICATIONSERVICES_LIBRARY ApplicationServices)
     find_library(CURL_LIBRARY curl)
+    find_library(COREML_LIBRARY CoreML)
 
     if(NOT COCOA_LIBRARY)
         message(FATAL_ERROR "Cocoa framework not found")
@@ -60,6 +61,7 @@ if(MACOS)
         ${COREAUDIO_LIBRARY}
         ${APPLICATIONSERVICES_LIBRARY}
         ${CURL_LIBRARY}
+        ${COREML_LIBRARY}
         Threads::Threads
         ${MIMALLOC_LIBRARY}
     )
@@ -213,6 +215,8 @@ if(APPLE OR LINUX)
         tests/common/test_config_load_save.cpp
         tests/common/test_config_toggles.cpp
         tests/common/test_gui_config.mm
+        tests/common/test_ai_text_meme.cpp
+        tests/common/test_local_llm.cpp
         tests/common/test_behavior_ai.mm
         tests/common/presence_stub.cpp
         src/common/app_actions.cpp
@@ -250,6 +254,7 @@ if(APPLE OR LINUX)
         src/common/behaviors/behavior_ai.mm
         src/common/behaviors/ai_http_client.mm
         src/common/behaviors/ai_text_meme.mm
+        src/common/behaviors/local_llm.mm
         src/common/hotkey.cpp
         src/common/mcp_server.cpp
         src/common/mcp_http_server.cpp
@@ -281,6 +286,7 @@ if(APPLE OR LINUX)
             ${COREGRAPHICS_LIBRARY}
             ${COREAUDIO_LIBRARY}
             ${APPLICATIONSERVICES_LIBRARY}
+            ${COREML_LIBRARY}
             ${MIMALLOC_LIBRARY}
         )
     else()

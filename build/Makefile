@@ -1046,6 +1046,15 @@ src/common/behaviors/behavior_rainbow.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/src/common/behaviors/behavior_rainbow.cpp.s
 .PHONY : src/common/behaviors/behavior_rainbow.cpp.s
 
+src/common/behaviors/local_llm.o: src/common/behaviors/local_llm.mm.o
+.PHONY : src/common/behaviors/local_llm.o
+
+# target to build an object file
+src/common/behaviors/local_llm.mm.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/common/behaviors/local_llm.mm.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/src/common/behaviors/local_llm.mm.o
+.PHONY : src/common/behaviors/local_llm.mm.o
+
 src/common/config.o: src/common/config.cpp.o
 .PHONY : src/common/config.o
 
@@ -1743,6 +1752,30 @@ tests/common/test_ai_routing.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/tests/common/test_ai_routing.cpp.s
 .PHONY : tests/common/test_ai_routing.cpp.s
 
+tests/common/test_ai_text_meme.o: tests/common/test_ai_text_meme.cpp.o
+.PHONY : tests/common/test_ai_text_meme.o
+
+# target to build an object file
+tests/common/test_ai_text_meme.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/tests/common/test_ai_text_meme.cpp.o
+.PHONY : tests/common/test_ai_text_meme.cpp.o
+
+tests/common/test_ai_text_meme.i: tests/common/test_ai_text_meme.cpp.i
+.PHONY : tests/common/test_ai_text_meme.i
+
+# target to preprocess a source file
+tests/common/test_ai_text_meme.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/tests/common/test_ai_text_meme.cpp.i
+.PHONY : tests/common/test_ai_text_meme.cpp.i
+
+tests/common/test_ai_text_meme.s: tests/common/test_ai_text_meme.cpp.s
+.PHONY : tests/common/test_ai_text_meme.s
+
+# target to generate assembly for a file
+tests/common/test_ai_text_meme.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/tests/common/test_ai_text_meme.cpp.s
+.PHONY : tests/common/test_ai_text_meme.cpp.s
+
 tests/common/test_ai_tokens.o: tests/common/test_ai_tokens.cpp.o
 .PHONY : tests/common/test_ai_tokens.o
 
@@ -2119,6 +2152,30 @@ tests/common/test_hotkey.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/tests/common/test_hotkey.cpp.s
 .PHONY : tests/common/test_hotkey.cpp.s
 
+tests/common/test_local_llm.o: tests/common/test_local_llm.cpp.o
+.PHONY : tests/common/test_local_llm.o
+
+# target to build an object file
+tests/common/test_local_llm.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/tests/common/test_local_llm.cpp.o
+.PHONY : tests/common/test_local_llm.cpp.o
+
+tests/common/test_local_llm.i: tests/common/test_local_llm.cpp.i
+.PHONY : tests/common/test_local_llm.i
+
+# target to preprocess a source file
+tests/common/test_local_llm.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/tests/common/test_local_llm.cpp.i
+.PHONY : tests/common/test_local_llm.cpp.i
+
+tests/common/test_local_llm.s: tests/common/test_local_llm.cpp.s
+.PHONY : tests/common/test_local_llm.s
+
+# target to generate assembly for a file
+tests/common/test_local_llm.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/tests/common/test_local_llm.cpp.s
+.PHONY : tests/common/test_local_llm.cpp.s
+
 tests/common/test_mcp_config.o: tests/common/test_mcp_config.cpp.o
 .PHONY : tests/common/test_mcp_config.o
 
@@ -2449,6 +2506,7 @@ help:
 	@echo "... src/common/behaviors/behavior_rainbow.o"
 	@echo "... src/common/behaviors/behavior_rainbow.i"
 	@echo "... src/common/behaviors/behavior_rainbow.s"
+	@echo "... src/common/behaviors/local_llm.o"
 	@echo "... src/common/config.o"
 	@echo "... src/common/config.i"
 	@echo "... src/common/config.s"
@@ -2529,6 +2587,9 @@ help:
 	@echo "... tests/common/test_ai_routing.o"
 	@echo "... tests/common/test_ai_routing.i"
 	@echo "... tests/common/test_ai_routing.s"
+	@echo "... tests/common/test_ai_text_meme.o"
+	@echo "... tests/common/test_ai_text_meme.i"
+	@echo "... tests/common/test_ai_text_meme.s"
 	@echo "... tests/common/test_ai_tokens.o"
 	@echo "... tests/common/test_ai_tokens.i"
 	@echo "... tests/common/test_ai_tokens.s"
@@ -2576,6 +2637,9 @@ help:
 	@echo "... tests/common/test_hotkey.o"
 	@echo "... tests/common/test_hotkey.i"
 	@echo "... tests/common/test_hotkey.s"
+	@echo "... tests/common/test_local_llm.o"
+	@echo "... tests/common/test_local_llm.i"
+	@echo "... tests/common/test_local_llm.s"
 	@echo "... tests/common/test_mcp_config.o"
 	@echo "... tests/common/test_mcp_config.i"
 	@echo "... tests/common/test_mcp_config.s"

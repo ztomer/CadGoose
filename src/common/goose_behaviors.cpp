@@ -251,9 +251,9 @@ static void handleFetching(Goose& g, double time, int w, int h) {
     } else if (g.forceItemFetch == 0) {
         g.heldItem = g_assets.GetRandomMeme(w, h, 0.1f);
     } else if (g.forceItemFetch == 1) {
-        if (AI_TextMeme_HasAvailable()) {
-            std::string aiText = AI_TextMeme_Dequeue();
-            g.heldItem = g_assets.CreateTextItem(aiText);
+        std::string text = AI_TextMeme_Dequeue();
+        if (!text.empty()) {
+            g.heldItem = g_assets.CreateTextItem(text);
         } else {
             g.heldItem = g_assets.GetRandomText();
         }

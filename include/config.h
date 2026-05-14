@@ -460,6 +460,8 @@ struct Config {
     bool textMemeAutoSave = false;
     int textMemeMaxQueue = 5;
     int chatMaxHistory = 100;
+    bool localLlmEnabled = false;
+    std::string localLlmModelPath;
   } ai;
 };
 
