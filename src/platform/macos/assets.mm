@@ -52,6 +52,20 @@ void AssetManager::Init() {
     ASSET_ROOT = ".";
 #endif
 
+    // If Assets folder doesn't exist in ASSET_ROOT, search parent dirs relative to ASSET_ROOT
+    fs::path assetsPath = ASSET_ROOT / "Assets";
+    if (!fs::exists(assetsPath)) {
+        fs::path parentPath = ASSET_ROOT / ".." / "Assets";
+        if (fs::exists(parentPath)) {
+            ASSET_ROOT = ASSET_ROOT.parent_path();
+        } else {
+            fs::path grandparentPath = ASSET_ROOT / ".." / ".." / "Assets";
+            if (fs::exists(grandparentPath)) {
+                ASSET_ROOT = ASSET_ROOT.parent_path().parent_path();
+            }
+        }
+    }
+
     std::cout << "Asset root: " << ASSET_ROOT << std::endl;
 
 #if defined(__APPLE__)
