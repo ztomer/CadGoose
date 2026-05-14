@@ -331,10 +331,10 @@ lifetime = 15.0
 chance = 15
 
 [Behavior]
-breadcrumbs_enabled = false
+breadcrumbs_enabled = true
 acid_enabled = false
 autumn_leaves_enabled = false
-rainbow_enabled = false
+rainbow_enabled = true
 anger_enabled = false
 jail_hotkey_p = "p"
 drag_enabled = false
