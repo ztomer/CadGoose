@@ -366,6 +366,7 @@ struct Behavior {
     RenderFunc render;
     CleanupFunc cleanup;
 
+    bool renderOnGround = false;
     const char** conflicts = nullptr;
     int priority = 0;
 
@@ -388,6 +389,7 @@ public:
     void InitAll(Goose* goose);
     void TickAll(Goose* goose, double dt, double time);
     void RenderAll(Goose* goose, void* ctx);
+    void RenderPass(Goose* goose, void* ctx, bool groundPass);
     void CleanupAll(Goose* goose);
 
     Behavior* Get(const char* id);

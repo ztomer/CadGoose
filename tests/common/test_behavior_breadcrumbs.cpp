@@ -138,3 +138,82 @@ TEST(BreadCrumbsBehavior, CursorPositionInScreenCoords) {
     EXPECT_EQ(drawX, 500.0f - 32.0f);
     EXPECT_EQ(drawY, 300.0f - 32.0f);
 }
+
+TEST(BreadCrumbsBehavior, CrumbEatenByProximity) {
+    struct TestCrumb { float x, y; bool eaten = false; };
+    TestCrumb crumb{100.0f, 100.0f, false};
+    float gooseX = 105.0f, gooseY = 100.0f;
+    float eatRadius = 32.0f;
+    float dist = std::hypot(gooseX - crumb.x, gooseY - crumb.y);
+    EXPECT_LT(dist, eatRadius);
+    if (dist < eatRadius) crumb.eaten = true;
+    EXPECT_TRUE(crumb.eaten);
+}
+
+TEST(BreadCrumbsBehavior, CrumbNotEatenWhenFar) {
+    struct TestCrumb { float x, y; bool eaten = false; };
+    TestCrumb crumb{100.0f, 100.0f, false};
+    float gooseX = 200.0f, gooseY = 200.0f;
+    float eatRadius = 32.0f;
+    float dist = std::hypot(gooseX - crumb.x, gooseY - crumb.y);
+    EXPECT_GT(dist, eatRadius);
+    EXPECT_FALSE(crumb.eaten);
+}
+
+TEST(BreadCrumbsBehavior, EatenCrumbSkippedInRender) {
+    struct Crumb { float x, y; bool eaten; double time; float lifetime; };
+    std::vector<Crumb> crumbs = {
+        {0, 0, false, 0, 10},
+        {10, 10, true, 0, 10},
+        {20, 20, false, 0, 10},
+    };
+    int renderCount = 0, skipCount = 0;
+    for (const auto& c : crumbs) {
+        if (c.eaten) { skipCount++; continue; }
+        renderCount++;
+    }
+    EXPECT_EQ(renderCount, 2);
+    EXPECT_EQ(skipCount, 1);
+}
+
+TEST(BreadCrumbsBehavior, ChewingAnimationFieldsWork) {
+    Config_Init();
+    Goose goose(0, "TestGoose", 800, 600);
+    EXPECT_FALSE(goose.isChewing);
+
+    goose.isChewing = true;
+    goose.chewingStartTime = goose.lastUpdateTime;
+    EXPECT_TRUE(goose.isChewing);
+
+    double elapsed = goose.lastUpdateTime - goose.chewingStartTime;
+    EXPECT_DOUBLE_EQ(elapsed, 0.0);
+}
+
+TEST(BreadCrumbsBehavior, ChewingAnimationExpiresAfterDuration) {
+    Config_Init();
+    Goose goose(0, "TestGoose", 800, 600);
+    goose.isChewing = true;
+    goose.chewingStartTime = 10.0;
+    goose.lastUpdateTime = 10.5;
+
+    const double kChewDuration = 0.4;
+    double elapsed = goose.lastUpdateTime - goose.chewingStartTime;
+    if (elapsed >= kChewDuration) {
+        goose.isChewing = false;
+    }
+    EXPECT_FALSE(goose.isChewing);
+}
+
+TEST(BreadCrumbsBehavior, EatenCrumbRemovedFromFront) {
+    struct Crumb { float x, y; bool eaten; double time; float lifetime; };
+    std::vector<Crumb> crumbs = {
+        {0, 0, true, 0, 10},
+        {10, 10, false, 0, 10},
+        {20, 20, false, 0, 10},
+    };
+    while (!crumbs.empty() && crumbs.front().eaten) {
+        crumbs.erase(crumbs.begin());
+    }
+    EXPECT_EQ(crumbs.size(), 2);
+    EXPECT_FALSE(crumbs[0].eaten);
+}

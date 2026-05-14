@@ -23,13 +23,15 @@ See [docs/README_LINUX.md](docs/README_LINUX.md) for Linux platform details.
 
 ## Documentation
 
-- [docs/MCP.md](docs/MCP.md) - MCP protocol & AI chat command reference
-- [docs/ARCH.md](docs/ARCH.md) - Internal Architecture (State Machine, Project Structure, Bundle)
-- [docs/PLAN.md](docs/PLAN.md) - Current project priorities and status
-- [docs/COMPLETED_TASKS.md](docs/COMPLETED_TASKS.md) - Historical completed items
-- [docs/README_LINUX.md](docs/README_LINUX.md) - Linux build instructions
-- [scripts/create_bundle.sh](scripts/create_bundle.sh) - macOS .app bundle builder
-- [.github/workflows/build_and_release.yml](.github/workflows/build_and_release.yml) - GitHub Actions CI/CD
+- [AGENTS.md](AGENTS.md) — Current project state, build/run, architecture notes
+- [docs/MCP.md](docs/MCP.md) — MCP protocol & AI chat command reference
+- [docs/PROTOCOL.md](docs/PROTOCOL.md) — Unix socket command protocol
+- [docs/ARCH.md](docs/ARCH.md) — Internal architecture (state machine, project structure, bundle)
+- [docs/PLAN.md](docs/PLAN.md) — Backlog and planned features
+- [docs/JOY_SUGGESTIONS.md](docs/JOY_SUGGESTIONS.md) — Future delight feature ideas
+- [docs/README_LINUX.md](docs/README_LINUX.md) — Linux build instructions
+- [scripts/create_bundle.sh](scripts/create_bundle.sh) — macOS .app bundle builder
+- [.github/workflows/build_and_release.yml](.github/workflows/build_and_release.yml) — GitHub Actions CI/CD
 
 ---
 
@@ -195,14 +197,7 @@ Sound files are loaded from `Assets/Sound/NotEmbedded/` via SDL2_mixer. Supporte
 
 ## Contributing
 
-Contributions are welcome. A few things to keep in mind:
-
-- The main orchestration file is `src/ui.cpp` (Linux) or `src/macos/renderer.mm` (macOS). Try to keep new logic in dedicated source files where possible.
-- `src/world.cpp` is the canonical home for any new global state. Avoid scattering new globals into other translation units.
-- The build currently has a mix of source files and pre-built artifacts in the tree. Do not commit build outputs or generated Wayland binding files that are already tracked under `protocols/`.
-- Run a `clang-format` pass before submitting patches.
-
-To open an issue or pull request, use the GitHub interface for this repository.
+Contributions are welcome. See [AGENTS.md](AGENTS.md) for build instructions and project state.
 
 ---
 
@@ -216,31 +211,7 @@ Third-party assets bundled under `Assets/` may carry their own licenses. Review 
 
 ## Mod Attribution
 
-CadGoose's behavior system is inspired by mods from the [Desktop Goose ResourceHub](https://desktopgooseunofficial.github.io/ResourceHub/mods/explore/mods.html). The following behaviors are based on or derived from ResourceHub mods:
-
-| Behavior | Based On | Original Author | Source |
-|---------|----------|-----------------|--------|
-| Honcker | Honcker | DesktopGooseUnofficial | [ResourceHub](https://desktopgooseunofficial.github.io/ResourceHub/mods/Honcker.html) |
-| Drag | DragGoose | Straaft | [ResourceHub](https://desktopgooseunofficial.github.io/ResourceHub/mods/DragGoose.html) |
-| Jail | GooseJail | WackyModer | [GitHub](https://github.com/WackyModer/GooseJail) |
-| Portal | PortalGoos | Moonaliss1 | [GitHub](https://github.com/Moonaliss1/DesktopGooseMod_PortalGoos) |
-| Clicker | Clicker | Wolf/NE1W01F | [GitHub](https://github.com/NE1W01F/Gooes-Mod) |
-| Anger | OnePunchGoose | VisualError | [GitHub](https://github.com/VisualError/OnePunchGoose) |
-| Ball | Ball | TheOrlando | [GitHub](https://github.com/TheOrlando/DesktopGooseMod_Ball) |
-| BreadCrumbs | BreadCrumbs | Straaft | [ResourceHub](https://desktopgooseunofficial.github.io/ResourceHub/mods/BreadCrumbs.html) |
-| Hats | Hats | - | ResourceHub |
-| Acid | AcidGoose | F!NN | [ResourceHub](https://desktopgooseunofficial.github.io/ResourceHub/mods/AcidGoose.html) |
-| Rainbow | Rainbow | - | ResourceHub |
-| Health | Health | - | ResourceHub |
-| Banish | Banish | - | ResourceHub |
-| Nametag | Nametag | - | ResourceHub |
-| Presence | GoosePresence | - | ResourceHub |
-| GooseManager | GooseManager | - | ResourceHub |
-| AI | AI | - | ResourceHub |
-
-Original mod sources preserved in `references/mods/`. See `references/MOD_IMPLEMENTATION_GUIDE.md` for implementation details.
-
-> **Note**: Some original mod repositories have been deleted. DLLs were decompiled for reference purposes only.
+CadGoose's behavior system is inspired by mods from the [Desktop Goose ResourceHub](https://desktopgooseunofficial.github.io/ResourceHub/mods/explore/mods.html).
 
 ## Open Source Acknowledgements
 

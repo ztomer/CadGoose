@@ -21,6 +21,7 @@ struct Crumbs {
     Vector2 pos;
     double time;
     float lifetime;
+    bool eaten = false;
 };
 static constexpr size_t kMaxCrumbs = 200;
 static RingBuffer<Crumbs, kMaxCrumbs> s_crumbs;
@@ -88,6 +89,24 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
     while (!s_crumbs.empty() && time - s_crumbs.front().time > s_crumbs.front().lifetime) {
         s_crumbs.pop();
     }
+
+    float eatRadius = g_config.render.footSize * 2.0f;
+    for (size_t i = 0; i < s_crumbs.size(); ++i) {
+        Crumbs& crumb = s_crumbs[i];
+        if (crumb.eaten) continue;
+        float dist = std::hypot(goose->pos.x - crumb.pos.x, goose->pos.y - crumb.pos.y);
+        if (dist < eatRadius) {
+            crumb.eaten = true;
+            g_assets.Bite();
+            goose->isChewing = true;
+            goose->chewingStartTime = time;
+            break;
+        }
+    }
+
+    while (!s_crumbs.empty() && s_crumbs.front().eaten) {
+        s_crumbs.pop();
+    }
 }
 
 static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
@@ -102,6 +121,7 @@ static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
     if (!s_crumbImage) {
         float size = g_config.behaviors.breadCrumbs.size;
         for (const auto& crumb : s_crumbs) {
+            if (crumb.eaten) continue;
             float alpha = std::max(0.0f, 1.0f - (float)(ctx.time - crumb.time) / crumb.lifetime);
             CGContextSetRGBFillColor(cg, 0.9f, 0.7f, 0.4f, alpha * 0.8f);
             CGContextFillEllipseInRect(cg, CGRectMake(crumb.pos.x - size/2, crumb.pos.y - size/2, size, size));
@@ -110,6 +130,7 @@ static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
         float imgWidth = (float)CGImageGetWidth(s_crumbImage);
         float imgHeight = (float)CGImageGetHeight(s_crumbImage);
         for (const auto& crumb : s_crumbs) {
+            if (crumb.eaten) continue;
             float alpha = std::max(0.0f, 1.0f - (float)(ctx.time - crumb.time) / crumb.lifetime);
             CGContextSetAlpha(cg, alpha);
             CGRect rect = CGRectMake(crumb.pos.x - imgWidth / 2.0f, crumb.pos.y - imgHeight / 2.0f, imgWidth, imgHeight);
@@ -130,6 +151,7 @@ static Behavior g_breadcrumbBehavior = {
     .tick = tick,
     .render = render,
     .cleanup = nullptr,
+    .renderOnGround = true,
     .conflicts = nullptr,
     .priority = 0,
     .config = { .requiresAccessibility = false, .isStarter = false }

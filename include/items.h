@@ -24,6 +24,7 @@ struct ItemData {
 
     std::shared_ptr<const std::string> textContent;
     int w = 0, h = 0;
+    bool isAIGenerated = false;
 
     ItemData();
     ~ItemData();

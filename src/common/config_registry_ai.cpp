@@ -35,5 +35,9 @@ void RegisterAI(std::vector<ConfigOption>& r) {
         &g_config.ai.textMemeMaxQueue, 1, 50, OnConfigChange));
     r.push_back(CONFIG_INT("AI", "chat_max_history", "Max Chat History Messages",
         &g_config.ai.chatMaxHistory, 10, 1000, OnConfigChange));
+    r.push_back(CONFIG_BOOL("AI", "local_llm_enabled", "Local CoreML LLM",
+        &g_config.ai.localLlmEnabled, OnConfigChange));
+    r.push_back(CONFIG_STRING("AI", "local_llm_model_path", "Local CoreML Model Path",
+        &g_config.ai.localLlmModelPath, OnConfigChange));
 
 }

@@ -134,7 +134,30 @@ void Renderer_DrawGoose(Goose* g, CGContextRef ctx) {
     float beakW = std::min(g_config.render.beakWidth, g_config.render.beakMaxWidth);
     Vector2 beakBase = g->rig.neckHead + fwd * g_config.rig.beakBaseOffset;
     Vector2 beakTip = beakBase + fwd * g_config.rig.beakLen;
-    DrawLine(ctx, beakBase, beakTip, beakW, beakR, beakG, beakB, 1.0f);
+
+    const double kChewDuration = 0.4;
+    float beakOpen = 0.0f;
+    if (g->isChewing) {
+        double elapsed = g->lastUpdateTime - g->chewingStartTime;
+        if (elapsed >= kChewDuration) {
+            g->isChewing = false;
+        } else {
+            double phase = elapsed * 10.0 * 2.0 * M_PI;
+            float rawOsc = 0.5f * (1.0f - std::cos(phase));
+            float decay = 1.0f - (float)(elapsed / kChewDuration);
+            beakOpen = rawOsc * decay * 6.0f;
+        }
+    }
+
+    if (beakOpen > 0.5f) {
+        Vector2 perp = Vector2::Normalize(Vector2{-fwd.y, fwd.x});
+        Vector2 upperTip = beakTip + perp * beakOpen;
+        Vector2 lowerTip = beakTip - perp * beakOpen;
+        DrawLine(ctx, beakBase, upperTip, beakW * 0.7f, beakR, beakG, beakB, 1.0f);
+        DrawLine(ctx, beakBase, lowerTip, beakW * 0.7f, beakR, beakG, beakB, 1.0f);
+    } else {
+        DrawLine(ctx, beakBase, beakTip, beakW, beakR, beakG, beakB, 1.0f);
+    }
 
     CGContextRestoreGState(ctx);
 

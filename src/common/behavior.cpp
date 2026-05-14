@@ -96,6 +96,10 @@ void BehaviorRegistry::TickAll(Goose* goose, double dt, double time) {
 }
 
 void BehaviorRegistry::RenderAll(Goose* goose, void* ctx) {
+    RenderPass(goose, ctx, false);
+}
+
+void BehaviorRegistry::RenderPass(Goose* goose, void* ctx, bool groundPass) {
     if (!goose) return;
 
     BehaviorContext behaviorCtx{};
@@ -104,7 +108,7 @@ void BehaviorRegistry::RenderAll(Goose* goose, void* ctx) {
     behaviorCtx.globalScale = g_config.general.globalScale;
 
     for (auto* behavior : behaviors) {
-        if (behavior->enabledPtr && *behavior->enabledPtr) {
+        if (behavior->enabledPtr && *behavior->enabledPtr && behavior->renderOnGround == groundPass) {
             try {
                 behavior->render(goose, behaviorCtx, ctx);
             } catch (const std::exception& e) {

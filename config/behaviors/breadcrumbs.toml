@@ -15,7 +15,7 @@ spawnDist = 15.0
 size = 5.0
 
 # Key for triggering (RightShift)
-triggerKey = "RightShift"
+triggerKey = "right shift"
 
 # Speed threshold to spawn crumbs
 speedThreshold = 10.0

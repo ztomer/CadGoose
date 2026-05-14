@@ -329,21 +329,19 @@ static BOOL s_hasPrimary = NO;
     DrawFootprints(ctx, g_footprints, self.currentTime);
     DrawLeaves(ctx, g_leafPiles, self.currentTime);
 
-    DEBUG_LOG("drawRect: g_geese.size=%zu g_droppedItems.size=%zu", g_geese.size(), g_droppedItems.size());
     for (auto& g : g_geese) {
-        DEBUG_LOG("  goose[%d]: heldItem=%p state=%d dragPos=(%.1f,%.1f) dragInit=%d",
-                   g.id, (void*)g.heldItem, (int)g.state, g.dragPos.x, g.dragPos.y, g.dragInit);
-        DrawGoose(&g, ctx);
-        if (g.heldItem) {
-            DEBUG_LOG("    heldItem: type=%d w=%d h=%d image=%p",
-                      (int)g.heldItem->type, g.heldItem->w, g.heldItem->h,
-                      (void*)g.heldItem->image);
-        }
-        DrawHeldItem(&g, ctx);
+        BehaviorRegistry::Instance().RenderPass(&g, ctx, true);
     }
 
     for (auto& g : g_geese) {
-        BehaviorRegistry::Instance().RenderAll(&g, ctx);
+        DrawGoose(&g, ctx);
+        if (g.heldItem) {
+            DrawHeldItem(&g, ctx);
+        }
+    }
+
+    for (auto& g : g_geese) {
+        BehaviorRegistry::Instance().RenderPass(&g, ctx, false);
     }
 
     DrawDebugOverlay(ctx, g_geese);

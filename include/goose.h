@@ -122,6 +122,10 @@ public:
     double fetchStartTime = -999.0;
     double chaseStartTime = -999.0;
 
+    bool isChewing = false;
+    double chewingStartTime = 0.0;
+    double lastUpdateTime = 0.0;
+
     // Behavior system enabled flag
     bool behaviorsEnabled = true;
     bool isResting = false;

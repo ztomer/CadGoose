@@ -17,6 +17,7 @@
 #include "window.h"
 #include "renderer.h"
 #include "audio.h"
+#include "ai_text_meme.h"
 
 extern bool g_debugMode;
 static bool g_mcpMode = false;
@@ -234,6 +235,9 @@ bool Config_IsSystemDarkTheme();
 
     g_assets.Init();
     DEBUG_LOG("Assets init done");
+
+    AI_TextMeme_LoadFileTexts();
+    DEBUG_LOG("AI text memes loaded");
 
     g_backendManager.Init();
     DEBUG_LOG("Backend: %s", g_backendManager.GetActiveBackend()->Name().c_str());
