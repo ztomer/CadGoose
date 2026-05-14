@@ -117,6 +117,11 @@ public:
     double lastDebugLog = -1e9;
     static constexpr double debugLogInterval = 0.1;
 
+    // Fetch/drop tracking
+    double lastDropTime = -999.0;
+    double fetchStartTime = -999.0;
+    double chaseStartTime = -999.0;
+
     // Behavior system enabled flag
     bool behaviorsEnabled = true;
     bool isResting = false;
@@ -125,7 +130,7 @@ public:
     Goose(int _id, const std::string& _name, int screenW, int screenH);
 
     CursorAction Update(double dt, double time, int scrW, int scrH, const CursorState& cursor);
-    void ForceFetch(int type, int w, int h);
+    void ForceFetch(int type, int w, int h, double time = -1.0);
     void ForceFetchText(const std::string& text, int w, int h);
     void ForceWander(int w, int h);
 
@@ -146,7 +151,7 @@ private:
     Vector2 CalculateSeparationForce();
     Vector2 CalculateEdgeAvoidance(int w, int h);
     void UpdateDrag(double dt);
-    void StartFetch(int w, int h);
+    void StartFetch(int w, int h, double time = -1.0);
     CursorAction UpdateBehaviors(double dt, double time, int w, int h, const CursorState& cursor);
     void UpdateChaseCursor(double time, const Vector2& cursorPos);
 

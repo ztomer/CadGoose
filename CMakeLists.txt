@@ -42,6 +42,14 @@ if(MACOS)
         message(FATAL_ERROR "Cocoa framework not found")
     endif()
 
+    find_library(MIMALLOC_LIBRARY mimalloc)
+    find_path(MIMALLOC_INCLUDE_DIR mimalloc.h)
+    if(MIMALLOC_LIBRARY AND MIMALLOC_INCLUDE_DIR)
+        message(STATUS "mimalloc found: ${MIMALLOC_LIBRARY}")
+        # Runtime override: DYLD_FORCE_FLAT_NAMESPACE=1 DYLD_INSERT_LIBRARIES=/opt/homebrew/lib/libmimalloc.dylib
+        # Or link -lmimalloc (linked below as library, no override by default on macOS)
+    endif()
+
     add_executable(CadGoose ${SOURCES})
 
     target_link_libraries(CadGoose
@@ -53,6 +61,7 @@ if(MACOS)
         ${APPLICATIONSERVICES_LIBRARY}
         ${CURL_LIBRARY}
         Threads::Threads
+        ${MIMALLOC_LIBRARY}
     )
 
     target_include_directories(CadGoose PUBLIC
@@ -60,6 +69,7 @@ if(MACOS)
         ${CMAKE_CURRENT_SOURCE_DIR}/src/platform/macos
         ${CMAKE_CURRENT_SOURCE_DIR}/src/common
         ${CMAKE_CURRENT_SOURCE_DIR}/vendor/toml11
+        ${MIMALLOC_INCLUDE_DIR}
     )
 
     set_target_properties(CadGoose PROPERTIES
@@ -239,6 +249,7 @@ if(APPLE OR LINUX)
         src/common/behaviors/behavior_presence.cpp
         src/common/behaviors/behavior_ai.mm
         src/common/behaviors/ai_http_client.mm
+        src/common/behaviors/ai_text_meme.mm
         src/common/hotkey.cpp
         src/common/mcp_server.cpp
         src/common/mcp_http_server.cpp
@@ -270,6 +281,7 @@ if(APPLE OR LINUX)
             ${COREGRAPHICS_LIBRARY}
             ${COREAUDIO_LIBRARY}
             ${APPLICATIONSERVICES_LIBRARY}
+            ${MIMALLOC_LIBRARY}
         )
     else()
         target_link_libraries(CadGooseTests
@@ -284,6 +296,7 @@ if(APPLE OR LINUX)
         ${CMAKE_CURRENT_SOURCE_DIR}/src/common
         ${CMAKE_CURRENT_SOURCE_DIR}/src/platform/macos
         ${CMAKE_CURRENT_SOURCE_DIR}/vendor/toml11/include
+        ${MIMALLOC_INCLUDE_DIR}
     )
     
     if(APPLE)

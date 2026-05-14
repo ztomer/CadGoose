@@ -3,6 +3,7 @@
 #include "config.h"
 #include "goose_math.h"
 #include "assets.h"
+#include "ai_text_meme.h"
 #include <cmath>
 #include <cstdio>
 #include <algorithm>
@@ -96,6 +97,15 @@ static CursorAction handleChaseCursor(Goose& g, double time, const CursorState& 
         return {};
     }
 
+    double chaseDuration = time - g.chaseStartTime;
+    if (chaseDuration > g_config.item.fetchCooldown * 2.0f) {
+        FILE* f = GetDebugLog();
+        fprintf(f, "[CHASE] t=%.1f g%d: chase timeout (%.1fs)\n", time, g.id, chaseDuration);
+        g.state = GooseState::WANDER;
+        g.PickNewTarget(w, h);
+        return {};
+    }
+
     g.target = cursor.position;
 
     // BEHAVIOR.md line 228: Catch when beak tip reaches cursor
@@ -166,6 +176,7 @@ static void handleWander(Goose& g, double time, const CursorState& cursor, int w
         if (totalChance > 100) totalChance = 100;
         if (roll < totalChance) {
             g.state = GooseState::CHASE_CURSOR;
+            g.chaseStartTime = time;
             g.target = cursor.position;
             triggerHonk(g.honkState, time, g_config.honk.chaseCooldown, g.honkState.lastChase);
             chased = true;
@@ -173,6 +184,11 @@ static void handleWander(Goose& g, double time, const CursorState& cursor, int w
     }
 
     if (!chased) {
+        bool canFetch = (time - g.lastDropTime) > g_config.item.fetchCooldown && !g.isResting;
+        FILE* f = GetDebugLog();
+        fprintf(f, "[FETCH] t=%.1f g%d: lastDrop=%.1f cooldown=%.1f canFetch=%d resting=%d\n",
+                time, g.id, g.lastDropTime, g_config.item.fetchCooldown, canFetch, g.isResting);
+
         int memeProb = g_config.general.memesEnabled ? g.memeFetchBias : 0;
         int noteProb = g.noteFetchBias;
         int trigger = g_config.item.fetchBaseChance + memeProb + noteProb;
@@ -181,17 +197,16 @@ static void handleWander(Goose& g, double time, const CursorState& cursor, int w
         int fetchCount = 0;
         for (auto& other : g_geese) if (other.state == GooseState::FETCHING) fetchCount++;
 
-        FILE* f = GetDebugLog();
         int fetchRoll = rand() % 100;
         fprintf(f, "[FETCH] t=%.1f g%d: trigger=%d roll=%d\n",
                 time, g.id, trigger, fetchRoll);
 
-        if (fetchCount < g_config.item.maxFetchGeese && fetchRoll < trigger) {
+        if (canFetch && fetchCount < g_config.item.maxFetchGeese && fetchRoll < trigger) {
             // 70% meme, 30% text when memes enabled
             if (g_config.general.memesEnabled && rand() % 100 < 70) {
-                g.ForceFetch(0, w, h); // meme
+                g.ForceFetch(0, w, h, time); // meme
             } else {
-                g.ForceFetch(1, w, h); // text
+                g.ForceFetch(1, w, h, time); // text
             }
         } else {
             g.PickNewTarget(w, h);
@@ -236,7 +251,12 @@ static void handleFetching(Goose& g, double time, int w, int h) {
     } else if (g.forceItemFetch == 0) {
         g.heldItem = g_assets.GetRandomMeme(w, h, 0.1f);
     } else if (g.forceItemFetch == 1) {
-        g.heldItem = g_assets.GetRandomText();
+        if (AI_TextMeme_HasAvailable()) {
+            std::string aiText = AI_TextMeme_Dequeue();
+            g.heldItem = g_assets.CreateTextItem(aiText);
+        } else {
+            g.heldItem = g_assets.GetRandomText();
+        }
     } else {
         g.heldItem = (rand() % 2 == 0) ? g_assets.GetRandomMeme() : g_assets.GetRandomText();
     }
@@ -293,6 +313,7 @@ static void handleReturning(Goose& g, double time, int w, int h) {
         g_assets.Bite();
     }
 
+    g.lastDropTime = time;
     g.state = GooseState::WANDER;
     g.PickNewTarget(w, h);
     g.stepTime = g_config.step.timeWander;
@@ -436,6 +457,17 @@ CursorAction Goose::UpdateBehaviors(double dt, double time, int w, int h, const 
             return CursorAction::MoveRel((int)cursorAction.x, (int)cursorAction.y);
         }
         return {};
+    }
+
+    if (state == GooseState::FETCHING && fetchStartTime > 0) {
+        double fetchDuration = time - fetchStartTime;
+        if (fetchDuration > g_config.item.fetchCooldown * 4.0f) {
+            FILE* df = GetDebugLog();
+            fprintf(df, "[FETCH] t=%.1f g%d: fetch timeout (%.1fs)\n", time, id, fetchDuration);
+            state = GooseState::WANDER;
+            PickNewTarget(w, h);
+            forceItemFetch = -1;
+        }
     }
 
     if (state == GooseState::CHASE_CURSOR) {

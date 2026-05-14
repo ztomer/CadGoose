@@ -9,6 +9,8 @@
 #include <deque>
 #include <vector>
 
+#include "ring_buffer.h"
+
 #ifdef __linux__
 #include <gtk/gtk.h>
 #endif
@@ -60,7 +62,8 @@ struct LeafPile {
 extern std::list<Goose> g_geese;
 extern std::list<MonitorInfo> g_monitors;
 extern std::list<DroppedItem> g_droppedItems;
-extern std::list<Footprint> g_footprints;
+constexpr size_t kMaxFootprints = 500;
+extern RingBuffer<Footprint, kMaxFootprints> g_footprints;
 extern std::list<LeafPile> g_leafPiles;
 extern int g_nextId;
 extern int g_screenWidth;

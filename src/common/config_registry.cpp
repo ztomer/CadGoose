@@ -162,7 +162,7 @@ static void RegisterSpawn(std::vector<ConfigOption>& r) {
     r.push_back(CONFIG_FLOAT("Spawn", "wander_target_offset", "Wander Target Offset",
         &g_config.spawn.wanderTargetOffset, 0.0f, 500.0f, 1.0f, OnConfigChange));
     r.push_back(CONFIG_FLOAT("Spawn", "fetch_edge_margin", "Fetch Edge Margin",
-        &g_config.spawn.fetchEdgeMargin, 0.0f, 200.0f, 1.0f, OnConfigChange));
+        &g_config.spawn.fetchEdgeMargin, 0.0f, 500.0f, 1.0f, OnConfigChange));
     r.push_back(CONFIG_INT("Spawn", "max_fetching_geese", "Max Fetching Geese",
         &g_config.spawn.maxFetchingGeese, 0, 100, OnConfigChange));
     r.push_back(CONFIG_FLOAT("Spawn", "separation_max_distance", "Separation Max Distance",
@@ -346,6 +346,8 @@ static void RegisterItem(std::vector<ConfigOption>& r) {
         &g_config.item.heistChancePercent, 0, 100, OnConfigChange));
     r.push_back(CONFIG_INT("Item", "heist_approach_margin", "Heist Approach Margin",
         &g_config.item.heistApproachMargin, 0, 500, OnConfigChange));
+    r.push_back(CONFIG_FLOAT("Item", "fetch_cooldown", "Fetch Cooldown",
+        &g_config.item.fetchCooldown, 0.0f, 30.0f, 0.5f, OnConfigChange));
 }
 
 static void RegisterMud(std::vector<ConfigOption>& r) {

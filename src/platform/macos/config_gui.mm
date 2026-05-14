@@ -212,7 +212,10 @@ void s_setBoolValue(const std::string& key, bool value) {
 
     [self.configItems addObject:@{@"name": @"FUN", @"type": @"header"}];
     [self addRow:@"Ball" key:@"behaviors.fun.ball" desc:@"Pushable balls that bounce around"];
-    [self addRow:@"Breadcrumbs" key:@"behaviors.fun.breadCrumbs" desc:@"Leave a trail of breadcrumbs"];
+    {
+        NSString* hk = @(g_config.behaviors.breadCrumbs.hotkey.c_str());
+        [self addRow:@"Breadcrumbs" key:@"behaviors.fun.breadCrumbs" desc:[NSString stringWithFormat:@"Hold %@ to drop breadcrumbs at cursor. Crumbs expire after %.0fs", hk, g_config.behaviors.breadCrumbs.lifetime]];
+    }
     [self addRow:@"Hats" key:@"behaviors.fun.hats" desc:@"Put various hats on geese"];
     [self addRow:@"Rainbow" key:@"behaviors.fun.rainbow" desc:@"Cycle colors on all geese"];
     [self addRow:@"Acid" key:@"behaviors.fun.acid" desc:@"Geese spin and honk rapidly"];

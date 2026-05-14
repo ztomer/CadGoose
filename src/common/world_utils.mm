@@ -16,10 +16,15 @@ void World_CleanupExpired(double currentTime) {
         return exp;
     });
 
-    g_footprints.remove_if([&](Footprint& fp) {
+    while (!g_footprints.empty()) {
+        Footprint& fp = g_footprints.front();
         float life = (fp.lifetime > 0.0f) ? fp.lifetime : g_config.mud.lifetime;
-        return (currentTime - fp.timeSpawned) > life;
-    });
+        if ((currentTime - fp.timeSpawned) > life) {
+            g_footprints.pop();
+        } else {
+            break;
+        }
+    }
 
     g_leafPiles.remove_if([&](const LeafPile& p) {
         return (p.timeSinceKicked > 0.0f && currentTime - p.timeSinceKicked > 10.0f);

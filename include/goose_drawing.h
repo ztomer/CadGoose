@@ -14,7 +14,7 @@
 
 void DrawGoose(Goose* g, CGContextRef ctx);
 void DrawHeldItem(Goose* g, CGContextRef ctx);
-void DrawFootprints(CGContextRef ctx, const std::list<Footprint>& footprints, double currentTime);
+void DrawFootprints(CGContextRef ctx, const RingBuffer<Footprint, kMaxFootprints>& footprints, double currentTime);
 void DrawLeaves(CGContextRef ctx, const std::list<LeafPile>& leafPiles, double currentTime);
 void DrawDroppedItem(CGContextRef ctx, const DroppedItem& item, float viewHeight);
 void DrawDebugOverlay(CGContextRef ctx, const std::list<Goose>& geese);

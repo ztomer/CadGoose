@@ -203,7 +203,7 @@ void Goose::SolveFeet(double time) {
                                              : g_config.step.rightFootAngle);
           fp.timeSpawned = time;
           fp.lifetime = mudLifetime;
-          g_footprints.push_back(fp);
+          g_footprints.push(fp);
         }
         
         if (time - lastStepSoundTime > stepSoundCooldown) {
@@ -329,10 +329,10 @@ CursorAction Goose::Update(double dt, double time, int w, int h,
   return action;
 }
 
-void Goose::ForceFetch(int type, int w, int h) {
+void Goose::ForceFetch(int type, int w, int h, double time) {
   fprintf(stderr, "[FF] g%d ForceFetch type=%d w=%d h=%d\n", id, type, w, h);
   forceItemFetch = type;
-  StartFetch(w, h);
+  StartFetch(w, h, time);
   fprintf(stderr, "[FF] after StartFetch state=%d heldItem=%p\n", (int)state, (void*)heldItem);
 }
 
@@ -350,8 +350,9 @@ void Goose::ForceWander(int w, int h) {
   PickNewTarget(w, h);
 }
 
-void Goose::StartFetch(int w, int h) {
+void Goose::StartFetch(int w, int h, double time) {
   state = GooseState::FETCHING;
+  if (time > 0) fetchStartTime = time;
 
   int side = rand() % 4;
   float edgeMargin = g_config.spawn.fetchEdgeMargin;

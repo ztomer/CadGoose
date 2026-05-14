@@ -379,10 +379,15 @@ gboolean on_tick(gpointer data) {
         return exp;
     });
 
-    g_footprints.remove_if([](Footprint& fp) {
+    while (!g_footprints.empty()) {
+        Footprint& fp = g_footprints.front();
         float life = (fp.lifetime > 0.0f) ? fp.lifetime : g_config.mudLifetime;
-        return (g_time - fp.timeSpawned) > life;
-    });
+        if ((g_time - fp.timeSpawned) > life) {
+            g_footprints.pop();
+        } else {
+            break;
+        }
+    }
 
     // We pass a window to setup_overlay, but we need to update ALL overlays.
     // However, on_tick is associated with a specific canvas.

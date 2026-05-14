@@ -86,10 +86,11 @@ void Goose::ClampToScreen(int w, int h) {
     }
 
     if (state == GooseState::FETCHING) {
-        minX -= g_config.physics.screenClampExpanded;
-        maxX += g_config.physics.screenClampExpanded;
-        minY -= g_config.physics.screenClampExpanded;
-        maxY += g_config.physics.screenClampExpanded;
+        float expanded = std::max(g_config.physics.screenClampExpanded, g_config.spawn.fetchEdgeMargin);
+        minX -= expanded;
+        maxX += expanded;
+        minY -= expanded;
+        maxY += expanded;
     } else {
         minX += g_config.physics.screenClampTight;
         maxX -= g_config.physics.screenClampTight;
