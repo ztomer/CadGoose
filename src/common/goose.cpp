@@ -268,6 +268,15 @@ CursorAction Goose::Update(double dt, double time, int w, int h,
                   state == GooseState::SNATCH_CURSOR || state == GooseState::RETURNING)
                      ? g_config.movement.baseRunSpeed
                      : g_config.movement.baseWalkSpeed;
+
+  time_t sysTime = std::time(nullptr);
+  struct tm* tm_info = std::localtime(&sysTime);
+  if (tm_info && (tm_info->tm_hour >= 23 || tm_info->tm_hour < 6)) {
+      tSpeed *= 0.6f; // Nighttime mode: walk a bit slower
+  }
+  
+  if (isSurprised) tSpeed = g_config.movement.baseRunSpeed * 1.5f;
+
   currentSpeed = Lerp(currentSpeed, tSpeed, g_config.movement.speedLerpRate);
 
   Vector2 steerForce = CalculateSeekForce();

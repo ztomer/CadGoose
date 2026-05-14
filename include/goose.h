@@ -88,6 +88,15 @@ public:
     int  mudChance = 15;
     float mudLifetime = 15.0f;
 
+    // Joy state
+    bool isPetted = false;
+    double pettedTime = 0.0;
+    Vector2 lastCursorPos{};
+    float cursorWiggleAmount = 0.0f;
+
+    bool isSurprised = false;
+    double surprisedTime = 0.0;
+
     // Honk timing state
     struct HonkState {
         bool init = false;

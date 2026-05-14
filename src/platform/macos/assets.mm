@@ -41,10 +41,22 @@ AssetManager::~AssetManager() {
 }
 
 void AssetManager::Init() {
+#if defined(__APPLE__)
+    std::string bundlePath = GetBundlePath();
+    if (!bundlePath.empty()) {
+        ASSET_ROOT = bundlePath;
+    } else {
+        ASSET_ROOT = ".";
+    }
+#else
     ASSET_ROOT = ".";
+#endif
+
+    std::cout << "Asset root: " << ASSET_ROOT << std::endl;
 
 #if defined(__APPLE__)
-    NSURL *fontDirURL = [NSURL fileURLWithPath:@"Assets/Text/MapleMono" isDirectory:YES];
+    std::string fontPath = ASSET_ROOT / "Assets/Text/MapleMono";
+    NSURL *fontDirURL = [NSURL fileURLWithPath:[NSString stringWithUTF8String:fontPath.c_str()] isDirectory:YES];
     CTFontManagerRegisterFontsForURL((__bridge CFURLRef)fontDirURL, kCTFontManagerScopeProcess, NULL);
 #endif
 

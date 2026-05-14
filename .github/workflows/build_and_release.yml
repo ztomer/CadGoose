@@ -1,0 +1,66 @@
+name: Build and Release CadGoose macOS Bundle
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: 'Release tag (e.g. v1.0.0)'
+        required: true
+
+jobs:
+  build-macos-bundle:
+    name: Build macOS Bundle
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install dependencies
+        run: |
+          brew install cmake sdl2 sdl2_mixer
+
+      - name: Build
+        run: |
+          mkdir -p build
+          cd build
+          cmake .. -DCMAKE_BUILD_TYPE=Release
+          cmake --build . --config Release --parallel $(sysctl -n hw.logicalcpu)
+
+      - name: Create App Bundle
+        run: |
+          chmod +x scripts/create_bundle.sh
+          ./scripts/create_bundle.sh --clean
+
+      - name: Verify Bundle
+        run: |
+          ls -la build/CadGoose.app/Contents/MacOS/
+          ls -la build/CadGoose.app/Contents/Resources/
+          file build/CadGoose.app/Contents/MacOS/CadGoose
+
+      - name: Package Bundle as ZIP
+        run: |
+          cd build
+          zip -r CadGoose.zip CadGoose.app
+
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: build/CadGoose.zip
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload Artifact (non-tag builds)
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: CadGoose-macOS-bundle
+          path: build/CadGoose.zip
+          retention-days: 30
