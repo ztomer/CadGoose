@@ -116,16 +116,23 @@ static NSString* s_fallbackResponseForMessage(NSString* message, NSString* goose
     self.window.title = [NSString stringWithFormat:@"💬 Chat with %@ 🦆", name];
     self.window.titleVisibility = NSWindowTitleHidden;
     self.window.titlebarAppearsTransparent = YES;
+    self.window.backgroundColor = [NSColor clearColor];
+    self.window.opaque = NO;
     [[self.window standardWindowButton:NSWindowMiniaturizeButton] setHidden:YES];
     [[self.window standardWindowButton:NSWindowZoomButton] setHidden:YES];
     [self.window center];
 
     NSView* contentView = self.window.contentView;
 
-    contentView.wantsLayer = YES;
-    contentView.layer.backgroundColor = [[NSColor colorWithWhite:0.12 alpha:1.0] CGColor];
+    // Apple-tier liquid glass background
+    NSVisualEffectView* visualEffectView = [[NSVisualEffectView alloc] initWithFrame:contentView.bounds];
+    visualEffectView.autoresizingMask = NSViewWidthSizable | NSViewHeightSizable;
+    visualEffectView.blendingMode = NSVisualEffectBlendingModeBehindWindow;
+    visualEffectView.material = NSVisualEffectMaterialUnderWindowBackground;
+    visualEffectView.state = NSVisualEffectStateActive;
+    [contentView addSubview:visualEffectView];
 
-    NSFont* chatFont = [NSFont fontWithName:@"Comic Sans MS" size:13] ?: [NSFont systemFontOfSize:13];
+    NSFont* chatFont = [NSFont fontWithName:@"Maple Mono" size:13] ?: [NSFont systemFontOfSize:13];
 
     // Appbar: [traffic lights | goose selector | pin]
     NSView* appBar = [[NSView alloc] initWithFrame:NSMakeRect(0, 322, 420, 38)];
@@ -142,7 +149,7 @@ static NSString* s_fallbackResponseForMessage(NSString* message, NSString* goose
 
     // Goose selector popup (replaces centered title)
     self.goosePopup = [[NSPopUpButton alloc] initWithFrame:NSMakeRect(70, 7, appBar.frame.size.width - 70 - 70, 24)];
-    self.goosePopup.font = [NSFont fontWithName:@"Comic Sans MS" size:13] ?: [NSFont systemFontOfSize:13 weight:NSFontWeightSemibold];
+    self.goosePopup.font = [NSFont fontWithName:@"Maple Mono" size:13] ?: [NSFont systemFontOfSize:13 weight:NSFontWeightSemibold];
     self.goosePopup.bezelStyle = NSBezelStyleRounded;
     self.goosePopup.target = self;
     self.goosePopup.action = @selector(gooseSelected:);
@@ -185,7 +192,7 @@ static NSString* s_fallbackResponseForMessage(NSString* message, NSString* goose
 
     // Status bar: model name between chat and input
     self.statusBar = [[NSTextField alloc] initWithFrame:NSMakeRect(18, 2, contentView.frame.size.width - 30, 12)];
-    self.statusBar.font = [NSFont fontWithName:@"Comic Sans MS" size:10] ?: [NSFont systemFontOfSize:10];
+    self.statusBar.font = [NSFont fontWithName:@"Maple Mono" size:10] ?: [NSFont systemFontOfSize:10];
     self.statusBar.textColor = [NSColor colorWithWhite:0.5 alpha:1.0];
     self.statusBar.backgroundColor = [NSColor clearColor];
     self.statusBar.bordered = NO;
@@ -193,21 +200,23 @@ static NSString* s_fallbackResponseForMessage(NSString* message, NSString* goose
     self.statusBar.autoresizingMask = NSViewWidthSizable;
     [contentView addSubview:self.statusBar];
 
-    self.inputField = [[NSTextField alloc] initWithFrame:NSMakeRect(10, 18, 340, 28)];
+    self.inputField = [[NSTextField alloc] initWithFrame:NSMakeRect(12, 16, 344, 30)];
     self.inputField.placeholderString = @"Type your message...";
-    self.inputField.font = [NSFont fontWithName:@"Comic Sans MS" size:13] ?: [NSFont systemFontOfSize:13];
+    self.inputField.font = [NSFont fontWithName:@"Maple Mono" size:13] ?: [NSFont systemFontOfSize:13];
     [self.inputField setTarget:self];
     [self.inputField setAction:@selector(sendMessage:)];
     self.inputField.bezelStyle = NSTextFieldRoundedBezel;
+    self.inputField.controlSize = NSControlSizeLarge;
     self.inputField.autoresizingMask = NSViewWidthSizable;
     [contentView addSubview:self.inputField];
 
-    self.sendButton = [[NSButton alloc] initWithFrame:NSMakeRect(360, 16, 50, 28)];
+    self.sendButton = [[NSButton alloc] initWithFrame:NSMakeRect(362, 16, 46, 30)];
     [self.sendButton setTitle:@"🪿"];
     [self.sendButton setFont:[NSFont systemFontOfSize:16]];
     [self.sendButton setTarget:self];
     [self.sendButton setAction:@selector(sendMessage:)];
     self.sendButton.bezelStyle = NSBezelStyleRounded;
+    self.sendButton.controlSize = NSControlSizeLarge;
     self.sendButton.autoresizingMask = NSViewMinXMargin;
     [contentView addSubview:self.sendButton];
 
@@ -230,6 +239,7 @@ static NSString* s_fallbackResponseForMessage(NSString* message, NSString* goose
                 fprintf(stderr, "[AI] Connection check failed: %s\n", message.UTF8String);
             } else {
                 fprintf(stderr, "[AI] Connection OK\n");
+                [strong updateModelDisplay];
             }
         });
     }];

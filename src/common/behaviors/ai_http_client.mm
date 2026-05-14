@@ -309,7 +309,14 @@ case 8: return @"You are an absurdly eloquent goose dictator. You have conquered
 #pragma mark - Connection Health Check
 
 - (void)checkConnectionWithCompletion:(void(^)(BOOL connected, NSString* message))completion {
-    NSString* endpoint = [self currentEndpoint];
+    NSString* endpoint = @"";
+    switch (g_config.ai.providerType) {
+        case 0: endpoint = [NSString stringWithFormat:@"http://localhost:%d/v1/models", g_config.ai.osaurusPort]; break;
+        case 1: endpoint = [NSString stringWithFormat:@"http://localhost:%d/api/tags", g_config.ai.ollamaPort]; break;
+        case 2: endpoint = [NSString stringWithUTF8String:g_config.ai.customEndpoint.c_str()]; break;
+        default: endpoint = @"http://localhost:1337/v1/models"; break;
+    }
+
     NSURL* url = [NSURL URLWithString:endpoint];
     if (!url) {
         if (completion) completion(NO, @"Invalid endpoint URL");
@@ -317,25 +324,9 @@ case 8: return @"You are an absurdly eloquent goose dictator. You have conquered
     }
 
     NSMutableURLRequest* request = [NSMutableURLRequest requestWithURL:url];
-    [request setHTTPMethod:@"POST"];
-    [request setValue:@"application/json" forHTTPHeaderField:@"Content-Type"];
     request.timeoutInterval = 5;
 
-    NSDictionary* body = @{
-        @"model": [self currentModel],
-        @"messages": @[@{@"role": @"user", @"content": @"ping"}],
-        @"max_tokens": @1,
-        @"temperature": @0
-    };
-    NSError* jsonError;
-    NSData* jsonData = [NSJSONSerialization dataWithJSONObject:body options:0 error:&jsonError];
-    if (jsonError) {
-        if (completion) completion(NO, @"JSON serialization failed");
-        return;
-    }
-    [request setHTTPBody:jsonData];
-
-    fprintf(stderr, "[AI] Health check: POST %s\n", endpoint.UTF8String);
+    fprintf(stderr, "[AI] Health check: GET %s\n", endpoint.UTF8String);
     NSURLSession* session = [NSURLSession sharedSession];
     NSURLSessionDataTask* task = [session dataTaskWithRequest:request completionHandler:^(NSData* data, NSURLResponse* response, NSError* error) {
         if (error) {
@@ -344,14 +335,14 @@ case 8: return @"You are an absurdly eloquent goose dictator. You have conquered
             return;
         }
         NSHTTPURLResponse* httpResp = (NSHTTPURLResponse*)response;
-        if (httpResp.statusCode != 200) {
+        if (httpResp.statusCode == 200 || httpResp.statusCode == 405) {
+            fprintf(stderr, "[AI] Health check OK\n");
+            self.connected = YES;
+            if (completion) completion(YES, @"Connected");
+        } else {
             fprintf(stderr, "[AI] Health check FAILED: HTTP %ld\n", (long)httpResp.statusCode);
             if (completion) completion(NO, [NSString stringWithFormat:@"HTTP %ld", (long)httpResp.statusCode]);
-            return;
         }
-        fprintf(stderr, "[AI] Health check OK\n");
-        self.connected = YES;
-        if (completion) completion(YES, @"Connected");
     }];
     [task resume];
 }

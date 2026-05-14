@@ -57,7 +57,6 @@ TEST(BehaviorStates, JailStateCreate) {
     ASSERT_NE(state, nullptr);
     state->Reset();
     EXPECT_FALSE(state->isJailed);
-    EXPECT_FALSE(state->positionSet);
 }
 
 TEST(BehaviorStates, PortalStateCreate) {

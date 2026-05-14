@@ -183,8 +183,7 @@ if(APPLE OR LINUX)
         tests/test_soak.cpp
         tests/common/test_behavior_helpers.cpp
         tests/common/test_behavior_manager.cpp
-        tests/common/test_jail_state.cpp
-        tests/common/test_behavior_sim.cpp
+        tests/common/test_behavior_states.cpp
         tests/common/test_behavior_typed.cpp
         tests/common/test_behavior_interaction.cpp
         tests/common/test_behavior_registry.cpp

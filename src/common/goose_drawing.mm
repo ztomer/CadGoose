@@ -132,10 +132,21 @@ void DrawGoose(Goose* g, CGContextRef ctx) {
     Vector2 eyeCenter = g->rig.neckHead + up * (-g_config.render.eyeOffsetY + eyeLift);
 
     if (back > g_config.render.eyeFacingThreshold) {
-        DrawEllipse(ctx, eyeCenter, g_config.render.eyeSize / 2.0f, g_config.render.eyeSize / 2.0f, eyeR, eyeG, eyeB, 1.0f);
+        if (g->isResting) {
+            DrawLine(ctx, eyeCenter - side * (g_config.render.eyeSize / 2.0f), eyeCenter + side * (g_config.render.eyeSize / 2.0f), 1.5f, eyeR, eyeG, eyeB, 1.0f);
+        } else {
+            DrawEllipse(ctx, eyeCenter, g_config.render.eyeSize / 2.0f, g_config.render.eyeSize / 2.0f, eyeR, eyeG, eyeB, 1.0f);
+        }
     } else {
-        DrawEllipse(ctx, eyeCenter - side * eyeSep, g_config.render.eyeSize / 2.0f, g_config.render.eyeSize / 2.0f, eyeR, eyeG, eyeB, 1.0f);
-        DrawEllipse(ctx, eyeCenter + side * eyeSep, g_config.render.eyeSize / 2.0f, g_config.render.eyeSize / 2.0f, eyeR, eyeG, eyeB, 1.0f);
+        if (g->isResting) {
+            Vector2 lEye = eyeCenter - side * eyeSep;
+            Vector2 rEye = eyeCenter + side * eyeSep;
+            DrawLine(ctx, lEye - side * (g_config.render.eyeSize / 2.0f), lEye + side * (g_config.render.eyeSize / 2.0f), 1.5f, eyeR, eyeG, eyeB, 1.0f);
+            DrawLine(ctx, rEye - side * (g_config.render.eyeSize / 2.0f), rEye + side * (g_config.render.eyeSize / 2.0f), 1.5f, eyeR, eyeG, eyeB, 1.0f);
+        } else {
+            DrawEllipse(ctx, eyeCenter - side * eyeSep, g_config.render.eyeSize / 2.0f, g_config.render.eyeSize / 2.0f, eyeR, eyeG, eyeB, 1.0f);
+            DrawEllipse(ctx, eyeCenter + side * eyeSep, g_config.render.eyeSize / 2.0f, g_config.render.eyeSize / 2.0f, eyeR, eyeG, eyeB, 1.0f);
+        }
     }
 
     if (g->heldItem && !facingBack) {

@@ -91,8 +91,8 @@ void s_setBoolValue(const std::string& key, bool value) {
         self.configItems = g_configItemsForAccess;
 
         // Compute list width from content: toggle+icon+name(max)+gap+desc(max)+padding
-        NSFont* nameFont = [NSFont fontWithName:@"Comic Sans MS" size:14] ?: [NSFont systemFontOfSize:14 weight:NSFontWeightSemibold];
-        NSFont* descFont = [NSFont fontWithName:@"Comic Sans MS" size:11] ?: [NSFont systemFontOfSize:11];
+        NSFont* nameFont = [NSFont fontWithName:@"Maple Mono" size:14] ?: [NSFont systemFontOfSize:14 weight:NSFontWeightSemibold];
+        NSFont* descFont = [NSFont fontWithName:@"Maple Mono" size:11] ?: [NSFont systemFontOfSize:11];
         CGFloat maxNW = [@"Autumn Leaves" sizeWithAttributes:@{NSFontAttributeName: nameFont}].width + 4;
         CGFloat maxDW = [@"Create portals with P+1/2, teleport with P+0" sizeWithAttributes:@{NSFontAttributeName: descFont}].width + 18;
         self.descLabelX = 64 + maxNW + 2;
@@ -114,15 +114,21 @@ void s_setBoolValue(const std::string& key, bool value) {
                                                      defer:NO];
         self.window.titleVisibility = NSWindowTitleHidden;
         self.window.titlebarAppearsTransparent = YES;
+        self.window.backgroundColor = [NSColor clearColor];
+        self.window.opaque = NO;
         self.window.title = @"Preferences";
         self.window.appearance = [NSAppearance appearanceNamed:NSAppearanceNameDarkAqua];
         [self.window center];
 
         NSView* contentView = self.window.contentView;
 
-        // Solid dark background
-        contentView.wantsLayer = YES;
-        contentView.layer.backgroundColor = [[NSColor colorWithWhite:0.12 alpha:1.0] CGColor];
+        // Apple-tier liquid glass background
+        NSVisualEffectView* visualEffectView = [[NSVisualEffectView alloc] initWithFrame:contentView.bounds];
+        visualEffectView.autoresizingMask = NSViewWidthSizable | NSViewHeightSizable;
+        visualEffectView.blendingMode = NSVisualEffectBlendingModeBehindWindow;
+        visualEffectView.material = NSVisualEffectMaterialUnderWindowBackground;
+        visualEffectView.state = NSVisualEffectStateActive;
+        [contentView addSubview:visualEffectView];
 
         // Appbar with tab control
         NSView* appBar = [[NSView alloc] initWithFrame:NSMakeRect(0, WINDOW_HEIGHT - APPBAR_HEIGHT, windowWidth, APPBAR_HEIGHT)];
@@ -320,7 +326,7 @@ void s_setBoolValue(const std::string& key, bool value) {
             label.backgroundColor = [NSColor clearColor];
             label.bordered = NO;
             label.editable = NO;
-            label.font = [NSFont fontWithName:@"Comic Sans MS" size:14] ?: [NSFont systemFontOfSize:14 weight:NSFontWeightSemibold];
+            label.font = [NSFont fontWithName:@"Maple Mono" size:14] ?: [NSFont systemFontOfSize:14 weight:NSFontWeightSemibold];
             label.textColor = [NSColor colorWithRed:0.9 green:0.1 blue:0.1 alpha:1.0];
         }
         label.frame = NSMakeRect(12, 2, self.listWidth, 24);

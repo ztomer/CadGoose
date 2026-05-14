@@ -15,7 +15,7 @@ Highly modified port of [CppGoose](https://github.com/jeffthepineapple/desktop-g
 ## Platforms
 
 - **macOS**: Native AppKit implementation with Core Graphics rendering
-- **Linux**: GTK4 with Wayland (Hyprland, wlroots) and X11 support
+- **Linux**: GTK4 with Wayland (Hyprland, wlroots) and X11 support (Linux support is best-effort and not regularly tested. Patches welcome.)
 
 See [docs/README_LINUX.md](docs/README_LINUX.md) for Linux platform details.
 
@@ -24,10 +24,10 @@ See [docs/README_LINUX.md](docs/README_LINUX.md) for Linux platform details.
 ## Documentation
 
 - [docs/MCP.md](docs/MCP.md) - MCP protocol & AI chat command reference
+- [docs/ARCH.md](docs/ARCH.md) - Internal Architecture (State Machine, Project Structure)
 - [docs/PLAN.md](docs/PLAN.md) - Current project priorities and status
 - [docs/COMPLETED_TASKS.md](docs/COMPLETED_TASKS.md) - Historical completed items
 - [docs/README_LINUX.md](docs/README_LINUX.md) - Linux build instructions
-- [docs/references/](docs/references/) - Mod implementation guides
 
 ---
 
@@ -39,8 +39,6 @@ See [docs/README_LINUX.md](docs/README_LINUX.md) for Linux platform details.
   - [Overview](#overview)
   - [Features](#features)
   - [Configuration](#configuration)
-  - [Project Structure](#project-structure)
-  - [State Machine](#state-machine)
   - [Assets](#assets)
   - [Known Limitations](#known-limitations)
   - [Contributing](#contributing)
@@ -148,50 +146,6 @@ Settings are edited through the preferences window (right-click the status bar i
 
 ---
 
-## Project Structure
-
-```
-src/
-  platform/
-    macos/                # macOS-specific (AppKit, CoreGraphics)
-    linux/                # Linux-specific (GTK4, Wayland/X11)
-      protocols/          # Wayland protocol definitions
-  common/                 # Shared game logic
-  include/                # Headers
-Assets/
-  Images/Memes/          # PNG images geese can pick up
-  Sound/NotEmbedded/     # Sound effects
-  Text/NotepadMessages/ # Text files for notes
-docs/
-  PLAN.md                # Project plan
-  COMPLETED_TASKS.md      # Historical completed items
-  references/             # Mod implementation guides
-  README_LINUX.md        # Linux build instructions
-tests/                    # Test suite
-tools/                    # Build tools (Extractor)
-vendor/                   # Third-party libraries
-CMakeLists.txt
-build.sh
-```
-
----
-
-## State Machine
-
-Each goose runs an independent state machine with the following states:
-
-| State | Description |
-|---|---|
-| `WANDER` | Default state. The goose walks in a chosen direction, periodically picking new targets. |
-| `FETCHING` | The goose has selected a nearby item and is walking toward it to pick it up. |
-| `RETURNING` | The goose is carrying an item and walking toward a drop location. |
-| `CHASE_CURSOR` | The goose is actively pursuing the cursor position reported by the active backend. |
-| `SNATCH_CURSOR` | The goose has reached the cursor and is temporarily controlling pointer movement. |
-
-State transitions are evaluated each tick in `goose.cpp`. External events such as item spawning or cursor proximity trigger transitions out of `WANDER`. The goose always returns to `WANDER` after completing a fetch/return cycle or releasing cursor control.
-
----
-
 ## Assets
 
 ### Meme images
@@ -205,15 +159,6 @@ Place plain text files (`.txt`) in `Assets/Text/NotepadMessages/`. Each file rep
 ### Sound effects
 
 Sound files are loaded from `Assets/Sound/NotEmbedded/` via SDL2_mixer. Supported formats are WAV, OGG, and MP3 (depending on SDL2_mixer build options on your system). Honk sounds and other behavioral audio cues are resolved by filename convention defined in `assets.cpp`.
-
----
-
-## Known Limitations
-
-- **GNOME / Mutter**: The `wlr-layer-shell` protocol is not supported on stock GNOME. The application will not display overlay windows on GNOME without a third-party shell extension that exposes the protocol.
-- **Multi-GPU / mixed DPI**: Monitor layout discovery relies on GTK4 monitor enumeration. Fractional scaling and mixed-DPI setups may produce minor positional drift in goose movement near monitor edges.
-- **Wayland cursor snatching**: The wlroots virtual-pointer backend can inject relative motion but cannot read absolute cursor position without a secondary input mechanism. Absolute position queries fall back to the compositor IPC (Hyprland) or X11 on mixed sessions.
-- **No Wayland screencopy**: Geese do not interact with window content. They walk over the top of windows without any awareness of what is underneath.
 
 ---
 
@@ -258,7 +203,6 @@ CadGoose's behavior system is inspired by mods from the [Desktop Goose ResourceH
 | Health | Health | - | ResourceHub |
 | Banish | Banish | - | ResourceHub |
 | Nametag | Nametag | - | ResourceHub |
-| Debugoose | Debugoose | - | ResourceHub |
 | Presence | GoosePresence | - | ResourceHub |
 | GooseManager | GooseManager | - | ResourceHub |
 | AI | AI | - | ResourceHub |
@@ -266,3 +210,8 @@ CadGoose's behavior system is inspired by mods from the [Desktop Goose ResourceH
 Original mod sources preserved in `references/mods/`. See `references/MOD_IMPLEMENTATION_GUIDE.md` for implementation details.
 
 > **Note**: Some original mod repositories have been deleted. DLLs were decompiled for reference purposes only.
+
+## Open Source Acknowledgements
+- **[Maple Mono](https://github.com/subframe7536/maple-font)**: Bundled UI font (SIL Open Font License 1.1).
+- **[toml11](https://github.com/ToruNiina/toml11)**: C++ TOML parser used for configuration (MIT License).
+IT License).
