@@ -12,8 +12,7 @@ static bool s_enabled = true;
 
 static constexpr float DRAG_RADIUS = 45.0f;
 
-static void init(BehaviorContext& ctx) {
-}
+static void init(BehaviorContext& ctx) {}
 
 static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
     if (!g_config.behaviors.control.drag) return;
@@ -54,6 +53,7 @@ static Behavior g_dragBehavior = {
     .name = "Drag",
     .description = "Drag the goose with your cursor. Be careful - he may bite! Based on DragGoose by Straaft",
     .enabledPtr = &s_enabled,
+    .configPtr = &g_config.behaviors.control.drag,
     .init = init,
     .tick = tick,
     .render = render,

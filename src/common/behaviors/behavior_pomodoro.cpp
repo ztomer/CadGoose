@@ -46,21 +46,33 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
             if (state->completedSessions >= cfg.sessionsBeforeLongBreak) {
                 state->phase = PomodoroPhase::LongBreak;
                 state->completedSessions = 0;
-                state->isAggressive = false;
+                state->isAggressive = cfg.enableAggressiveMode;
             } else {
                 state->phase = PomodoroPhase::Break;
-                state->isAggressive = false;
+                state->isAggressive = cfg.enableAggressiveMode;
             }
         } else {
             state->phase = PomodoroPhase::Work;
-            state->isAggressive = cfg.enableAggressiveMode;
+            state->isAggressive = false;
         }
         state->phaseStartTime = time;
         elapsed = 0;
     }
 
-    if (state->phase == PomodoroPhase::Work && state->isAggressive) {
-        // Work phase: goose spins, honks, runs
+    if (state->phase == PomodoroPhase::Work) {
+        // Work phase: goose rests in place (sleeps in corner)
+        goose->target = goose->pos;
+        goose->vel = {0, 0};
+        if (state->accumulatedRotation > 0) {
+            goose->dir -= state->accumulatedRotation;
+            state->accumulatedRotation = 0;
+        }
+        if (state->speedMultiplierApplied) {
+            goose->currentSpeed = 0.0f;
+            state->speedMultiplierApplied = false;
+        }
+    } else if (state->isAggressive && (state->phase == PomodoroPhase::Break || state->phase == PomodoroPhase::LongBreak)) {
+        // Break/LongBreak: goose goes manic - spins, honks, runs
         float rotationAmount = 90.0f * (float)dt;
         goose->dir += rotationAmount;
         state->accumulatedRotation += rotationAmount;
@@ -74,20 +86,8 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
             goose->currentSpeed = g_config.movement.baseRunSpeed * cfg.aggressiveSpeedMultiplier;
             state->speedMultiplierApplied = true;
         }
-    } else if (state->phase == PomodoroPhase::Break || state->phase == PomodoroPhase::LongBreak) {
-        // Break/LongBreak: goose rests in place
-        goose->target = goose->pos;
-        goose->vel = {0, 0};
-        if (state->accumulatedRotation > 0) {
-            goose->dir -= state->accumulatedRotation;
-            state->accumulatedRotation = 0;
-        }
-        if (state->speedMultiplierApplied) {
-            goose->currentSpeed = 0.0f;
-            state->speedMultiplierApplied = false;
-        }
     } else {
-        // Non-aggressive work: normal walking
+        // Non-aggressive break: normal walking
         if (state->accumulatedRotation > 0) {
             goose->dir -= state->accumulatedRotation;
             state->accumulatedRotation = 0;
@@ -114,21 +114,21 @@ static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
     int minutes = (int)(remaining / 60.0);
     int seconds = (int)fmod(remaining, 60.0);
 
-    const char* phaseLabel = "W";
+    const char* phaseLabel = "R";
     float bgR = 0.3f, bgG = 0.3f, bgB = 0.3f;
 
     switch (state->phase) {
         case PomodoroPhase::Work:
-            phaseLabel = state->isAggressive ? "ATK!" : "W";
-            bgR = 0.6f; bgG = 0.2f; bgB = 0.2f;
-            break;
-        case PomodoroPhase::Break:
-            phaseLabel = "B";
+            phaseLabel = "R";
             bgR = 0.2f; bgG = 0.5f; bgB = 0.2f;
             break;
+        case PomodoroPhase::Break:
+            phaseLabel = state->isAggressive ? "ATK!" : "B";
+            bgR = 0.6f; bgG = 0.2f; bgB = 0.2f;
+            break;
         case PomodoroPhase::LongBreak:
-            phaseLabel = "LB";
-            bgR = 0.2f; bgG = 0.3f; bgB = 0.6f;
+            phaseLabel = state->isAggressive ? "ATK!" : "LB";
+            bgR = 0.6f; bgG = 0.2f; bgB = 0.2f;
             break;
     }
 
@@ -180,8 +180,9 @@ static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
 static Behavior g_pomodoroBehavior = {
     .id = "pomodoro",
     .name = "Pomodoro",
-    .description = "Work/rest timer: 25 min work, 5 min break, 15 min long break after 4 sessions",
+    .description = "Pomodoro timer: goose rests during work, goes wild during break",
     .enabledPtr = &s_enabled,
+    .configPtr = &g_config.behaviors.systems.pomodoro,
     .init = init,
     .tick = tick,
     .render = render,

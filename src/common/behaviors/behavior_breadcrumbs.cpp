@@ -4,6 +4,7 @@
 #include "world.h"
 #include "assets.h"
 #include "cursor_backend.h"
+#include "hotkey.h"
 #include <CoreGraphics/CoreGraphics.h>
 #include <ApplicationServices/ApplicationServices.h>
 #include <TargetConditionals.h>
@@ -22,15 +23,8 @@ struct Crumbs {
 };
 static std::vector<Crumbs> s_crumbs;
 
-static int GetTriggerKeyCode() {
-    const std::string& keyName = g_config.behaviors.breadCrumbs.triggerKey;
-    if (keyName == "RightShift") return 60;
-    if (keyName == "LeftShift") return 56;
-    return 60;
-}
-
 static bool IsKeyDown(int keyCode) {
-    return CGEventSourceKeyState(kCGEventSourceStateCombinedSessionState, (CGKeyCode)keyCode);
+    return CGEventSourceKeyState(kCGEventSourceStateHIDSystemState, (CGKeyCode)keyCode);
 }
 
 static void LogCrumb(const char* msg) {
@@ -55,7 +49,7 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
     if (!backend) return;
 
     Vector2 cursorPos = backend->GetCursorPos();
-    int keyCode = GetTriggerKeyCode();
+    int keyCode = KeyNameToKeyCode(g_config.behaviors.breadCrumbs.hotkey);
     bool keyDown = IsKeyDown(keyCode);
 
     if (keyDown && !s_wasKeyDown) {
@@ -131,8 +125,9 @@ static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
 static Behavior g_breadcrumbBehavior = {
     .id = "breadcrumbs",
     .name = "Bread Crumbs",
-    .description = "Hold RightShift to drop breadcrumbs at cursor. Based on BreadCrumbs by Straaft",
+    .description = "Hold hotkey to drop breadcrumbs at cursor. Based on BreadCrumbs by Straaft",
     .enabledPtr = &s_enabled,
+    .configPtr = &g_config.behaviors.fun.breadCrumbs,
     .init = init,
     .tick = tick,
     .render = render,

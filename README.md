@@ -23,6 +23,7 @@ See [docs/README_LINUX.md](docs/README_LINUX.md) for Linux platform details.
 
 ## Documentation
 
+- [docs/MCP.md](docs/MCP.md) - MCP protocol & AI chat command reference
 - [docs/PLAN.md](docs/PLAN.md) - Current project priorities and status
 - [docs/COMPLETED_TASKS.md](docs/COMPLETED_TASKS.md) - Historical completed items
 - [docs/README_LINUX.md](docs/README_LINUX.md) - Linux build instructions

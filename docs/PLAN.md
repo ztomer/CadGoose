@@ -1,118 +1,69 @@
 # CadGoose Project Plan
 
-## Current Session Priorities (2026-05-10)
+## Features
 
-| # | Priority | Item | Status |
-|---|----------|------|--------|
-| 0 | P0 | Fix behavior bugs (ball, breadcrumbs, hats) | Done |
-| 1 | P1 | Write automated tests for behaviors | Done |
-| 2 | P2 | No file above 500 LOC | Done |
-| 3 | P2 | Linux support maintenance | Done |
-| 4 | P1 | Theme Setting Panel & Editor | Todo |
+### 3. Polished settings + AI panel
+- Apple-tier, liquid glass everywhere interface
+- Expert UI review needed — appearance and AI tabs are messy
+- NSVisualEffectView with vibrant backgrounds, smooth animations, proper spacing
 
-## Bug Fixes (2026-05-10)
+### 4. Font switch: Comic Sans → Maple Mono
+- Bundle the font (SIL Open Font License, commercial use allowed)
+- Add attribution in README for Maple Mono and toml11
+- Replace all `[NSFont fontWithName:@"Comic Sans MS" ...]` fallback patterns
 
-### Ball Behavior - FIXED
+## Bugs
 
-- **Issue**: Ball spins in place, doesn't bounce, goose doesn't make contact
-- **Root Cause**: Coordinate space mismatch (cursor in screen coords vs ball in world coords), missing goose chase integration
-- **Fix**:
-  - Use screen coordinates directly for cursor position
-  - Fixed ball collision detection with proper distance calculation
-  - Goose targets ball center and chases it
-- **Reference**: BallModv1.0.dll decompiled
+### 1. Preferences panel needs UI review
+- Appearance and AI tabs specifically are messy
+- Need an expert UI reviewer to audit layout, spacing, consistency
 
-### Hats Behavior - FIXED
+### 4. Jail only works once
+- Need multiple jails, reset functionality, better UX
+- Current JailState is per-goose; need multiple traps
 
-- **Issue**: Hat too large, upside down
-- **Root Cause**: Y-flip coordinate transform, incorrect scaling
-- **Fix**:
-  - Calculate screenY from worldY properly
-  - Scale hat based on config, render upright
-- **Reference**: HatGoos by DaNike
+### 5. Rest mode for goose
+- Goose goes to bottom-right corner during Pomodoro work period
+- Sleeps (eyes closed, lays down)
+- Integrates with Pomodoro system behavior
 
-### BreadCrumbs Behavior - FIXED
+## Maintenance
 
-- **Issue**: Nothing happens when key pressed
-- **Root Cause**: Key detection rate limiting, render coordinate issues
-- **Fix**:
-  - Use screen coordinates directly for cursor
-  - Render crumbs at cursor position using backend
-- **Reference**: BreadCrumbs.dll decompiled
+### 1. Remove DebugGoose code + config entirely
+- Find and remove all debug goose related code
 
-## Behavior Testing
+### 2. Linux + Uncle Bob code review
+- Apply clean code principles across the board
+- Linux best-effort support — make it clear in docs: not tested, patches welcome
 
-### Unix Socket Commands (for automated testing)
+### 3. Enforce 500-line limit per file
+- No file should exceed 500 lines
+- `behavior_ai.mm` (761) is over — need to split
 
-```bash
-# Enable/disable behaviors
-echo -e "enable\tball" | nc -q1 -U /tmp/desktop-goose.sock
-echo -e "disable\tball" | nc -q1 -U /tmp/desktop-goose.sock
-echo -e "enable\tbreadcrumbs" | nc -q1 -U /tmp/desktop-goose.sock
-echo -e "enable\thats" | nc -q1 -U /tmp/desktop-goose.sock
-```
+### 4. Linux best-effort support
+- Document: "Linux support is best-effort and not regularly tested. Patches welcome."
 
-### Test Plan
+### 5. Repo code layout review
+- Is `behaviors/` still descriptive? Source files are split across `src/common/behaviors/`, `src/platform/macos/`
+- Evaluate directory structure for v1 clarity
 
-- [x] Ball: enable, verify ball renders, click on ball, verify bounce, verify goose chases
-- [x] BreadCrumbs: enable, hold Right Shift, verify crumbs appear at cursor
-- [x] Hats: enable, verify hat renders above goose head, correct size and orientation
+### 6. Evaluate what's missing for v1 release
+- Feature completeness, stability, documentation
 
----
+### 7. Deep scan for hardcoded values → move to config
+- Check for other hardcoded magic numbers, strings, paths
 
-## Archive: Completed Items
+### 8. Remove stale references
+- Clean up any stale enum values, comments, dead code paths
 
-### 0. Build Cache + Project Cleanup ✅ (2026-05-08)
+## Manual
 
-- Add CMake build cache support (ccache)
-- Move test files to tests/ folder
-- Verify tests still build and run
+### 1. Go over all supported behaviors — collect bug list
+- Systematic test of every behavior toggle
+- Document issues found
 
-### 1. Fix Bugs ✅ (2026-05-08)
-
-- Debugoose/Nametag contrast
-- Meme images too large
-- Honker key detection
-- Jail/Drag/Banish key detection
-- Clicker random range
-- Drag animation broken
-- Pomodoro shows nothing
-- Text mirrored on X axis - FIXED!
-
-### 2. Configuration Pane ✅ (2026-05-08)
-
-- Implemented via menu toggles and Unix socket commands
-- All 20 behaviors accessible
-
-### 3. Osaurus + Ollama (Local LLM) Support ✅ (2026-05-08)
-
-- `ai.useOsaurus` and `ai.useOllama` toggles
-- Configurable ports
-
-### 4. Visual Regression Tests ✅ (2026-05-08)
-
-- OCR-based screenshot tests
-- Text rendering fixed
-
----
-
-## File Size Status
-
-| File | Current LOC | Target |
-|------|-------------|--------|
-| config.cpp | ~140 | <200 |
-| goose.cpp | ~404 | <500 |
-| main.mm | ~480 | <500 |
-| ui.cpp | ~492 | <500 |
-| All behaviors | <150 each | <500 |
-
----
-
-## Test Results
-
-- **182 tests passing**, 0 failing
-- Build: `build/CadGoose`
-- Tests: `build/CadGooseTests`
+### 2. "What can make this more joyful?" — ask Gemini
+- Get creative/UX suggestions for delight factor
 
 ---
 

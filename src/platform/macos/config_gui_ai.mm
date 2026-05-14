@@ -16,8 +16,6 @@ extern "C" void AI_RefreshModelDisplay();
 @property (nonatomic, strong) NSTextField* modelLabel;
 @property (nonatomic, strong) NSPopUpButton* modelPopup;
 @property (nonatomic, strong) NSButton* refreshBtn;
-@property (nonatomic, strong) NSButton* unixSocketToggle;
-@property (nonatomic, strong) NSTextField* socketPathField;
 @end
 
 @implementation AITabView
@@ -260,6 +258,28 @@ extern "C" void AI_RefreshModelDisplay();
 
     y -= 22;
 
+    // MCP Port field
+    NSTextField* mcpPortLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(24, y + 2, 40, 16)];
+    mcpPortLabel.stringValue = @"Port:";
+    mcpPortLabel.font = [NSFont fontWithName:@"Comic Sans MS" size:11] ?: [NSFont systemFontOfSize:11];
+    mcpPortLabel.textColor = [NSColor colorWithWhite:0.75 alpha:1.0];
+    mcpPortLabel.backgroundColor = [NSColor clearColor];
+    mcpPortLabel.bordered = NO;
+    mcpPortLabel.editable = NO;
+    mcpPortLabel.alignment = NSTextAlignmentRight;
+    [self addSubview:mcpPortLabel];
+
+    NSTextField* mcpPortField = [[NSTextField alloc] initWithFrame:NSMakeRect(66, y, 70, 22)];
+    mcpPortField.stringValue = [NSString stringWithFormat:@"%d", g_config.ai.mcpPort];
+    mcpPortField.font = [NSFont fontWithName:@"Comic Sans MS" size:11] ?: [NSFont systemFontOfSize:11];
+    mcpPortField.bezelStyle = NSTextFieldRoundedBezel;
+    mcpPortField.target = self;
+    mcpPortField.action = @selector(mcpPortChanged:);
+    mcpPortField.autoresizingMask = NSViewMaxXMargin;
+    [self addSubview:mcpPortField];
+
+    y -= 22;
+
     NSButton* mcpBtn = [[NSButton alloc] initWithFrame:NSMakeRect(12, y, 200, 18)];
     [mcpBtn setButtonType:NSButtonTypeSwitch];
     [mcpBtn setTitle:@"Enable MCP Server"];
@@ -269,45 +289,20 @@ extern "C" void AI_RefreshModelDisplay();
     [mcpBtn setAction:@selector(mcpToggled:)];
     [self addSubview:mcpBtn];
 
-    y -= 22;
 
-    _unixSocketToggle = [[NSButton alloc] initWithFrame:NSMakeRect(12, y, 200, 18)];
-    [_unixSocketToggle setButtonType:NSButtonTypeSwitch];
-    [_unixSocketToggle setTitle:@"Use Unix Socket"];
-    [_unixSocketToggle setFont:[NSFont fontWithName:@"Comic Sans MS" size:11] ?: [NSFont systemFontOfSize:11]];
-    [_unixSocketToggle setState:g_config.ai.useUnixSocket ? NSControlStateValueOn : NSControlStateValueOff];
-    [_unixSocketToggle setTarget:self];
-    [_unixSocketToggle setAction:@selector(unixSocketToggled:)];
-    [self addSubview:_unixSocketToggle];
-
-    y -= 22;
-
-    _socketPathField = [[NSTextField alloc] initWithFrame:NSMakeRect(24, y, w - 36, 22)];
-    _socketPathField.stringValue = [NSString stringWithUTF8String:g_config.ai.unixSocketPath.c_str()];
-    _socketPathField.placeholderString = @"/tmp/desktop-goose-ai.sock";
-    _socketPathField.font = [NSFont fontWithName:@"Comic Sans MS" size:11] ?: [NSFont systemFontOfSize:11];
-    _socketPathField.bezelStyle = NSTextFieldRoundedBezel;
-    _socketPathField.target = self;
-    _socketPathField.action = @selector(socketPathChanged:);
-    _socketPathField.hidden = !g_config.ai.useUnixSocket;
-    _socketPathField.autoresizingMask = NSViewWidthSizable;
-    [self addSubview:_socketPathField];
 
     [self performSelector:@selector(refreshModels:) withObject:_refreshBtn afterDelay:0.5];
 }
-
 - (void)updateCustomVisibility {
     NSInteger prov = [self currentProvider];
     BOOL isCustom = (prov == 2);
-    BOOL useSocket = g_config.ai.useUnixSocket;
-    _endpointField.hidden = isCustom ? useSocket : YES;
+    _endpointField.hidden = !isCustom;
     _customModelField.hidden = !isCustom;
-    _portLabel.hidden = isCustom || useSocket;
-    _portField.hidden = isCustom || useSocket;
+    _portLabel.hidden = isCustom;
+    _portField.hidden = isCustom;
     _modelLabel.hidden = isCustom;
     _modelPopup.hidden = isCustom;
     _refreshBtn.hidden = isCustom;
-    _socketPathField.hidden = !useSocket;
 }
 
 - (void)providerChanged:(NSPopUpButton*)sender {
@@ -400,7 +395,6 @@ extern "C" void AI_RefreshModelDisplay();
     }];
     [task resume];
 }
-
 - (NSString*)modelsEndpointForTest {
     NSInteger prov = [self currentProvider];
     if (prov == 2) return [NSString stringWithUTF8String:g_config.ai.customEndpoint.c_str()];
@@ -478,24 +472,22 @@ extern "C" void AI_RefreshModelDisplay();
     Config_SaveAll();
 }
 
-- (void)unixSocketToggled:(NSButton*)sender {
-    g_config.ai.useUnixSocket = (sender.state == NSControlStateValueOn);
-    [self updateCustomVisibility];
-    Config_SaveAll();
-}
-
-- (void)socketPathChanged:(NSTextField*)sender {
-    g_config.ai.unixSocketPath = std::string([sender.stringValue UTF8String]);
-    Config_SaveAll();
-}
-
 - (void)mcpToggled:(NSButton*)sender {
     g_config.ai.enableMCP = (sender.state == NSControlStateValueOn);
     if (g_config.ai.enableMCP) {
         MCP_StartInternalServer();
+        MCP_StartHTTPServer();
     } else {
+        MCP_StopHTTPServer();
         MCP_StopInternalServer();
     }
+    Config_SaveAll();
+}
+
+- (void)mcpPortChanged:(NSTextField*)sender {
+    int port = [sender.stringValue intValue];
+    if (port < 1024 || port > 65535) port = 31072;
+    g_config.ai.mcpPort = port;
     Config_SaveAll();
 }
 

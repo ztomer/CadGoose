@@ -6,6 +6,7 @@
 #include "goose.h"
 #include "config.h"
 #include "world.h"
+#include "hotkey.h"
 #include <CoreGraphics/CoreGraphics.h>
 #include <ApplicationServices/ApplicationServices.h>
 
@@ -17,7 +18,7 @@ static constexpr float RESPAWN_DELAY = 30.0f;
 static bool s_bKeyWasDown = false;
 
 static bool IsKeyHeld(int keyCode) {
-    return CGEventSourceKeyState(kCGEventSourceStateCombinedSessionState, (CGKeyCode)keyCode);
+    return CGEventSourceKeyState(kCGEventSourceStateHIDSystemState, (CGKeyCode)keyCode);
 }
 
 static bool IsMiddleMouseDown() {
@@ -31,11 +32,12 @@ static bool AreModifiersPressed() {
 
 static bool IsBanishActive() {
     // Banish key (default 'B' = 0x0B) or Ctrl+Alt+MiddleClick
-    bool keyPressed = IsKeyHeld(g_config.behaviors.banish.key);
+    int banishKey = KeyNameToKeyCode(g_config.behaviors.banish.hotkey);
+    bool keyPressed = IsKeyHeld(banishKey);
     bool edgeDetected = keyPressed && !s_bKeyWasDown;
     s_bKeyWasDown = keyPressed;
     if (edgeDetected) {
-        fprintf(stderr, "[Banish] Key trigger (keyCode=%d)\n", g_config.behaviors.banish.key);
+        fprintf(stderr, "[Banish] Key trigger (hotkey=%s)\n", g_config.behaviors.banish.hotkey.c_str());
         return true;
     }
     if (AreModifiersPressed() && IsMiddleMouseDown()) {
@@ -105,6 +107,7 @@ static Behavior g_banishBehavior = {
     .name = "Banish",
     .description = "Press B (or Ctrl+Alt+MiddleClick) to banish goose to the shadow realm. Respawns after 30s.",
     .enabledPtr = &s_enabled,
+    .configPtr = &g_config.behaviors.control.banish,
     .init = init,
     .tick = tick,
     .render = render,

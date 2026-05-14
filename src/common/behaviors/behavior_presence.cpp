@@ -52,6 +52,7 @@ static Behavior g_presenceBehavior = {
     .name = "Presence",
     .description = "Shows goose state in menu bar and controls goose window visibility",
     .enabledPtr = &s_enabled,
+    .configPtr = &g_config.behaviors.info.presence,
     .init = init,
     .tick = tick,
     .render = render,

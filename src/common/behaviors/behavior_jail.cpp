@@ -7,12 +7,14 @@
 #include "goose.h"
 #include "config.h"
 #include "world.h"
+#include "hotkey.h"
 #ifdef __APPLE__
 #include <CoreText/CoreText.h>
 #endif
 
 static bool s_enabled = true;
-static bool s_wasKeyDown = false;
+static bool s_oWasKeyDown = false;
+static bool s_pWasKeyDown = false;
 
 static bool IsKeyPressed(int keyCode) {
     return CGEventSourceKeyState(kCGEventSourceStateHIDSystemState, (CGKeyCode)keyCode);
@@ -40,18 +42,20 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
         }
     }
 
-    if (IsKeyPressed(g_config.behaviors.jail.keyO)) {
+    bool oDown = IsKeyPressed(KeyNameToKeyCode(g_config.behaviors.jail.hotkeyO));
+    if (oDown && !s_oWasKeyDown) {
         state->jailPos = cursorPos;
         state->positionSet = true;
     }
+    s_oWasKeyDown = oDown;
 
-    bool keyDown = IsKeyPressed(g_config.behaviors.jail.keyP);
-    if (keyDown && !s_wasKeyDown) {
+    bool pDown = IsKeyPressed(KeyNameToKeyCode(g_config.behaviors.jail.hotkeyP));
+    if (pDown && !s_pWasKeyDown) {
         state->isJailed = !state->isJailed;
         goose->state = GooseState::WANDER;
         g_assets.Honk();
     }
-    s_wasKeyDown = keyDown;
+    s_pWasKeyDown = pDown;
 
     if (state->isJailed && state->positionSet) {
         goose->target = state->jailPos;
@@ -124,6 +128,7 @@ static Behavior g_jailBehavior = {
     .name = "Jail",
     .description = "Press O to set jail position, P to trap goose. Based on GooseJail by WackyModer",
     .enabledPtr = &s_enabled,
+    .configPtr = &g_config.behaviors.control.jail,
     .init = init,
     .tick = tick,
     .render = render,

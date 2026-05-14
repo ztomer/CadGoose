@@ -192,6 +192,7 @@ static Behavior g_ballBehavior = {
     .name = "Ball",
     .description = "Ball that goose chases and kicks. Based on BallMod by TheOrlando",
     .enabledPtr = &s_enabled,
+    .configPtr = &g_config.behaviors.fun.ball,
     .init = init,
     .tick = tick,
     .render = render,

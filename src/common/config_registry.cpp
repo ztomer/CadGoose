@@ -1,8 +1,6 @@
 #include "config.h"
 
-namespace {
-
-void RegisterCommon(std::vector<ConfigOption>& r) {
+static void RegisterCommon(std::vector<ConfigOption>& r) {
     r.push_back(CONFIG_BOOL("Debug", "to_terminal", "To Terminal",
         &g_config.debug.toTerminal, OnConfigChange));
     r.push_back(CONFIG_BOOL("Debug", "visuals", "Visuals",
@@ -23,6 +21,8 @@ void RegisterCommon(std::vector<ConfigOption>& r) {
         &g_config.general.lightThemeRole, OnConfigChange));
     r.push_back(CONFIG_STRING("General", "dark_theme_role", "Dark Theme Role",
         &g_config.general.darkThemeRole, OnConfigChange));
+    r.push_back(CONFIG_STRING("General", "failsafe_hotkey", "Failsafe Hotkey",
+        &g_config.general.failsafeHotkey, OnConfigChange));
     r.push_back(CONFIG_INT("Screen", "default_width", "Default Width",
         &g_config.screen.defaultWidth, 0, 10000, OnConfigChange));
     r.push_back(CONFIG_INT("Screen", "default_height", "Default Height",
@@ -41,7 +41,7 @@ void RegisterCommon(std::vector<ConfigOption>& r) {
         &g_config.asset.notePlaceholderH, 0, 1000, OnConfigChange));
 }
 
-void RegisterCursor(std::vector<ConfigOption>& r) {
+static void RegisterCursor(std::vector<ConfigOption>& r) {
     r.push_back(CONFIG_BOOL("Cursor", "chase_enabled", "Chase Enabled",
         &g_config.cursor.chaseEnabled, OnConfigChange));
     r.push_back(CONFIG_INT("Cursor", "chase_chance", "Chase Chance",
@@ -50,7 +50,7 @@ void RegisterCursor(std::vector<ConfigOption>& r) {
         &g_config.cursor.multiMonitorEnabled, OnConfigChange));
 }
 
-void RegisterMovement(std::vector<ConfigOption>& r) {
+static void RegisterMovement(std::vector<ConfigOption>& r) {
     r.push_back(CONFIG_FLOAT("Movement", "base_walk_speed", "Base Walk Speed",
         &g_config.movement.baseWalkSpeed, 0.0f, 1000.0f, 0.1f, OnConfigChange));
     r.push_back(CONFIG_FLOAT("Movement", "base_run_speed", "Base Run Speed",
@@ -77,7 +77,7 @@ void RegisterMovement(std::vector<ConfigOption>& r) {
         &g_config.movement.directionBlendRate, 0.0f, 1.0f, 0.01f, OnConfigChange));
 }
 
-void RegisterPhysics(std::vector<ConfigOption>& r) {
+static void RegisterPhysics(std::vector<ConfigOption>& r) {
     r.push_back(CONFIG_FLOAT("Physics", "screen_margin", "Screen Margin",
         &g_config.physics.screenMargin, 0.0f, 500.0f, 1.0f, OnConfigChange));
     r.push_back(CONFIG_FLOAT("Physics", "bounce_factor_wall", "Bounce Factor Wall",
@@ -130,7 +130,7 @@ void RegisterPhysics(std::vector<ConfigOption>& r) {
         &g_config.physics.minValidScale, 0.01f, 1.0f, 0.01f, OnConfigChange));
 }
 
-void RegisterSpawn(std::vector<ConfigOption>& r) {
+static void RegisterSpawn(std::vector<ConfigOption>& r) {
     r.push_back(CONFIG_FLOAT("Spawn", "margin_x", "Margin X",
         &g_config.spawn.marginX, 0.0f, 500.0f, 1.0f, OnConfigChange));
     r.push_back(CONFIG_FLOAT("Spawn", "margin_y", "Margin Y",
@@ -173,7 +173,7 @@ void RegisterSpawn(std::vector<ConfigOption>& r) {
         &g_config.spawn.separationMinDistance, 1.0f, 200.0f, 1.0f, OnConfigChange));
 }
 
-void RegisterRig(std::vector<ConfigOption>& r) {
+static void RegisterRig(std::vector<ConfigOption>& r) {
     r.push_back(CONFIG_FLOAT("Rig", "underbody_y", "Underbody Y",
         &g_config.rig.underbodyY, -100.0f, 100.0f, 0.5f, OnConfigChange));
     r.push_back(CONFIG_FLOAT("Rig", "body_y", "Body Y",
@@ -224,7 +224,7 @@ void RegisterRig(std::vector<ConfigOption>& r) {
         &g_config.rig.headForwardBias, -1.0f, 1.0f, 0.01f, OnConfigChange));
 }
 
-void RegisterHonk(std::vector<ConfigOption>& r) {
+static void RegisterHonk(std::vector<ConfigOption>& r) {
     r.push_back(CONFIG_FLOAT("Honk", "min_gap", "Min Gap",
         &g_config.honk.minGap, 0.0f, 10.0f, 0.1f, OnConfigChange));
     r.push_back(CONFIG_FLOAT("Honk", "idle_min", "Idle Min",
@@ -245,7 +245,7 @@ void RegisterHonk(std::vector<ConfigOption>& r) {
         &g_config.honk.wanderHonkDivisor, 1, 1000, OnConfigChange));
 }
 
-void RegisterSnatch(std::vector<ConfigOption>& r) {
+static void RegisterSnatch(std::vector<ConfigOption>& r) {
     r.push_back(CONFIG_FLOAT("Snatch", "radius_base", "Radius Base",
         &g_config.snatch.radiusBase, 0.0f, 200.0f, 1.0f, OnConfigChange));
     r.push_back(CONFIG_FLOAT("Snatch", "radius_range", "Radius Range",
@@ -276,7 +276,7 @@ void RegisterSnatch(std::vector<ConfigOption>& r) {
         &g_config.snatch.angularSpeedRandomRange, 0.0f, 5.0f, 0.1f, OnConfigChange));
 }
 
-void RegisterStep(std::vector<ConfigOption>& r) {
+static void RegisterStep(std::vector<ConfigOption>& r) {
     r.push_back(CONFIG_FLOAT("Step", "time_fetch", "Time Fetch",
         &g_config.step.timeFetch, 0.0f, 1.0f, 0.01f, OnConfigChange));
     r.push_back(CONFIG_FLOAT("Step", "time_wander", "Time Wander",
@@ -323,7 +323,7 @@ void RegisterStep(std::vector<ConfigOption>& r) {
         &g_config.step.minDuration, 0.0f, 0.5f, 0.01f, OnConfigChange));
 }
 
-void RegisterItem(std::vector<ConfigOption>& r) {
+static void RegisterItem(std::vector<ConfigOption>& r) {
     r.push_back(CONFIG_FLOAT("Item", "pickup_cooldown", "Pickup Cooldown",
         &g_config.item.pickupCooldown, 0.0f, 10.0f, 0.1f, OnConfigChange));
     r.push_back(CONFIG_FLOAT("Item", "item_lifetime", "Item Lifetime",
@@ -348,7 +348,7 @@ void RegisterItem(std::vector<ConfigOption>& r) {
         &g_config.item.heistApproachMargin, 0, 500, OnConfigChange));
 }
 
-void RegisterMud(std::vector<ConfigOption>& r) {
+static void RegisterMud(std::vector<ConfigOption>& r) {
     r.push_back(CONFIG_BOOL("Mud", "enabled", "Enabled",
         &g_config.mud.enabled, OnConfigChange));
     r.push_back(CONFIG_INT("Mud", "chance", "Chance",
@@ -357,7 +357,66 @@ void RegisterMud(std::vector<ConfigOption>& r) {
         &g_config.mud.lifetime, 0.0f, 60.0f, 1.0f, OnConfigChange));
 }
 
-void RegisterRender(std::vector<ConfigOption>& r) {
+static void RegisterBehaviors(std::vector<ConfigOption>& r) {
+    // Behavior toggle bools
+    r.push_back(CONFIG_BOOL("Behavior", "ball_enabled", "Ball Enabled",
+        &g_config.behaviors.fun.ball, OnConfigChange));
+    r.push_back(CONFIG_BOOL("Behavior", "breadcrumbs_enabled", "Breadcrumbs Enabled",
+        &g_config.behaviors.fun.breadCrumbs, OnConfigChange));
+    r.push_back(CONFIG_BOOL("Behavior", "hats_enabled", "Hats Enabled",
+        &g_config.behaviors.fun.hats, OnConfigChange));
+    r.push_back(CONFIG_BOOL("Behavior", "rainbow_enabled", "Rainbow Enabled",
+        &g_config.behaviors.fun.rainbow, OnConfigChange));
+    r.push_back(CONFIG_BOOL("Behavior", "acid_enabled", "Acid Enabled",
+        &g_config.behaviors.fun.acid, OnConfigChange));
+    r.push_back(CONFIG_BOOL("Behavior", "anger_enabled", "Anger Enabled",
+        &g_config.behaviors.fun.anger, OnConfigChange));
+    r.push_back(CONFIG_BOOL("Behavior", "autumn_leaves_enabled", "Autumn Leaves Enabled",
+        &g_config.behaviors.fun.autumnLeaves, OnConfigChange));
+    r.push_back(CONFIG_BOOL("Behavior", "honcker_enabled", "Honcker Enabled",
+        &g_config.behaviors.control.honcker, OnConfigChange));
+    r.push_back(CONFIG_BOOL("Behavior", "jail_enabled", "Jail Enabled",
+        &g_config.behaviors.control.jail, OnConfigChange));
+    r.push_back(CONFIG_BOOL("Behavior", "portals_enabled", "Portals Enabled",
+        &g_config.behaviors.control.portals, OnConfigChange));
+    r.push_back(CONFIG_BOOL("Behavior", "drag_enabled", "Drag Enabled",
+        &g_config.behaviors.control.drag, OnConfigChange));
+    r.push_back(CONFIG_BOOL("Behavior", "banish_enabled", "Banish Enabled",
+        &g_config.behaviors.control.banish, OnConfigChange));
+    r.push_back(CONFIG_BOOL("Behavior", "nametag_enabled", "Nametag Enabled",
+        &g_config.behaviors.info.nametag, OnConfigChange));
+    r.push_back(CONFIG_BOOL("Behavior", "presence_enabled", "Presence Enabled",
+        &g_config.behaviors.info.presence, OnConfigChange));
+    r.push_back(CONFIG_BOOL("Behavior", "config_gui_enabled", "Config GUI Enabled",
+        &g_config.behaviors.info.configGUI, OnConfigChange));
+    r.push_back(CONFIG_BOOL("Behavior", "visible_enabled", "Visible Enabled",
+        &g_config.behaviors.info.visible, OnConfigChange));
+    r.push_back(CONFIG_BOOL("Behavior", "health_enabled", "Health Enabled",
+        &g_config.behaviors.systems.health, OnConfigChange));
+    r.push_back(CONFIG_BOOL("Behavior", "ai_enabled", "AI Enabled",
+        &g_config.behaviors.systems.ai, OnConfigChange));
+    r.push_back(CONFIG_BOOL("Behavior", "pomodoro_enabled", "Pomodoro Enabled",
+        &g_config.behaviors.systems.pomodoro, OnConfigChange));
+    // Behavior hotkey strings
+    r.push_back(CONFIG_STRING("Behavior", "honcker_hotkey", "Honcker Hotkey",
+        &g_config.behaviors.honcker.hotkey, OnConfigChange));
+    r.push_back(CONFIG_STRING("Behavior", "jail_hotkey_o", "Jail Set Hotkey",
+        &g_config.behaviors.jail.hotkeyO, OnConfigChange));
+    r.push_back(CONFIG_STRING("Behavior", "jail_hotkey_p", "Jail Toggle Hotkey",
+        &g_config.behaviors.jail.hotkeyP, OnConfigChange));
+    r.push_back(CONFIG_STRING("Behavior", "banish_hotkey", "Banish Hotkey",
+        &g_config.behaviors.banish.hotkey, OnConfigChange));
+    r.push_back(CONFIG_STRING("Behavior", "portal_hotkey_1", "Portal 1 Hotkey",
+        &g_config.portal.hotkey1, OnConfigChange));
+    r.push_back(CONFIG_STRING("Behavior", "portal_hotkey_2", "Portal 2 Hotkey",
+        &g_config.portal.hotkey2, OnConfigChange));
+    r.push_back(CONFIG_STRING("Behavior", "portal_hotkey_0", "Portal Toggle Hotkey",
+        &g_config.portal.hotkey0, OnConfigChange));
+    r.push_back(CONFIG_STRING("Behavior", "breadcrumbs_hotkey", "Breadcrumbs Hotkey",
+        &g_config.behaviors.breadCrumbs.hotkey, OnConfigChange));
+}
+
+static void RegisterRender(std::vector<ConfigOption>& r) {
     r.push_back(CONFIG_FLOAT("Render", "shadow_offset_x", "Shadow Offset X",
         &g_config.render.shadowOffsetX, -50.0f, 50.0f, 0.5f, OnConfigChange));
     r.push_back(CONFIG_FLOAT("Render", "shadow_offset_y", "Shadow Offset Y",
@@ -418,36 +477,7 @@ void RegisterRender(std::vector<ConfigOption>& r) {
         &g_config.render.facingBackThreshold, -1.0f, 1.0f, 0.01f, OnConfigChange));
 }
 
-}
-
-void RegisterAI(std::vector<ConfigOption>& r) {
-    r.push_back(CONFIG_INT("AI", "provider_type", "Provider Type",
-        &g_config.ai.providerType, 0, 2, OnConfigChange));
-    r.push_back(CONFIG_INT("AI", "osaurus_port", "Osaurus Port",
-        &g_config.ai.osaurusPort, 0, 65535, OnConfigChange));
-    r.push_back(CONFIG_INT("AI", "ollama_port", "Ollama Port",
-        &g_config.ai.ollamaPort, 0, 65535, OnConfigChange));
-    r.push_back(CONFIG_INT("AI", "custom_port", "Custom Port",
-        &g_config.ai.customPort, 0, 65535, OnConfigChange));
-    r.push_back(CONFIG_STRING("AI", "osaurus_model", "Osaurus Model",
-        &g_config.ai.osaurusModel, OnConfigChange));
-    r.push_back(CONFIG_STRING("AI", "ollama_model", "Ollama Model",
-        &g_config.ai.ollamaModel, OnConfigChange));
-    r.push_back(CONFIG_STRING("AI", "custom_endpoint", "Custom Endpoint",
-        &g_config.ai.customEndpoint, OnConfigChange));
-    r.push_back(CONFIG_STRING("AI", "custom_model", "Custom Model",
-        &g_config.ai.customModel, OnConfigChange));
-    r.push_back(CONFIG_FLOAT("AI", "evil_level", "Evil Level",
-        &g_config.ai.evilLevel, 0.0f, 1.0f, 0.01f, OnConfigChange));
-    r.push_back(CONFIG_BOOL("AI", "show_status_bar", "Show Status Bar",
-        &g_config.ai.showStatusBar, OnConfigChange));
-    r.push_back(CONFIG_BOOL("AI", "enable_mcp", "Enable MCP Server",
-        &g_config.ai.enableMCP, OnConfigChange));
-    r.push_back(CONFIG_BOOL("AI", "use_unix_socket", "Use Unix Socket",
-        &g_config.ai.useUnixSocket, OnConfigChange));
-    r.push_back(CONFIG_STRING("AI", "unix_socket_path", "Unix Socket Path",
-        &g_config.ai.unixSocketPath, OnConfigChange));
-}
+extern void RegisterAI(std::vector<ConfigOption>& r);
 
 void Config_InitRegistry() {
     g_configRegistry.clear();
@@ -463,6 +493,7 @@ void Config_InitRegistry() {
     RegisterStep(g_configRegistry);
     RegisterItem(g_configRegistry);
     RegisterMud(g_configRegistry);
+    RegisterBehaviors(g_configRegistry);
     RegisterRender(g_configRegistry);
     RegisterAI(g_configRegistry);
 }

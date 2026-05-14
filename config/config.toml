@@ -9,6 +9,7 @@ memes_enabled = true
 light_theme_role = "Default"
 appearance_mode = 2
 dark_theme_role = "Canadian"
+failsafe_hotkey = "cmd+shift+escape"
 
 [Rig]
 neck_height_moving = 10.0
@@ -287,15 +288,18 @@ max_force = 350.0
 direction_blend_rate = 0.15
 
 [AI]
-use_ollama = false
 ollama_port = 11434
-use_osaurus = true
 osaurus_port = 1337
-osaurus_model = "foundation"
+custom_port = 1337
+evil_level = 1.0
+provider_type = 0
 ollama_model = "llama3"
+custom_endpoint = "http://localhost:1337/v1/chat/completions"
+custom_model = "foundation"
 enable_mcp = true
-evil_level = 0.5
 show_status_bar = true
+osaurus_model = "minimax-m2.7-small-jangtq"
+mcp_port = 31072
 
 [Step]
 lift_run = 7.0
@@ -325,5 +329,34 @@ zero_velocity_threshold = 0.001
 enabled = true
 lifetime = 15.0
 chance = 15
+
+[Behavior]
+breadcrumbs_enabled = false
+acid_enabled = false
+autumn_leaves_enabled = false
+rainbow_enabled = false
+anger_enabled = false
+jail_hotkey_p = "p"
+drag_enabled = false
+jail_enabled = false
+nametag_enabled = false
+portal_hotkey_1 = "1"
+presence_enabled = false
+jail_hotkey_o = "o"
+banish_enabled = false
+pomodoro_enabled = false
+config_gui_enabled = false
+honcker_enabled = true
+visible_enabled = true
+hats_enabled = false
+ai_enabled = false
+health_enabled = false
+portals_enabled = true
+honcker_hotkey = "f"
+banish_hotkey = "b"
+ball_enabled = false
+portal_hotkey_2 = "2"
+breadcrumbs_hotkey = "right shift"
+portal_hotkey_0 = "0"
 
 

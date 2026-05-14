@@ -20,7 +20,6 @@ bool s_getBoolForKey(const std::string& key) {
     if (key == "behaviors.info.nametag") return g_config.behaviors.info.nametag;
     if (key == "behaviors.info.presence") return g_config.behaviors.info.presence;
     if (key == "behaviors.info.configGUI") return g_config.behaviors.info.configGUI;
-    if (key == "behaviors.info.gooseManager") return g_config.behaviors.info.gooseManager;
     if (key == "behaviors.systems.health") return g_config.behaviors.systems.health;
     if (key == "behaviors.systems.ai") return g_config.behaviors.systems.ai;
     if (key == "behaviors.systems.pomodoro") return g_config.behaviors.systems.pomodoro;
@@ -41,10 +40,10 @@ void s_setFloatValue(const std::string& key, float value) {
     else if (key == "behaviors.control.banish.duration") g_config.behaviors.banish.duration = value;
     else if (key == "behaviors.info.nametag.size") g_config.behaviors.nametag.size = value;
     else if (key == "behaviors.info.presence.interval") g_config.behaviors.presence.interval = value;
-    else if (key == "behaviors.info.gooseManager.taskInterval") g_config.behaviors.gooseManager.taskInterval = value;
     else if (key == "behaviors.systems.health.opacity") g_config.behaviors.health.opacity = value;
     else if (key == "behaviors.systems.pomodoro.workDuration") g_config.behaviors.pomodoro.workMinutes = (int)value;
     else if (key == "behaviors.systems.pomodoro.breakDuration") g_config.behaviors.pomodoro.breakMinutes = (int)value;
+    OnConfigChange();
 }
 
 NSMutableArray* g_configItemsForAccess = nil;
@@ -65,10 +64,10 @@ void s_setBoolValue(const std::string& key, bool value) {
     else if (key == "behaviors.info.nametag") g_config.behaviors.info.nametag = value;
     else if (key == "behaviors.info.presence") g_config.behaviors.info.presence = value;
     else if (key == "behaviors.info.configGUI") g_config.behaviors.info.configGUI = value;
-    else if (key == "behaviors.info.gooseManager") g_config.behaviors.info.gooseManager = value;
     else if (key == "behaviors.systems.health") g_config.behaviors.systems.health = value;
     else if (key == "behaviors.systems.ai") g_config.behaviors.systems.ai = value;
     else if (key == "behaviors.systems.pomodoro") g_config.behaviors.systems.pomodoro = value;
+    OnConfigChange();
 }
 
 // Thin separator view drawn via drawRect (layer-backing triggers AGXMetalG16X blit shader compilation crash on Mac16,6 macOS 26.5)
@@ -215,11 +214,26 @@ void s_setBoolValue(const std::string& key, bool value) {
     [self addRow:@"Autumn Leaves" key:@"behaviors.fun.autumnLeaves" desc:@"Piles of leaves accumulate on screen"];
 
     [self.configItems addObject:@{@"name": @"CONTROL", @"type": @"header"}];
-    [self addRow:@"Honcker" key:@"behaviors.control.honcker" desc:@"Press F to honk at cursor"];
-    [self addRow:@"Jail" key:@"behaviors.control.jail" desc:@"Set traps with O, trigger with P"];
-    [self addRow:@"Portals" key:@"behaviors.control.portals" desc:@"Create portals with P+1/2, teleport with P+0"];
+    {
+        NSString* hk = @(g_config.behaviors.honcker.hotkey.c_str());
+        [self addRow:@"Honcker" key:@"behaviors.control.honcker" desc:[NSString stringWithFormat:@"Press %@ to honk at cursor", hk]];
+    }
+    {
+        NSString* kO = @(g_config.behaviors.jail.hotkeyO.c_str());
+        NSString* kP = @(g_config.behaviors.jail.hotkeyP.c_str());
+        [self addRow:@"Jail" key:@"behaviors.control.jail" desc:[NSString stringWithFormat:@"Set traps with %@, trigger with %@", kO, kP]];
+    }
+    {
+        NSString* k1 = @(g_config.portal.hotkey1.c_str());
+        NSString* k2 = @(g_config.portal.hotkey2.c_str());
+        NSString* k0 = @(g_config.portal.hotkey0.c_str());
+        [self addRow:@"Portals" key:@"behaviors.control.portals" desc:[NSString stringWithFormat:@"Press %@/%@ to place portals, %@ to toggle. Based on PortalGoos by Moonaliss1", k1, k2, k0]];
+    }
     [self addRow:@"Drag" key:@"behaviors.control.drag" desc:@"Click and drag geese around"];
-    [self addRow:@"Banish" key:@"behaviors.control.banish" desc:@"Banish goose to another dimension"];
+    {
+        NSString* bk = @(g_config.behaviors.banish.hotkey.c_str());
+        [self addRow:@"Banish" key:@"behaviors.control.banish" desc:[NSString stringWithFormat:@"Press %@ (or Ctrl+Alt+MiddleClick) to banish goose to the shadow realm", bk]];
+    }
 
     [self.configItems addObject:@{@"name": @"INFO", @"type": @"header"}];
     [self addRow:@"Nametag" key:@"behaviors.info.nametag" desc:@"Show goose name above head"];

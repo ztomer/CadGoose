@@ -78,6 +78,7 @@ static Behavior g_healthBehavior = {
     .name = "Health",
     .description = "Health system for geese",
     .enabledPtr = &s_enabled,
+    .configPtr = &g_config.behaviors.systems.health,
     .init = init,
     .tick = tick,
     .render = render,

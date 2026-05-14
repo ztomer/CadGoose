@@ -66,6 +66,7 @@ struct GeneralConfig {
   int appearanceMode = APPEARANCE_SYSTEM;
   std::string lightThemeRole = "Default";
   std::string darkThemeRole = "Canadian";
+  std::string failsafeHotkey = "cmd+shift+escape";
 };
 
 struct ScreenConfig {
@@ -85,7 +86,7 @@ struct AssetConfig {
 struct MovementConfig {
   float baseWalkSpeed = 180.0f;
   float baseRunSpeed = 480.0f;
-  float maxForce = 350.0f;
+  float maxForce = 1000.0f;
   float moveDistanceThreshold = 1.0f;
   float friction = 0.85f;
   float maxSpeed = 600.0f;
@@ -114,7 +115,7 @@ struct PhysicsConfig {
   float screenClampTight = 20.0f;
   float screenClampExpanded = 50.0f;
   float screenClampBounce = 50.0f;
-  float steerSeekForce = 2.0f;
+  float steerSeekForce = 4.0f;
   float curveFadeDistance = 200.0f;
   float curveTangentForce = 0.8f;
   float curveFadeMinVel = 10.0f;
@@ -359,7 +360,6 @@ struct BehaviorConfig {
     bool nametag = false;
     bool presence = false;
     bool configGUI = false;
-    bool gooseManager = false;
     bool visible = true;  // goose window visibility
   } info;
 
@@ -369,16 +369,14 @@ struct BehaviorConfig {
     bool pomodoro = false;
   } systems;
 
-  struct HonckerConfig { int key = 0x03; float size = 40.0f; float cooldown = 0.5f; } honcker; // F key
+  struct HonckerConfig { std::string hotkey = "f"; float size = 40.0f; float cooldown = 0.5f; } honcker;
   struct DragConfig { float radius = 45.0f; } drag;
-  struct JailConfig { int keyO = 0x1F; int keyP = 0x23; float size = 150.0f; } jail; // O, P keys
-  struct BanishConfig { float duration = 30.0f; int key = 0x0B; } banish; // B key
+  struct JailConfig { std::string hotkeyO = "o"; std::string hotkeyP = "p"; float size = 150.0f; } jail;
+  struct BanishConfig { float duration = 30.0f; std::string hotkey = "b"; } banish;
   struct NametagConfig { float size = 14.0f; } nametag;
   struct PresenceConfig { float interval = 1.0f; } presence;
   struct HealthConfig { float opacity = 0.8f; float maxHealth = 100.0f; float regenRate = 0.5f; float damageCooldown = 2.0f; float damageSpeedThreshold = 200.0f; float damageAmount = 5.0f; } health;
-  struct GooseManagerConfig { bool taskWander = true, taskFetch = true, taskChase = true, taskSnatch = true; bool speedWalk = true, speedRun = true; float taskInterval = 5.0f; } gooseManager;
   struct AngerConfig { float increaseRate = 15.0f; float decreaseRate = 8.0f; float punchCooldown = 2.0; float punchDuration = 0.3f; float cursorRadius = 100.0f; float maxAnger = 100.0f; float punchThreshold = 80.0f; float minVisualThreshold = 10.0f; } anger;
-  struct ClickerConfig { int chance = 300; int key = 0x24; } clicker;
   struct AcidConfig { float spinSpeed = 720.0f; float honkInterval = 0.15f; float rotationTotal = 1080.0f; int triggerChance = 300; } acid;
   struct RainbowConfig { float hueSpeed = 120.0f; } rainbow;
   struct PomodoroConfig {
@@ -409,7 +407,7 @@ struct BehaviorConfig {
     float soccerBounce = 0.75f;
     float beachBounce = 0.65f;
   } ball;
-  struct BreadCrumbsConfig { int maxCrumbs = 50; float lifetime = 10.0f; float spawnDist = 15.0f; float size = 5.0f; std::string triggerKey = "RightShift"; } breadCrumbs;
+  struct BreadCrumbsConfig { int maxCrumbs = 50; float lifetime = 10.0f; float spawnDist = 15.0f; float size = 5.0f; std::string hotkey = "right shift"; } breadCrumbs;
   struct HatsConfig { std::string path; float sizeX = 32.0f; float sizeY = 24.0f; float offsetX = 0.0f; float offsetY = -15.0f; } hats;
 };
 
@@ -433,7 +431,7 @@ struct Config {
   BehaviorConfig behaviors;
 
   enum ProviderType { kProviderOsaurus = 0, kProviderOllama = 1, kProviderCustom = 2 };
-  struct PortalConfig { float p1Width = 80.0f; float p1Height = 80.0f; float p2Width = 80.0f; float p2Height = 80.0f; float width = 80.0f; } portal;
+  struct PortalConfig { std::string hotkey1 = "1"; std::string hotkey2 = "2"; std::string hotkey0 = "0"; float p1Width = 80.0f; float p1Height = 80.0f; float p2Width = 80.0f; float p2Height = 80.0f; float width = 80.0f; } portal;
   struct ModelProfile {
     std::string pattern;           // glob match on model name (e.g. "qwen*", "gemma*")
     float temperature = 0.8f;
@@ -455,13 +453,8 @@ struct Config {
     float evilLevel = 0.5f;
     bool showStatusBar = true;
     bool enableMCP = false;
-    bool useUnixSocket = false;
-    std::string unixSocketPath = "/tmp/desktop-goose-ai.sock";
+    int mcpPort = 31072;
   } ai;
-  struct GooseManagerConfig {
-    bool taskWander = true, taskFetch = true, taskChase = true, taskSnatch = true;
-    bool speedWalk = true, speedRun = true;
-  } gooseManager;
 };
 
 extern Config g_config;

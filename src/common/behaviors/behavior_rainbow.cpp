@@ -44,6 +44,7 @@ static Behavior g_rainbowBehavior = {
     .name = "Rainbow",
     .description = "Goose cycles through rainbow colors",
     .enabledPtr = &s_enabled,
+    .configPtr = &g_config.behaviors.fun.rainbow,
     .init = init,
     .tick = tick,
     .render = render,

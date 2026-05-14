@@ -58,6 +58,7 @@ static Behavior g_acidBehavior = {
     .name = "Acid",
     .description = "Goose spins wildly with honks. Based on AcidGoose by F!NN",
     .enabledPtr = &s_enabled,
+    .configPtr = &g_config.behaviors.fun.acid,
     .init = init,
     .tick = tick,
     .render = render,

@@ -88,6 +88,7 @@ static Behavior g_angerBehavior = {
     .name = "Anger",
     .description = "Goose gets angry near the cursor and punches. Based on OnePunchGoose by VisualError",
     .enabledPtr = &s_enabled,
+    .configPtr = &g_config.behaviors.fun.anger,
     .init = init,
     .tick = tick,
     .render = render,

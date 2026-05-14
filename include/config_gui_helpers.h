@@ -11,6 +11,8 @@ bool s_getBoolForKey(const std::string& key);
 void s_setFloatValue(const std::string& key, float value);
 void s_setBoolValue(const std::string& key, bool value);
 
+#include "hotkey.h"
+
 extern NSMutableArray* g_configItemsForAccess;
 
 @interface AppBarBorderView : NSView @end

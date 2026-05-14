@@ -10,6 +10,7 @@
 #include <atomic>
 #include "behavior.h"
 #include "config.h"
+#include "hotkey.h"
 #include <iostream>
 #include <cstring>
 
@@ -140,6 +141,17 @@ extern "C" const char* GetAccessibilityStatus() {
 - (void)startMonitoring {
     __weak FailsafeHotkeyMonitor* weakSelf = self;
     
+    auto parsed = ParseHotkeyString(g_config.general.failsafeHotkey);
+    int targetKeyCode = parsed ? parsed->keyCode : 0x29;
+    CGEventFlags targetModifiers = 0;
+    if (parsed) {
+        if (parsed->modifierMask & kCGEventFlagMaskCommand) targetModifiers |= NSEventModifierFlagCommand;
+        if (parsed->modifierMask & kCGEventFlagMaskShift) targetModifiers |= NSEventModifierFlagShift;
+        if (parsed->modifierMask & kCGEventFlagMaskAlternate) targetModifiers |= NSEventModifierFlagOption;
+        if (parsed->modifierMask & kCGEventFlagMaskControl) targetModifiers |= NSEventModifierFlagControl;
+        if (parsed->modifierMask & kCGEventFlagMaskSecondaryFn) targetModifiers |= NSEventModifierFlagFunction;
+    }
+
     static std::atomic<bool> localTerminateFlag(false);
     self.terminateFlag = &localTerminateFlag;
 
@@ -151,10 +163,9 @@ extern "C" const char* GetAccessibilityStatus() {
         }
 
         NSEventModifierFlags flags = event.modifierFlags;
-        BOOL cmdPressed = (flags & NSEventModifierFlagCommand) != 0;
-        BOOL shiftPressed = (flags & NSEventModifierFlagShift) != 0;
+        BOOL modsMatch = (flags & targetModifiers) == targetModifiers;
 
-        if (cmdPressed && shiftPressed && event.keyCode == 0x29) {
+        if (modsMatch && event.keyCode == (unsigned short)targetKeyCode) {
             fprintf(stderr, "[FAILSAFE] Emergency hotkey triggered! Terminating...\n");
             fflush(stderr);
             if (strongSelf->_terminateFlag) {
@@ -173,10 +184,9 @@ extern "C" const char* GetAccessibilityStatus() {
         }
 
         NSEventModifierFlags flags = event.modifierFlags;
-        BOOL cmdPressed = (flags & NSEventModifierFlagCommand) != 0;
-        BOOL shiftPressed = (flags & NSEventModifierFlagShift) != 0;
+        BOOL modsMatch = (flags & targetModifiers) == targetModifiers;
 
-        if (cmdPressed && shiftPressed && event.keyCode == 0x29) {
+        if (modsMatch && event.keyCode == (unsigned short)targetKeyCode) {
             fprintf(stderr, "[FAILSAFE] Emergency hotkey triggered! Terminating...\n");
             fflush(stderr);
             if (strongSelf->_terminateFlag) {
@@ -188,7 +198,7 @@ extern "C" const char* GetAccessibilityStatus() {
         return event;
     }];
 
-    fprintf(stderr, "[FAILSAFE] Monitoring for Cmd+Shift+Escape to terminate\n");
+    fprintf(stderr, "[FAILSAFE] Monitoring for %s to terminate\n", g_config.general.failsafeHotkey.c_str());
     fflush(stderr);
 }
 
