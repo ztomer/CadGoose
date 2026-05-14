@@ -6,6 +6,7 @@
 #include "goose.h"
 #include "world.h"
 #include "assets.h"
+#include "config.h"
 
 struct ConfigSpec {
     bool debugToTerminal = false;
@@ -211,6 +212,7 @@ TEST(Integration, Goose_WanderToChase) {
 TEST(Integration, Goose_SnatchCursor) {
     Goose g(2, "Test", 1920, 1080);
     g.state = GooseState::CHASE_CURSOR;
+    g.chaseStartTime = 0.0;
     g.pos = {500, 500};
     g.target = {500, 500};
 
@@ -297,4 +299,55 @@ TEST(Integration, Goose_DropItem) {
     EXPECT_EQ(g.state, GooseState::WANDER);
     EXPECT_EQ(g.heldItem, nullptr);
     EXPECT_EQ(g_droppedItems.size(), initialDrops + 1);
+}
+
+TEST(GooseStateMachine, FetchStartTimeSetOnForceFetch) {
+    Goose g(100, "FetchClock", 1920, 1080);
+    g.state = GooseState::WANDER;
+    g.pos = {500, 500};
+    g.target = {500, 500};
+    g.cursorChaseChance = 0;
+    g.attackMouseBias = 0;
+
+    g.ForceFetch(0, 1920, 1080, 42.0);
+    EXPECT_EQ(g.state, GooseState::FETCHING);
+    // Target should be off-screen (one of 4 sides)
+    bool offScreen = g.target.x < 0 || g.target.x > 1920 || g.target.y < 0 || g.target.y > 1080;
+    EXPECT_TRUE(offScreen) << "Fetch target should be off-screen at edge margin";
+}
+
+TEST(GooseStateMachine, FetchEdgeMarginRespectedByClamp) {
+    // When fetchEdgeMargin > screenClampExpanded, ClampToScreen should expand
+    // to at least fetchEdgeMargin so the goose can reach the off-screen fetch target.
+    // This prevents regression where fetchEdgeMargin=80 but clamp only allowed 50px.
+    Goose g(101, "FetchClamp", 1920, 1080);
+    g.state = GooseState::FETCHING;
+    g.target = {-300, 500};  // way off-screen
+    g.pos = {-5, 500};       // already past screen edge
+
+    g.Update(1.0, 42.0, 1920, 1080, CursorState{});
+    // After physics+clamp, goose should be at or past -fetchEdgeMargin, not clamped at 0
+    EXPECT_LE(g.pos.x, -10.0f) << "Goose in FETCHING should move past screen edge toward fetch target";
+}
+
+TEST(GooseStateMachine, FetchTimeoutWorks) {
+    Goose g(102, "FetchTimeout", 1920, 1080);
+    g.state = GooseState::FETCHING;
+    g.pos = {1000, 500};
+    g.target = {1000, 500};
+    g.forceItemFetch = 0;
+
+    float origCooldown = g_config.item.fetchCooldown;
+    g_config.item.fetchCooldown = 1.0f;
+
+    CursorState c;
+    // ForceFetch with positive time sets fetchStartTime
+    g.ForceFetch(0, 1920, 1080, 1.0);
+
+    // Tick at time well beyond cooldown*4 — should trigger timeout
+    g.Update(0.1, 100.0, 1920, 1080, c);
+    EXPECT_EQ(g.state, GooseState::WANDER) << "Should have timed out of FETCHING";
+    EXPECT_EQ(g.forceItemFetch, -1) << "Should have cleared forceItemFetch on timeout";
+
+    g_config.item.fetchCooldown = origCooldown;
 }

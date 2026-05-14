@@ -8,6 +8,12 @@
 
 static bool s_enabled = true;
 static CGImageRef s_hatImage = nullptr;
+static CGImageRef s_hatScaled = nullptr;
+static float s_hatScaledSize = 0;
+
+static void cleanupHat(BehaviorContext&) {
+    if (s_hatScaled) { CGImageRelease(s_hatScaled); s_hatScaled = nullptr; }
+}
 
 static void init(BehaviorContext& ctx) {
     if (!s_hatImage) {
@@ -38,6 +44,22 @@ static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
     float drawW = imgWidth * scale;
     float drawH = imgHeight * scale;
 
+    // Cache scaled image at current size
+    if (s_hatScaledSize != hatSize) {
+        if (s_hatScaled) { CGImageRelease(s_hatScaled); s_hatScaled = nullptr; }
+        if (drawW > 0 && drawH > 0) {
+            CGColorSpaceRef cs = CGColorSpaceCreateDeviceRGB();
+            CGContextRef bmp = CGBitmapContextCreate(nullptr, (size_t)drawW, (size_t)drawH, 8, 0, cs, kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host);
+            CGColorSpaceRelease(cs);
+            if (bmp) {
+                CGContextDrawImage(bmp, CGRectMake(0, 0, drawW, drawH), s_hatImage);
+                s_hatScaled = CGBitmapContextCreateImage(bmp);
+                CGContextRelease(bmp);
+                s_hatScaledSize = hatSize;
+            }
+        }
+    }
+
     Vector2 headDevice = WorldCoord::RigNeckHead(*goose);
     float screenX = headDevice.x + offsetX * gs;
     float screenY = headDevice.y + offsetY * gs;
@@ -53,22 +75,10 @@ static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
     float halfW = drawW / 2.0f;
     float halfH = drawH / 2.0f;
 
-    // Pre-render hat to bitmap at exact size to avoid Metal shader compilation
-    if (drawW > 0 && drawH > 0) {
-        CGColorSpaceRef cs = CGColorSpaceCreateDeviceRGB();
-        CGContextRef bmp = CGBitmapContextCreate(nullptr, (size_t)drawW, (size_t)drawH, 8, 0, cs, kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host);
-        CGColorSpaceRelease(cs);
-        if (bmp) {
-            CGContextDrawImage(bmp, CGRectMake(0, 0, drawW, drawH), s_hatImage);
-            CGImageRef scaled = CGBitmapContextCreateImage(bmp);
-            CGContextRelease(bmp);
-            if (scaled) {
-                CGContextTranslateCTM(cg, -halfW, halfH);
-                CGContextScaleCTM(cg, 1.0, -1.0);
-                CGContextDrawImage(cg, CGRectMake(0, 0, drawW, drawH), scaled);
-                CGImageRelease(scaled);
-            }
-        }
+    if (s_hatScaled) {
+        CGContextTranslateCTM(cg, -halfW, halfH);
+        CGContextScaleCTM(cg, 1.0, -1.0);
+        CGContextDrawImage(cg, CGRectMake(0, 0, drawW, drawH), s_hatScaled);
     }
     CGContextRestoreGState(cg);
 }
@@ -82,7 +92,7 @@ static Behavior g_hatsBehavior = {
     .init = init,
     .tick = tick,
     .render = render,
-    .cleanup = nullptr,
+    .cleanup = cleanupHat,
     .conflicts = nullptr,
     .priority = 0,
     .config = { .requiresAccessibility = false, .isStarter = false }

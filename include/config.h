@@ -142,7 +142,7 @@ struct SpawnConfig {
   float catchThresholdMin = 15.0f;
   float wanderTargetMargin = 400.0f;
   float wanderTargetOffset = 200.0f;
-  float fetchEdgeMargin = 40.0f;
+  float fetchEdgeMargin = 80.0f;
   float maxFetchingGeese = 3;
   float separationMaxDistance = 70.0f;
   float separationForceMultiplier = 1.5f;
@@ -254,6 +254,7 @@ struct ItemConfig {
   int attackMouseBiasMax = 25;
   int heistChancePercent = 10;
   int heistApproachMargin = 8;
+  float fetchCooldown = 4.0f;
 };
 
 struct ColorRGB {
@@ -454,6 +455,11 @@ struct Config {
     bool showStatusBar = true;
     bool enableMCP = false;
     int mcpPort = 31072;
+    bool textMemeEnabled = false;
+    float textMemeTemperature = 1.2f;
+    bool textMemeAutoSave = false;
+    int textMemeMaxQueue = 5;
+    int chatMaxHistory = 100;
   } ai;
 };
 

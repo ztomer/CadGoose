@@ -623,6 +623,15 @@ src/common/behaviors/ai_http_client.mm.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/src/common/behaviors/ai_http_client.mm.o
 .PHONY : src/common/behaviors/ai_http_client.mm.o
 
+src/common/behaviors/ai_text_meme.o: src/common/behaviors/ai_text_meme.mm.o
+.PHONY : src/common/behaviors/ai_text_meme.o
+
+# target to build an object file
+src/common/behaviors/ai_text_meme.mm.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/common/behaviors/ai_text_meme.mm.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/src/common/behaviors/ai_text_meme.mm.o
+.PHONY : src/common/behaviors/ai_text_meme.mm.o
+
 src/common/behaviors/behavior_acid.o: src/common/behaviors/behavior_acid.cpp.o
 .PHONY : src/common/behaviors/behavior_acid.o
 
@@ -2393,6 +2402,7 @@ help:
 	@echo "... src/common/behavior.i"
 	@echo "... src/common/behavior.s"
 	@echo "... src/common/behaviors/ai_http_client.o"
+	@echo "... src/common/behaviors/ai_text_meme.o"
 	@echo "... src/common/behaviors/behavior_acid.o"
 	@echo "... src/common/behaviors/behavior_acid.i"
 	@echo "... src/common/behaviors/behavior_acid.s"

@@ -118,8 +118,17 @@ case 8: return @"You are an absurdly eloquent goose dictator. You have conquered
     }
 }
 
+- (void)addToHistory:(NSDictionary*)entry {
+    [self.history addObject:entry];
+    int maxHistory = g_config.ai.chatMaxHistory;
+    if (maxHistory < 1) maxHistory = 1;
+    while ((int)self.history.count > maxHistory) {
+        [self.history removeObjectAtIndex:0];
+    }
+}
+
 - (void)sendMessage:(NSString*)message completion:(void(^)(NSString*, NSError*))completion {
-    [self.history addObject:@{@"role": @"user", @"content": message}];
+    [self addToHistory:@{@"role": @"user", @"content": message}];
 
     NSString* model = [self currentModel];
     const BuiltinProfile* profile = [self currentProfile];
@@ -234,7 +243,7 @@ case 8: return @"You are an absurdly eloquent goose dictator. You have conquered
             // Add assistant message with tool_calls to history
             NSMutableDictionary* assistantMsg = [NSMutableDictionary dictionaryWithDictionary:msg];
             assistantMsg[@"role"] = @"assistant";
-            [self.history addObject:assistantMsg];
+            [self addToHistory:assistantMsg];
 
             // Execute each tool call
             for (NSDictionary* tc in toolCalls) {
@@ -265,7 +274,7 @@ case 8: return @"You are an absurdly eloquent goose dictator. You have conquered
 
                 fprintf(stderr, "[AI] Tool result: %s\n", toolResult.UTF8String);
 
-                [self.history addObject:@{
+                [self addToHistory:@{
                     @"role": @"tool",
                     @"tool_call_id": toolId ?: @"",
                     @"content": toolResult
@@ -282,7 +291,7 @@ case 8: return @"You are an absurdly eloquent goose dictator. You have conquered
         if (content && content.length > 0) {
             content = [self stripThinkBlocks:content];
             self.connected = YES;
-            [self.history addObject:@{@"role": @"assistant", @"content": content}];
+            [self addToHistory:@{@"role": @"assistant", @"content": content}];
             if (completion) completion(content, nil);
             return;
         }
@@ -294,7 +303,7 @@ case 8: return @"You are an absurdly eloquent goose dictator. You have conquered
                 fprintf(stderr, "[AI] Empty content, using reasoning_content (%lu chars)\n",
                         (unsigned long)reasoning.length);
                 self.connected = YES;
-                [self.history addObject:@{@"role": @"assistant", @"content": reasoning}];
+                [self addToHistory:@{@"role": @"assistant", @"content": reasoning}];
                 if (completion) completion(reasoning, nil);
                 return;
             }

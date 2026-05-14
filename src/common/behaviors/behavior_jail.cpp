@@ -8,6 +8,7 @@
 #include "config.h"
 #include "world.h"
 #include "hotkey.h"
+#include "ring_buffer.h"
 #ifdef __APPLE__
 #include <CoreText/CoreText.h>
 #endif
@@ -15,9 +16,17 @@
 static bool s_enabled = true;
 static bool s_oWasKeyDown = false;
 static bool s_pWasKeyDown = false;
-static std::vector<Vector2> s_jails;
+static constexpr size_t kMaxJails = 10;
+static RingBuffer<Vector2, kMaxJails> s_jails;
 static bool s_jailsActive = false;
 static double s_lastInputTime = 0;
+
+#ifdef __APPLE__
+static CTFontRef s_jailFont = nullptr;
+static void cleanupJailFont() {
+    if (s_jailFont) { CFRelease(s_jailFont); s_jailFont = nullptr; }
+}
+#endif
 
 static bool IsKeyPressed(int keyCode) {
     return CGEventSourceKeyState(kCGEventSourceStateHIDSystemState, (CGKeyCode)keyCode);
@@ -56,8 +65,7 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
                 s_jails.clear();
                 s_jailsActive = false;
             }
-            s_jails.push_back(cursorPos);
-            if (s_jails.size() > 10) s_jails.erase(s_jails.begin()); // Limit to 10 jails
+            s_jails.push(cursorPos);
         }
         s_oWasKeyDown = oDown;
 
@@ -116,11 +124,11 @@ static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
         CGContextFillRect(cg, rect);
 
         const char* label = jailed ? "JAIL" : "SET";
-        CTFontRef font = CTFontCreateWithName(CFSTR("Helvetica-Bold"), 14.0f, NULL);
-        if (font) {
+        if (!s_jailFont) s_jailFont = CTFontCreateWithName(CFSTR("Helvetica-Bold"), 14.0f, NULL);
+        if (s_jailFont) {
             CGColorRef textColor = CGColorCreateGenericRGB(1.0f, 0.6f, 0.0f, jailed ? 1.0f : pulse * 0.6f);
             CFTypeRef keys[] = { kCTFontAttributeName, kCTForegroundColorAttributeName };
-            CFTypeRef values[] = { font, textColor };
+            CFTypeRef values[] = { s_jailFont, textColor };
             CFDictionaryRef attributes = CFDictionaryCreate(NULL, (const void**)keys, (const void**)values, 2, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
 
             CFStringRef string = CFStringCreateWithBytes(NULL, (const UInt8*)label, strlen(label), kCFStringEncodingUTF8, false);
@@ -143,7 +151,6 @@ static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
             CFRelease(string);
             CFRelease(attributes);
             CGColorRelease(textColor);
-            CFRelease(font);
         }
     }
 #endif
@@ -158,7 +165,7 @@ static Behavior g_jailBehavior = {
     .init = init,
     .tick = tick,
     .render = render,
-    .cleanup = nullptr,
+    .cleanup = [](BehaviorContext&) { cleanupJailFont(); },
     .conflicts = nullptr,
     .priority = 0,
     .config = { .requiresAccessibility = false, .isStarter = true }

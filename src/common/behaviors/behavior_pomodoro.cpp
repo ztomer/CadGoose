@@ -61,8 +61,17 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
 
     if (state->phase == PomodoroPhase::Work) {
         // Work phase: goose rests in place (sleeps in corner)
+        goose->isResting = true;
+        if (goose->state == GooseState::FETCHING || goose->state == GooseState::RETURNING) {
+            if (goose->heldItem) {
+                delete goose->heldItem;
+                goose->heldItem = nullptr;
+            }
+            goose->state = GooseState::WANDER;
+        }
         goose->target = goose->pos;
         goose->vel = {0, 0};
+        goose->forceItemFetch = -1;
         if (state->accumulatedRotation > 0) {
             goose->dir -= state->accumulatedRotation;
             state->accumulatedRotation = 0;
@@ -98,6 +107,19 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
             state->speedMultiplierApplied = false;
         }
     }
+}
+
+static CTFontRef s_pomoFont = nullptr;
+static CGColorRef s_pomoWhite = nullptr;
+
+static void cleanupPomoFont(BehaviorContext&) {
+    if (s_pomoFont) { CFRelease(s_pomoFont); s_pomoFont = nullptr; }
+    if (s_pomoWhite) { CGColorRelease(s_pomoWhite); s_pomoWhite = nullptr; }
+}
+
+static void ensurePomoFont() {
+    if (!s_pomoFont) s_pomoFont = CTFontCreateWithName(CFSTR("Helvetica-Bold"), 11.0f, NULL);
+    if (!s_pomoWhite) s_pomoWhite = CGColorCreateGenericRGB(1.0f, 1.0f, 1.0f, 1.0f);
 }
 
 static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
@@ -144,11 +166,10 @@ static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
     CGContextSetRGBFillColor(cg, bgR, bgG, bgB, 0.85f);
     CGContextFillRect(cg, CGRectMake(headPos.x - textWidth/2, headPos.y - 60.0f, textWidth, textHeight));
 
-    CTFontRef font = CTFontCreateWithName(CFSTR("Helvetica-Bold"), 11.0f, NULL);
-    if (font) {
-        CGColorRef white = CGColorCreateGenericRGB(1.0f, 1.0f, 1.0f, 1.0f);
+    ensurePomoFont();
+    if (s_pomoFont && s_pomoWhite) {
         CFTypeRef keys[] = { kCTFontAttributeName, kCTForegroundColorAttributeName };
-        CFTypeRef values[] = { font, white };
+        CFTypeRef values[] = { s_pomoFont, s_pomoWhite };
         CFDictionaryRef attributes = CFDictionaryCreate(NULL, (const void**)keys, (const void**)values, 2, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
 
         CFStringRef string = CFStringCreateWithBytes(NULL, (const UInt8*)timerText, strlen(timerText), kCFStringEncodingUTF8, false);
@@ -159,9 +180,7 @@ static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
             float textX = headPos.x - textWidth/2 + 5.0f;
             float textY = headPos.y - 48.0f;
             CGContextSaveGState(cg);
-            CGContextTranslateCTM(cg, textX, textY);
-            CGContextScaleCTM(cg, 1.0, -1.0);
-            CGContextSetTextPosition(cg, 0, 0);
+            CGContextSetTextPosition(cg, textX, textY);
             CTLineDraw(line, cg);
             CGContextRestoreGState(cg);
             CFRelease(line);
@@ -170,8 +189,6 @@ static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
         CFRelease(attrStr);
         CFRelease(string);
         CFRelease(attributes);
-        CGColorRelease(white);
-        CFRelease(font);
     }
 
     CGContextRestoreGState(cg);
@@ -187,7 +204,7 @@ static Behavior g_pomodoroBehavior = {
     .init = init,
     .tick = tick,
     .render = render,
-    .cleanup = nullptr,
+    .cleanup = cleanupPomoFont,
     .conflicts = nullptr,
     .priority = 10,
     .config = { .requiresAccessibility = false, .isStarter = false }

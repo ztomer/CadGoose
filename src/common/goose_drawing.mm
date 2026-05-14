@@ -201,7 +201,7 @@ void DrawHeldItem(Goose* g, CGContextRef ctx) {
     CGContextRestoreGState(ctx);
 }
 
-void DrawFootprints(CGContextRef ctx, const std::list<Footprint>& footprints, double currentTime) {
+void DrawFootprints(CGContextRef ctx, const RingBuffer<Footprint, kMaxFootprints>& footprints, double currentTime) {
     for (const auto& fp : footprints) {
         float age = (float)(currentTime - fp.timeSpawned);
         float life = (fp.lifetime > 0.0f) ? fp.lifetime : g_config.mud.lifetime;

@@ -25,5 +25,15 @@ void RegisterAI(std::vector<ConfigOption>& r) {
         &g_config.ai.enableMCP, OnConfigChange));
     r.push_back(CONFIG_INT("AI", "mcp_port", "MCP HTTP Port",
         &g_config.ai.mcpPort, 1024, 65535, OnConfigChange));
+    r.push_back(CONFIG_BOOL("AI", "text_meme_enabled", "AI Text Meme Generation",
+        &g_config.ai.textMemeEnabled, OnConfigChange));
+    r.push_back(CONFIG_FLOAT("AI", "text_meme_temperature", "Text Meme Temperature",
+        &g_config.ai.textMemeTemperature, 0.0f, 2.0f, 0.1f, OnConfigChange));
+    r.push_back(CONFIG_BOOL("AI", "text_meme_auto_save", "Auto-Save Generated Texts",
+        &g_config.ai.textMemeAutoSave, OnConfigChange));
+    r.push_back(CONFIG_INT("AI", "text_meme_max_queue", "Max Pending Text Memes",
+        &g_config.ai.textMemeMaxQueue, 1, 50, OnConfigChange));
+    r.push_back(CONFIG_INT("AI", "chat_max_history", "Max Chat History Messages",
+        &g_config.ai.chatMaxHistory, 10, 1000, OnConfigChange));
 
 }

@@ -3,6 +3,7 @@
 #import "config_gui_helpers.h"
 #include "config.h"
 #include "mcp_server.h"
+#include "ai_text_meme.h"
 
 extern "C" void AI_RefreshModelDisplay();
 
@@ -264,16 +265,82 @@ extern "C" void AI_RefreshModelDisplay();
     _promptBody.stringValue = [self promptPreviewForEvilLevel:g_config.ai.evilLevel];
     [self addSubview:_promptBody];
 
-    y -= 40;
-    
-    // --- SECTION: Advanced ---
+    y -= 10;
+
+    // --- SECTION: TEXT MEME ---
     NSTextField* section3 = [[NSTextField alloc] initWithFrame:NSMakeRect(marginX, y, 200, 16)];
-    section3.stringValue = @"ADVANCED";
+    section3.stringValue = @"TEXT MEME";
     section3.font = [NSFont fontWithName:@"Maple Mono" size:12] ?: [NSFont systemFontOfSize:12 weight:NSFontWeightBold];
     section3.textColor = [NSColor colorWithWhite:0.6 alpha:1.0];
     section3.backgroundColor = [NSColor clearColor];
     section3.bordered = NO; section3.editable = NO;
     [self addSubview:section3];
+
+    y -= 26;
+
+    NSButton* textMemeBtn = [[NSButton alloc] initWithFrame:NSMakeRect(marginX, y, 220, 18)];
+    [textMemeBtn setButtonType:NSButtonTypeSwitch];
+    [textMemeBtn setTitle:@"Generate text memes via AI"];
+    [textMemeBtn setFont:[NSFont fontWithName:@"Maple Mono" size:11] ?: [NSFont systemFontOfSize:11]];
+    [textMemeBtn setState:g_config.ai.textMemeEnabled ? NSControlStateValueOn : NSControlStateValueOff];
+    [textMemeBtn setTarget:self];
+    [textMemeBtn setAction:@selector(textMemeToggled:)];
+    [self addSubview:textMemeBtn];
+
+    y -= 26;
+
+    NSTextField* tempLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(marginX, y, 120, 16)];
+    tempLabel.stringValue = @"Temperature";
+    tempLabel.font = [NSFont fontWithName:@"Maple Mono" size:11] ?: [NSFont systemFontOfSize:11];
+    tempLabel.textColor = [NSColor whiteColor];
+    tempLabel.backgroundColor = [NSColor clearColor];
+    tempLabel.bordered = NO; tempLabel.editable = NO;
+    [self addSubview:tempLabel];
+
+    NSTextField* tempValue = [[NSTextField alloc] initWithFrame:NSMakeRect(w - marginX - 40, y, 40, 14)];
+    tempValue.stringValue = [NSString stringWithFormat:@"%.1f", g_config.ai.textMemeTemperature];
+    tempValue.font = [NSFont fontWithName:@"Maple Mono" size:10] ?: [NSFont systemFontOfSize:10];
+    tempValue.textColor = [NSColor colorWithWhite:0.85 alpha:1.0];
+    tempValue.backgroundColor = [NSColor clearColor];
+    tempValue.bordered = NO; tempValue.editable = NO;
+    tempValue.alignment = NSTextAlignmentRight;
+    tempValue.autoresizingMask = NSViewMinXMargin;
+    tempValue.tag = 301;
+    [self addSubview:tempValue];
+
+    y -= 20;
+
+    NSSlider* tempSlider = [[NSSlider alloc] initWithFrame:NSMakeRect(marginX, y, w - marginX*2, 20)];
+    tempSlider.minValue = 0.0;
+    tempSlider.maxValue = 2.0;
+    tempSlider.doubleValue = g_config.ai.textMemeTemperature;
+    tempSlider.target = self;
+    tempSlider.action = @selector(textMemeTempChanged:);
+    tempSlider.autoresizingMask = NSViewWidthSizable;
+    tempSlider.continuous = YES;
+    [self addSubview:tempSlider];
+
+    y -= 26;
+
+    NSButton* autoSaveBtn = [[NSButton alloc] initWithFrame:NSMakeRect(marginX, y, 260, 18)];
+    [autoSaveBtn setButtonType:NSButtonTypeSwitch];
+    [autoSaveBtn setTitle:@"Auto-save generated texts"];
+    [autoSaveBtn setFont:[NSFont fontWithName:@"Maple Mono" size:11] ?: [NSFont systemFontOfSize:11]];
+    [autoSaveBtn setState:g_config.ai.textMemeAutoSave ? NSControlStateValueOn : NSControlStateValueOff];
+    [autoSaveBtn setTarget:self];
+    [autoSaveBtn setAction:@selector(textMemeAutoSaveToggled:)];
+    [self addSubview:autoSaveBtn];
+
+    y -= 10;
+
+    // --- SECTION: Advanced ---
+    NSTextField* section4 = [[NSTextField alloc] initWithFrame:NSMakeRect(marginX, y, 200, 16)];
+    section4.stringValue = @"ADVANCED";
+    section4.font = [NSFont fontWithName:@"Maple Mono" size:12] ?: [NSFont systemFontOfSize:12 weight:NSFontWeightBold];
+    section4.textColor = [NSColor colorWithWhite:0.6 alpha:1.0];
+    section4.backgroundColor = [NSColor clearColor];
+    section4.bordered = NO; section4.editable = NO;
+    [self addSubview:section4];
 
     y -= 28;
 
@@ -511,6 +578,30 @@ extern "C" void AI_RefreshModelDisplay();
     int port = [sender.stringValue intValue];
     if (port < 1024 || port > 65535) port = 31072;
     g_config.ai.mcpPort = port;
+    Config_SaveAll();
+}
+
+- (void)textMemeToggled:(NSButton*)sender {
+    g_config.ai.textMemeEnabled = (sender.state == NSControlStateValueOn);
+    if (g_config.ai.textMemeEnabled) {
+        AI_TextMeme_Reset();
+    }
+    Config_SaveAll();
+}
+
+- (void)textMemeTempChanged:(NSSlider*)sender {
+    g_config.ai.textMemeTemperature = (float)sender.doubleValue;
+    for (NSView* subview in self.subviews) {
+        if ([subview isKindOfClass:[NSTextField class]] && [subview isNotEqualTo:sender] && ((NSTextField*)subview).tag == 301) {
+            ((NSTextField*)subview).stringValue = [NSString stringWithFormat:@"%.1f", g_config.ai.textMemeTemperature];
+            break;
+        }
+    }
+    Config_SaveAll();
+}
+
+- (void)textMemeAutoSaveToggled:(NSButton*)sender {
+    g_config.ai.textMemeAutoSave = (sender.state == NSControlStateValueOn);
     Config_SaveAll();
 }
 

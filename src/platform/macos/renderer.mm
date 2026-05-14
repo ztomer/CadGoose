@@ -13,6 +13,7 @@
 #include "cursor_io.h"
 #include "items.h"
 #include "behavior.h"
+#include "ai_text_meme.h"
 #include "world_utils.h"
 
 void Honcker_Honk(Goose* goose, double time);
@@ -160,6 +161,7 @@ static BOOL s_hasPrimary = NO;
 }
 
 - (void)tick {
+    @autoreleasepool {
     self.currentTime += g_config.render.frameDt;
     self.tickCount++;
 
@@ -184,6 +186,8 @@ static BOOL s_hasPrimary = NO;
                 BehaviorRegistry::Instance().TickAll(&g, g_config.render.frameDt, self.currentTime);
             }
         }
+
+    AI_TextMeme_Tick(self.currentTime);
 
     if (g_cursorProvider && !action.isNone()) {
         g_cursorProvider->Execute(action);
@@ -226,6 +230,7 @@ static BOOL s_hasPrimary = NO;
     }
 
     [self setNeedsDisplay:YES];
+    }
 }
 
 - (NSView *)hitTest:(NSPoint)point {

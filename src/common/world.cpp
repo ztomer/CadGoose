@@ -14,7 +14,7 @@ void UiLogPush(const std::string& s) {
 std::list<Goose> g_geese;
 std::list<MonitorInfo> g_monitors;
 std::list<DroppedItem> g_droppedItems;
-std::list<Footprint> g_footprints;
+RingBuffer<Footprint, kMaxFootprints> g_footprints;
 std::list<LeafPile> g_leafPiles;
 int g_nextId = 0;
 int g_screenWidth = 0;

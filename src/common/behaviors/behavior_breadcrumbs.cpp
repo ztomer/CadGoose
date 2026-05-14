@@ -8,8 +8,9 @@
 #include <CoreGraphics/CoreGraphics.h>
 #include <ApplicationServices/ApplicationServices.h>
 #include <TargetConditionals.h>
-#include <vector>
 #include <cmath>
+
+#include "ring_buffer.h"
 
 static bool s_enabled = true;
 static CGImageRef s_crumbImage = nullptr;
@@ -21,7 +22,8 @@ struct Crumbs {
     double time;
     float lifetime;
 };
-static std::vector<Crumbs> s_crumbs;
+static constexpr size_t kMaxCrumbs = 200;
+static RingBuffer<Crumbs, kMaxCrumbs> s_crumbs;
 
 static bool IsKeyDown(int keyCode) {
     return CGEventSourceKeyState(kCGEventSourceStateHIDSystemState, (CGKeyCode)keyCode);
@@ -58,7 +60,7 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
         crumb.pos = cursorPos;
         crumb.time = time;
         crumb.lifetime = g_config.behaviors.breadCrumbs.lifetime;
-        s_crumbs.push_back(crumb);
+        s_crumbs.push(crumb);
         LogCrumb("first crumb dropped");
         g_assets.Honk();
     } else if (!keyDown) {
@@ -66,7 +68,7 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
         s_wasKeyDown = false;
     }
 
-    if (keyDown && s_crumbs.size() > 0) {
+    if (keyDown && !s_crumbs.empty()) {
         Crumbs& last = s_crumbs.back();
         float dist = std::hypot(cursorPos.x - last.pos.x, cursorPos.y - last.pos.y);
         if (dist >= g_config.behaviors.breadCrumbs.spawnDist) {
@@ -74,21 +76,17 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
             crumb.pos = cursorPos;
             crumb.time = time;
             crumb.lifetime = g_config.behaviors.breadCrumbs.lifetime;
-            s_crumbs.push_back(crumb);
+            s_crumbs.push(crumb);
         }
     }
 
     int maxCrumbs = g_config.behaviors.breadCrumbs.maxCrumbs;
-    while ((int)s_crumbs.size() > maxCrumbs) {
-        s_crumbs.erase(s_crumbs.begin());
+    while (s_crumbs.size() > (size_t)maxCrumbs) {
+        s_crumbs.pop();
     }
 
-    for (auto it = s_crumbs.begin(); it != s_crumbs.end(); ) {
-        if (time - it->time > it->lifetime) {
-            it = s_crumbs.erase(it);
-        } else {
-            ++it;
-        }
+    while (!s_crumbs.empty() && time - s_crumbs.front().time > s_crumbs.front().lifetime) {
+        s_crumbs.pop();
     }
 }
 

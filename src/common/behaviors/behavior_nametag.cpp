@@ -12,6 +12,24 @@
 
 static bool s_enabled = true;
 
+static CTFontRef s_nameFont = nullptr;
+static CGColorRef s_nameWhite = nullptr;
+static float s_nameFontSize = 0;
+
+static void cleanupNameFont(BehaviorContext&) {
+    if (s_nameFont) { CFRelease(s_nameFont); s_nameFont = nullptr; }
+    if (s_nameWhite) { CGColorRelease(s_nameWhite); s_nameWhite = nullptr; }
+    s_nameFontSize = 0;
+}
+
+static void ensureNameFont(float fontSize) {
+    if (s_nameFont && s_nameFontSize == fontSize) return;
+    if (s_nameFont) { CFRelease(s_nameFont); s_nameFont = nullptr; }
+    s_nameFont = CTFontCreateWithName(CFSTR("Helvetica"), fontSize, NULL);
+    s_nameFontSize = fontSize;
+    if (!s_nameWhite) s_nameWhite = CGColorCreateGenericRGB(1.0f, 1.0f, 1.0f, 1.0f);
+}
+
 static void init(BehaviorContext& ctx) {
     auto* state = BehaviorStateManager::Instance().GetOrCreate<BehaviorState>(ctx.goose->id, "nametag");
     state->Reset();
@@ -48,11 +66,10 @@ static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
     CGContextSetRGBFillColor(cg, 1.0f, 1.0f, 1.0f, 1.0f);
 
     float fontSize = g_config.behaviors.nametag.size;
-    CTFontRef font = CTFontCreateWithName(CFSTR("Helvetica"), fontSize, NULL);
-    if (font) {
-        CGColorRef white = CGColorCreateGenericRGB(1.0f, 1.0f, 1.0f, 1.0f);
+    ensureNameFont(fontSize);
+    if (s_nameFont && s_nameWhite) {
         CFTypeRef keys[] = { kCTFontAttributeName, kCTForegroundColorAttributeName };
-        CFTypeRef values[] = { font, white };
+        CFTypeRef values[] = { s_nameFont, s_nameWhite };
         CFDictionaryRef attributes = CFDictionaryCreate(NULL, (const void**)keys, (const void**)values, 2, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
 
         CGContextSetTextMatrix(cg, CGAffineTransformMakeScale(1.0, -1.0));
@@ -70,8 +87,6 @@ static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
         CFRelease(attrStr);
         CFRelease(string);
         CFRelease(attributes);
-        CGColorRelease(white);
-        CFRelease(font);
     }
 
     CGContextRestoreGState(cg);
@@ -87,7 +102,7 @@ static Behavior g_nametagBehavior = {
     .init = init,
     .tick = tick,
     .render = render,
-    .cleanup = nullptr,
+    .cleanup = cleanupNameFont,
     .conflicts = nullptr,
     .priority = 0,
     .config = { .requiresAccessibility = false, .isStarter = false }
