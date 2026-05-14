@@ -9,6 +9,7 @@
 #include "config.h"
 #include "world.h"
 #include "assets.h"
+#include "hotkey.h"
 #include <ApplicationServices/ApplicationServices.h>
 #include <CoreGraphics/CoreGraphics.h>
 
@@ -29,7 +30,7 @@ static void init(BehaviorContext& ctx) {
 static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
     if (!g_config.behaviors.control.honcker) return;
 
-    int keyCode = g_config.behaviors.honcker.key;
+    int keyCode = KeyNameToKeyCode(g_config.behaviors.honcker.hotkey);
     bool pressed = IsKeyPressed(keyCode);
 
     if (pressed && !s_wasPressed) {
@@ -78,6 +79,7 @@ static Behavior g_honckerBehavior = {
     .name = "Honcker",
     .description = "Press F to make the goose honk. Based on Honcker by DesktopGooseUnofficial",
     .enabledPtr = &s_enabled,
+    .configPtr = &g_config.behaviors.control.honcker,
     .init = init,
     .tick = tick,
     .render = render,

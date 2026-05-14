@@ -20,8 +20,8 @@ TEST(BehaviorStates, AllBehaviorStatesExist) {
         {"portal", "portal"}, {"anger", "anger"}, {"ball", "ball"},
         {"breadcrumbs", "breadcrumbs"}, {"health", "health"},
         {"banish", "banish"}, {"acid", "acid"}, {"rainbow", "rainbow"},
-        {"pomodoro", "pomodoro"}, {"clicker", "clicker"},
-        {"gooseManager", "presence"}, {"presence", "presence"}
+        {"pomodoro", "pomodoro"},
+        {"presence", "presence"}
     };
 
     for (const auto& [stateType, behaviorId] : stateDefs) {

@@ -3,6 +3,7 @@
 // Portal Behavior - User-controlled portal placement
 // Based on PortalGoos by Moonaliss1
 // Reference: 1 places portal 1, 2 places portal 2, 0 toggles portals on/off
+// Note: No P modifier — just press 1/2/0 directly
 // Uses p1.png and p2.png images
 // ===========================
 #include "behavior.h"
@@ -10,15 +11,16 @@
 #include "config.h"
 #include "world.h"
 #include "assets.h"
+#include "hotkey.h"
 #include <CoreGraphics/CoreGraphics.h>
 #include <ApplicationServices/ApplicationServices.h>
 
 static bool s_enabled = true;
 static bool s_portalsOn = true;
 static bool s_p0Pressed = false;
+static bool s_p1Pressed = false;
+static bool s_p2Pressed = false;
 static CGImageRef s_portalImages[2] = {nullptr, nullptr};
-
-enum PortalKey { D1_KEY = 0x31, D2_KEY = 0x32, D0_KEY = 0x30 };
 
 static bool IsKeyHeld(int keyCode) {
     return CGEventSourceKeyState(kCGEventSourceStateHIDSystemState, (CGKeyCode)keyCode);
@@ -88,23 +90,29 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
         CFRelease(source);
     }
 
-    bool d1Pressed = IsKeyHeld(D1_KEY);
-    bool d2Pressed = IsKeyHeld(D2_KEY);
-    bool d0Pressed = IsKeyHeld(D0_KEY);
+    bool d1Pressed = IsKeyHeld(KeyNameToKeyCode(g_config.portal.hotkey1));
+    bool d2Pressed = IsKeyHeld(KeyNameToKeyCode(g_config.portal.hotkey2));
+    bool d0Pressed = IsKeyHeld(KeyNameToKeyCode(g_config.portal.hotkey0));
 
-    if (d1Pressed) {
+    if (d1Pressed && !s_p1Pressed) {
+        s_p1Pressed = true;
         state->portalA.x = haveMouse ? (float)mousePos.x : goose->pos.x;
         state->portalA.y = haveMouse ? (float)mousePos.y : goose->pos.y;
         state->portalA.active = true;
         state->portalA.portalId = 1;
         fprintf(stderr, "[Portal] Portal 1 placed at (%.0f, %.0f)\n", state->portalA.x, state->portalA.y);
+    } else if (!d1Pressed) {
+        s_p1Pressed = false;
     }
-    if (d2Pressed) {
+    if (d2Pressed && !s_p2Pressed) {
+        s_p2Pressed = true;
         state->portalB.x = haveMouse ? (float)mousePos.x : goose->pos.x;
         state->portalB.y = haveMouse ? (float)mousePos.y : goose->pos.y;
         state->portalB.active = true;
         state->portalB.portalId = 2;
         fprintf(stderr, "[Portal] Portal 2 placed at (%.0f, %.0f)\n", state->portalB.x, state->portalB.y);
+    } else if (!d2Pressed) {
+        s_p2Pressed = false;
     }
     if (d0Pressed && !s_p0Pressed) {
         s_portalsOn = !s_portalsOn;
@@ -143,6 +151,7 @@ static Behavior g_portalBehavior = {
     .name = "Portal",
     .description = "Press 1/2 to place portals at cursor, 0 to toggle. Based on PortalGoos by Moonaliss1",
     .enabledPtr = &s_enabled,
+    .configPtr = &g_config.behaviors.control.portals,
     .init = init,
     .tick = tick,
     .render = render,

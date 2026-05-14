@@ -40,6 +40,8 @@
         y -= 35;
     } else if ([key isEqualToString:@"behaviors.fun.breadCrumbs"]) {
         _titleLabel.stringValue = @"Breadcrumbs Behavior";
+        [self addHotkeyFieldWithLabel:@"Trigger Key" value:@(g_config.behaviors.breadCrumbs.hotkey.c_str()) atY:y key:@"breadcrumbs_hotkey"];
+        y -= 30;
         [self addSliderWithLabel:@"Max Crumbs" min:10.0f max:200.0f value:g_config.behaviors.breadCrumbs.maxCrumbs atY:y key:@"behaviors.fun.breadCrumbs.max"];
         y -= 35;
     } else if ([key isEqualToString:@"behaviors.fun.hats"]) {
@@ -60,20 +62,38 @@
         y -= 35;
     } else if ([key isEqualToString:@"behaviors.control.honcker"]) {
         _titleLabel.stringValue = @"Honcker Behavior";
-        [self addInstructionLabel:@"🦆 Press F to honk at cursor location" atY:y];
+        NSString* k = @(g_config.behaviors.honcker.hotkey.c_str());
+        [self addInstructionLabel:[NSString stringWithFormat:@"🦆 Press %@ to honk at cursor location", k] atY:y];
         y -= 25;
+        [self addHotkeyFieldWithLabel:@"Honk Key" value:@(g_config.behaviors.honcker.hotkey.c_str()) atY:y key:@"hotkey"];
+        y -= 30;
         [self addSliderWithLabel:@"Honk Cooldown" min:0.1f max:10.0f value:g_config.behaviors.honcker.cooldown atY:y key:@"behaviors.control.honcker.cooldown"];
         y -= 35;
     } else if ([key isEqualToString:@"behaviors.control.jail"]) {
         _titleLabel.stringValue = @"Jail Behavior";
-        [self addInstructionLabel:@"🔒 O = set cursor as jail position\n   P = toggle jail on/off" atY:y];
+        NSString* kO = @(g_config.behaviors.jail.hotkeyO.c_str());
+        NSString* kP = @(g_config.behaviors.jail.hotkeyP.c_str());
+        [self addInstructionLabel:[NSString stringWithFormat:@"🔒 %@ = set cursor as jail position\n   %@ = toggle jail on/off", kO, kP] atY:y];
         y -= 42;
+        [self addHotkeyFieldWithLabel:@"Set Key" value:@(g_config.behaviors.jail.hotkeyO.c_str()) atY:y key:@"hotkeyO"];
+        y -= 30;
+        [self addHotkeyFieldWithLabel:@"Toggle Key" value:@(g_config.behaviors.jail.hotkeyP.c_str()) atY:y key:@"hotkeyP"];
+        y -= 30;
         [self addSliderWithLabel:@"Jail Size" min:50.0f max:300.0f value:g_config.behaviors.jail.size atY:y key:@"behaviors.control.jail.size"];
         y -= 35;
     } else if ([key isEqualToString:@"behaviors.control.portals"]) {
         _titleLabel.stringValue = @"Portal Behavior";
-        [self addInstructionLabel:@"🌀 P+1 = place portal A\n   P+2 = place portal B\n   P+0 = toggle portals" atY:y];
+        NSString* k1 = @(g_config.portal.hotkey1.c_str());
+        NSString* k2 = @(g_config.portal.hotkey2.c_str());
+        NSString* k0 = @(g_config.portal.hotkey0.c_str());
+        [self addInstructionLabel:[NSString stringWithFormat:@"🌀 %@ = place portal A\n   %@ = place portal B\n   %@ = toggle portals", k1, k2, k0] atY:y];
         y -= 60;
+        [self addHotkeyFieldWithLabel:@"Portal 1" value:@(g_config.portal.hotkey1.c_str()) atY:y key:@"hotkey1"];
+        y -= 30;
+        [self addHotkeyFieldWithLabel:@"Portal 2" value:@(g_config.portal.hotkey2.c_str()) atY:y key:@"hotkey2"];
+        y -= 30;
+        [self addHotkeyFieldWithLabel:@"Toggle" value:@(g_config.portal.hotkey0.c_str()) atY:y key:@"hotkey0"];
+        y -= 30;
         [self addSliderWithLabel:@"Portal Width" min:30.0f max:200.0f value:g_config.portal.width atY:y key:@"behaviors.control.portals.width"];
         y -= 35;
     } else if ([key isEqualToString:@"behaviors.control.drag"]) {
@@ -84,8 +104,11 @@
         y -= 35;
     } else if ([key isEqualToString:@"behaviors.control.banish"]) {
         _titleLabel.stringValue = @"Banish Behavior";
-        [self addInstructionLabel:@"👻 Ctrl+Alt+Middle Click to banish\n   Respawns after the duration" atY:y];
+        NSString* k = @(g_config.behaviors.banish.hotkey.c_str());
+        [self addInstructionLabel:[NSString stringWithFormat:@"👻 Press %@ (or Ctrl+Alt+Middle Click) to banish\n   Respawns after the duration", k] atY:y];
         y -= 42;
+        [self addHotkeyFieldWithLabel:@"Banish Key" value:@(g_config.behaviors.banish.hotkey.c_str()) atY:y key:@"banish_hotkey"];
+        y -= 30;
         [self addSliderWithLabel:@"Duration (s)" min:1.0f max:60.0f value:g_config.behaviors.banish.duration atY:y key:@"behaviors.control.banish.duration"];
         y -= 35;
     } else if ([key isEqualToString:@"behaviors.info.nametag"]) {
@@ -171,6 +194,57 @@
     valueField.target = self;
     valueField.action = @selector(valueFieldChanged:);
     [_contentView addSubview:valueField];
+}
+
+- (void)addHotkeyFieldWithLabel:(NSString*)label value:(NSString*)value atY:(float)y key:(NSString*)key {
+    CGFloat pw = _contentView.bounds.size.width;
+    CGFloat leftPad = 12;
+    CGFloat gap = 6;
+    NSDictionary* font12 = @{NSFontAttributeName: [NSFont systemFontOfSize:12]};
+    CGFloat labelW = [label sizeWithAttributes:font12].width + 10;
+    CGFloat fieldW = pw - leftPad - labelW - gap - 12;
+
+    NSTextField* labelField = [[NSTextField alloc] initWithFrame:NSMakeRect(leftPad, y, labelW, 18)];
+    labelField.font = [NSFont systemFontOfSize:12];
+    labelField.textColor = [NSColor whiteColor];
+    labelField.backgroundColor = [NSColor clearColor];
+    labelField.bordered = NO;
+    labelField.editable = NO;
+    labelField.stringValue = label;
+    [_contentView addSubview:labelField];
+
+    NSTextField* field = [[NSTextField alloc] initWithFrame:NSMakeRect(leftPad + labelW + gap, y, fieldW, 22)];
+    field.font = [NSFont fontWithName:@"Menlo" size:12] ?: [NSFont systemFontOfSize:12];
+    field.stringValue = value;
+    field.bezelStyle = NSTextFieldRoundedBezel;
+    field.identifier = key;
+    field.target = self;
+    field.action = @selector(hotkeyFieldChanged:);
+    [_contentView addSubview:field];
+}
+
+- (void)hotkeyFieldChanged:(NSTextField*)sender {
+    NSString* keyStr = sender.identifier;
+    std::string value = std::string([sender.stringValue UTF8String]);
+
+    if ([keyStr isEqualToString:@"hotkey"]) {
+        g_config.behaviors.honcker.hotkey = value;
+    } else if ([keyStr isEqualToString:@"hotkeyO"]) {
+        g_config.behaviors.jail.hotkeyO = value;
+    } else if ([keyStr isEqualToString:@"hotkeyP"]) {
+        g_config.behaviors.jail.hotkeyP = value;
+    } else if ([keyStr isEqualToString:@"hotkey1"]) {
+        g_config.portal.hotkey1 = value;
+    } else if ([keyStr isEqualToString:@"hotkey2"]) {
+        g_config.portal.hotkey2 = value;
+    } else if ([keyStr isEqualToString:@"hotkey0"]) {
+        g_config.portal.hotkey0 = value;
+    } else if ([keyStr isEqualToString:@"banish_hotkey"]) {
+        g_config.behaviors.banish.hotkey = value;
+    } else if ([keyStr isEqualToString:@"breadcrumbs_hotkey"]) {
+        g_config.behaviors.breadCrumbs.hotkey = value;
+    }
+    OnConfigChange();
 }
 
 - (float)addGeeseListAtY:(float)y {

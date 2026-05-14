@@ -257,16 +257,6 @@ struct RainbowState : public BehaviorState {
     }
 };
 
-struct ClickerState : public BehaviorState {
-    double nextClickTime = 0;
-    bool isActive = false;
-
-    void Reset() override {
-        nextClickTime = 0;
-        isActive = false;
-    }
-};
-
 struct HonckerState : public BehaviorState {
     double lastHonkTime = 0;
     double lastShowTime = 0;
@@ -278,16 +268,6 @@ struct HonckerState : public BehaviorState {
         lastShowTime = 0;
         isOnCooldown = false;
         visible = false;
-    }
-};
-
-struct GooseManagerState : public BehaviorState {
-    bool tasksEnabled[4] = { true, true, true, true };
-    bool speedsEnabled[2] = { true, true };
-
-    void Reset() override {
-        for (int i = 0; i < 4; i++) tasksEnabled[i] = true;
-        for (int i = 0; i < 2; i++) speedsEnabled[i] = true;
     }
 };
 

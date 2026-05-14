@@ -177,13 +177,33 @@ if(APPLE OR LINUX)
     
     add_executable(CadGooseTests 
         tests/test_main.cpp
-        tests/common/test_behavior.cpp
+        tests/test_goose_behavior.cpp
+        tests/test_goose_physics.cpp
+        tests/test_goose_behaviors.cpp
+        tests/test_soak.cpp
+        tests/common/test_behavior_helpers.cpp
+        tests/common/test_behavior_manager.cpp
+        tests/common/test_jail_state.cpp
+        tests/common/test_behavior_sim.cpp
+        tests/common/test_behavior_typed.cpp
+        tests/common/test_behavior_interaction.cpp
         tests/common/test_behavior_registry.cpp
         tests/common/test_behavior_states.cpp
         tests/common/test_behavior_ball.cpp
         tests/common/test_behavior_breadcrumbs.cpp
         tests/common/test_behavior_hats.cpp
-        tests/common/test_config.cpp
+        tests/common/test_hotkey.cpp
+        tests/common/test_mcp_protocol.cpp
+        tests/common/test_mcp_config.cpp
+        tests/common/test_mcp_resources.cpp
+        tests/common/test_ai_tokens.cpp
+        tests/common/test_ai_routing.cpp
+        tests/common/test_ai_bridge.cpp
+        tests/common/test_config_registry.cpp
+        tests/common/test_config_get_set.cpp
+        tests/common/test_config_load_save.cpp
+        tests/common/test_config_toggles.cpp
+        tests/common/test_gui_config.mm
         tests/common/test_behavior_ai.mm
         tests/common/presence_stub.cpp
         src/common/app_actions.cpp
@@ -193,6 +213,7 @@ if(APPLE OR LINUX)
         src/common/config_helpers.h
         src/common/config_load.cpp
         src/common/config_registry.cpp
+        src/common/config_registry_ai.cpp
         src/common/config_save.cpp
         src/common/cursor_backend.cpp
         src/common/goose.cpp
@@ -216,9 +237,15 @@ if(APPLE OR LINUX)
         src/common/behaviors/behavior_anger.cpp
         src/common/behaviors/behavior_banish.cpp
         src/common/behaviors/behavior_nametag.cpp
-        src/common/behaviors/behavior_goose_manager.cpp
         src/common/behaviors/behavior_presence.cpp
         src/common/behaviors/behavior_ai.mm
+        src/common/behaviors/ai_http_client.mm
+        src/common/hotkey.cpp
+        src/common/mcp_server.cpp
+        src/common/mcp_http_server.cpp
+        src/common/mcp_json_rpc.cpp
+        src/common/mcp_handlers.cpp
+        src/common/ai_mcp_bridge.cpp
     )
     
     if(APPLE)
@@ -233,6 +260,7 @@ if(APPLE OR LINUX)
             tests/common/presence_stub.cpp
             tests/common/test_presence.cpp
             tests/platform/macos/test_renderer.mm
+            tests/platform/macos/test_gui_accessibility.mm
         )
         target_link_libraries(CadGooseTests
             GTest::GTest

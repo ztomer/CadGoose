@@ -78,6 +78,7 @@ static Behavior g_hatsBehavior = {
     .name = "Hats",
     .description = "Put hats on geese. Based on HatGoos by DaNike",
     .enabledPtr = &s_enabled,
+    .configPtr = &g_config.behaviors.fun.hats,
     .init = init,
     .tick = tick,
     .render = render,

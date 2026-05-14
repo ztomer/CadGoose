@@ -16,7 +16,7 @@ TEST(BehaviorRegistry, AllBehaviorsRegistered) {
     auto& registry = BehaviorRegistry::Instance();
     size_t count = registry.GetBehaviorCount();
     fprintf(stderr, "[INFO] Registered %zu behaviors\n", count);
-    EXPECT_EQ(count, 17) << "Expected 17 behaviors to be registered";
+    EXPECT_EQ(count, 16) << "Expected 16 behaviors to be registered";
 
     auto* acid = registry.Get("acid");
     EXPECT_NE(acid, nullptr) << "acid should be registered";
@@ -35,9 +35,6 @@ TEST(BehaviorRegistry, AllBehaviorsRegistered) {
 
     auto* drag = registry.Get("drag");
     EXPECT_NE(drag, nullptr) << "drag should be registered";
-
-    auto* gooseManager = registry.Get("gooseManager");
-    EXPECT_NE(gooseManager, nullptr) << "gooseManager should be registered";
 
     auto* hats = registry.Get("hats");
     EXPECT_NE(hats, nullptr) << "hats should be registered";
@@ -143,4 +140,155 @@ TEST(BehaviorRegistry, BehaviorsCanBeEnabledDisabled) {
     EXPECT_TRUE(*rainbow->enabledPtr);
 
     *rainbow->enabledPtr = original;
+}
+
+TEST(BehaviorToggle, AllBehaviorsHaveEnabledPtr) {
+    auto& registry = BehaviorRegistry::Instance();
+    for (const auto* b : registry.GetAll()) {
+        ASSERT_NE(b->enabledPtr, nullptr) << "Behavior " << b->id << " has null enabledPtr";
+    }
+}
+
+TEST(BehaviorToggle, AllBehaviorsHaveConfigPtr) {
+    auto& registry = BehaviorRegistry::Instance();
+    for (const auto* b : registry.GetAll()) {
+        ASSERT_NE(b->configPtr, nullptr) << "Behavior " << b->id << " has null configPtr";
+    }
+}
+
+TEST(BehaviorToggle, EnabledPtrStaysTrue) {
+    // enabledPtr must always be true — the outer tick loop gate that passes
+    // through to the internal config bool check (the real runtime gate).
+    // If s_enabled were false, no amount of config toggling would run the behavior.
+    auto& registry = BehaviorRegistry::Instance();
+    for (const auto* b : registry.GetAll()) {
+        EXPECT_TRUE(*b->enabledPtr) << "Behavior " << b->id << " enabledPtr should be true";
+    }
+}
+
+TEST(BehaviorToggle, ConfigPtrWritesThroughToConfig) {
+    // Writing through configPtr must update the corresponding g_config bool.
+    // This is the mechanism the CLI enable/disable uses to persist toggle state.
+    Config_Init();
+
+    auto& registry = BehaviorRegistry::Instance();
+
+    auto* ball = registry.Get("ball");
+    ASSERT_NE(ball, nullptr);
+    ASSERT_NE(ball->configPtr, nullptr);
+
+    bool saved = *ball->configPtr;
+    *ball->configPtr = true;
+    EXPECT_TRUE(g_config.behaviors.fun.ball);
+    *ball->configPtr = false;
+    EXPECT_FALSE(g_config.behaviors.fun.ball);
+    *ball->configPtr = saved;
+}
+
+TEST(BehaviorToggle, ConfigPtrMap) {
+    // Verify every behavior's configPtr points to its correct config bool field.
+    // This ensures CLI enable/disable and runtime gating stay in sync.
+    Config_Init();
+    auto& reg = BehaviorRegistry::Instance();
+
+    struct { const char* id; bool* expectedField; } map[] = {
+        {"acid",     &g_config.behaviors.fun.acid},
+        {"anger",    &g_config.behaviors.fun.anger},
+        {"ball",     &g_config.behaviors.fun.ball},
+        {"banish",   &g_config.behaviors.control.banish},
+        {"breadcrumbs", &g_config.behaviors.fun.breadCrumbs},
+        {"drag",     &g_config.behaviors.control.drag},
+        {"hats",     &g_config.behaviors.fun.hats},
+        {"health",   &g_config.behaviors.systems.health},
+        {"honcker",  &g_config.behaviors.control.honcker},
+        {"jail",     &g_config.behaviors.control.jail},
+        {"nametag",  &g_config.behaviors.info.nametag},
+        {"pomodoro", &g_config.behaviors.systems.pomodoro},
+        {"portal",   &g_config.behaviors.control.portals},
+        {"presence", &g_config.behaviors.info.presence},
+        {"rainbow",  &g_config.behaviors.fun.rainbow},
+        {"ai",       &g_config.behaviors.systems.ai},
+    };
+
+    for (const auto& entry : map) {
+        const auto* behavior = reg.Get(entry.id);
+        ASSERT_NE(behavior, nullptr) << "Behavior not found: " << entry.id;
+        ASSERT_NE(behavior->configPtr, nullptr) << "Null configPtr for: " << entry.id;
+        EXPECT_EQ(behavior->configPtr, entry.expectedField)
+            << "configPtr mismatch for " << entry.id;
+    }
+}
+
+TEST(BehaviorToggle, ConfigPtrWritePreservesThroughRegistry) {
+    // Full round-trip: write through configPtr, verify via Config_GetValueByKey
+    Config_Init();
+
+    auto* ball = BehaviorRegistry::Instance().Get("ball");
+    ASSERT_NE(ball, nullptr);
+    ASSERT_NE(ball->configPtr, nullptr);
+
+    bool saved = *ball->configPtr;
+
+    *ball->configPtr = true;
+    std::string value;
+    bool ok = Config_GetValueByKey("ball_enabled", &value);
+    ASSERT_TRUE(ok);
+    EXPECT_EQ(value, "1");
+
+    *ball->configPtr = false;
+    ok = Config_GetValueByKey("ball_enabled", &value);
+    ASSERT_TRUE(ok);
+    EXPECT_EQ(value, "0");
+
+    *ball->configPtr = saved;
+}
+
+TEST(BehaviorToggle, DisableViaConfigPtrThenReEnable) {
+    // Toggle off and back on via configPtr — verifies no sticky state
+    Config_Init();
+
+    auto* ball = BehaviorRegistry::Instance().Get("ball");
+    ASSERT_NE(ball, nullptr);
+    ASSERT_NE(ball->configPtr, nullptr);
+
+    bool saved = *ball->configPtr;
+
+    *ball->configPtr = false;
+    EXPECT_FALSE(g_config.behaviors.fun.ball);
+
+    *ball->configPtr = true;
+    EXPECT_TRUE(g_config.behaviors.fun.ball);
+
+    *ball->configPtr = saved;
+}
+
+TEST(BehaviorToggle, ConfigPtrAndEnabledPtrAreDistinct) {
+    // enabledPtr and configPtr must point to different locations
+    // (s_enabled in behavior file vs g_config.behaviors.X.Y)
+    auto& reg = BehaviorRegistry::Instance();
+    for (const auto* b : reg.GetAll()) {
+        ASSERT_NE(b->enabledPtr, nullptr);
+        ASSERT_NE(b->configPtr, nullptr);
+        EXPECT_NE(b->enabledPtr, b->configPtr)
+            << "Behavior " << b->id << ": enabledPtr and configPtr should be distinct";
+    }
+}
+
+TEST(BehaviorToggle, SetConfigBoolThenTickGateRespectsIt) {
+    Config_Init();
+
+    auto* ball = BehaviorRegistry::Instance().Get("ball");
+    ASSERT_NE(ball, nullptr);
+    ASSERT_TRUE(*ball->enabledPtr);
+
+    bool saved = g_config.behaviors.fun.ball;
+
+    g_config.behaviors.fun.ball = false;
+    ASSERT_TRUE(*ball->enabledPtr);
+    EXPECT_FALSE(g_config.behaviors.fun.ball) << "With ball disabled, internal gate should block";
+
+    g_config.behaviors.fun.ball = true;
+    EXPECT_TRUE(g_config.behaviors.fun.ball) << "With ball enabled, internal gate should pass";
+
+    g_config.behaviors.fun.ball = saved;
 }

@@ -83,6 +83,7 @@ static Behavior g_nametagBehavior = {
     .name = "Nametag",
     .description = "Shows the goose's name above its head",
     .enabledPtr = &s_enabled,
+    .configPtr = &g_config.behaviors.info.nametag,
     .init = init,
     .tick = tick,
     .render = render,

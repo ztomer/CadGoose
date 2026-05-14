@@ -191,7 +191,6 @@ bool Config_IsSystemDarkTheme();
     if (s == "behaviors.info.nametag") return &g_config.behaviors.info.nametag;
     if (s == "behaviors.info.presence") return &g_config.behaviors.info.presence;
     if (s == "behaviors.info.configGUI") return &g_config.behaviors.info.configGUI;
-    if (s == "behaviors.info.gooseManager") return &g_config.behaviors.info.gooseManager;
     if (s == "behaviors.systems.health") return &g_config.behaviors.systems.health;
     if (s == "behaviors.systems.ai") return &g_config.behaviors.systems.ai;
 
@@ -219,6 +218,7 @@ bool Config_IsSystemDarkTheme();
     DEBUG_LOG("Config init done");
     if (g_config.ai.enableMCP && !g_mcpMode) {
         MCP_StartInternalServer();
+        MCP_StartHTTPServer();
     }
 
     if (g_mcpMode) {
@@ -327,6 +327,7 @@ bool Config_IsSystemDarkTheme();
 }
 
 - (void)applicationWillTerminate:(NSNotification*)aNotification {
+    MCP_StopHTTPServer();
     MCP_StopInternalServer();
     CommandSocket_StopServer();
 }

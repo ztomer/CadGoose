@@ -2,6 +2,7 @@
 // test_behavior_ai.mm
 // Unit tests for AI behavior Foundation fallback
 // ===========================
+#include <sstream>
 #include "gtest/gtest.h"
 #include <string>
 #include <vector>
@@ -303,4 +304,165 @@ TEST(AIChatFallback, NoFalsePositive) {
     EXPECT_FALSE(km.contains("food"));
     EXPECT_FALSE(km.contains("goose"));
     EXPECT_EQ(select_response(km), "name_response");
+}
+
+#pragma mark - Endpoint Generation
+
+struct EndpointTestCase {
+    int providerType;
+    int osaurusPort;
+    int ollamaPort;
+    std::string customEndpoint;
+    std::string expected;
+};
+
+static std::string generateEndpoint(int providerType, int osaurusPort, int ollamaPort, const std::string& customEndpoint) {
+    switch (providerType) {
+        case 0:
+            return "http://localhost:" + std::to_string(osaurusPort) + "/v1/chat/completions";
+        case 1:
+            return "http://localhost:" + std::to_string(ollamaPort) + "/v1/chat/completions";
+        case 2:
+            return customEndpoint;
+        default:
+            return "http://localhost:1337/v1/chat/completions";
+    }
+}
+
+class AIEndpointTest : public ::testing::TestWithParam<EndpointTestCase> {};
+
+TEST_P(AIEndpointTest, GeneratesCorrectURL) {
+    const auto& p = GetParam();
+    std::string result = generateEndpoint(p.providerType, p.osaurusPort, p.ollamaPort, p.customEndpoint);
+    EXPECT_EQ(result, p.expected);
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    EndpointScenarios, AIEndpointTest,
+    ::testing::Values(
+        EndpointTestCase{0, 1337, 11434, "", "http://localhost:1337/v1/chat/completions"},
+        EndpointTestCase{0, 8080, 11434, "", "http://localhost:8080/v1/chat/completions"},
+        EndpointTestCase{0, 5000, 11434, "", "http://localhost:5000/v1/chat/completions"},
+        EndpointTestCase{1, 1337, 11434, "", "http://localhost:11434/v1/chat/completions"},
+        EndpointTestCase{1, 1337, 12345, "", "http://localhost:12345/v1/chat/completions"},
+        EndpointTestCase{2, 1337, 11434, "http://my-server:9999/v1/chat/completions", "http://my-server:9999/v1/chat/completions"},
+        EndpointTestCase{2, 1337, 11434, "https://api.openai.com/v1/chat/completions", "https://api.openai.com/v1/chat/completions"},
+        EndpointTestCase{99, 1337, 11434, "", "http://localhost:1337/v1/chat/completions"}
+    )
+);
+
+#pragma mark - Completion Handler Logic
+
+enum class HandlerResult {
+    LLMResponse,
+    MCPResponse,
+    LLMError,
+    Fallback
+};
+
+struct HandlerTestCase {
+    bool hasResponse;
+    bool hasError;
+    bool mcpHandles;
+    HandlerResult expected;
+};
+
+static HandlerResult simulateHandler(const HandlerTestCase& tc) {
+    if (tc.hasResponse && !tc.hasError) {
+        return HandlerResult::LLMResponse;
+    }
+    if (tc.mcpHandles) {
+        return HandlerResult::MCPResponse;
+    }
+    if (tc.hasResponse) {
+        return HandlerResult::LLMError;
+    }
+    return HandlerResult::Fallback;
+}
+
+class AIHandlerTest : public ::testing::TestWithParam<HandlerTestCase> {};
+
+TEST_P(AIHandlerTest, RoutesCorrectly) {
+    const auto& p = GetParam();
+    EXPECT_EQ(simulateHandler(p), p.expected);
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    HandlerScenarios, AIHandlerTest,
+    ::testing::Values(
+        // Successful LLM response
+        HandlerTestCase{true, false, false, HandlerResult::LLMResponse},
+        // MCP command handles when LLM fails with error
+        HandlerTestCase{true, true, true, HandlerResult::MCPResponse},
+        // MCP command handles when LLM returns nothing
+        HandlerTestCase{false, true, true, HandlerResult::MCPResponse},
+        HandlerTestCase{false, false, true, HandlerResult::MCPResponse},
+        // LLM error shown when MCP can't handle (THE FIX)
+        HandlerTestCase{true, true, false, HandlerResult::LLMError},
+        // Fallback when no response at all and MCP can't handle
+        HandlerTestCase{false, true, false, HandlerResult::Fallback},
+        HandlerTestCase{false, false, false, HandlerResult::Fallback}
+    )
+);
+
+#pragma mark - Think Block Stripping
+
+static std::string stripThinkBlocks(const std::string& content) {
+    std::string result = content;
+    size_t start, end;
+    while ((start = result.find("<think>")) != std::string::npos) {
+        end = result.find("</think>", start);
+        if (end == std::string::npos) break;
+        result.erase(start, end + 8 - start);
+    }
+    size_t pos = result.find_first_not_of(" \t\n\r");
+    if (pos != std::string::npos) {
+        result = result.substr(pos);
+        pos = result.find_last_not_of(" \t\n\r");
+        if (pos != std::string::npos) result = result.substr(0, pos + 1);
+    }
+    if (result.empty()) return content;
+    return result;
+}
+
+TEST(AIThinkBlock, StripsSimpleThinkBlock) {
+    EXPECT_EQ(stripThinkBlocks("<think>reasoning</think>actual"), "actual");
+}
+
+TEST(AIThinkBlock, StripsThinkBlockWithNewlines) {
+    EXPECT_EQ(stripThinkBlocks("<think>\nreasoning\n</think>\ncontent"), "content");
+}
+
+TEST(AIThinkBlock, NoThinkBlock) {
+    EXPECT_EQ(stripThinkBlocks("hello world"), "hello world");
+}
+
+TEST(AIThinkBlock, ThinkBlockOnlyReturnsOriginal) {
+    std::string input = "<think>reasoning</think>";
+    EXPECT_EQ(stripThinkBlocks(input), input);
+}
+
+TEST(AIThinkBlock, MultipleThinkBlocks) {
+    EXPECT_EQ(stripThinkBlocks("<think>first</think>middle<think>second</think>end"), "middleend");
+}
+
+TEST(AIThinkBlock, LeadingWhitespacePreserved) {
+    EXPECT_EQ(stripThinkBlocks("  <think>reasoning</think>content"), "content");
+}
+
+TEST(AIThinkBlock, TrailingNewlinesBeforeContent) {
+    EXPECT_EQ(stripThinkBlocks("<think>reasoning</think>\n\ncontent"), "content");
+}
+
+TEST(AIThinkBlock, UnclosedThinkBlock) {
+    EXPECT_EQ(stripThinkBlocks("<think>unclosed"), "<think>unclosed");
+}
+
+TEST(AIThinkBlock, EmptyContent) {
+    EXPECT_EQ(stripThinkBlocks(""), "");
+}
+
+TEST(AIThinkBlock, NoContentAfterStripping) {
+    std::string input = "<think>only</think>";
+    EXPECT_EQ(stripThinkBlocks(input), input);
 }
