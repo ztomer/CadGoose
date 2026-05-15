@@ -99,6 +99,47 @@ struct AIState : public BehaviorState {
 
 #pragma mark - AIChatWindowController
 
+// --- Layout constants ---
+static constexpr float kChatWindowWidth = 420.0f;
+static constexpr float kChatWindowHeight = 360.0f;
+static constexpr float kAppBarHeight = 38.0f;
+static constexpr float kAppBarY = kChatWindowHeight - kAppBarHeight - 0.0f;
+static constexpr float kSeparatorHeight = 1.0f;
+static constexpr float kGoosePopupLeftMargin = 70.0f;
+static constexpr float kGoosePopupRightReserved = 70.0f;
+static constexpr float kGoosePopupHeight = 24.0f;
+static constexpr float kGoosePopupY = 7.0f;
+static constexpr float kPinButtonRightMargin = 30.0f;
+static constexpr float kPinButtonY = 9.0f;
+static constexpr float kPinButtonSize = 20.0f;
+static constexpr float kPinButtonFontSize = 12.0f;
+static constexpr float kScrollViewMarginX = 10.0f;
+static constexpr float kInputAreaHeight = 46.0f;
+static constexpr float kScrollViewY = kInputAreaHeight + 10.0f;
+static constexpr float kScrollViewWidth = kChatWindowWidth - 20.0f;
+static constexpr float kScrollViewHeight = kChatWindowHeight - kAppBarHeight - kInputAreaHeight - 28.0f;
+static constexpr float kTextViewWidth = kScrollViewWidth;
+static constexpr float kTextViewHeight = kScrollViewHeight + 6.0f;
+static constexpr float kSpinnerX = 3.0f;
+static constexpr float kSpinnerY = 2.0f;
+static constexpr float kSpinnerSize = 12.0f;
+static constexpr float kStatusBarMarginX = 18.0f;
+static constexpr float kStatusBarY = 2.0f;
+static constexpr float kStatusBarRightMargin = 30.0f;
+static constexpr float kStatusBarHeight = 12.0f;
+static constexpr float kStatusBarFontSize = 10.0f;
+static constexpr float kInputFieldMarginX = 12.0f;
+static constexpr float kInputFieldY = 16.0f;
+static constexpr float kInputFieldWidth = kChatWindowWidth - 2 * kInputFieldMarginX - 58.0f;
+static constexpr float kInputFieldHeight = 30.0f;
+static constexpr float kSendButtonX = kInputFieldMarginX + kInputFieldWidth + 6.0f;
+static constexpr float kSendButtonY = kInputFieldY;
+static constexpr float kSendButtonWidth = 46.0f;
+static constexpr float kSendButtonHeight = kInputFieldHeight;
+static constexpr float kSendButtonFontSize = 16.0f;
+static constexpr float kChatFontSize = 13.0f;
+static constexpr float kChatFontWeight = 13.0f;
+
 @interface AIChatWindowController : NSWindowController <NSWindowDelegate>
 @property (nonatomic, copy) NSString* gooseName;
 @property (nonatomic, strong) NSTextField* inputField;
@@ -122,7 +163,7 @@ struct AIState : public BehaviorState {
 - (instancetype)initWithGooseName:(NSString*)name {
     self.gooseName = name;
 
-    self.window = [[NSWindow alloc] initWithContentRect:NSMakeRect(0, 0, 420, 360)
+    self.window = [[NSWindow alloc] initWithContentRect:NSMakeRect(0, 0, kChatWindowWidth, kChatWindowHeight)
                                              styleMask:NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskResizable | NSWindowStyleMaskFullSizeContentView
                                                backing:NSBackingStoreBuffered
                                                  defer:NO];
@@ -145,10 +186,10 @@ struct AIState : public BehaviorState {
     visualEffectView.state = NSVisualEffectStateActive;
     [contentView addSubview:visualEffectView];
 
-    NSFont* chatFont = [NSFont fontWithName:@"Maple Mono" size:13] ?: [NSFont systemFontOfSize:13];
+    NSFont* chatFont = [NSFont fontWithName:@"Maple Mono" size:kChatFontSize] ?: [NSFont systemFontOfSize:kChatFontSize];
 
     // Appbar: [traffic lights | goose selector | pin] with liquid glass
-    NSView* appBar = [[NSView alloc] initWithFrame:NSMakeRect(0, 322, 420, 38)];
+    NSView* appBar = [[NSView alloc] initWithFrame:NSMakeRect(0, kAppBarY, kChatWindowWidth, kAppBarHeight)];
     appBar.autoresizingMask = NSViewWidthSizable | NSViewMinYMargin;
     [contentView addSubview:appBar];
 
@@ -160,15 +201,15 @@ struct AIState : public BehaviorState {
     appBarGlass.state = NSVisualEffectStateActive;
     [appBar addSubview:appBarGlass];
 
-    NSView* sep = [[NSView alloc] initWithFrame:NSMakeRect(0, 0, 420, 1)];
+    NSView* sep = [[NSView alloc] initWithFrame:NSMakeRect(0, 0, kChatWindowWidth, kSeparatorHeight)];
     sep.wantsLayer = YES;
     sep.layer.backgroundColor = [[NSColor separatorColor] CGColor];
     sep.autoresizingMask = NSViewWidthSizable;
     [appBar addSubview:sep];
 
     // Goose selector popup (replaces centered title)
-    self.goosePopup = [[NSPopUpButton alloc] initWithFrame:NSMakeRect(70, 7, appBar.frame.size.width - 70 - 70, 24)];
-    self.goosePopup.font = [NSFont fontWithName:@"Maple Mono" size:13] ?: [NSFont systemFontOfSize:13 weight:NSFontWeightSemibold];
+    self.goosePopup = [[NSPopUpButton alloc] initWithFrame:NSMakeRect(kGoosePopupLeftMargin, kGoosePopupY, appBar.frame.size.width - kGoosePopupLeftMargin - kGoosePopupRightReserved, kGoosePopupHeight)];
+    self.goosePopup.font = [NSFont fontWithName:@"Maple Mono" size:kChatFontSize] ?: [NSFont systemFontOfSize:kChatFontSize weight:NSFontWeightSemibold];
     self.goosePopup.bezelStyle = NSBezelStyleRounded;
     self.goosePopup.target = self;
     self.goosePopup.action = @selector(gooseSelected:);
@@ -177,9 +218,9 @@ struct AIState : public BehaviorState {
     [appBar addSubview:self.goosePopup];
 
     // Pin button (far right)
-    self.pinButton = [[NSButton alloc] initWithFrame:NSMakeRect(appBar.frame.size.width - 30, 9, 20, 20)];
+    self.pinButton = [[NSButton alloc] initWithFrame:NSMakeRect(appBar.frame.size.width - kPinButtonRightMargin, kPinButtonY, kPinButtonSize, kPinButtonSize)];
     [self.pinButton setTitle:@"📌"];
-    [self.pinButton setFont:[NSFont systemFontOfSize:12]];
+    [self.pinButton setFont:[NSFont systemFontOfSize:kPinButtonFontSize]];
     [self.pinButton setTarget:self];
     [self.pinButton setAction:@selector(togglePin:)];
     self.pinButton.bezelStyle = NSBezelStyleInline;
@@ -187,12 +228,12 @@ struct AIState : public BehaviorState {
     [appBar addSubview:self.pinButton];
 
     // Chat scrollview - fills space between input and appbar (no empty gap)
-    NSScrollView* scrollView = [[NSScrollView alloc] initWithFrame:NSMakeRect(10, 56, 400, 258)];
+    NSScrollView* scrollView = [[NSScrollView alloc] initWithFrame:NSMakeRect(kScrollViewMarginX, kScrollViewY, kScrollViewWidth, kScrollViewHeight)];
     scrollView.hasVerticalScroller = YES;
     scrollView.autoresizingMask = NSViewWidthSizable | NSViewHeightSizable;
     scrollView.drawsBackground = NO;
 
-    NSTextView* textView = [[NSTextView alloc] initWithFrame:NSMakeRect(0, 0, 400, 264)];
+    NSTextView* textView = [[NSTextView alloc] initWithFrame:NSMakeRect(0, 0, kTextViewWidth, kTextViewHeight)];
     textView.editable = NO;
     textView.font = chatFont;
     textView.backgroundColor = [NSColor clearColor];
@@ -202,7 +243,7 @@ struct AIState : public BehaviorState {
     [contentView addSubview:scrollView];
 
     // Spinner: shown during AI request
-    self.spinner = [[NSProgressIndicator alloc] initWithFrame:NSMakeRect(3, 2, 12, 12)];
+    self.spinner = [[NSProgressIndicator alloc] initWithFrame:NSMakeRect(kSpinnerX, kSpinnerY, kSpinnerSize, kSpinnerSize)];
     self.spinner.style = NSProgressIndicatorStyleSpinning;
     self.spinner.controlSize = NSControlSizeSmall;
     self.spinner.hidden = YES;
@@ -210,8 +251,8 @@ struct AIState : public BehaviorState {
     [contentView addSubview:self.spinner];
 
     // Status bar: model name between chat and input
-    self.statusBar = [[NSTextField alloc] initWithFrame:NSMakeRect(18, 2, contentView.frame.size.width - 30, 12)];
-    self.statusBar.font = [NSFont fontWithName:@"Maple Mono" size:10] ?: [NSFont systemFontOfSize:10];
+    self.statusBar = [[NSTextField alloc] initWithFrame:NSMakeRect(kStatusBarMarginX, kStatusBarY, contentView.frame.size.width - kStatusBarMarginX - kStatusBarRightMargin, kStatusBarHeight)];
+    self.statusBar.font = [NSFont fontWithName:@"Maple Mono" size:kStatusBarFontSize] ?: [NSFont systemFontOfSize:kStatusBarFontSize];
     self.statusBar.textColor = [NSColor colorWithWhite:0.5 alpha:1.0];
     self.statusBar.backgroundColor = [NSColor clearColor];
     self.statusBar.bordered = NO;
@@ -219,9 +260,9 @@ struct AIState : public BehaviorState {
     self.statusBar.autoresizingMask = NSViewWidthSizable;
     [contentView addSubview:self.statusBar];
 
-    self.inputField = [[NSTextField alloc] initWithFrame:NSMakeRect(12, 16, 344, 30)];
+    self.inputField = [[NSTextField alloc] initWithFrame:NSMakeRect(kInputFieldMarginX, kInputFieldY, kInputFieldWidth, kInputFieldHeight)];
     self.inputField.placeholderString = @"Type your message...";
-    self.inputField.font = [NSFont fontWithName:@"Maple Mono" size:13] ?: [NSFont systemFontOfSize:13];
+    self.inputField.font = [NSFont fontWithName:@"Maple Mono" size:kChatFontSize] ?: [NSFont systemFontOfSize:kChatFontSize];
     [self.inputField setTarget:self];
     [self.inputField setAction:@selector(sendMessage:)];
     self.inputField.bezelStyle = NSTextFieldRoundedBezel;
@@ -229,9 +270,9 @@ struct AIState : public BehaviorState {
     self.inputField.autoresizingMask = NSViewWidthSizable;
     [contentView addSubview:self.inputField];
 
-    self.sendButton = [[NSButton alloc] initWithFrame:NSMakeRect(362, 16, 46, 30)];
+    self.sendButton = [[NSButton alloc] initWithFrame:NSMakeRect(kSendButtonX, kSendButtonY, kSendButtonWidth, kSendButtonHeight)];
     [self.sendButton setTitle:@"🪿"];
-    [self.sendButton setFont:[NSFont systemFontOfSize:16]];
+    [self.sendButton setFont:[NSFont systemFontOfSize:kSendButtonFontSize]];
     [self.sendButton setTarget:self];
     [self.sendButton setAction:@selector(sendMessage:)];
     self.sendButton.bezelStyle = NSBezelStyleRounded;

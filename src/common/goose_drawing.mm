@@ -147,25 +147,29 @@ void DrawGoose(Goose* g, CGContextRef ctx) {
     Vector2 beakTip = beakBase + fwd * g_config.rig.beakLen;
 
     const double kChewDuration = 0.4;
+    const float kChewFrequencyHz = 10.0f;
+    const float kChewMaxAmplitude = 6.0f;
+    const float kBeakSplitThreshold = 0.5f;
+    const float kSplitBeakWidthFactor = 0.7f;
     float beakOpen = 0.0f;
     if (g->isChewing) {
         double elapsed = g->lastUpdateTime - g->chewingStartTime;
         if (elapsed >= kChewDuration) {
             g->isChewing = false;
         } else {
-            double phase = elapsed * 10.0 * 2.0 * M_PI;
+            double phase = elapsed * kChewFrequencyHz * 2.0 * M_PI;
             float rawOsc = 0.5f * (1.0f - std::cos(phase));
             float decay = 1.0f - (float)(elapsed / kChewDuration);
-            beakOpen = rawOsc * decay * 6.0f;
+            beakOpen = rawOsc * decay * kChewMaxAmplitude;
         }
     }
 
-    if (beakOpen > 0.5f) {
+    if (beakOpen > kBeakSplitThreshold) {
         Vector2 perp = Vector2::Normalize(Vector2{-fwd.y, fwd.x});
         Vector2 upperTip = beakTip + perp * beakOpen;
         Vector2 lowerTip = beakTip - perp * beakOpen;
-        DrawLine(ctx, beakBase, upperTip, beakW * 0.7f, beakR, beakG, beakB, 1.0f);
-        DrawLine(ctx, beakBase, lowerTip, beakW * 0.7f, beakR, beakG, beakB, 1.0f);
+        DrawLine(ctx, beakBase, upperTip, beakW * kSplitBeakWidthFactor, beakR, beakG, beakB, 1.0f);
+        DrawLine(ctx, beakBase, lowerTip, beakW * kSplitBeakWidthFactor, beakR, beakG, beakB, 1.0f);
     } else {
         DrawLine(ctx, beakBase, beakTip, beakW, beakR, beakG, beakB, 1.0f);
     }
@@ -369,11 +373,11 @@ void DrawDroppedItem(CGContextRef ctx, const DroppedItem& item, float viewHeight
         if (item.data->isAIGenerated) {
             NSString* aiLabel = @"AI";
             NSDictionary* labelAttrs = @{
-                NSFontAttributeName: [NSFont systemFontOfSize:8.0],
+                NSFontAttributeName: [NSFont systemFontOfSize:kAILabelFontSize],
                 NSForegroundColorAttributeName: [NSColor colorWithRed:0.5 green:0.4 blue:0.3 alpha:0.6]
             };
             CGSize labelSize = [aiLabel sizeWithAttributes:labelAttrs];
-            float labelX = x + item.data->w - labelSize.width - 4;
+            float labelX = x + item.data->w - labelSize.width - kAILabelPadding;
             float labelY = y + 2;
             [aiLabel drawAtPoint:NSMakePoint(labelX, labelY) withAttributes:labelAttrs];
         }

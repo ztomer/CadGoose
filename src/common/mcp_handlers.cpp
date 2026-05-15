@@ -3,36 +3,54 @@
 #include "config.h"
 #include <string>
 #include <vector>
+#include <unordered_map>
+#include <functional>
 
 extern std::string JsonEscape(const std::string& s);
 extern std::string ExtractArg(const std::string& json, const std::string& key);
 
+// --- Helper: serialize a bool to JSON "true"/"false" ---
+static std::string BoolJson(bool v) { return v ? "true" : "false"; }
+
+// --- Helper: serialize a behavior group to JSON ---
+struct BoolField { const char* name; bool* ptr; };
+
+static std::string SerializeBoolGroup(const std::vector<BoolField>& fields) {
+    std::string j = "{";
+    for (size_t i = 0; i < fields.size(); i++) {
+        if (i > 0) j += ",";
+        j += std::string("\"") + fields[i].name + "\":" + BoolJson(*fields[i].ptr);
+    }
+    j += "}";
+    return j;
+}
+
 static std::string ConfigToJson() {
     std::string j = "{";
-    j += "\"fun\":{";
-    j += "\"ball\":" + std::string(g_config.behaviors.fun.ball ? "true" : "false") + ",";
-    j += "\"breadCrumbs\":" + std::string(g_config.behaviors.fun.breadCrumbs ? "true" : "false") + ",";
-    j += "\"hats\":" + std::string(g_config.behaviors.fun.hats ? "true" : "false") + ",";
-    j += "\"rainbow\":" + std::string(g_config.behaviors.fun.rainbow ? "true" : "false") + ",";
-    j += "\"acid\":" + std::string(g_config.behaviors.fun.acid ? "true" : "false") + ",";
-    j += "\"anger\":" + std::string(g_config.behaviors.fun.anger ? "true" : "false");
-    j += "},";
-    j += "\"control\":{";
-    j += "\"honcker\":" + std::string(g_config.behaviors.control.honcker ? "true" : "false") + ",";
-    j += "\"jail\":" + std::string(g_config.behaviors.control.jail ? "true" : "false") + ",";
-    j += "\"portals\":" + std::string(g_config.behaviors.control.portals ? "true" : "false") + ",";
-    j += "\"drag\":" + std::string(g_config.behaviors.control.drag ? "true" : "false");
-    j += "},";
-    j += "\"info\":{";
-    j += "\"nametag\":" + std::string(g_config.behaviors.info.nametag ? "true" : "false") + ",";
-    j += "\"presence\":" + std::string(g_config.behaviors.info.presence ? "true" : "false") + ",";
-    j += "\"configGUI\":" + std::string(g_config.behaviors.info.configGUI ? "true" : "false");
-    j += "},";
-    j += "\"systems\":{";
-    j += "\"health\":" + std::string(g_config.behaviors.systems.health ? "true" : "false") + ",";
-    j += "\"ai\":" + std::string(g_config.behaviors.systems.ai ? "true" : "false") + ",";
-    j += "\"pomodoro\":" + std::string(g_config.behaviors.systems.pomodoro ? "true" : "false");
-    j += "},";
+    j += "\"fun\":" + SerializeBoolGroup({
+        {"ball", &g_config.behaviors.fun.ball},
+        {"breadCrumbs", &g_config.behaviors.fun.breadCrumbs},
+        {"hats", &g_config.behaviors.fun.hats},
+        {"rainbow", &g_config.behaviors.fun.rainbow},
+        {"acid", &g_config.behaviors.fun.acid},
+        {"anger", &g_config.behaviors.fun.anger}
+    }) + ",";
+    j += "\"control\":" + SerializeBoolGroup({
+        {"honcker", &g_config.behaviors.control.honcker},
+        {"jail", &g_config.behaviors.control.jail},
+        {"portals", &g_config.behaviors.control.portals},
+        {"drag", &g_config.behaviors.control.drag}
+    }) + ",";
+    j += "\"info\":" + SerializeBoolGroup({
+        {"nametag", &g_config.behaviors.info.nametag},
+        {"presence", &g_config.behaviors.info.presence},
+        {"configGUI", &g_config.behaviors.info.configGUI}
+    }) + ",";
+    j += "\"systems\":" + SerializeBoolGroup({
+        {"health", &g_config.behaviors.systems.health},
+        {"ai", &g_config.behaviors.systems.ai},
+        {"pomodoro", &g_config.behaviors.systems.pomodoro}
+    }) + ",";
     j += "\"honcker_hotkey\":\"" + JsonEscape(g_config.behaviors.honcker.hotkey) + "\",";
     j += "\"jail_hotkey_o\":\"" + JsonEscape(g_config.behaviors.jail.hotkeyO) + "\",";
     j += "\"jail_hotkey_p\":\"" + JsonEscape(g_config.behaviors.jail.hotkeyP) + "\",";
@@ -55,21 +73,76 @@ std::string HandleInitialize() {
     "}";
 }
 
+// --- Tool definitions (single source of truth) ---
+struct ToolDef {
+    const char* name;
+    const char* description;
+    const char* paramsJson; // MCP params schema (without required wrapper)
+    const char* required;   // comma-separated required param names, or ""
+};
+
+static const ToolDef kTools[] = {
+    {"spawn_goose", "Spawn a new goose on the desktop",
+     "{\"name\":{\"type\":\"string\",\"description\":\"Optional name for the goose\"}}", ""},
+    {"clear_geese", "Remove all geese from the desktop", "{}", ""},
+    {"honk", "Make a goose honk", "{}", ""},
+    {"fetch", "Make a goose fetch an item",
+     "{\"type\":{\"type\":\"string\",\"description\":\"Item type: 'meme' or 'text'\"}}", ""},
+    {"goose_status", "Get the current status of the goose system", "{}", ""},
+    {"open_preferences", "Open the goose preferences window", "{}", ""},
+    {"send_chat", "Send a chat message to the goose AI",
+     "{\"message\":{\"type\":\"string\",\"description\":\"Message to send to the goose\"}}", "message"},
+    {"enable_behavior", "Enable a goose behavior by ID (e.g. 'ball', 'hats', 'rainbow')",
+     "{\"id\":{\"type\":\"string\",\"description\":\"Behavior ID to enable\"}}", "id"},
+    {"disable_behavior", "Disable a goose behavior by ID",
+     "{\"id\":{\"type\":\"string\",\"description\":\"Behavior ID to disable\"}}", "id"},
+    {"get_config", "Get configuration values from the goose system. Returns all config if no key specified.",
+     "{\"key\":{\"type\":\"string\",\"description\":\"Optional config key path (e.g. 'behaviors.fun.ball')\"}}", ""},
+    {"set_config", "Set a configuration value on the goose system",
+     "{\"key\":{\"type\":\"string\",\"description\":\"Config key path (e.g. 'behaviors.fun.ball')\"},\"value\":{\"type\":[\"string\",\"number\",\"boolean\"],\"description\":\"Value to set\"}}", "key,value"},
+    {"set_hotkey", "Change a behavior hotkey (e.g. honcker_hotkey, jail_hotkey_o)",
+     "{\"hotkey\":{\"type\":\"string\",\"description\":\"Hotkey field name (e.g. 'honcker_hotkey', 'jail_hotkey_o')\"},\"value\":{\"type\":\"string\",\"description\":\"New hotkey string (e.g. 'f', 'cmd+shift+p')\"}}", "hotkey,value"},
+};
+static constexpr int kToolCount = sizeof(kTools) / sizeof(kTools[0]);
+
+static std::string ToolToMcpJson(const ToolDef& t) {
+    std::string j = "{\"name\":\"" + std::string(t.name) + "\",";
+    j += "\"description\":\"" + std::string(t.description) + "\",";
+    j += "\"inputSchema\":{\"type\":\"object\",\"properties\":" + std::string(t.paramsJson) + "}}";
+    return j;
+}
+
+static std::string ToolToOpenAIJson(const ToolDef& t) {
+    std::string j = "{\"type\":\"function\",\"function\":{";
+    j += "\"name\":\"" + std::string(t.name) + "\",";
+    j += "\"description\":\"" + std::string(t.description) + "\",";
+    j += "\"parameters\":{\"type\":\"object\",\"properties\":" + std::string(t.paramsJson);
+    if (t.required[0]) {
+        j += ",\"required\":[";
+        const char* p = t.required;
+        bool first = true;
+        while (*p) {
+            const char* end = p;
+            while (*end && *end != ',') end++;
+            if (!first) j += ",";
+            j += "\"" + std::string(p, end - p) + "\"";
+            first = false;
+            p = (*end == ',') ? end + 1 : end;
+        }
+        j += "]";
+    }
+    j += "}}}";
+    return j;
+}
+
 std::string HandleToolsList() {
-    return "{\"tools\":["
-        "{\"name\":\"spawn_goose\",\"description\":\"Spawn a new goose on the desktop\",\"inputSchema\":{\"type\":\"object\",\"properties\":{\"name\":{\"type\":\"string\",\"description\":\"Optional name for the goose\"}}}}"
-        ",{\"name\":\"clear_geese\",\"description\":\"Remove all geese from the desktop\",\"inputSchema\":{\"type\":\"object\",\"properties\":{}}}"
-        ",{\"name\":\"honk\",\"description\":\"Make a goose honk\",\"inputSchema\":{\"type\":\"object\",\"properties\":{}}}"
-        ",{\"name\":\"fetch\",\"description\":\"Make a goose fetch an item\",\"inputSchema\":{\"type\":\"object\",\"properties\":{\"type\":{\"type\":\"string\",\"description\":\"Item type: 'meme' or 'text'\"}}}}"
-        ",{\"name\":\"goose_status\",\"description\":\"Get the current status of the goose system\",\"inputSchema\":{\"type\":\"object\",\"properties\":{}}}"
-        ",{\"name\":\"open_preferences\",\"description\":\"Open the goose preferences window\",\"inputSchema\":{\"type\":\"object\",\"properties\":{}}}"
-        ",{\"name\":\"send_chat\",\"description\":\"Send a chat message to the goose AI\",\"inputSchema\":{\"type\":\"object\",\"properties\":{\"message\":{\"type\":\"string\",\"description\":\"Message to send to the goose\"}}}}"
-        ",{\"name\":\"enable_behavior\",\"description\":\"Enable a goose behavior by ID (e.g. 'ball', 'hats', 'rainbow')\",\"inputSchema\":{\"type\":\"object\",\"properties\":{\"id\":{\"type\":\"string\",\"description\":\"Behavior ID to enable\"}}}}"
-        ",{\"name\":\"disable_behavior\",\"description\":\"Disable a goose behavior by ID\",\"inputSchema\":{\"type\":\"object\",\"properties\":{\"id\":{\"type\":\"string\",\"description\":\"Behavior ID to disable\"}}}}"
-        ",{\"name\":\"get_config\",\"description\":\"Get configuration values from the goose system. Returns all config if no key specified.\",\"inputSchema\":{\"type\":\"object\",\"properties\":{\"key\":{\"type\":\"string\",\"description\":\"Optional config key path (e.g. 'behaviors.fun.ball', 'general.appearanceMode')\"}}}}"
-        ",{\"name\":\"set_config\",\"description\":\"Set a configuration value on the goose system\",\"inputSchema\":{\"type\":\"object\",\"properties\":{\"key\":{\"type\":\"string\",\"description\":\"Config key path (e.g. 'behaviors.fun.ball')\"},\"value\":{\"type\":[\"string\",\"number\",\"boolean\"],\"description\":\"Value to set\"}}}}"
-        ",{\"name\":\"set_hotkey\",\"description\":\"Change a behavior hotkey (e.g. honcker_hotkey, jail_hotkey_o)\",\"inputSchema\":{\"type\":\"object\",\"properties\":{\"hotkey\":{\"type\":\"string\",\"description\":\"Hotkey field name (e.g. 'honcker_hotkey', 'jail_hotkey_o')\"},\"value\":{\"type\":\"string\",\"description\":\"New hotkey string (e.g. 'f', 'cmd+shift+p')\"}}}}"
-    "]}";
+    std::string j = "{\"tools\":[";
+    for (int i = 0; i < kToolCount; i++) {
+        if (i > 0) j += ",";
+        j += ToolToMcpJson(kTools[i]);
+    }
+    j += "]}";
+    return j;
 }
 
 std::string HandleResourcesList() {
@@ -88,33 +161,33 @@ std::string HandleResourcesRead(const std::string& uri) {
     if (uri == "config://behaviors") {
         json = ConfigToJson();
     } else if (uri == "config://behaviors/fun") {
-        json = "{";
-        json += "\"ball\":" + std::string(g_config.behaviors.fun.ball ? "true" : "false") + ",";
-        json += "\"breadCrumbs\":" + std::string(g_config.behaviors.fun.breadCrumbs ? "true" : "false") + ",";
-        json += "\"hats\":" + std::string(g_config.behaviors.fun.hats ? "true" : "false") + ",";
-        json += "\"rainbow\":" + std::string(g_config.behaviors.fun.rainbow ? "true" : "false") + ",";
-        json += "\"acid\":" + std::string(g_config.behaviors.fun.acid ? "true" : "false") + ",";
-        json += "\"anger\":" + std::string(g_config.behaviors.fun.anger ? "true" : "false");
-        json += "}";
+        json = SerializeBoolGroup({
+            {"ball", &g_config.behaviors.fun.ball},
+            {"breadCrumbs", &g_config.behaviors.fun.breadCrumbs},
+            {"hats", &g_config.behaviors.fun.hats},
+            {"rainbow", &g_config.behaviors.fun.rainbow},
+            {"acid", &g_config.behaviors.fun.acid},
+            {"anger", &g_config.behaviors.fun.anger}
+        });
     } else if (uri == "config://behaviors/control") {
-        json = "{";
-        json += "\"honcker\":" + std::string(g_config.behaviors.control.honcker ? "true" : "false") + ",";
-        json += "\"jail\":" + std::string(g_config.behaviors.control.jail ? "true" : "false") + ",";
-        json += "\"portals\":" + std::string(g_config.behaviors.control.portals ? "true" : "false") + ",";
-        json += "\"drag\":" + std::string(g_config.behaviors.control.drag ? "true" : "false");
-        json += "}";
+        json = SerializeBoolGroup({
+            {"honcker", &g_config.behaviors.control.honcker},
+            {"jail", &g_config.behaviors.control.jail},
+            {"portals", &g_config.behaviors.control.portals},
+            {"drag", &g_config.behaviors.control.drag}
+        });
     } else if (uri == "config://behaviors/info") {
-        json = "{";
-        json += "\"nametag\":" + std::string(g_config.behaviors.info.nametag ? "true" : "false") + ",";
-        json += "\"presence\":" + std::string(g_config.behaviors.info.presence ? "true" : "false") + ",";
-        json += "\"configGUI\":" + std::string(g_config.behaviors.info.configGUI ? "true" : "false");
-        json += "}";
+        json = SerializeBoolGroup({
+            {"nametag", &g_config.behaviors.info.nametag},
+            {"presence", &g_config.behaviors.info.presence},
+            {"configGUI", &g_config.behaviors.info.configGUI}
+        });
     } else if (uri == "config://behaviors/systems") {
-        json = "{";
-        json += "\"health\":" + std::string(g_config.behaviors.systems.health ? "true" : "false") + ",";
-        json += "\"ai\":" + std::string(g_config.behaviors.systems.ai ? "true" : "false") + ",";
-        json += "\"pomodoro\":" + std::string(g_config.behaviors.systems.pomodoro ? "true" : "false");
-        json += "}";
+        json = SerializeBoolGroup({
+            {"health", &g_config.behaviors.systems.health},
+            {"ai", &g_config.behaviors.systems.ai},
+            {"pomodoro", &g_config.behaviors.systems.pomodoro}
+        });
     } else {
         return "";
     }
@@ -122,108 +195,39 @@ std::string HandleResourcesRead(const std::string& uri) {
 }
 
 static bool SetConfigValue(const std::string& key, const std::string& valueJson) {
-    if (key == "behaviors.fun.ball") g_config.behaviors.fun.ball = (valueJson == "true");
-    else if (key == "behaviors.fun.breadCrumbs") g_config.behaviors.fun.breadCrumbs = (valueJson == "true");
-    else if (key == "behaviors.fun.hats") g_config.behaviors.fun.hats = (valueJson == "true");
-    else if (key == "behaviors.fun.rainbow") g_config.behaviors.fun.rainbow = (valueJson == "true");
-    else if (key == "behaviors.fun.acid") g_config.behaviors.fun.acid = (valueJson == "true");
-    else if (key == "behaviors.fun.anger") g_config.behaviors.fun.anger = (valueJson == "true");
-    else if (key == "behaviors.control.honcker") g_config.behaviors.control.honcker = (valueJson == "true");
-    else if (key == "behaviors.control.jail") g_config.behaviors.control.jail = (valueJson == "true");
-    else if (key == "behaviors.control.portals") g_config.behaviors.control.portals = (valueJson == "true");
-    else if (key == "behaviors.control.drag") g_config.behaviors.control.drag = (valueJson == "true");
-    else if (key == "behaviors.info.nametag") g_config.behaviors.info.nametag = (valueJson == "true");
-    else if (key == "behaviors.info.presence") g_config.behaviors.info.presence = (valueJson == "true");
-    else if (key == "behaviors.info.configGUI") g_config.behaviors.info.configGUI = (valueJson == "true");
-    else if (key == "behaviors.info.visible") g_config.behaviors.info.visible = (valueJson == "true");
-    else if (key == "behaviors.systems.health") g_config.behaviors.systems.health = (valueJson == "true");
-    else if (key == "behaviors.systems.ai") g_config.behaviors.systems.ai = (valueJson == "true");
-    else if (key == "behaviors.systems.pomodoro") g_config.behaviors.systems.pomodoro = (valueJson == "true");
-    else return false;
+    static const std::unordered_map<std::string, bool*> boolFields = {
+        {"behaviors.fun.ball", &g_config.behaviors.fun.ball},
+        {"behaviors.fun.breadCrumbs", &g_config.behaviors.fun.breadCrumbs},
+        {"behaviors.fun.hats", &g_config.behaviors.fun.hats},
+        {"behaviors.fun.rainbow", &g_config.behaviors.fun.rainbow},
+        {"behaviors.fun.acid", &g_config.behaviors.fun.acid},
+        {"behaviors.fun.anger", &g_config.behaviors.fun.anger},
+        {"behaviors.control.honcker", &g_config.behaviors.control.honcker},
+        {"behaviors.control.jail", &g_config.behaviors.control.jail},
+        {"behaviors.control.portals", &g_config.behaviors.control.portals},
+        {"behaviors.control.drag", &g_config.behaviors.control.drag},
+        {"behaviors.info.nametag", &g_config.behaviors.info.nametag},
+        {"behaviors.info.presence", &g_config.behaviors.info.presence},
+        {"behaviors.info.configGUI", &g_config.behaviors.info.configGUI},
+        {"behaviors.info.visible", &g_config.behaviors.info.visible},
+        {"behaviors.systems.health", &g_config.behaviors.systems.health},
+        {"behaviors.systems.ai", &g_config.behaviors.systems.ai},
+        {"behaviors.systems.pomodoro", &g_config.behaviors.systems.pomodoro},
+    };
+    auto it = boolFields.find(key);
+    if (it == boolFields.end()) return false;
+    *it->second = (valueJson == "true");
     return true;
 }
 
 std::string MCP_GetOpenAITools() {
-    return "["
-        "{\"type\":\"function\",\"function\":{"
-            "\"name\":\"spawn_goose\","
-            "\"description\":\"Spawn a new goose on the desktop\","
-            "\"parameters\":{\"type\":\"object\",\"properties\":{"
-                "\"name\":{\"type\":\"string\",\"description\":\"Optional name for the goose\"}"
-            "}}"
-        "}},"
-        "{\"type\":\"function\",\"function\":{"
-            "\"name\":\"clear_geese\","
-            "\"description\":\"Remove all geese from the desktop\","
-            "\"parameters\":{\"type\":\"object\",\"properties\":{}}"
-        "}},"
-        "{\"type\":\"function\",\"function\":{"
-            "\"name\":\"honk\","
-            "\"description\":\"Make a goose honk\","
-            "\"parameters\":{\"type\":\"object\",\"properties\":{}}"
-        "}},"
-        "{\"type\":\"function\",\"function\":{"
-            "\"name\":\"fetch\","
-            "\"description\":\"Make a goose fetch an item\","
-            "\"parameters\":{\"type\":\"object\",\"properties\":{"
-                "\"type\":{\"type\":\"string\",\"description\":\"Item type: 'meme' or 'text'\"}"
-            "}}"
-        "}},"
-        "{\"type\":\"function\",\"function\":{"
-            "\"name\":\"goose_status\","
-            "\"description\":\"Get the current status of the goose system\","
-            "\"parameters\":{\"type\":\"object\",\"properties\":{}}"
-        "}},"
-        "{\"type\":\"function\",\"function\":{"
-            "\"name\":\"open_preferences\","
-            "\"description\":\"Open the goose preferences window\","
-            "\"parameters\":{\"type\":\"object\",\"properties\":{}}"
-        "}},"
-        "{\"type\":\"function\",\"function\":{"
-            "\"name\":\"send_chat\","
-            "\"description\":\"Send a chat message to the goose AI\","
-            "\"parameters\":{\"type\":\"object\",\"properties\":{"
-                "\"message\":{\"type\":\"string\",\"description\":\"Message to send to the goose\"}"
-            "},\"required\":[\"message\"]}"
-        "}},"
-        "{\"type\":\"function\",\"function\":{"
-            "\"name\":\"enable_behavior\","
-            "\"description\":\"Enable a goose behavior by ID (e.g. 'ball', 'hats', 'rainbow')\","
-            "\"parameters\":{\"type\":\"object\",\"properties\":{"
-                "\"id\":{\"type\":\"string\",\"description\":\"Behavior ID to enable\"}"
-            "},\"required\":[\"id\"]}"
-        "}},"
-        "{\"type\":\"function\",\"function\":{"
-            "\"name\":\"disable_behavior\","
-            "\"description\":\"Disable a goose behavior by ID\","
-            "\"parameters\":{\"type\":\"object\",\"properties\":{"
-                "\"id\":{\"type\":\"string\",\"description\":\"Behavior ID to disable\"}"
-            "},\"required\":[\"id\"]}"
-        "}},"
-        "{\"type\":\"function\",\"function\":{"
-            "\"name\":\"get_config\","
-            "\"description\":\"Get configuration values from the goose system. Returns all config if no key specified.\","
-            "\"parameters\":{\"type\":\"object\",\"properties\":{"
-                "\"key\":{\"type\":\"string\",\"description\":\"Optional config key path (e.g. 'behaviors.fun.ball')\"}"
-            "}}"
-        "}},"
-        "{\"type\":\"function\",\"function\":{"
-            "\"name\":\"set_config\","
-            "\"description\":\"Set a configuration value on the goose system\","
-            "\"parameters\":{\"type\":\"object\",\"properties\":{"
-                "\"key\":{\"type\":\"string\",\"description\":\"Config key path (e.g. 'behaviors.fun.ball')\"},"
-                "\"value\":{\"type\":[\"string\",\"number\",\"boolean\"],\"description\":\"Value to set\"}"
-            "},\"required\":[\"key\",\"value\"]}"
-        "}},"
-        "{\"type\":\"function\",\"function\":{"
-            "\"name\":\"set_hotkey\","
-            "\"description\":\"Change a behavior hotkey (e.g. honcker_hotkey, jail_hotkey_o)\","
-            "\"parameters\":{\"type\":\"object\",\"properties\":{"
-                "\"hotkey\":{\"type\":\"string\",\"description\":\"Hotkey field name (e.g. 'honcker_hotkey', 'jail_hotkey_o')\"},"
-                "\"value\":{\"type\":\"string\",\"description\":\"New hotkey string (e.g. 'f', 'cmd+shift+p')\"}"
-            "},\"required\":[\"hotkey\",\"value\"]}"
-        "}}"
-    "]";
+    std::string j = "[";
+    for (int i = 0; i < kToolCount; i++) {
+        if (i > 0) j += ",";
+        j += ToolToOpenAIJson(kTools[i]);
+    }
+    j += "]";
+    return j;
 }
 
 std::string ExecuteTool(const std::string& name, const std::string& argsJson) {
@@ -275,14 +279,18 @@ std::string ExecuteTool(const std::string& name, const std::string& argsJson) {
         std::string hotkey = ExtractArg(argsJson, "hotkey");
         std::string value = ExtractArg(argsJson, "value");
         if (hotkey.empty() || value.empty()) return "error: 'hotkey' and 'value' arguments required";
-        if (hotkey == "honcker_hotkey") g_config.behaviors.honcker.hotkey = value;
-        else if (hotkey == "jail_hotkey_o") g_config.behaviors.jail.hotkeyO = value;
-        else if (hotkey == "jail_hotkey_p") g_config.behaviors.jail.hotkeyP = value;
-        else if (hotkey == "portal_hotkey_1") g_config.portal.hotkey1 = value;
-        else if (hotkey == "portal_hotkey_2") g_config.portal.hotkey2 = value;
-        else if (hotkey == "portal_hotkey_0") g_config.portal.hotkey0 = value;
-        else if (hotkey == "breadcrumbs_hotkey") g_config.behaviors.breadCrumbs.hotkey = value;
-        else return "error: unknown hotkey field '" + hotkey + "'";
+        static const std::unordered_map<std::string, std::string*> hotkeyFields = {
+            {"honcker_hotkey", &g_config.behaviors.honcker.hotkey},
+            {"jail_hotkey_o", &g_config.behaviors.jail.hotkeyO},
+            {"jail_hotkey_p", &g_config.behaviors.jail.hotkeyP},
+            {"portal_hotkey_1", &g_config.portal.hotkey1},
+            {"portal_hotkey_2", &g_config.portal.hotkey2},
+            {"portal_hotkey_0", &g_config.portal.hotkey0},
+            {"breadcrumbs_hotkey", &g_config.behaviors.breadCrumbs.hotkey},
+        };
+        auto it = hotkeyFields.find(hotkey);
+        if (it == hotkeyFields.end()) return "error: unknown hotkey field '" + hotkey + "'";
+        *it->second = value;
         return "ok: " + hotkey + " set to '" + value + "'";
     } else {
         return "error: unknown tool: " + name;
