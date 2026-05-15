@@ -164,32 +164,6 @@ TEST(BehaviorInteraction, PortalPairCreationAndTeleport) {
     EXPECT_NEAR(y, 500.0f, 1.0f);
 }
 
-TEST(BehaviorInteraction, BanishAndRespawn) {
-    Vector2 originalPos{400.0f, 300.0f};
-    Vector2 goosePos = originalPos;
-    bool banished = false;
-
-    banished = true;
-    goosePos.x = -100.0f;
-    goosePos.y = -100.0f;
-
-    EXPECT_TRUE(banished);
-    EXPECT_NE(goosePos.x, originalPos.x);
-
-    banished = false;
-    float screenW = 1920.0f;
-    float screenH = 1080.0f;
-
-    goosePos.x = 100.0f + static_cast<float>(rand() % static_cast<int>(screenW - 200.0f));
-    goosePos.y = 100.0f + static_cast<float>(rand() % static_cast<int>(screenH - 200.0f));
-
-    EXPECT_FALSE(banished);
-    EXPECT_GE(goosePos.x, 100.0f);
-    EXPECT_LE(goosePos.x, screenW - 100.0f);
-    EXPECT_GE(goosePos.y, 100.0f);
-    EXPECT_LE(goosePos.y, screenH - 100.0f);
-}
-
 TEST(BehaviorInteraction, DraggableGooseResistance) {
     Vector2 goosePos{400.0f, 300.0f};
     Vector2 cursorPos{410.0f, 305.0f};

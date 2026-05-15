@@ -17,11 +17,12 @@
     if ([key hasSuffix:@"jail"]) return @"🔒";
     if ([key hasSuffix:@"portals"]) return @"🌀";
     if ([key hasSuffix:@"drag"]) return @"🖱️";
-    if ([key hasSuffix:@"banish"]) return @"👻";
     if ([key hasSuffix:@"nametag"]) return @"🏷️";
     if ([key hasSuffix:@"health"]) return @"❤️";
     if ([key hasSuffix:@"ai"]) return @"🤖";
     if ([key hasSuffix:@"pomodoro"]) return @"⏰";
+    if ([key hasSuffix:@"sonicMode"]) return @"💨";
+    if ([key hasSuffix:@"toysEnabled"]) return @"🧸";
     if ([key isEqualToString:@"appearance.colors"]) return @"🎨";
     return @"🦆";
 }

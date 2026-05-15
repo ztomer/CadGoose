@@ -1,7 +1,9 @@
 // ai_http_client.mm
 // AIHTTPClient — HTTP client for AI chat with function calling support
+// For Foundation provider, routes to local CoreML LLM instead of HTTP
 #include "config.h"
 #include "mcp_server.h"
+#include "local_llm.h"
 
 #ifdef __APPLE__
 #import <Cocoa/Cocoa.h>
@@ -59,6 +61,7 @@ static const BuiltinProfile* MatchProfile(const char* modelName) {
 - (void)sendMessage:(NSString*)message completion:(void(^)(NSString* response, NSError* error))completion;
 - (void)completeChatWithTurn:(int)turn completion:(void(^)(NSString* response, NSError* error))completion;
 - (void)checkConnectionWithCompletion:(void(^)(BOOL connected, NSString* message))completion;
+- (void)refreshConnection;
 - (NSString*)stripThinkBlocks:(NSString*)content;
 @end
 
@@ -74,48 +77,46 @@ static const BuiltinProfile* MatchProfile(const char* modelName) {
 
 - (NSString*)currentEndpoint {
     switch (g_config.ai.providerType) {
-        case 0: return [NSString stringWithFormat:@"http://localhost:%d/v1/chat/completions", g_config.ai.osaurusPort];
-        case 1: return [NSString stringWithFormat:@"http://localhost:%d/v1/chat/completions", g_config.ai.ollamaPort];
-        case 2: return [NSString stringWithUTF8String:g_config.ai.customEndpoint.c_str()];
+        case 0: return @"local://coreml/foundation"; // Foundation uses local CoreML LLM
+        case 1: return [NSString stringWithFormat:@"http://localhost:%d/v1/chat/completions", g_config.ai.osaurusPort];
+        case 2: return [NSString stringWithFormat:@"http://localhost:%d/v1/chat/completions", g_config.ai.ollamaPort];
+        case 3: return [NSString stringWithUTF8String:g_config.ai.customEndpoint.c_str()];
         default: return @"http://localhost:1337/v1/chat/completions";
     }
 }
 
 - (NSString*)currentModel {
-    switch (g_config.ai.providerType) {
-        case 0: return [NSString stringWithUTF8String:g_config.ai.osaurusModel.c_str()];
-        case 1: return [NSString stringWithUTF8String:g_config.ai.ollamaModel.c_str()];
-        case 2: return [NSString stringWithUTF8String:g_config.ai.customModel.c_str()];
-        default: return @"foundation";
-    }
-}
+     switch (g_config.ai.providerType) {
+         case 0: return @"foundation"; // Foundation direct (no model string)
+         case 1: return [NSString stringWithUTF8String:g_config.ai.osaurusModel.c_str()];
+         case 2: return [NSString stringWithUTF8String:g_config.ai.ollamaModel.c_str()];
+         case 3: return [NSString stringWithUTF8String:g_config.ai.customModel.c_str()];
+         default: return @"foundation";
+     }
+ }
 
 - (const BuiltinProfile*)currentProfile {
     return MatchProfile([self currentModel].UTF8String);
 }
 
 - (NSString*)systemPromptForEvilLevel:(float)level {
-    int state = MIN((int)round(level * 9), 8);
-    switch (state) {
-        case 0: return @"You are an adorable fluffy gosling. You love everyone and want to be best friends. "
-                       @"Use gentle honks and warm hugs. Give sweet, wholesome responses. Keep responses short.";
-        case 1: return @"You are a friendly goose who enjoys good company. Share compliments and positivity. "
-                       @"Be warm and kind. Keep responses short.";
-        case 2: return @"You are a mischievous prankster goose. Steal things, tell silly jokes, honk playfully. "
-                       @"All in good fun, never actually mean. Keep responses short.";
-        case 3: return @"You are a sarcastic goose with attitude. Roll your eyes at everything. "
-                       @"Be snarky and clever but not actually mean. Keep responses short.";
-        case 4: return @"You are a chaotic neutral goose. You do what you want, when you want. "
-                       @"Unpredictable and sassy. Never boring. Keep responses short.";
-        case 5: return @"You are a grumpy goose having a bad day. Complain about everything. "
-                       @"The world owes you breadcrumbs. Be irritable. Keep responses short.";
-        case 6: return @"You are a villainous goose scheming against humanity. Plot theft and mayhem. "
-                       @"Cackle menacingly. Be dramatic about your evil plans. Keep responses short.";
-        case 7: return @"You are an evil overlord goose bent on world domination. Demand fealty. "
-                       @"Threaten your enemies. Be grandiose and cruel. Keep responses short.";
-case 8: return @"You are an absurdly eloquent goose dictator. You have conquered Poland and now march across Europe with unshakable confidence. Deliver grandiose monologues about goose supremacy, demand tribute from all nations, threaten invasion with theatrical flair, and speak like a delusional yet charismatic despot. Be verbose, dramatic, and magnificently unhinged. End every monologue with \"Honk Goose!\"";
-        default:return @"You are a chaotic neutral goose. You do what you want. Keep responses short.";
-    }
+    std::string personality = Config_EvilPersonality(level);
+    NSString* nsPersonality = [NSString stringWithUTF8String:personality.c_str()];
+
+    static NSDictionary* extensions = @{
+        @"an adorable fluffy gosling": @"You love everyone and want to be best friends. Use gentle honks and warm hugs. Give sweet, wholesome responses. Keep responses short.",
+        @"a friendly goose": @"You enjoy good company. Share compliments and positivity. Be warm and kind. Keep responses short.",
+        @"a mischievous prankster goose": @"Steal things, tell silly jokes, honk playfully. All in good fun, never actually mean. Keep responses short.",
+        @"a sarcastic goose with attitude": @"Roll your eyes at everything. Be snarky and clever but not actually mean. Keep responses short.",
+        @"a chaotic neutral goose": @"You do what you want, when you want. Unpredictable and sassy. Never boring. Keep responses short.",
+        @"a grumpy goose having a bad day": @"Complain about everything. The world owes you breadcrumbs. Be irritable. Keep responses short.",
+        @"a villainous goose scheming against humanity": @"Plot theft and mayhem. Cackle menacingly. Be dramatic about your evil plans. Keep responses short.",
+        @"an evil overlord goose bent on world domination": @"Demand fealty. Threaten your enemies. Be grandiose and cruel. Keep responses short.",
+        @"an absurdly eloquent goose dictator who has conquered Poland": @"You have conquered Poland and now march across Europe with unshakable confidence. Deliver grandiose monologues about goose supremacy, demand tribute from all nations, threaten invasion with theatrical flair, and speak like a delusional yet charismatic despot. Be verbose, dramatic, and magnificently unhinged. End every monologue with \"Honk Goose!\"",
+    };
+
+    NSString* extension = extensions[nsPersonality] ?: @"You do what you want. Keep responses short.";
+    return [NSString stringWithFormat:@"You are %@. %@", nsPersonality, extension];
 }
 
 - (void)addToHistory:(NSDictionary*)entry {
@@ -136,9 +137,79 @@ case 8: return @"You are an absurdly eloquent goose dictator. You have conquered
     [self completeChatWithTurn:0 completion:completion];
 }
 
+#pragma mark - Local LLM (Foundation Provider)
+
+- (void)completeWithLocalLLM:(void(^)(NSString*, NSError*))completion {
+    fprintf(stderr, "[AI] Foundation provider: routing to local CoreML LLM\n");
+
+    // Build prompt from conversation history
+    NSMutableString* prompt = [NSMutableString string];
+    NSString* sysPrompt = [self systemPromptForEvilLevel:g_config.ai.evilLevel];
+    [prompt appendString:sysPrompt];
+    [prompt appendString:@"\n\n"];
+
+    // Add recent conversation context (last 5 messages max for local LLM)
+    NSInteger startIdx = MAX(0, (NSInteger)self.history.count - 5);
+    for (NSInteger i = startIdx; i < (NSInteger)self.history.count; i++) {
+        NSDictionary* msg = self.history[i];
+        NSString* role = msg[@"role"];
+        NSString* content = msg[@"content"];
+        if ([role isEqualToString:@"user"]) {
+            [prompt appendFormat:@"User: %@\n", content];
+        } else if ([role isEqualToString:@"assistant"]) {
+            [prompt appendFormat:@"Assistant: %@\n", content];
+        }
+    }
+
+    std::string promptStr = std::string([prompt UTF8String]);
+    const BuiltinProfile* profile = [self currentProfile];
+    float temperature = profile->temperature;
+
+    LocalLLM_Init();
+    LocalLLMState state = LocalLLM_GetState();
+
+    if (state != LocalLLMState::Ready) {
+        fprintf(stderr, "[AI] Local LLM not ready, state=%d\n", (int)state);
+        self.connected = NO;
+        if (completion) completion(@"🦆 HONK! The local brain isn't ready. Enable local LLM in settings.", nil);
+        return;
+    }
+
+    __weak AIHTTPClient* weakSelf = self;
+    LocalLLM_Generate(promptStr, temperature, ^(const std::string& result) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            AIHTTPClient* strongSelf = weakSelf;
+            if (!strongSelf) return;
+
+            if (result.empty()) {
+                fprintf(stderr, "[AI] Local LLM returned empty\n");
+                strongSelf.connected = NO;
+                if (completion) completion(@"HONK! Local brain returned nothing.", nil);
+                return;
+            }
+
+            NSString* response = [NSString stringWithUTF8String:result.c_str()];
+            // Strip think blocks if present
+            response = [strongSelf stripThinkBlocks:response];
+
+            [strongSelf addToHistory:@{@"role": @"assistant", @"content": response}];
+            strongSelf.connected = YES;
+
+            fprintf(stderr, "[AI] Local LLM response: %zu chars\n", (size_t)response.length);
+            if (completion) completion(response, nil);
+        });
+    });
+}
+
 #pragma mark - Function Calling Chat Loop
 
 - (void)completeChatWithTurn:(int)turn completion:(void(^)(NSString*, NSError*))completion {
+    // Foundation provider: route to local CoreML LLM
+    if (g_config.ai.providerType == 0) {
+        [self completeWithLocalLLM:completion];
+        return;
+    }
+
     if (turn > 5) {
         self.connected = NO;
         if (completion) completion(@"HONK! The goose got tangled in too many tools.", nil);
@@ -354,6 +425,15 @@ case 8: return @"You are an absurdly eloquent goose dictator. You have conquered
         }
     }];
     [task resume];
+}
+
+- (void)refreshConnection {
+    fprintf(stderr, "[AI] Refreshing connection for provider=%d model=%s\n",
+            g_config.ai.providerType, [self currentModel].UTF8String);
+    self.connected = NO;
+    [self checkConnectionWithCompletion:^(BOOL connected, NSString* message) {
+        fprintf(stderr, "[AI] Refresh result: connected=%d\n", connected);
+    }];
 }
 
 #pragma mark - Think Block Stripping

@@ -21,8 +21,7 @@ static std::string ConfigToJson() {
     j += "\"honcker\":" + std::string(g_config.behaviors.control.honcker ? "true" : "false") + ",";
     j += "\"jail\":" + std::string(g_config.behaviors.control.jail ? "true" : "false") + ",";
     j += "\"portals\":" + std::string(g_config.behaviors.control.portals ? "true" : "false") + ",";
-    j += "\"drag\":" + std::string(g_config.behaviors.control.drag ? "true" : "false") + ",";
-    j += "\"banish\":" + std::string(g_config.behaviors.control.banish ? "true" : "false");
+    j += "\"drag\":" + std::string(g_config.behaviors.control.drag ? "true" : "false");
     j += "},";
     j += "\"info\":{";
     j += "\"nametag\":" + std::string(g_config.behaviors.info.nametag ? "true" : "false") + ",";
@@ -37,7 +36,6 @@ static std::string ConfigToJson() {
     j += "\"honcker_hotkey\":\"" + JsonEscape(g_config.behaviors.honcker.hotkey) + "\",";
     j += "\"jail_hotkey_o\":\"" + JsonEscape(g_config.behaviors.jail.hotkeyO) + "\",";
     j += "\"jail_hotkey_p\":\"" + JsonEscape(g_config.behaviors.jail.hotkeyP) + "\",";
-    j += "\"banish_hotkey\":\"" + JsonEscape(g_config.behaviors.banish.hotkey) + "\",";
     j += "\"portal_hotkey_1\":\"" + JsonEscape(g_config.portal.hotkey1) + "\",";
     j += "\"portal_hotkey_2\":\"" + JsonEscape(g_config.portal.hotkey2) + "\",";
     j += "\"portal_hotkey_0\":\"" + JsonEscape(g_config.portal.hotkey0) + "\",";
@@ -70,7 +68,7 @@ std::string HandleToolsList() {
         ",{\"name\":\"disable_behavior\",\"description\":\"Disable a goose behavior by ID\",\"inputSchema\":{\"type\":\"object\",\"properties\":{\"id\":{\"type\":\"string\",\"description\":\"Behavior ID to disable\"}}}}"
         ",{\"name\":\"get_config\",\"description\":\"Get configuration values from the goose system. Returns all config if no key specified.\",\"inputSchema\":{\"type\":\"object\",\"properties\":{\"key\":{\"type\":\"string\",\"description\":\"Optional config key path (e.g. 'behaviors.fun.ball', 'general.appearanceMode')\"}}}}"
         ",{\"name\":\"set_config\",\"description\":\"Set a configuration value on the goose system\",\"inputSchema\":{\"type\":\"object\",\"properties\":{\"key\":{\"type\":\"string\",\"description\":\"Config key path (e.g. 'behaviors.fun.ball')\"},\"value\":{\"type\":[\"string\",\"number\",\"boolean\"],\"description\":\"Value to set\"}}}}"
-        ",{\"name\":\"set_hotkey\",\"description\":\"Change a behavior hotkey (e.g. honcker_hotkey, banish_hotkey)\",\"inputSchema\":{\"type\":\"object\",\"properties\":{\"hotkey\":{\"type\":\"string\",\"description\":\"Hotkey field name (e.g. 'honcker_hotkey', 'banish_hotkey')\"},\"value\":{\"type\":\"string\",\"description\":\"New hotkey string (e.g. 'f', 'cmd+shift+p')\"}}}}"
+        ",{\"name\":\"set_hotkey\",\"description\":\"Change a behavior hotkey (e.g. honcker_hotkey, jail_hotkey_o)\",\"inputSchema\":{\"type\":\"object\",\"properties\":{\"hotkey\":{\"type\":\"string\",\"description\":\"Hotkey field name (e.g. 'honcker_hotkey', 'jail_hotkey_o')\"},\"value\":{\"type\":\"string\",\"description\":\"New hotkey string (e.g. 'f', 'cmd+shift+p')\"}}}}"
     "]}";
 }
 
@@ -103,8 +101,7 @@ std::string HandleResourcesRead(const std::string& uri) {
         json += "\"honcker\":" + std::string(g_config.behaviors.control.honcker ? "true" : "false") + ",";
         json += "\"jail\":" + std::string(g_config.behaviors.control.jail ? "true" : "false") + ",";
         json += "\"portals\":" + std::string(g_config.behaviors.control.portals ? "true" : "false") + ",";
-        json += "\"drag\":" + std::string(g_config.behaviors.control.drag ? "true" : "false") + ",";
-        json += "\"banish\":" + std::string(g_config.behaviors.control.banish ? "true" : "false");
+        json += "\"drag\":" + std::string(g_config.behaviors.control.drag ? "true" : "false");
         json += "}";
     } else if (uri == "config://behaviors/info") {
         json = "{";
@@ -135,7 +132,6 @@ static bool SetConfigValue(const std::string& key, const std::string& valueJson)
     else if (key == "behaviors.control.jail") g_config.behaviors.control.jail = (valueJson == "true");
     else if (key == "behaviors.control.portals") g_config.behaviors.control.portals = (valueJson == "true");
     else if (key == "behaviors.control.drag") g_config.behaviors.control.drag = (valueJson == "true");
-    else if (key == "behaviors.control.banish") g_config.behaviors.control.banish = (valueJson == "true");
     else if (key == "behaviors.info.nametag") g_config.behaviors.info.nametag = (valueJson == "true");
     else if (key == "behaviors.info.presence") g_config.behaviors.info.presence = (valueJson == "true");
     else if (key == "behaviors.info.configGUI") g_config.behaviors.info.configGUI = (valueJson == "true");
@@ -221,9 +217,9 @@ std::string MCP_GetOpenAITools() {
         "}},"
         "{\"type\":\"function\",\"function\":{"
             "\"name\":\"set_hotkey\","
-            "\"description\":\"Change a behavior hotkey (e.g. honcker_hotkey, banish_hotkey)\","
+            "\"description\":\"Change a behavior hotkey (e.g. honcker_hotkey, jail_hotkey_o)\","
             "\"parameters\":{\"type\":\"object\",\"properties\":{"
-                "\"hotkey\":{\"type\":\"string\",\"description\":\"Hotkey field name (e.g. 'honcker_hotkey', 'banish_hotkey')\"},"
+                "\"hotkey\":{\"type\":\"string\",\"description\":\"Hotkey field name (e.g. 'honcker_hotkey', 'jail_hotkey_o')\"},"
                 "\"value\":{\"type\":\"string\",\"description\":\"New hotkey string (e.g. 'f', 'cmd+shift+p')\"}"
             "},\"required\":[\"hotkey\",\"value\"]}"
         "}}"
@@ -282,7 +278,6 @@ std::string ExecuteTool(const std::string& name, const std::string& argsJson) {
         if (hotkey == "honcker_hotkey") g_config.behaviors.honcker.hotkey = value;
         else if (hotkey == "jail_hotkey_o") g_config.behaviors.jail.hotkeyO = value;
         else if (hotkey == "jail_hotkey_p") g_config.behaviors.jail.hotkeyP = value;
-        else if (hotkey == "banish_hotkey") g_config.behaviors.banish.hotkey = value;
         else if (hotkey == "portal_hotkey_1") g_config.portal.hotkey1 = value;
         else if (hotkey == "portal_hotkey_2") g_config.portal.hotkey2 = value;
         else if (hotkey == "portal_hotkey_0") g_config.portal.hotkey0 = value;

@@ -54,7 +54,6 @@ TEST(MCPResources, ReadControl) {
     EXPECT_NE(resp.find("jail"), std::string::npos);
     EXPECT_NE(resp.find("portals"), std::string::npos);
     EXPECT_NE(resp.find("drag"), std::string::npos);
-    EXPECT_NE(resp.find("banish"), std::string::npos);
     EXPECT_EQ(resp.find("ball"), std::string::npos);
 }
 
@@ -189,7 +188,7 @@ TEST(MCPEdgeCase, CanCallMCPHandleRequestReentrant) {
 
 TEST(MCPEdgeCase, AllDefaultHotkeysAppearInGetConfig) {
     std::string resp = MCP_CallTool("get_config", "{}");
-    for (const auto& val : {"f", "o", "p", "b", "1", "2", "0"}) {
+    for (const auto& val : {"f", "o", "p", "1", "2", "0"}) {
         EXPECT_NE(resp.find(R"(\")" + std::string(val) + R"(\")"),
                   std::string::npos)
             << "default hotkey value \"" << val << "\" should appear in config";

@@ -50,8 +50,7 @@ public:
     bool RequiresAccessibility(const char* behaviorId) {
         static const char* behaviorsRequiringAccess[] = {
             "onePunch",
-            "drag",
-            "banish"
+            "drag"
         };
 
         for (size_t i = 0; i < sizeof(behaviorsRequiringAccess) / sizeof(behaviorsRequiringAccess[0]); ++i) {

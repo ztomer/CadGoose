@@ -1,3 +1,5 @@
+goose = ["Goose 0"]
+
 [Debug]
 to_terminal = false
 visuals = false
@@ -290,10 +292,11 @@ direction_blend_rate = 0.15
 
 [AI]
 ollama_port = 11434
+local_llm_enabled = false
 osaurus_port = 1337
 custom_port = 1337
 evil_level = 1.0
-provider_type = 0
+provider_type = 1
 text_meme_temperature = 1.2
 ollama_model = "llama3"
 text_meme_auto_save = true
@@ -304,6 +307,9 @@ enable_mcp = true
 show_status_bar = true
 osaurus_model = "minimax-m2.7-small-jangtq"
 mcp_port = 31072
+text_meme_max_queue = 5
+chat_max_history = 100
+local_llm_model_path = ""
 
 [Step]
 lift_run = 7.0
@@ -335,32 +341,40 @@ lifetime = 15.0
 chance = 15
 
 [Behavior]
-breadcrumbs_enabled = true
-acid_enabled = false
-autumn_leaves_enabled = true
-rainbow_enabled = true
+autumn_leaves_enabled = false
+rainbow_enabled = false
+interactive_drops_puddle_lifetime = 30.0
 anger_enabled = false
-jail_hotkey_p = "p"
+avoidance_enabled = true
+affirmations_custom_message = ""
+boredom_enabled = false
+breadcrumbs_enabled = false
+peeking_enabled = true
+acid_enabled = false
+ball_enabled = true
+honcker_hotkey = "f"
+interactive_drops_enabled = false
+jail_enabled = false
 drag_enabled = true
-jail_enabled = true
 nametag_enabled = true
+affirmations_enabled = false
 portal_hotkey_1 = "1"
 presence_enabled = false
 jail_hotkey_o = "o"
-banish_enabled = false
-pomodoro_enabled = false
+affirmations_interval = 300.0
 config_gui_enabled = false
-honcker_enabled = true
+honcker_enabled = false
 visible_enabled = true
 hats_enabled = true
 ai_enabled = false
-health_enabled = true
+health_enabled = false
 portals_enabled = true
-honcker_hotkey = "f"
-banish_hotkey = "b"
-ball_enabled = true
+pomodoro_enabled = false
+jail_hotkey_p = "p"
 portal_hotkey_2 = "2"
 breadcrumbs_hotkey = "i"
+interactive_drops_flower_grow_time = 10.0
 portal_hotkey_0 = "0"
+interactive_drops_drop_interval = 120.0
 
 

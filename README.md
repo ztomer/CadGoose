@@ -43,7 +43,14 @@ On **macOS 26.5+** with ad-hoc code signing, the `.app` bundle may crash on laun
 Unable to reach MTLCompilerService. The process is unavailable because the compiler is no longer active.
 ```
 
-This is a known limitation: Metal shader JIT compilation requires properly signed binaries, which ad-hoc signing (`codesign --sign -`) cannot provide.
+**Root Cause:** This occurs when using ad-hoc signing (`codesign --sign -`) which doesn't allow the necessary entitlements for Metal's just-in-time (JIT) shader compilation. The crash is triggered by:
+- Using `MLComputeUnitsAll` in CoreML (local LLM functionality)
+- Having `wantsLayer=YES` on CALayer-backed views (macOS UI components)
+
+**Required Fix:** To create a working .app bundle, you need:
+- Apple Developer ID signing (not ad-hoc)
+- Hardened runtime enabled
+- `com.apple.security.cs.allow-jit` entitlement
 
 **Workaround:** Run the binary directly instead of the bundle:
 
@@ -151,6 +158,19 @@ CadGoose includes a comprehensive behavior system inspired by Desktop Goose Reso
 - **Health**: Health bar system for geese
 - **AI**: Chat with the goose (requires API configuration)
 - **Pomodoro**: Work/rest timer mode
+
+**Joy & Delight Behaviors** (Disabled by default in Preferences → Behaviors → JOY category):
+
+- **Petting**: Pet the goose with left mouse button for happy response
+- **Avoidance**: Goose avoids cursor when petted too much
+- **Nighttime**: Special behaviors between 10pm-6am (yawns, sleepy eyes)
+- **Weekend**: Extra playful behavior on Saturdays and Sundays
+- **Preening**: Goose cleans itself with happy sounds
+- **Boredom**: Goose looks for interaction when idle
+- **Peeking**: Goose peeks at user from screen edges
+- **Affirmations**: Goose gives encouraging messages
+- **Interactive Drops**: Goose responds to dropped items with thoughts
+- **AI Typing Sounds**: Audio feedback when AI is generating responses
 
 Enable behaviors via the Behaviors menu in the status bar.
 

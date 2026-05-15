@@ -7,6 +7,39 @@
 bool LoadThemeFromFile(const std::string& path);
 bool SaveThemeToFile(const std::string& path, const std::string& desc);
 
+// Maps identifier (e.g. "customBodyR") to the corresponding ColorRGB field pointer
+static float* ColorFieldForIdentifier(NSString* ident) {
+    if (!ident || ![ident hasPrefix:@"custom"] || ident.length < 10) return nullptr;
+    const char* s = ident.UTF8String;
+    auto field = [&](ColorRGB& c, char channel) -> float* {
+        if (s[ident.length - 1] != channel) return nullptr;
+        return channel == 'R' ? &c.r : channel == 'G' ? &c.g : &c.b;
+    };
+    if ([ident hasSuffix:@"R"]) {
+        if      ([ident hasPrefix:@"customBody"])    return &g_config.color.customBody.r;
+        else if ([ident hasPrefix:@"customNeck"])    return &g_config.color.customNeck.r;
+        else if ([ident hasPrefix:@"customHead"])    return &g_config.color.customHead.r;
+        else if ([ident hasPrefix:@"customBeak"])    return &g_config.color.customBeak.r;
+        else if ([ident hasPrefix:@"customEye"])     return &g_config.color.customEye.r;
+        else if ([ident hasPrefix:@"customOutline"]) return &g_config.color.customOutline.r;
+    } else if ([ident hasSuffix:@"G"]) {
+        if      ([ident hasPrefix:@"customBody"])    return &g_config.color.customBody.g;
+        else if ([ident hasPrefix:@"customNeck"])    return &g_config.color.customNeck.g;
+        else if ([ident hasPrefix:@"customHead"])    return &g_config.color.customHead.g;
+        else if ([ident hasPrefix:@"customBeak"])    return &g_config.color.customBeak.g;
+        else if ([ident hasPrefix:@"customEye"])     return &g_config.color.customEye.g;
+        else if ([ident hasPrefix:@"customOutline"]) return &g_config.color.customOutline.g;
+    } else if ([ident hasSuffix:@"B"]) {
+        if      ([ident hasPrefix:@"customBody"])    return &g_config.color.customBody.b;
+        else if ([ident hasPrefix:@"customNeck"])    return &g_config.color.customNeck.b;
+        else if ([ident hasPrefix:@"customHead"])    return &g_config.color.customHead.b;
+        else if ([ident hasPrefix:@"customBeak"])    return &g_config.color.customBeak.b;
+        else if ([ident hasPrefix:@"customEye"])     return &g_config.color.customEye.b;
+        else if ([ident hasPrefix:@"customOutline"]) return &g_config.color.customOutline.b;
+    }
+    return nullptr;
+}
+
 #pragma mark -
 
 @interface AppearanceTabView ()
@@ -94,6 +127,17 @@ bool SaveThemeToFile(const std::string& path, const std::string& desc);
 
     y -= 22;
 
+    // --- Goose preview positioned to the RIGHT of color selectors ---
+    float previewX = swatchX + 30; // Right of swatches
+    float previewW = w - previewX - 12; // Remaining width with margin
+    float colorRowsHeight = 6 * 26 + 22; // 6 color rows + headers
+    float previewY = y - colorRowsHeight + 20; // Align with top of color rows
+    float previewH = colorRowsHeight - 30; // Slightly shorter than color section
+
+    PreviewGooseView* preview = [[PreviewGooseView alloc] initWithFrame:NSMakeRect(previewX, previewY, previewW, previewH)];
+    preview.identifier = @"goosePreview";
+    [self addSubview:preview];
+
     // --- Color editor rows ---
     auto addColorRow = [&](NSString* label, float* rPtr, float* gPtr, float* bPtr, NSString* prefix, float yPos) -> float {
         NSTextField* lf = [[NSTextField alloc] initWithFrame:NSMakeRect(12, yPos, labelW, 16)];
@@ -178,10 +222,6 @@ bool SaveThemeToFile(const std::string& path, const std::string& desc);
     [self addSubview:openThemeBtn];
     y -= 30;
 
-    PreviewGooseView* preview = [[PreviewGooseView alloc] initWithFrame:NSMakeRect(12, 10, 400, 100)];
-    preview.identifier = @"goosePreview";
-    [self addSubview:preview];
-
     [self refreshThemeList];
     Config_UpdateActiveTheme();
     [self updateSwatches];
@@ -198,28 +238,11 @@ bool SaveThemeToFile(const std::string& path, const std::string& desc);
 
 - (void)colorSliderChanged:(NSSlider*)sender {
     NSString* ident = sender.identifier;
-    if (!ident) return;
-    float val = (float)sender.doubleValue;
+    float* valPtr = ColorFieldForIdentifier(ident);
+    if (!valPtr) return;
 
-    if      ([ident isEqualToString:@"customBodyR"])    g_config.color.customBody.r = val;
-    else if ([ident isEqualToString:@"customBodyG"])    g_config.color.customBody.g = val;
-    else if ([ident isEqualToString:@"customBodyB"])    g_config.color.customBody.b = val;
-    else if ([ident isEqualToString:@"customNeckR"])    g_config.color.customNeck.r = val;
-    else if ([ident isEqualToString:@"customNeckG"])    g_config.color.customNeck.g = val;
-    else if ([ident isEqualToString:@"customNeckB"])    g_config.color.customNeck.b = val;
-    else if ([ident isEqualToString:@"customHeadR"])    g_config.color.customHead.r = val;
-    else if ([ident isEqualToString:@"customHeadG"])    g_config.color.customHead.g = val;
-    else if ([ident isEqualToString:@"customHeadB"])    g_config.color.customHead.b = val;
-    else if ([ident isEqualToString:@"customBeakR"])    g_config.color.customBeak.r = val;
-    else if ([ident isEqualToString:@"customBeakG"])    g_config.color.customBeak.g = val;
-    else if ([ident isEqualToString:@"customBeakB"])    g_config.color.customBeak.b = val;
-    else if ([ident isEqualToString:@"customEyeR"])     g_config.color.customEye.r = val;
-    else if ([ident isEqualToString:@"customEyeG"])     g_config.color.customEye.g = val;
-    else if ([ident isEqualToString:@"customEyeB"])     g_config.color.customEye.b = val;
-    else if ([ident isEqualToString:@"customOutlineR"]) g_config.color.customOutline.r = val;
-    else if ([ident isEqualToString:@"customOutlineG"]) g_config.color.customOutline.g = val;
-    else if ([ident isEqualToString:@"customOutlineB"]) g_config.color.customOutline.b = val;
-    else return;
+    float val = (float)sender.doubleValue;
+    *valPtr = val;
 
     for (NSView* subview in self.subviews) {
         if ([subview.identifier isEqualToString:ident] && [subview isKindOfClass:[NSTextField class]]) {
@@ -233,28 +256,11 @@ bool SaveThemeToFile(const std::string& path, const std::string& desc);
 
 - (void)colorFieldChanged:(NSTextField*)sender {
     NSString* ident = sender.identifier;
-    if (!ident) return;
-    float val = (float)sender.doubleValue;
+    float* valPtr = ColorFieldForIdentifier(ident);
+    if (!valPtr) return;
 
-    if      ([ident isEqualToString:@"customBodyR"])    g_config.color.customBody.r = val;
-    else if ([ident isEqualToString:@"customBodyG"])    g_config.color.customBody.g = val;
-    else if ([ident isEqualToString:@"customBodyB"])    g_config.color.customBody.b = val;
-    else if ([ident isEqualToString:@"customNeckR"])    g_config.color.customNeck.r = val;
-    else if ([ident isEqualToString:@"customNeckG"])    g_config.color.customNeck.g = val;
-    else if ([ident isEqualToString:@"customNeckB"])    g_config.color.customNeck.b = val;
-    else if ([ident isEqualToString:@"customHeadR"])    g_config.color.customHead.r = val;
-    else if ([ident isEqualToString:@"customHeadG"])    g_config.color.customHead.g = val;
-    else if ([ident isEqualToString:@"customHeadB"])    g_config.color.customHead.b = val;
-    else if ([ident isEqualToString:@"customBeakR"])    g_config.color.customBeak.r = val;
-    else if ([ident isEqualToString:@"customBeakG"])    g_config.color.customBeak.g = val;
-    else if ([ident isEqualToString:@"customBeakB"])    g_config.color.customBeak.b = val;
-    else if ([ident isEqualToString:@"customEyeR"])     g_config.color.customEye.r = val;
-    else if ([ident isEqualToString:@"customEyeG"])     g_config.color.customEye.g = val;
-    else if ([ident isEqualToString:@"customEyeB"])     g_config.color.customEye.b = val;
-    else if ([ident isEqualToString:@"customOutlineR"]) g_config.color.customOutline.r = val;
-    else if ([ident isEqualToString:@"customOutlineG"]) g_config.color.customOutline.g = val;
-    else if ([ident isEqualToString:@"customOutlineB"]) g_config.color.customOutline.b = val;
-    else return;
+    float val = (float)sender.doubleValue;
+    *valPtr = val;
 
     for (NSView* subview in self.subviews) {
         if ([subview.identifier isEqualToString:ident] && [subview isKindOfClass:[NSSlider class]]) {
@@ -280,15 +286,11 @@ bool SaveThemeToFile(const std::string& path, const std::string& desc);
         NSString* ident = sv.identifier;
         if ([ident hasPrefix:@"swatch"]) {
             NSString* prefix = [ident substringFromIndex:6];
-            ColorRGB* c = nullptr;
-            if      ([prefix isEqualToString:@"customBody"])    c = &g_config.color.customBody;
-            else if ([prefix isEqualToString:@"customNeck"])    c = &g_config.color.customNeck;
-            else if ([prefix isEqualToString:@"customHead"])    c = &g_config.color.customHead;
-            else if ([prefix isEqualToString:@"customBeak"])    c = &g_config.color.customBeak;
-            else if ([prefix isEqualToString:@"customEye"])     c = &g_config.color.customEye;
-            else if ([prefix isEqualToString:@"customOutline"]) c = &g_config.color.customOutline;
-            if (c && [sv isKindOfClass:[ColorSwatchView class]]) {
-                ((ColorSwatchView*)sv).color = [NSColor colorWithRed:c->r green:c->g blue:c->b alpha:1];
+            float* rPtr = ColorFieldForIdentifier([prefix stringByAppendingString:@"R"]);
+            float* gPtr = ColorFieldForIdentifier([prefix stringByAppendingString:@"G"]);
+            float* bPtr = ColorFieldForIdentifier([prefix stringByAppendingString:@"B"]);
+            if (rPtr && gPtr && bPtr && [sv isKindOfClass:[ColorSwatchView class]]) {
+                ((ColorSwatchView*)sv).color = [NSColor colorWithRed:*rPtr green:*gPtr blue:*bPtr alpha:1];
                 [sv setNeedsDisplay:YES];
             }
         }
@@ -337,30 +339,11 @@ bool SaveThemeToFile(const std::string& path, const std::string& desc);
     // Update all sliders and value fields from loaded custom* values
     for (NSView* sv in self.subviews) {
         NSString* ident = sv.identifier;
-        if (![ident hasPrefix:@"custom"] || ident.length < 10) continue;
-        float val = 0;
-        if      ([ident isEqualToString:@"customBodyR"])    val = g_config.color.customBody.r;
-        else if ([ident isEqualToString:@"customBodyG"])    val = g_config.color.customBody.g;
-        else if ([ident isEqualToString:@"customBodyB"])    val = g_config.color.customBody.b;
-        else if ([ident isEqualToString:@"customNeckR"])    val = g_config.color.customNeck.r;
-        else if ([ident isEqualToString:@"customNeckG"])    val = g_config.color.customNeck.g;
-        else if ([ident isEqualToString:@"customNeckB"])    val = g_config.color.customNeck.b;
-        else if ([ident isEqualToString:@"customHeadR"])    val = g_config.color.customHead.r;
-        else if ([ident isEqualToString:@"customHeadG"])    val = g_config.color.customHead.g;
-        else if ([ident isEqualToString:@"customHeadB"])    val = g_config.color.customHead.b;
-        else if ([ident isEqualToString:@"customBeakR"])    val = g_config.color.customBeak.r;
-        else if ([ident isEqualToString:@"customBeakG"])    val = g_config.color.customBeak.g;
-        else if ([ident isEqualToString:@"customBeakB"])    val = g_config.color.customBeak.b;
-        else if ([ident isEqualToString:@"customEyeR"])     val = g_config.color.customEye.r;
-        else if ([ident isEqualToString:@"customEyeG"])     val = g_config.color.customEye.g;
-        else if ([ident isEqualToString:@"customEyeB"])     val = g_config.color.customEye.b;
-        else if ([ident isEqualToString:@"customOutlineR"]) val = g_config.color.customOutline.r;
-        else if ([ident isEqualToString:@"customOutlineG"]) val = g_config.color.customOutline.g;
-        else if ([ident isEqualToString:@"customOutlineB"]) val = g_config.color.customOutline.b;
-        else continue;
-        if ([sv isKindOfClass:[NSSlider class]])   ((NSSlider*)sv).doubleValue = val;
+        float* valPtr = ColorFieldForIdentifier(ident);
+        if (!valPtr) continue;
+        if ([sv isKindOfClass:[NSSlider class]])   ((NSSlider*)sv).doubleValue = *valPtr;
         if ([sv isKindOfClass:[NSTextField class]] && ![sv isKindOfClass:[ColorSwatchView class]])
-            ((NSTextField*)sv).stringValue = [NSString stringWithFormat:@"%.2f", val];
+            ((NSTextField*)sv).stringValue = [NSString stringWithFormat:@"%.2f", *valPtr];
     }
     [self applyCustomToPreview];
 }

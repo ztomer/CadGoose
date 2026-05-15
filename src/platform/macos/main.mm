@@ -1,4 +1,5 @@
 #import <Cocoa/Cocoa.h>
+#import <dispatch/dispatch.h>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -72,11 +73,14 @@ bool Config_IsSystemDarkTheme();
 
 @interface AppDelegate : NSObject <NSApplicationDelegate>
 @property (nonatomic, strong) NSStatusItem* statusItem;
+@property (nonatomic, strong) NSMenuItem* muteMenuItem;
 - (void)setupMenubar;
 - (void)addBehaviorItem:(NSString*)title configKey:(NSString*)key toMenu:(NSMenu*)menu;
 - (void)toggleBehavior:(NSMenuItem*)sender;
 - (bool*)getBehaviorFlag:(NSString*)key;
 - (void)openPresencePanel:(id)sender;
+- (void)toggleMute:(id)sender;
+- (void)updateMuteMenuItem;
 @end
 
 @implementation AppDelegate
@@ -101,6 +105,9 @@ bool Config_IsSystemDarkTheme();
     [menu addItem:[NSMenuItem separatorItem]];
 
     [menu addItemWithTitle:@"Honk!" action:@selector(testHonk:) keyEquivalent:@"h"];
+
+    self.muteMenuItem = [menu addItemWithTitle:@"" action:@selector(toggleMute:) keyEquivalent:@""];
+    [self updateMuteMenuItem];
 
     [menu addItem:[NSMenuItem separatorItem]];
 
@@ -160,7 +167,25 @@ bool Config_IsSystemDarkTheme();
     DEBUG_LOG("Test honk from menubar");
 }
 
+- (void)updateMuteMenuItem {
+    NSImageName imageName = g_config.general.audioMuted ? NSImageNameTouchBarAudioOutputMuteTemplate : NSImageNameTouchBarAudioInputTemplate;
+    NSImage* icon = [NSImage imageNamed:imageName];
+    self.muteMenuItem.image = icon;
+    self.muteMenuItem.title = g_config.general.audioMuted ? @"Unmute" : @"Mute";
+}
+
+- (void)toggleMute:(id)sender {
+    g_config.general.audioMuted = !g_config.general.audioMuted;
+    [self updateMuteMenuItem];
+    DEBUG_LOG("Audio muted: %d", g_config.general.audioMuted);
+}
+
 - (void)quitApp:(id)sender {
+    g_config.gooseNames.clear();
+    for (const auto& g : g_geese) {
+        g_config.gooseNames.push(g.name);
+    }
+    Config_SaveAll();
     [[NSApplication sharedApplication] terminate:nil];
 }
 
@@ -178,23 +203,8 @@ bool Config_IsSystemDarkTheme();
 - (bool*)getBehaviorFlag:(NSString*)key {
     const char* k = [key UTF8String];
     std::string s = k ? k : "";
-
-    if (s == "behaviors.fun.ball") return &g_config.behaviors.fun.ball;
-    if (s == "behaviors.fun.breadCrumbs") return &g_config.behaviors.fun.breadCrumbs;
-    if (s == "behaviors.fun.hats") return &g_config.behaviors.fun.hats;
-    if (s == "behaviors.fun.rainbow") return &g_config.behaviors.fun.rainbow;
-    if (s == "behaviors.fun.acid") return &g_config.behaviors.fun.acid;
-    if (s == "behaviors.control.honcker") return &g_config.behaviors.control.honcker;
-    if (s == "behaviors.control.jail") return &g_config.behaviors.control.jail;
-    if (s == "behaviors.control.portals") return &g_config.behaviors.control.portals;
-    if (s == "behaviors.control.drag") return &g_config.behaviors.control.drag;
-    if (s == "behaviors.control.banish") return &g_config.behaviors.control.banish;
-    if (s == "behaviors.info.nametag") return &g_config.behaviors.info.nametag;
-    if (s == "behaviors.info.presence") return &g_config.behaviors.info.presence;
-    if (s == "behaviors.info.configGUI") return &g_config.behaviors.info.configGUI;
-    if (s == "behaviors.systems.health") return &g_config.behaviors.systems.health;
-    if (s == "behaviors.systems.ai") return &g_config.behaviors.systems.ai;
-
+    const ConfigOption* opt = Config_FindOptionByKey(s);
+    if (opt && opt->type == CFG_BOOL) return (bool*)opt->ptr;
     return nullptr;
 }
 
@@ -236,8 +246,10 @@ bool Config_IsSystemDarkTheme();
     g_assets.Init();
     DEBUG_LOG("Assets init done");
 
-    AI_TextMeme_LoadFileTexts();
-    DEBUG_LOG("AI text memes loaded");
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0), ^{
+        AI_TextMeme_LoadFileTexts();
+        DEBUG_LOG("AI text memes loaded");
+    });
 
     g_backendManager.Init();
     DEBUG_LOG("Backend: %s", g_backendManager.GetActiveBackend()->Name().c_str());
@@ -331,6 +343,11 @@ bool Config_IsSystemDarkTheme();
 }
 
 - (void)applicationWillTerminate:(NSNotification*)aNotification {
+    g_config.gooseNames.clear();
+    for (const auto& g : g_geese) {
+        g_config.gooseNames.push(g.name);
+    }
+    Config_SaveAll();
     MCP_StopHTTPServer();
     MCP_StopInternalServer();
     CommandSocket_StopServer();

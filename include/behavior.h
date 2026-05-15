@@ -164,6 +164,14 @@ struct PomodoroState : public BehaviorState {
     float accumulatedRotation = 0.0f;
     bool speedMultiplierApplied = false;
 
+    // Sleep mode fields
+    bool isSleeping = false;
+    Vector2 bedPosition{0, 0};
+    double zzzAnimTime = 0;
+    int zzzFrame = 0;
+    double slowRotateDir = 1.0f;
+    double slowRotateTimer = 0;
+
     void Reset() override {
         phase = PomodoroPhase::Work;
         phaseStartTime = 0;
@@ -172,6 +180,12 @@ struct PomodoroState : public BehaviorState {
         isAggressive = false;
         accumulatedRotation = 0.0f;
         speedMultiplierApplied = false;
+        isSleeping = false;
+        bedPosition = {0, 0};
+        zzzAnimTime = 0;
+        zzzFrame = 0;
+        slowRotateDir = 1.0f;
+        slowRotateTimer = 0;
     }
 
     int GetPhaseDurationMinutes() const {
@@ -263,13 +277,64 @@ struct HonckerState : public BehaviorState {
     }
 };
 
-struct BanishState : public BehaviorState {
-    float fadeProgress = 0.0f;
-    Vector2 originalPos{0, 0};
+struct BoredomState : public BehaviorState {
+    double idleStartTime = 0;
+    bool isSighing = false;
+    double sighStartTime = 0;
+    bool isLyingDown = false;
+    double lieDownStartTime = 0;
 
     void Reset() override {
-        fadeProgress = 0.0f;
-        originalPos = {0, 0};
+        idleStartTime = 0;
+        isSighing = false;
+        sighStartTime = 0;
+        isLyingDown = false;
+        lieDownStartTime = 0;
+    }
+};
+
+struct PeekingState : public BehaviorState {
+    bool isPeeking = false;
+    double peekStartTime = 0;
+    int peekSide = 0;
+    double nextPeekTime = 0;
+
+    void Reset() override {
+        isPeeking = false;
+        peekStartTime = 0;
+        peekSide = 0;
+        nextPeekTime = 0;
+    }
+};
+
+struct InteractivePuddle {
+    Vector2 pos{0, 0};
+    Vector2 vel{0, 0};
+    float radius = 15.0f;
+    double spawnTime = 0;
+    bool splashed = false;
+    float maxRadius = 40.0f;
+    float alpha = 0.6f;
+};
+
+struct InteractiveFlower {
+    Vector2 pos{0, 0};
+    double spawnTime = 0;
+    float growth = 0.0f;
+    float stemHeight = 0.0f;
+    float petalSize = 0.0f;
+    float hue = 0.0f;
+};
+
+struct InteractiveDropsState : public BehaviorState {
+    std::vector<InteractivePuddle> puddles;
+    std::vector<InteractiveFlower> flowers;
+    double lastDropTime = 0;
+
+    void Reset() override {
+        puddles.clear();
+        flowers.clear();
+        lastDropTime = 0;
     }
 };
 

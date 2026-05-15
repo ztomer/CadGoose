@@ -43,12 +43,19 @@ if(MACOS)
         message(FATAL_ERROR "Cocoa framework not found")
     endif()
 
-    find_library(MIMALLOC_LIBRARY mimalloc)
-    find_path(MIMALLOC_INCLUDE_DIR mimalloc.h)
-    if(MIMALLOC_LIBRARY AND MIMALLOC_INCLUDE_DIR)
-        message(STATUS "mimalloc found: ${MIMALLOC_LIBRARY}")
-        # Runtime override: DYLD_FORCE_FLAT_NAMESPACE=1 DYLD_INSERT_LIBRARIES=/opt/homebrew/lib/libmimalloc.dylib
-        # Or link -lmimalloc (linked below as library, no override by default on macOS)
+    option(USE_MIMALLOC "Use mimalloc allocator" ON)
+    if(USE_MIMALLOC)
+        find_library(MIMALLOC_LIBRARY mimalloc)
+        find_path(MIMALLOC_INCLUDE_DIR mimalloc.h)
+        if(MIMALLOC_LIBRARY AND MIMALLOC_INCLUDE_DIR)
+            message(STATUS "mimalloc found: ${MIMALLOC_LIBRARY}")
+        else()
+            message(WARNING "mimalloc not found, falling back to system malloc")
+        endif()
+    else()
+        message(STATUS "mimalloc disabled via USE_MIMALLOC=OFF")
+        unset(MIMALLOC_LIBRARY)
+        unset(MIMALLOC_INCLUDE_DIR)
     endif()
 
     add_executable(CadGoose ${SOURCES})
@@ -225,13 +232,18 @@ if(APPLE OR LINUX)
         src/common/config.cpp
         src/common/config_helpers.h
         src/common/config_load.cpp
-        src/common/config_registry.cpp
+        src/common/config_registry_general.cpp
+        src/common/config_registry_behaviors.cpp
+        src/common/config_registry_render.cpp
         src/common/config_registry_ai.cpp
         src/common/config_save.cpp
         src/common/cursor_backend.cpp
         src/common/goose.cpp
         src/common/goose_forces.cpp
-        src/common/goose_behaviors.cpp
+        src/common/goose_behaviors_internal.cpp
+        src/common/goose_behaviors_wander.cpp
+        src/common/goose_behaviors_fetch.cpp
+        src/common/goose_behaviors_interact.cpp
         src/common/goose_drawing.mm
         src/common/items.cpp
         src/common/world.cpp
@@ -248,13 +260,14 @@ if(APPLE OR LINUX)
         src/common/behaviors/behavior_jail.cpp
         src/common/behaviors/behavior_portal.cpp
         src/common/behaviors/behavior_anger.cpp
-        src/common/behaviors/behavior_banish.cpp
         src/common/behaviors/behavior_nametag.cpp
         src/common/behaviors/behavior_presence.cpp
         src/common/behaviors/behavior_ai.mm
         src/common/behaviors/ai_http_client.mm
         src/common/behaviors/ai_text_meme.mm
-        src/common/behaviors/local_llm.mm
+        src/common/behaviors/local_llm_tokenizer.mm
+        src/common/behaviors/local_llm_model.mm
+        src/common/behaviors/local_llm_inference.mm
         src/common/hotkey.cpp
         src/common/mcp_server.cpp
         src/common/mcp_http_server.cpp
@@ -277,18 +290,20 @@ if(APPLE OR LINUX)
             tests/platform/macos/test_renderer.mm
             tests/platform/macos/test_gui_accessibility.mm
         )
-        target_link_libraries(CadGooseTests
-            GTest::GTest
-            GTest::Main
-            Threads::Threads
-            ${COCOA_LIBRARY}
-            ${AVFOUNDATION_LIBRARY}
-            ${COREGRAPHICS_LIBRARY}
-            ${COREAUDIO_LIBRARY}
-            ${APPLICATIONSERVICES_LIBRARY}
-            ${COREML_LIBRARY}
-            ${MIMALLOC_LIBRARY}
-        )
+    target_link_libraries(CadGooseTests
+        toml11
+        ${COCOA_LIBRARY}
+        ${AVFOUNDATION_LIBRARY}
+        ${COREGRAPHICS_LIBRARY}
+        ${COREAUDIO_LIBRARY}
+        ${APPLICATIONSERVICES_LIBRARY}
+        ${CURL_LIBRARY}
+        ${COREML_LIBRARY}
+        GTest::GTest
+        GTest::Main
+        Threads::Threads
+        ${MIMALLOC_LIBRARY}
+    )
     else()
         target_link_libraries(CadGooseTests
             GTest::GTest

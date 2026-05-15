@@ -19,7 +19,12 @@ void AppActions_SetApplication(void* app) {}
 Goose* AppActions_SpawnGoose(const std::string& requestedName) {
     std::string name = requestedName;
     if (name.empty()) {
-        name = "Goose " + std::to_string(g_nextId);
+        size_t idx = g_geese.size();
+        if (idx < g_config.gooseNames.size() && !g_config.gooseNames[idx].empty()) {
+            name = g_config.gooseNames[idx];
+        } else {
+            name = "Goose " + std::to_string(g_nextId);
+        }
     }
 
     g_geese.emplace_back(g_nextId++, name, g_screenWidth, g_screenHeight);
@@ -43,6 +48,12 @@ void AppActions_ClearGeese() {
     }
     g_droppedItems.clear();
     g_footprints.clear();
+
+    g_config.gooseNames.clear();
+    for (const auto& g : g_geese) {
+        g_config.gooseNames.push(g.name);
+    }
+
     g_geese.clear();
     g_cursorGrabberId = -1;
     g_selectedGooseId = 0;

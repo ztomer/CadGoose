@@ -19,7 +19,6 @@ static const std::vector<std::pair<const char*, bool*>> kGUIVisibleToggleKeys = 
     {"behaviors.control.jail",         &g_config.behaviors.control.jail},
     {"behaviors.control.portals",      &g_config.behaviors.control.portals},
     {"behaviors.control.drag",         &g_config.behaviors.control.drag},
-    {"behaviors.control.banish",       &g_config.behaviors.control.banish},
     {"behaviors.info.nametag",         &g_config.behaviors.info.nametag},
     {"behaviors.systems.health",       &g_config.behaviors.systems.health},
     {"behaviors.systems.pomodoro",     &g_config.behaviors.systems.pomodoro},
@@ -38,7 +37,6 @@ static const std::vector<std::pair<const char*, bool*>> kAllToggleKeys = {
     {"behaviors.control.jail",         &g_config.behaviors.control.jail},
     {"behaviors.control.portals",      &g_config.behaviors.control.portals},
     {"behaviors.control.drag",         &g_config.behaviors.control.drag},
-    {"behaviors.control.banish",       &g_config.behaviors.control.banish},
     {"behaviors.info.nametag",         &g_config.behaviors.info.nametag},
     {"behaviors.info.presence",        &g_config.behaviors.info.presence},
     {"behaviors.info.configGUI",       &g_config.behaviors.info.configGUI},
@@ -85,10 +83,10 @@ TEST(GUIConfigTest, AllGUIVisibleKeysAreUnique) {
 }
 
 TEST(GUIConfigTest, ToggleCount) {
-    EXPECT_EQ(kGUIVisibleToggleKeys.size(), 15)
-        << "Should be exactly 15 GUI-visible toggle keys";
-    EXPECT_EQ(kAllToggleKeys.size(), 18)
-        << "Should be exactly 18 total toggle keys (15 visible + 3 hidden: presence, configGUI, ai)";
+    EXPECT_EQ(kGUIVisibleToggleKeys.size(), 14)
+        << "Should be exactly 14 GUI-visible toggle keys";
+    EXPECT_EQ(kAllToggleKeys.size(), 17)
+        << "Should be exactly 17 total toggle keys (14 visible + 3 hidden: presence, configGUI, ai)";
 }
 
 TEST(GUIConfigTest, ReadWriteRoundTrip) {
@@ -118,7 +116,6 @@ TEST(GUIConfigTest, DefaultValues) {
     EXPECT_FALSE(g_config.behaviors.control.jail);
     EXPECT_FALSE(g_config.behaviors.control.portals);
     EXPECT_FALSE(g_config.behaviors.control.drag);
-    EXPECT_FALSE(g_config.behaviors.control.banish);
     EXPECT_FALSE(g_config.behaviors.info.nametag);
     EXPECT_FALSE(g_config.behaviors.info.presence);
     EXPECT_FALSE(g_config.behaviors.info.configGUI);

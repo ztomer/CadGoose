@@ -47,23 +47,23 @@ static bool SeenHash(size_t hash) {
 #pragma mark - Prompt Builder
 
 static std::string GetActiveBehaviorsStr() {
+    static const char* kBehaviorKeys[] = {
+        "behaviors.fun.ball", "behaviors.fun.breadCrumbs", "behaviors.fun.hats",
+        "behaviors.fun.rainbow", "behaviors.fun.acid", "behaviors.fun.anger",
+        "behaviors.fun.autumnLeaves", "behaviors.control.honcker", "behaviors.control.jail",
+        "behaviors.control.portals", "behaviors.control.drag", "behaviors.info.nametag",
+        "behaviors.systems.health", "behaviors.systems.pomodoro",
+    };
     std::vector<std::string> active;
-    if (g_config.behaviors.fun.ball) active.push_back("Ball");
-    if (g_config.behaviors.fun.breadCrumbs) active.push_back("Breadcrumbs");
-    if (g_config.behaviors.fun.hats) active.push_back("Hats");
-    if (g_config.behaviors.fun.rainbow) active.push_back("Rainbow");
-    if (g_config.behaviors.fun.acid) active.push_back("Acid");
-    if (g_config.behaviors.fun.anger) active.push_back("Anger");
-    if (g_config.behaviors.fun.autumnLeaves) active.push_back("Autumn Leaves");
-    if (g_config.behaviors.control.honcker) active.push_back("Honcker");
-    if (g_config.behaviors.control.jail) active.push_back("Jail");
-    if (g_config.behaviors.control.portals) active.push_back("Portals");
-    if (g_config.behaviors.control.drag) active.push_back("Drag");
-    if (g_config.behaviors.control.banish) active.push_back("Banish");
-    if (g_config.behaviors.info.nametag) active.push_back("Nametag");
-    if (g_config.behaviors.systems.health) active.push_back("Health");
-    if (g_config.behaviors.systems.pomodoro) active.push_back("Pomodoro");
-
+    for (const char* key : kBehaviorKeys) {
+        const ConfigOption* opt = Config_FindOptionByKey(key);
+        if (opt && opt->type == CFG_BOOL && *(bool*)opt->ptr) {
+            // Extract short name from key (last component after '.')
+            std::string s(key);
+            size_t dot = s.rfind('.');
+            active.push_back(dot != std::string::npos ? s.substr(dot + 1) : s);
+        }
+    }
     if (active.empty()) return "none";
     std::string result;
     for (size_t i = 0; i < active.size(); i++) {
@@ -84,19 +84,7 @@ static std::string GetColorModeStr() {
 }
 
 static std::string GetEvilPersonality(float level) {
-    int state = MIN((int)round(level * 9), 8);
-    switch (state) {
-        case 0: return "an adorable fluffy gosling";
-        case 1: return "a friendly goose";
-        case 2: return "a mischievous prankster goose";
-        case 3: return "a sarcastic goose with attitude";
-        case 4: return "a chaotic neutral goose";
-        case 5: return "a grumpy goose having a bad day";
-        case 6: return "a villainous goose scheming against humanity";
-        case 7: return "an evil overlord goose bent on world domination";
-        case 8: return "an absurdly eloquent goose dictator who has conquered Poland";
-        default: return "a goose";
-    }
+    return Config_EvilPersonality(level);
 }
 
 static std::string BuildPrompt() {
@@ -118,6 +106,9 @@ static std::string BuildPrompt() {
 
 #pragma mark - HTTP Request
 
+// Forward declaration
+static void TryLocalGeneration(const std::string& prompt, float temperature);
+
 static void SendGenerateRequest(const std::string& prompt, float temperature) {
     s_nextGenTime = [[NSDate date] timeIntervalSince1970] + 2.0;
     NSString* nsPrompt = [NSString stringWithUTF8String:prompt.c_str()];
@@ -126,14 +117,27 @@ static void SendGenerateRequest(const std::string& prompt, float temperature) {
     NSString* model = @"";
     switch (g_config.ai.providerType) {
         case 0:
+            // Foundation: use local CoreML LLM if available, otherwise fall back to file texts
+            LocalLLM_Init();
+            if (LocalLLM_GetState() == LocalLLMState::Ready) {
+                fprintf(stderr, "[AITEXT] Foundation provider: routing to local CoreML LLM\n");
+                TryLocalGeneration(prompt, temperature);
+            } else {
+                fprintf(stderr, "[AITEXT] Foundation provider: no local model available, using file texts\n");
+                // Don't set s_nextGenTime here - let file queue handle it
+                // File texts are always available via Dequeue fallback
+                s_nextGenTime = [[NSDate date] timeIntervalSince1970] + 5.0; // Gentle cooldown
+            }
+            return;
+        case 1:
             endpoint = [NSString stringWithFormat:@"http://localhost:%d/v1/chat/completions", g_config.ai.osaurusPort];
             model = [NSString stringWithUTF8String:g_config.ai.osaurusModel.c_str()];
             break;
-        case 1:
+        case 2:
             endpoint = [NSString stringWithFormat:@"http://localhost:%d/v1/chat/completions", g_config.ai.ollamaPort];
             model = [NSString stringWithUTF8String:g_config.ai.ollamaModel.c_str()];
             break;
-        case 2:
+        case 3:
             endpoint = [NSString stringWithUTF8String:g_config.ai.customEndpoint.c_str()];
             model = [NSString stringWithUTF8String:g_config.ai.customModel.c_str()];
             break;
@@ -260,8 +264,9 @@ static void TryLocalGeneration(const std::string& prompt, float temperature) {
     LocalLLM_Generate(prompt, temperature, ^(const std::string& result) {
         dispatch_async(dispatch_get_main_queue(), ^{
             if (result.empty()) {
-                fprintf(stderr, "[AITEXT] Local LLM returned empty\n");
-                s_nextGenTime = [[NSDate date] timeIntervalSince1970] + 10.0;
+                fprintf(stderr, "[AITEXT] Local LLM returned empty, falling back to file texts\n");
+                // Fall back to file texts - they're always available via Dequeue
+                s_nextGenTime = [[NSDate date] timeIntervalSince1970] + 5.0;
                 return;
             }
 
@@ -283,48 +288,30 @@ static void TryLocalGeneration(const std::string& prompt, float temperature) {
 
 #pragma mark - File Text Loading
 
+static void LoadTextsFromDirectory(const std::filesystem::path& dir, std::queue<std::string>& queue) {
+    std::error_code ec;
+    if (!std::filesystem::exists(dir, ec)) return;
+    for (const auto& entry : std::filesystem::directory_iterator(dir, ec)) {
+        if (!entry.is_regular_file()) continue;
+        std::string ext = entry.path().extension().string();
+        std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
+        if (ext != ".txt") continue;
+        std::ifstream file(entry.path());
+        if (!file) continue;
+        std::stringstream buf;
+        buf << file.rdbuf();
+        std::string text = buf.str();
+        while (!text.empty() && (text.back() == '\n' || text.back() == '\r')) text.pop_back();
+        if (!text.empty()) queue.push(text);
+    }
+}
+
 void AI_TextMeme_LoadFileTexts() {
     std::lock_guard<std::mutex> lock(s_mutex);
     while (!s_fileQueue.empty()) s_fileQueue.pop();
 
-    // Load from ConfigDir/TextMemes/ (auto-saved AI texts become file texts)
-    std::filesystem::path textsDir = ConfigDirPath() / "TextMemes";
-    if (std::filesystem::exists(textsDir)) {
-        for (const auto& entry : std::filesystem::directory_iterator(textsDir)) {
-            if (!entry.is_regular_file()) continue;
-            std::string ext = entry.path().extension().string();
-            std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
-            if (ext == ".txt") {
-                std::ifstream file(entry.path());
-                if (file) {
-                    std::stringstream buf;
-                    buf << file.rdbuf();
-                    std::string text = buf.str();
-                    while (!text.empty() && (text.back() == '\n' || text.back() == '\r')) text.pop_back();
-                    if (!text.empty()) s_fileQueue.push(text);
-                }
-            }
-        }
-    }
-
-    // Load from ASSET_ROOT/Assets/Text/NotepadMessages/
-    if (std::filesystem::exists(ASSET_ROOT / "Assets" / "Text" / "NotepadMessages")) {
-        for (const auto& entry : std::filesystem::directory_iterator(ASSET_ROOT / "Assets" / "Text" / "NotepadMessages")) {
-            if (!entry.is_regular_file()) continue;
-            std::string ext = entry.path().extension().string();
-            std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
-            if (ext == ".txt") {
-                std::ifstream file(entry.path());
-                if (file) {
-                    std::stringstream buf;
-                    buf << file.rdbuf();
-                    std::string text = buf.str();
-                    while (!text.empty() && (text.back() == '\n' || text.back() == '\r')) text.pop_back();
-                    if (!text.empty()) s_fileQueue.push(text);
-                }
-            }
-        }
-    }
+    LoadTextsFromDirectory(ConfigDirPath() / "TextMemes", s_fileQueue);
+    LoadTextsFromDirectory(ASSET_ROOT / "Assets" / "Text" / "NotepadMessages", s_fileQueue);
 
     fprintf(stderr, "[AITEXT] Loaded %zu file texts\n", s_fileQueue.size());
 }

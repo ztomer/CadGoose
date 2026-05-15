@@ -4,77 +4,72 @@
 #include "config.h"
 #include "world.h"
 
+// --- Layout constants ---
+static constexpr float kWindowHeight = 520.0f;
+static constexpr float kAppbarHeight = 44.0f;
+static constexpr float kTableHeight = kWindowHeight - kAppbarHeight;
+static constexpr float kRowHeight = 52.0f;
+static constexpr float kHeaderRowHeight = 28.0f;
+static constexpr float kRowPaddingX = 16.0f;
+static constexpr float kRowIconX = kRowPaddingX;
+static constexpr float kRowIconWidth = 24.0f;
+static constexpr float kRowIconGap = 8.0f;
+static constexpr float kRowToggleX = kRowIconX + kRowIconWidth + kRowIconGap;
+static constexpr float kRowToggleWidth = 36.0f;
+static constexpr float kRowNameX = kRowToggleX + kRowToggleWidth + kRowIconGap;
+static constexpr float kRowDescGap = 12.0f;
+static constexpr float kRowDescPaddingX = 16.0f;
+static constexpr float kDetailLeftPad = 16.0f;
+static constexpr float kDetailLabelGap = 8.0f;
+static constexpr float kDetailSliderMinWidth = 160.0f;
+static constexpr float kDetailValuePad = 16.0f;
+static constexpr float kDetailRightPad = 16.0f;
+static constexpr float kSeparatorWidth = 1.0f;
+static constexpr float kTabBarWidth = 260.0f;
+static constexpr float kTabBarY = 10.0f;
+static constexpr float kTabBarHeight = 24.0f;
+static constexpr float kNameFontSize = 14.0f;
+static constexpr float kDescFontSize = 11.0f;
+static constexpr float kDetailLabelFontSize = 12.0f;
+static constexpr float kDetailValueFontSize = 11.0f;
+
 bool s_getBoolForKey(const std::string& key) {
-    if (key == "behaviors.fun.ball") return g_config.behaviors.fun.ball;
-    if (key == "behaviors.fun.breadCrumbs") return g_config.behaviors.fun.breadCrumbs;
-    if (key == "behaviors.fun.hats") return g_config.behaviors.fun.hats;
-    if (key == "behaviors.fun.rainbow") return g_config.behaviors.fun.rainbow;
-    if (key == "behaviors.fun.acid") return g_config.behaviors.fun.acid;
-    if (key == "behaviors.fun.anger") return g_config.behaviors.fun.anger;
-    if (key == "behaviors.fun.autumnLeaves") return g_config.behaviors.fun.autumnLeaves;
-    if (key == "behaviors.control.honcker") return g_config.behaviors.control.honcker;
-    if (key == "behaviors.control.jail") return g_config.behaviors.control.jail;
-    if (key == "behaviors.control.portals") return g_config.behaviors.control.portals;
-    if (key == "behaviors.control.drag") return g_config.behaviors.control.drag;
-    if (key == "behaviors.control.banish") return g_config.behaviors.control.banish;
-    if (key == "behaviors.info.nametag") return g_config.behaviors.info.nametag;
-    if (key == "behaviors.info.presence") return g_config.behaviors.info.presence;
-    if (key == "behaviors.info.configGUI") return g_config.behaviors.info.configGUI;
-    if (key == "behaviors.systems.health") return g_config.behaviors.systems.health;
-    if (key == "behaviors.systems.ai") return g_config.behaviors.systems.ai;
-    if (key == "behaviors.systems.pomodoro") return g_config.behaviors.systems.pomodoro;
+    const ConfigOption* opt = Config_FindOptionByKey(key);
+    if (opt && opt->type == CFG_BOOL) return *(bool*)opt->ptr;
     return false;
 }
 
 void s_setFloatValue(const std::string& key, float value) {
-    if (key == "behaviors.fun.ball.size") g_config.behaviors.ball.size = value;
-    else if (key == "behaviors.fun.breadCrumbs.max") g_config.behaviors.breadCrumbs.maxCrumbs = (int)value;
-    else if (key == "behaviors.fun.hats.size") g_config.behaviors.hats.sizeX = value;
-    else if (key == "behaviors.fun.rainbow.speed") g_config.behaviors.rainbow.hueSpeed = value;
-    else if (key == "behaviors.fun.acid.speed") g_config.behaviors.acid.spinSpeed = value;
-    else if (key == "behaviors.fun.anger.max") g_config.behaviors.anger.maxAnger = value;
-    else if (key == "behaviors.control.honcker.cooldown") g_config.behaviors.honcker.cooldown = value;
-    else if (key == "behaviors.control.jail.size") g_config.behaviors.jail.size = value;
-    else if (key == "behaviors.control.portals.width") g_config.portal.width = value;
-    else if (key == "behaviors.control.drag.radius") g_config.behaviors.drag.radius = value;
-    else if (key == "behaviors.control.banish.duration") g_config.behaviors.banish.duration = value;
-    else if (key == "behaviors.info.nametag.size") g_config.behaviors.nametag.size = value;
-    else if (key == "behaviors.info.presence.interval") g_config.behaviors.presence.interval = value;
-    else if (key == "behaviors.systems.health.opacity") g_config.behaviors.health.opacity = value;
-    else if (key == "behaviors.systems.pomodoro.workDuration") g_config.behaviors.pomodoro.workMinutes = (int)value;
-    else if (key == "behaviors.systems.pomodoro.breakDuration") g_config.behaviors.pomodoro.breakMinutes = (int)value;
+    const ConfigOption* opt = Config_FindOptionByKey(key);
+    if (!opt) return;
+    if (opt->type == CFG_FLOAT) {
+        *(float*)opt->ptr = value;
+    } else if (opt->type == CFG_INT) {
+        *(int*)opt->ptr = (int)value;
+    }
     OnConfigChange();
 }
 
 NSMutableArray* g_configItemsForAccess = nil;
 
 void s_setBoolValue(const std::string& key, bool value) {
-    if (key == "behaviors.fun.ball") g_config.behaviors.fun.ball = value;
-    else if (key == "behaviors.fun.breadCrumbs") g_config.behaviors.fun.breadCrumbs = value;
-    else if (key == "behaviors.fun.hats") g_config.behaviors.fun.hats = value;
-    else if (key == "behaviors.fun.rainbow") g_config.behaviors.fun.rainbow = value;
-    else if (key == "behaviors.fun.acid") g_config.behaviors.fun.acid = value;
-    else if (key == "behaviors.fun.anger") g_config.behaviors.fun.anger = value;
-    else if (key == "behaviors.fun.autumnLeaves") g_config.behaviors.fun.autumnLeaves = value;
-    else if (key == "behaviors.control.honcker") g_config.behaviors.control.honcker = value;
-    else if (key == "behaviors.control.jail") g_config.behaviors.control.jail = value;
-    else if (key == "behaviors.control.portals") g_config.behaviors.control.portals = value;
-    else if (key == "behaviors.control.drag") g_config.behaviors.control.drag = value;
-    else if (key == "behaviors.control.banish") g_config.behaviors.control.banish = value;
-    else if (key == "behaviors.info.nametag") g_config.behaviors.info.nametag = value;
-    else if (key == "behaviors.info.presence") g_config.behaviors.info.presence = value;
-    else if (key == "behaviors.info.configGUI") g_config.behaviors.info.configGUI = value;
-    else if (key == "behaviors.systems.health") g_config.behaviors.systems.health = value;
-    else if (key == "behaviors.systems.ai") g_config.behaviors.systems.ai = value;
-    else if (key == "behaviors.systems.pomodoro") g_config.behaviors.systems.pomodoro = value;
-    OnConfigChange();
+    const ConfigOption* opt = Config_FindOptionByKey(key);
+    if (opt && opt->type == CFG_BOOL) {
+        *(bool*)opt->ptr = value;
+        OnConfigChange();
+    }
 }
 
-// Thin separator view drawn via drawRect (layer-backing triggers AGXMetalG16X blit shader compilation crash on Mac16,6 macOS 26.5)
+// Separator view - using backgroundColor instead of custom drawRect to avoid Metal shader compilation issues
+// The AppBarBorderView class is kept for compatibility but now uses layer-backed approach
 @implementation AppBarBorderView
-- (void)drawRect:(NSRect)dirtyRect {
-    [[NSColor separatorColor] setFill];
-    NSRectFill(dirtyRect);
+- (instancetype)initWithFrame:(NSRect)frame {
+    self = [super initWithFrame:frame];
+    if (self) {
+        self.wantsLayer = YES;
+        self.layer.backgroundColor = [[NSColor separatorColor] CGColor];
+    }
+    return self;
 }
 @end
 
@@ -90,34 +85,39 @@ void s_setBoolValue(const std::string& key, bool value) {
         g_configItemsForAccess = [NSMutableArray array];
         self.configItems = g_configItemsForAccess;
 
-        // Compute list width from content: toggle+icon+name(max)+gap+desc(max)+padding
-        NSFont* nameFont = [NSFont fontWithName:@"Maple Mono" size:14] ?: [NSFont systemFontOfSize:14 weight:NSFontWeightSemibold];
-        NSFont* descFont = [NSFont fontWithName:@"Maple Mono" size:11] ?: [NSFont systemFontOfSize:11];
-        CGFloat maxNW = [@"Autumn Leaves" sizeWithAttributes:@{NSFontAttributeName: nameFont}].width + 4;
-        CGFloat maxDW = [@"Create portals with P+1/2, teleport with P+0" sizeWithAttributes:@{NSFontAttributeName: descFont}].width + 18;
-        self.descLabelX = 64 + maxNW + 2;
-        self.listWidth = self.descLabelX + maxDW + 12;
+        // Compute list width from content: icon+toggle+name(max)+gap+desc(max)+padding
+        NSFont* nameFont = [NSFont fontWithName:@"Maple Mono" size:kNameFontSize] ?: [NSFont systemFontOfSize:kNameFontSize weight:NSFontWeightSemibold];
+        NSFont* descFont = [NSFont fontWithName:@"Maple Mono" size:kDescFontSize] ?: [NSFont systemFontOfSize:kDescFontSize];
+        CGFloat maxNW = [@"Interactive Drops" sizeWithAttributes:@{NSFontAttributeName: nameFont}].width + 4;
+        // Measure longest description to ensure no truncation
+        CGFloat maxDW = [@"Create portals with P+1/2, teleport with P+0. Based on PortalGoos by Moonaliss1" sizeWithAttributes:@{NSFontAttributeName: descFont}].width + kRowDescPaddingX;
+        self.descLabelX = kRowNameX + maxNW + kRowDescGap;
+        self.listWidth = self.descLabelX + maxDW + kRowDescPaddingX;
         fprintf(stderr, "[config] listWidth=%.0f descLabelX=%.0f maxNW=%.0f maxDW=%.0f\n",
                 self.listWidth, self.descLabelX, maxNW, maxDW);
 
         // Compute detail width from content: instruction text + slider controls
-        NSDictionary* font12 = @{NSFontAttributeName: [NSFont systemFontOfSize:12]};
+        NSDictionary* font12 = @{NSFontAttributeName: [NSFont systemFontOfSize:kDetailLabelFontSize]};
         CGFloat labelW = 120; // max label width for slider names
-        CGFloat valW = [@"100.00" sizeWithAttributes:@{NSFontAttributeName: [NSFont systemFontOfSize:11]}].width + 12;
-        CGFloat sliderMin = 150;
-        CGFloat detailWidth = 12 + labelW + 6 + sliderMin + 6 + valW + 12;
-        CGFloat windowWidth = self.listWidth + 1 + detailWidth;
+        CGFloat valW = [@"100.00" sizeWithAttributes:@{NSFontAttributeName: [NSFont systemFontOfSize:kDetailValueFontSize]}].width + kDetailValuePad;
+        CGFloat detailWidth = kDetailLeftPad + labelW + kDetailLabelGap + kDetailSliderMinWidth + kDetailLabelGap + valW + kDetailRightPad;
+        CGFloat windowWidth = self.listWidth + kSeparatorWidth + detailWidth;
 
-        self.window = [[NSWindow alloc] initWithContentRect:NSMakeRect(0, 0, windowWidth, WINDOW_HEIGHT)
-                                                 styleMask:NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskFullSizeContentView
-                                                   backing:NSBackingStoreBuffered
-                                                     defer:NO];
+        self.window = [[NSWindow alloc] initWithContentRect:NSMakeRect(0, 0, windowWidth, kWindowHeight)
+                                                  styleMask:NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskFullSizeContentView
+                                                    backing:NSBackingStoreBuffered
+                                                      defer:NO];
         self.window.titleVisibility = NSWindowTitleHidden;
         self.window.titlebarAppearsTransparent = YES;
         self.window.backgroundColor = [NSColor clearColor];
         self.window.opaque = NO;
         self.window.title = @"Preferences";
         self.window.appearance = [NSAppearance appearanceNamed:NSAppearanceNameDarkAqua];
+
+        // Hide zoom and miniaturize buttons (keep only close)
+        [[self.window standardWindowButton:NSWindowMiniaturizeButton] setHidden:YES];
+        [[self.window standardWindowButton:NSWindowZoomButton] setHidden:YES];
+
         [self.window center];
 
         NSView* contentView = self.window.contentView;
@@ -131,9 +131,9 @@ void s_setBoolValue(const std::string& key, bool value) {
         [contentView addSubview:visualEffectView];
 
         // Appbar with tab control
-        NSView* appBar = [[NSView alloc] initWithFrame:NSMakeRect(0, WINDOW_HEIGHT - APPBAR_HEIGHT, windowWidth, APPBAR_HEIGHT)];
+        NSView* appBar = [[NSView alloc] initWithFrame:NSMakeRect(0, kWindowHeight - kAppbarHeight, windowWidth, kAppbarHeight)];
 
-        _tabControl = [[NSSegmentedControl alloc] initWithFrame:NSMakeRect((windowWidth - 260) / 2, 7, 260, 24)];
+        _tabControl = [[NSSegmentedControl alloc] initWithFrame:NSMakeRect((windowWidth - kTabBarWidth) / 2, kTabBarY, kTabBarWidth, kTabBarHeight)];
         _tabControl.segmentCount = 3;
         [_tabControl setLabel:@"Behaviors" forSegment:0];
         [_tabControl setLabel:@"Appearance" forSegment:1];
@@ -147,29 +147,29 @@ void s_setBoolValue(const std::string& key, bool value) {
         [contentView addSubview:appBar];
 
         // Appbar bottom border drawn via drawRect (layer-backed triggers AGX Metal crash)
-        NSView* appBarBorder = [[AppBarBorderView alloc] initWithFrame:NSMakeRect(0, WINDOW_HEIGHT - APPBAR_HEIGHT, windowWidth, 1)];
+        NSView* appBarBorder = [[AppBarBorderView alloc] initWithFrame:NSMakeRect(0, kWindowHeight - kAppbarHeight, windowWidth, kSeparatorWidth)];
         [contentView addSubview:appBarBorder];
 
         // Content container (below appbar)
-        _contentContainer = [[NSView alloc] initWithFrame:NSMakeRect(0, 0, windowWidth, TABLE_HEIGHT)];
+        _contentContainer = [[NSView alloc] initWithFrame:NSMakeRect(0, 0, windowWidth, kTableHeight)];
         _contentContainer.appearance = [NSAppearance appearanceNamed:NSAppearanceNameDarkAqua];
         [contentView addSubview:_contentContainer];
 
         // --- Behaviors tab: list + detail split ---
         _behaviorsContainer = [[NSView alloc] initWithFrame:_contentContainer.bounds];
 
-        _detailView = [[BehaviorDetailView alloc] initWithFrame:NSMakeRect(self.listWidth + 1, 0, detailWidth, TABLE_HEIGHT)];
+        _detailView = [[BehaviorDetailView alloc] initWithFrame:NSMakeRect(self.listWidth + kSeparatorWidth, 0, detailWidth, kTableHeight)];
         [_behaviorsContainer addSubview:_detailView];
 
-        NSView* separator = [[AppBarBorderView alloc] initWithFrame:NSMakeRect(self.listWidth, 0, 1, TABLE_HEIGHT)];
+        NSView* separator = [[AppBarBorderView alloc] initWithFrame:NSMakeRect(self.listWidth, 0, kSeparatorWidth, kTableHeight)];
         [_behaviorsContainer addSubview:separator];
 
-        NSScrollView* scrollView = [[NSScrollView alloc] initWithFrame:NSMakeRect(0, 0, self.listWidth, TABLE_HEIGHT)];
+        NSScrollView* scrollView = [[NSScrollView alloc] initWithFrame:NSMakeRect(0, 0, self.listWidth, kTableHeight)];
         scrollView.hasVerticalScroller = NO;
         scrollView.borderType = NSNoBorder;
         scrollView.drawsBackground = NO;
 
-        NSTableView* tableView = [[NSTableView alloc] initWithFrame:NSMakeRect(0, 0, self.listWidth, TABLE_HEIGHT)];
+        NSTableView* tableView = [[NSTableView alloc] initWithFrame:NSMakeRect(0, 0, self.listWidth, kTableHeight)];
         tableView.headerView = nil;
         tableView.delegate = self;
         tableView.dataSource = self;
@@ -221,6 +221,15 @@ void s_setBoolValue(const std::string& key, bool value) {
     [self addRow:@"Acid" key:@"behaviors.fun.acid" desc:@"Geese spin and honk rapidly"];
     [self addRow:@"Anger" key:@"behaviors.fun.anger" desc:@"Geese get angry and punch things"];
     [self addRow:@"Autumn Leaves" key:@"behaviors.fun.autumnLeaves" desc:@"Piles of leaves accumulate on screen"];
+    
+    [self.configItems addObject:@{@"name": @"JOY", @"type": @"header"}];
+    [self addRow:@"Avoidance" key:@"behaviors.fun.avoidance" desc:@"Goose dodges fast-moving cursor"];
+    [self addRow:@"Boredom Sigh" key:@"behaviors.fun.boredom" desc:@"Goose sighs dramatically after 10+ minutes idle"];
+    [self addRow:@"Window Peeking" key:@"behaviors.fun.peeking" desc:@"Goose peeks head around monitor bezel at screen edges"];
+    [self addRow:@"Custom Affirmations" key:@"behaviors.fun.affirmations" desc:@"Goose drops configurable positive messages"];
+    [self addRow:@"Interactive Drops" key:@"behaviors.fun.interactiveDrops" desc:@"Goose drops puddles that splash or flowers that grow"];
+    [self addRow:@"Sonic Mode" key:@"behaviors.fun.sonicMode" desc:@"Goose moves at supersonic speed"];
+    [self addRow:@"Toys" key:@"behaviors.fun.toysEnabled" desc:@"Scatter interactive toys for the goose"];
 
     [self.configItems addObject:@{@"name": @"CONTROL", @"type": @"header"}];
     {
@@ -239,10 +248,6 @@ void s_setBoolValue(const std::string& key, bool value) {
         [self addRow:@"Portals" key:@"behaviors.control.portals" desc:[NSString stringWithFormat:@"Press %@/%@ to place portals, %@ to toggle. Based on PortalGoos by Moonaliss1", k1, k2, k0]];
     }
     [self addRow:@"Drag" key:@"behaviors.control.drag" desc:@"Click and drag geese around"];
-    {
-        NSString* bk = @(g_config.behaviors.banish.hotkey.c_str());
-        [self addRow:@"Banish" key:@"behaviors.control.banish" desc:[NSString stringWithFormat:@"Press %@ (or Ctrl+Alt+MiddleClick) to banish goose to the shadow realm", bk]];
-    }
 
     [self.configItems addObject:@{@"name": @"INFO", @"type": @"header"}];
     [self addRow:@"Nametag" key:@"behaviors.info.nametag" desc:@"Show goose name above head"];
@@ -309,8 +314,8 @@ void s_setBoolValue(const std::string& key, bool value) {
 
 - (CGFloat)tableView:(NSTableView*)tableView heightOfRow:(NSInteger)row {
     NSDictionary* item = self.configItems[row];
-    if ([item[@"type"] isEqualToString:@"header"]) return 28;
-    return 44;
+    if ([item[@"type"] isEqualToString:@"header"]) return kHeaderRowHeight;
+    return kRowHeight;
 }
 
 - (NSInteger)numberOfRowsInTableView:(NSTableView*)tableView {
@@ -329,10 +334,10 @@ void s_setBoolValue(const std::string& key, bool value) {
             label.backgroundColor = [NSColor clearColor];
             label.bordered = NO;
             label.editable = NO;
-            label.font = [NSFont fontWithName:@"Maple Mono" size:14] ?: [NSFont systemFontOfSize:14 weight:NSFontWeightSemibold];
+            label.font = [NSFont fontWithName:@"Maple Mono" size:kNameFontSize] ?: [NSFont systemFontOfSize:kNameFontSize weight:NSFontWeightSemibold];
             label.textColor = [NSColor colorWithRed:0.9 green:0.1 blue:0.1 alpha:1.0];
         }
-        label.frame = NSMakeRect(12, 2, self.listWidth, 24);
+        label.frame = NSMakeRect(kRowPaddingX, 2, self.listWidth - kRowPaddingX * 2, kHeaderRowHeight - 4);
         label.stringValue = item[@"name"];
         return label;
     }
@@ -340,7 +345,7 @@ void s_setBoolValue(const std::string& key, bool value) {
     if ([type isEqualToString:@"behavior"]) {
         BehaviorRowView* rowView = [tableView makeViewWithIdentifier:@"behaviorRow" owner:self];
         if (!rowView) {
-            rowView = [[BehaviorRowView alloc] initWithFrame:NSMakeRect(0, 0, self.listWidth, 44)];
+            rowView = [[BehaviorRowView alloc] initWithFrame:NSMakeRect(0, 0, self.listWidth, kRowHeight)];
             rowView.identifier = @"behaviorRow";
         }
 
@@ -350,8 +355,9 @@ void s_setBoolValue(const std::string& key, bool value) {
         rowView.nameLabel.stringValue = nameText;
         rowView.descLabel.stringValue = descText;
         NSFont* df = rowView.descLabel.font;
-        CGFloat dw = MIN([descText sizeWithAttributes:@{NSFontAttributeName: df}].width + 18, self.listWidth - self.descLabelX - 10);
-        rowView.descLabel.frame = NSMakeRect(self.descLabelX, 8, dw, 14);
+        CGFloat descAvailableWidth = self.listWidth - self.descLabelX - kRowDescPaddingX;
+        CGFloat dw = MIN([descText sizeWithAttributes:@{NSFontAttributeName: df}].width + kRowDescPaddingX, descAvailableWidth);
+        rowView.descLabel.frame = NSMakeRect(self.descLabelX, (kRowHeight - kDescFontSize) / 2 - 2, dw, kDescFontSize + 2);
         rowView.iconLabel.stringValue = [BehaviorRowView iconForConfigKey:item[@"key"]];
         rowView.target = self;
         rowView.detailAction = @selector(showDetailForBehavior:);

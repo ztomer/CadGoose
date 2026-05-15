@@ -55,25 +55,6 @@ TEST(GooseBehaviors, PortalTeleportZerosVel) {
     EXPECT_FLOAT_EQ(g.vel.y, 0.0f);
 }
 
-TEST(GooseBehaviors, BanishRespawnZerosVel) {
-    Goose g(73, "Banish", 1920, 1080);
-    g.pos = {100, 100};
-    g.vel = {200, -100};
-
-    float screenW = 1920.0f;
-    float screenH = 1080.0f;
-    g.pos.x = 100.0f + (float)(rand() % (int)(screenW - 200.0f));
-    g.pos.y = 100.0f + (float)(rand() % (int)(screenH - 200.0f));
-    g.vel = {0, 0};
-
-    EXPECT_GE(g.pos.x, 100.0f) << "Banish respawn x >= 100";
-    EXPECT_GE(g.pos.y, 100.0f) << "Banish respawn y >= 100";
-    EXPECT_LE(g.pos.x, screenW - 100.0f) << "Banish respawn x <= screenW - 100";
-    EXPECT_LE(g.pos.y, screenH - 100.0f) << "Banish respawn y <= screenH - 100";
-    EXPECT_FLOAT_EQ(g.vel.x, 0.0f);
-    EXPECT_FLOAT_EQ(g.vel.y, 0.0f);
-}
-
 TEST(GooseBehaviors, BallTargetInDeviceSpace) {
     Goose g(74, "BallCoord", 1920, 1080);
     float globalScale = 1.0f;
@@ -231,7 +212,6 @@ TEST(ConfigValidation, SliderKeysMatchConfigKeys) {
         {"behaviors.control.jail.size", &g_config.behaviors.jail.size},
         {"behaviors.control.portals.width", &g_config.portal.width},
         {"behaviors.control.drag.radius", &g_config.behaviors.drag.radius},
-        {"behaviors.control.banish.duration", &g_config.behaviors.banish.duration},
         {"behaviors.info.nametag.size", &g_config.behaviors.nametag.size},
         {"behaviors.info.presence.interval", &g_config.behaviors.presence.interval},
         {"behaviors.systems.health.opacity", &g_config.behaviors.health.opacity},
@@ -253,7 +233,6 @@ TEST(ConfigValidation, SliderKeysMatchConfigKeys) {
         {"behaviors.control.jail", &g_config.behaviors.control.jail},
         {"behaviors.control.portals", &g_config.behaviors.control.portals},
         {"behaviors.control.drag", &g_config.behaviors.control.drag},
-        {"behaviors.control.banish", &g_config.behaviors.control.banish},
         {"behaviors.info.nametag", &g_config.behaviors.info.nametag},
         {"behaviors.systems.health", &g_config.behaviors.systems.health},
         {"behaviors.systems.ai", &g_config.behaviors.systems.ai},

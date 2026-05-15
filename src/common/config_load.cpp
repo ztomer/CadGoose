@@ -75,6 +75,16 @@ void Config_Load(const toml::basic_value<toml::type_config>& config) {
         g_config.color.customEye.r, g_config.color.customEye.g, g_config.color.customEye.b);
     config_helpers::get_color_rgb(config, "color", "customOutline", "customOutline",
         g_config.color.customOutline.r, g_config.color.customOutline.g, g_config.color.customOutline.b);
+
+    if (config.contains("goose") && config.at("goose").is_array()) {
+        const auto& namesArr = config.at("goose").as_array();
+        g_config.gooseNames.clear();
+        for (const auto& item : namesArr) {
+            if (item.is_string()) {
+                g_config.gooseNames.push(std::string(item.as_string()));
+            }
+        }
+    }
 }
 
 void Config_LoadAll() {

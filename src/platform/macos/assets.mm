@@ -92,7 +92,11 @@ void AssetManager::PreloadBehaviorAssets() {
         "Assets/Images/OtherGfx/crumbs.png",
         "Assets/Images/OtherGfx/heart.png",
         "Assets/Images/OtherGfx/hat_default.png",
-        "Assets/Images/OtherGfx/honk.png"
+        "Assets/Images/OtherGfx/honk.png",
+        "Assets/Items/Bed/bed.png",
+        "Assets/Items/Bed/z1.png",
+        "Assets/Items/Bed/z2.png",
+        "Assets/Items/Bed/z3.png"
     };
 
     for (const auto& path : behaviorImages) {
