@@ -70,6 +70,9 @@ static void DrawLine(CGContextRef ctx, Vector2 a, Vector2 b, float width, float 
 @property (nonatomic, assign) NSPoint lastMouseLoc;
 @property (nonatomic, assign) int lastItemCount;
 - (void)handleKeyDown:(NSEvent*)event;
+- (void)mouseDownAtPoint:(NSPoint)pt viewY:(float)viewY;
+- (void)mouseDraggedAtPoint:(NSPoint)pt viewY:(float)viewY;
+- (void)mouseUpAtPoint:(NSPoint)pt;
 @end
 
 static BOOL s_hasPrimary = NO;
@@ -99,6 +102,37 @@ static BOOL s_hasPrimary = NO;
             self.isPrimary = YES;
             s_hasPrimary = YES;
             DEBUG_LOG("  PRIMARY GOOSE VIEW (will update geese)");
+
+            __weak GooseView* weakView = self;
+            [NSEvent addLocalMonitorForEventsMatchingMask:NSEventMaskLeftMouseDown handler:^NSEvent*(NSEvent* event) {
+                GooseView* view = weakView;
+                if (!view || !view.window) return event;
+                NSPoint screenPt = [NSEvent mouseLocation];
+                NSRect frame = view.window.frame;
+                NSPoint windowPt = NSMakePoint(screenPt.x - frame.origin.x, screenPt.y - frame.origin.y);
+                NSPoint viewPt = [view convertPoint:windowPt fromView:nil];
+                float viewY = view.bounds.size.height - viewPt.y;
+                [view mouseDownAtPoint:viewPt viewY:viewY];
+                return event;
+            }];
+            [NSEvent addLocalMonitorForEventsMatchingMask:NSEventMaskLeftMouseDragged handler:^NSEvent*(NSEvent* event) {
+                GooseView* view = weakView;
+                if (!view || !view.window) return event;
+                NSPoint screenPt = [NSEvent mouseLocation];
+                NSRect frame = view.window.frame;
+                NSPoint windowPt = NSMakePoint(screenPt.x - frame.origin.x, screenPt.y - frame.origin.y);
+                NSPoint viewPt = [view convertPoint:windowPt fromView:nil];
+                float viewY = view.bounds.size.height - viewPt.y;
+                [view mouseDraggedAtPoint:viewPt viewY:viewY];
+                return event;
+            }];
+            [NSEvent addLocalMonitorForEventsMatchingMask:NSEventMaskLeftMouseUp handler:^NSEvent*(NSEvent* event) {
+                GooseView* view = weakView;
+                if (!view) return event;
+                [view mouseUpAtPoint:NSZeroPoint];
+                return event;
+            }];
+            DEBUG_LOG("  event monitors installed");
         } else {
             self.isPrimary = NO;
             DEBUG_LOG("  SECONDARY GOOSE VIEW (display only)");
@@ -151,6 +185,10 @@ static BOOL s_hasPrimary = NO;
 }
 
 - (BOOL)acceptsFirstResponder {
+    return YES;
+}
+
+- (BOOL)acceptsFirstMouse:(NSEvent *)event {
     return YES;
 }
 
@@ -214,38 +252,10 @@ static BOOL s_hasPrimary = NO;
                             g_geese.empty() ? nullptr : &g_geese.front());
     }
 
-    bool shouldAcceptMouse = (self.draggedItem != nullptr);
-    if (!shouldAcceptMouse && ShouldAcceptMouseEvents()) {
-        NSPoint mouseLoc = [NSEvent mouseLocation];
-        NSRect windowRect = [self.window convertRectFromScreen:NSMakeRect(mouseLoc.x, mouseLoc.y, 0, 0)];
-        NSPoint p = [self convertPoint:windowRect.origin fromView:nil];
-        int itemCount = (int)g_droppedItems.size();
+    bool shouldAcceptMouse = (self.draggedItem != nullptr) || !g_droppedItems.empty();
+    int itemCount = (int)g_droppedItems.size();
 
-        // Only re-check hit-testing when mouse moves or items change
-        bool needsCheck = (itemCount != self.lastItemCount ||
-                           fabs(p.x - self.lastMouseLoc.x) > 1.0f ||
-                           fabs(p.y - self.lastMouseLoc.y) > 1.0f);
-        if (needsCheck) {
-            self.lastMouseLoc = p;
-            self.lastItemCount = itemCount;
-
-            for (auto it = g_droppedItems.rbegin(); it != g_droppedItems.rend(); ++it) {
-                DroppedItem& item = *it;
-                float dx = p.x - item.pos.x;
-                float dy = p.y - item.pos.y;
-                float cosA = cos(item.rotation);
-                float sinA = sin(item.rotation);
-                float lx = dx * cosA - dy * sinA;
-                float ly = dx * sinA + dy * cosA;
-                if (lx >= -item.data->w/2.0f && lx <= item.data->w/2.0f &&
-                    ly >= -item.data->h/2.0f && ly <= item.data->h/2.0f) {
-                    shouldAcceptMouse = true;
-                    break;
-                }
-            }
-        }
-    }
-    if (self.window.ignoresMouseEvents == shouldAcceptMouse) {
+    if (self.window.ignoresMouseEvents != !shouldAcceptMouse) {
         self.window.ignoresMouseEvents = !shouldAcceptMouse;
     }
 
@@ -254,9 +264,8 @@ static BOOL s_hasPrimary = NO;
 }
 
 - (NSView *)hitTest:(NSPoint)point {
-    NSPoint p = [self convertPoint:point fromView:self.superview];
-    float worldX = p.x;
-    float worldY = p.y;
+    float worldX = point.x;
+    float worldY = self.bounds.size.height - point.y;
 
     for (auto it = g_droppedItems.rbegin(); it != g_droppedItems.rend(); ++it) {
         DroppedItem& item = *it;
@@ -268,6 +277,8 @@ static BOOL s_hasPrimary = NO;
         float ly = dx * sinA + dy * cosA;
         if (lx >= -item.data->w/2.0f && lx <= item.data->w/2.0f &&
             ly >= -item.data->h/2.0f && ly <= item.data->h/2.0f) {
+            fprintf(stderr, "[DRAG] hitTest HIT pt(%.0f,%.0f) item(%.0f,%.0f)\n",
+                    point.x, point.y, item.pos.x, item.pos.y);
             return self;
         }
     }
@@ -291,15 +302,17 @@ static BOOL s_hasPrimary = NO;
         if (lx >= -item.data->w/2.0f && lx <= item.data->w/2.0f &&
             ly >= -item.data->h/2.0f && ly <= item.data->h/2.0f) {
 
-            float closeX = -item.data->w/2.0f;
-            float closeY = -item.data->h/2.0f;
-            if (lx >= closeX && lx <= closeX + g_config.render.closeButtonSize &&
-                ly >= closeY && ly <= closeY + g_config.render.closeButtonSize) {
-                delete item.data;
-                auto forward_it = std::prev(it.base());
-                g_droppedItems.erase(forward_it);
-                [self setNeedsDisplay:YES];
-                return;
+            if (item.data->type != ItemData::TOY) {
+                float closeX = -item.data->w/2.0f;
+                float closeY = -item.data->h/2.0f;
+                if (lx >= closeX && lx <= closeX + g_config.render.closeButtonSize &&
+                    ly >= closeY && ly <= closeY + g_config.render.closeButtonSize) {
+                    delete item.data;
+                    auto forward_it = std::prev(it.base());
+                    g_droppedItems.erase(forward_it);
+                    [self setNeedsDisplay:YES];
+                    return;
+                }
             }
 
             self.draggedItem = &item;
@@ -315,16 +328,63 @@ static BOOL s_hasPrimary = NO;
 - (void)mouseDragged:(NSEvent *)event {
     if (self.draggedItem) {
         NSPoint p = [self convertPoint:[event locationInWindow] fromView:nil];
-        float worldX = p.x;
-        float worldY = p.y;
-
-        self.draggedItem->pos.x = worldX + self.dragOffset.x;
-        self.draggedItem->pos.y = worldY + self.dragOffset.y;
+        self.draggedItem->pos.x = p.x + self.dragOffset.x;
+        self.draggedItem->pos.y = p.y + self.dragOffset.y;
         [self setNeedsDisplay:YES];
     }
 }
 
 - (void)mouseUp:(NSEvent *)event {
+    if (self.draggedItem) {
+        self.draggedItem = nullptr;
+    }
+}
+
+- (void)mouseDownAtPoint:(NSPoint)pt viewY:(float)viewY {
+    for (auto it = g_droppedItems.rbegin(); it != g_droppedItems.rend(); ++it) {
+        DroppedItem& item = *it;
+        float dx = pt.x - item.pos.x;
+        float dy = viewY - item.pos.y;
+        float cosA = cos(item.rotation);
+        float sinA = sin(item.rotation);
+        float lx = dx * cosA - dy * sinA;
+        float ly = dx * sinA + dy * cosA;
+
+        if (lx >= -item.data->w/2.0f && lx <= item.data->w/2.0f &&
+            ly >= -item.data->h/2.0f && ly <= item.data->h/2.0f) {
+
+            if (item.data->type != ItemData::TOY) {
+                float closeX = -item.data->w/2.0f;
+                float closeY = -item.data->h/2.0f;
+                if (lx >= closeX && lx <= closeX + g_config.render.closeButtonSize &&
+                    ly >= closeY && ly <= closeY + g_config.render.closeButtonSize) {
+                    delete item.data;
+                    auto forward_it = std::prev(it.base());
+                    g_droppedItems.erase(forward_it);
+                    [self setNeedsDisplay:YES];
+                    return;
+                }
+            }
+
+            self.draggedItem = &item;
+            self.draggedItem->pinned = true;
+            self.dragOffset = NSMakePoint(item.pos.x - pt.x, item.pos.y - viewY);
+            auto forward_it = std::prev(it.base());
+            g_droppedItems.splice(g_droppedItems.end(), g_droppedItems, forward_it);
+            return;
+        }
+    }
+}
+
+- (void)mouseDraggedAtPoint:(NSPoint)pt viewY:(float)viewY {
+    if (self.draggedItem) {
+        self.draggedItem->pos.x = pt.x + self.dragOffset.x;
+        self.draggedItem->pos.y = viewY + self.dragOffset.y;
+        [self setNeedsDisplay:YES];
+    }
+}
+
+- (void)mouseUpAtPoint:(NSPoint)pt {
     if (self.draggedItem) {
         self.draggedItem = nullptr;
     }

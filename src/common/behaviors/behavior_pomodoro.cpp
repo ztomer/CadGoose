@@ -72,6 +72,10 @@ static void init(BehaviorContext& ctx) {
     auto* state = BehaviorStateManager::Instance().GetOrCreate<PomodoroState>(ctx.goose->id, "pomodoro");
     state->Reset();
     state->phaseStartTime = ctx.time;
+    state->bedPosition = {
+        (float)g_screenWidth - kBedMarginX,
+        (float)g_screenHeight - kBedMarginY
+    };
 
     if (!s_bedImage) {
         s_bedImage = g_assets.GetBehaviorImage("Assets/Items/Bed/bed.png");
@@ -282,6 +286,7 @@ static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
             float textX = headPos.x - textWidth/2 + kTimerTextXPad;
             float textY = headPos.y - kTimerTextDrawYOffset;
             CGContextSaveGState(cg);
+            CGContextSetTextMatrix(cg, CGAffineTransformMakeScale(1.0, -1.0));
             CGContextSetTextPosition(cg, textX, textY);
             CTLineDraw(line, cg);
             CGContextRestoreGState(cg);
@@ -294,7 +299,7 @@ static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
     }
 
     if (state->isSleeping) {
-        Vector2 bedPos = WorldCoord::ToDevice(state->bedPosition, *goose);
+        Vector2 bedPos = WorldCoord::ToDevice(state->bedPosition);
         float bedWidth = kBedWidth;
         float bedHeight = kBedHeight;
 
@@ -327,8 +332,12 @@ static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
             float imgW = (float)CGImageGetWidth(zzzImg);
             float imgH = (float)CGImageGetHeight(zzzImg);
             CGContextSetAlpha(cg, zzzAlpha);
-            CGRect zzzRect = CGRectMake(zzzX - imgW / 2.0f, zzzY - imgH / 2.0f, imgW, imgH);
+            CGContextSaveGState(cg);
+            CGContextTranslateCTM(cg, zzzX, zzzY);
+            CGContextScaleCTM(cg, 1.0f, -1.0f);
+            CGRect zzzRect = CGRectMake(-imgW / 2.0f, -imgH / 2.0f, imgW, imgH);
             CGContextDrawImage(cg, zzzRect, zzzImg);
+            CGContextRestoreGState(cg);
         } else {
             CGContextSetRGBFillColor(cg, kZzzFallbackR, kZzzFallbackG, kZzzFallbackB, zzzAlpha);
             CTFontRef zzzFont = CTFontCreateWithName(CFSTR("Helvetica-Bold"), kZzzFontsize, NULL);

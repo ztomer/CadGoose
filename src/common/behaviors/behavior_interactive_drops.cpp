@@ -24,54 +24,14 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
     bool shouldDrop = (time - lastDrop >= g_config.behaviors.interactiveDrops.dropInterval) && ((rand() % 400) == 0);
 
     if (shouldDrop) {
-        int dropType = rand() % 2;
         Vector2 dropPos = goose->GetBeakTipDevice();
-        if (dropType == 0) {
-            InteractivePuddle puddle;
-            puddle.pos = dropPos;
-            puddle.spawnTime = time;
-            puddle.radius = 5.0f;
-            puddle.maxRadius = 20.0f + (rand() % 20);
-            state->puddles.push_back(puddle);
-        } else {
-            InteractiveFlower flower;
-            flower.pos = dropPos;
-            flower.spawnTime = time;
-            flower.hue = (rand() % 360) / 360.0f * 360.0f;
-            state->flowers.push_back(flower);
-        }
+        InteractiveFlower flower;
+        flower.pos = dropPos;
+        flower.spawnTime = time;
+        flower.hue = (rand() % 360) / 360.0f * 360.0f;
+        state->flowers.push_back(flower);
         state->lastDropTime = time;
         g_assets.Bite();
-    }
-    for (auto it = state->puddles.begin(); it != state->puddles.end(); ) {
-        double age = time - it->spawnTime;
-        if (age > g_config.behaviors.interactiveDrops.puddleLifetime) {
-            it = state->puddles.erase(it);
-            continue;
-        }
-        if (age < 1.0) {
-            it->radius = it->maxRadius * (float)age * 2.0f;
-            it->alpha = 0.6f;
-        } else {
-            it->alpha = 0.6f * (1.0f - (float)((age - 1.0) / (g_config.behaviors.interactiveDrops.puddleLifetime - 1.0)));
-        }
-        if (!it->splashed) {
-            Vector2 cursorPos;
-            if (g_cursorProvider) {
-                CursorState cs = g_cursorProvider->Read();
-                cursorPos = cs.position;
-                if (cs.hasPos() && Vector2::Distance(cursorPos, it->pos) < it->radius + 10.0f) {
-                    it->splashed = true;
-                    it->vel = Vector2::Normalize(cursorPos - it->pos) * 60.0f;
-                }
-            }
-        }
-        if (it->splashed) {
-            it->pos = it->pos + it->vel * (float)dt;
-            it->vel = it->vel * 0.95f;
-            it->alpha *= 0.98f;
-        }
-        ++it;
     }
 
     for (auto it = state->flowers.begin(); it != state->flowers.end(); ) {
@@ -99,15 +59,6 @@ static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
     if (!cg) return;
 
     CGContextSaveGState(cg);
-
-    for (auto& p : state->puddles) {
-        if (p.alpha <= 0.01f) continue;
-        CGContextSetRGBFillColor(cg, 0.3f, 0.5f, 0.8f, p.alpha * 0.4f);
-        CGContextFillEllipseInRect(cg, CGRectMake(p.pos.x - p.radius, p.pos.y - p.radius, p.radius * 2, p.radius * 2));
-        CGContextSetRGBStrokeColor(cg, 0.2f, 0.4f, 0.7f, p.alpha * 0.6f);
-        CGContextSetLineWidth(cg, 1.0f);
-        CGContextStrokeEllipseInRect(cg, CGRectMake(p.pos.x - p.radius, p.pos.y - p.radius, p.radius * 2, p.radius * 2));
-    }
 
     for (auto& f : state->flowers) {
         if (f.growth <= 0.01f) continue;

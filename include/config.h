@@ -247,6 +247,10 @@ struct StepConfig {
 struct ItemConfig {
   float pickupCooldown = 2.0f;
   float itemLifetime = 15.0f;
+  float memeLifetime = 30.0f;
+  float textLifetime = 30.0f;
+  int maxDroppedMemes = 20;
+  int maxDroppedTexts = 20;
   int memePickupChance = 10;
   int fetchBaseChance = 2;
   int maxFetchBias = 100;
@@ -355,7 +359,7 @@ struct BehaviorConfig {
     bool affirmations = false;
     bool interactiveDrops = false;
     bool sonicMode = false;
-    bool toysEnabled = false;
+    bool toysEnabled = true;
   } fun;
 
   struct Control {

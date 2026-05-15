@@ -347,11 +347,13 @@ struct SonicState : public BehaviorState {
     std::vector<SonicTrail> trails;
     double lastTrailTime = 0;
     double lastHonkTime = 0;
+    float baseSpeed = 0;
 
     void Reset() override {
         trails.clear();
         lastTrailTime = 0;
         lastHonkTime = 0;
+        baseSpeed = 0;
     }
 };
 

@@ -277,6 +277,17 @@ void DrawHeldItem(Goose* g, CGContextRef ctx) {
             [text drawInRect:NSMakeRect(textX, textY, textW, textH) withAttributes:attrs];
 #endif
         }
+    } else if (g->heldItem->type == ItemData::TOY) {
+        if (g->heldItem->image) {
+            CGContextSaveGState(ctx);
+            CGContextTranslateCTM(ctx, 0, g->heldItem->h);
+            CGContextScaleCTM(ctx, 1.0, -1.0);
+            CGContextDrawImage(ctx, CGRectMake(0, 0, g->heldItem->w, g->heldItem->h), g->heldItem->image);
+            CGContextRestoreGState(ctx);
+        } else {
+            CGContextSetRGBFillColor(ctx, 0.55f, 0.35f, 0.15f, 1.0f);
+            CGContextFillRect(ctx, CGRectMake(0, 0, g->heldItem->w, g->heldItem->h));
+        }
     }
 
     CGContextRestoreGState(ctx);
@@ -395,23 +406,36 @@ void DrawDroppedItem(CGContextRef ctx, const DroppedItem& item, float viewHeight
                                      g_config.render.memePlaceholderColor.b, 1.0);
             CGContextFillRect(ctx, CGRectMake(x, y, item.data->w, item.data->h));
         }
+    } else if (item.data->type == ItemData::TOY) {
+        if (item.data->image) {
+            CGContextSaveGState(ctx);
+            CGContextTranslateCTM(ctx, x, y + item.data->h);
+            CGContextScaleCTM(ctx, 1.0, -1.0);
+            CGContextDrawImage(ctx, CGRectMake(0, 0, item.data->w, item.data->h), item.data->image);
+            CGContextRestoreGState(ctx);
+        } else {
+            CGContextSetRGBFillColor(ctx, 0.55f, 0.35f, 0.15f, 1.0f);
+            CGContextFillRect(ctx, CGRectMake(x, y, item.data->w, item.data->h));
+        }
     }
 
-    float closeX = -item.data->w / 2.0f;
-    float closeY = -item.data->h / 2.0f;
-    CGContextSetRGBFillColor(ctx, g_config.render.closeButtonColor.r,
-                             g_config.render.closeButtonColor.g,
-                             g_config.render.closeButtonColor.b, 0.8);
-    CGContextFillRect(ctx, CGRectMake(closeX, closeY, g_config.render.closeButtonSize, g_config.render.closeButtonSize));
-    CGContextSetRGBStrokeColor(ctx, g_config.render.closeButtonStroke.r,
-                               g_config.render.closeButtonStroke.g,
-                               g_config.render.closeButtonStroke.b, 1.0);
-    CGContextSetLineWidth(ctx, 2.0);
-    CGContextMoveToPoint(ctx, closeX + 4, closeY + 4);
-    CGContextAddLineToPoint(ctx, closeX + g_config.render.closeButtonSize - 4, closeY + g_config.render.closeButtonSize - 4);
-    CGContextMoveToPoint(ctx, closeX + g_config.render.closeButtonSize - 4, closeY + 4);
-    CGContextAddLineToPoint(ctx, closeX + 4, closeY + g_config.render.closeButtonSize - 4);
-    CGContextStrokePath(ctx);
+    if (item.data->type != ItemData::TOY) {
+        float closeX = -item.data->w / 2.0f;
+        float closeY = -item.data->h / 2.0f;
+        CGContextSetRGBFillColor(ctx, g_config.render.closeButtonColor.r,
+                                 g_config.render.closeButtonColor.g,
+                                 g_config.render.closeButtonColor.b, 0.8);
+        CGContextFillRect(ctx, CGRectMake(closeX, closeY, g_config.render.closeButtonSize, g_config.render.closeButtonSize));
+        CGContextSetRGBStrokeColor(ctx, g_config.render.closeButtonStroke.r,
+                                   g_config.render.closeButtonStroke.g,
+                                   g_config.render.closeButtonStroke.b, 1.0);
+        CGContextSetLineWidth(ctx, 2.0);
+        CGContextMoveToPoint(ctx, closeX + 4, closeY + 4);
+        CGContextAddLineToPoint(ctx, closeX + g_config.render.closeButtonSize - 4, closeY + g_config.render.closeButtonSize - 4);
+        CGContextMoveToPoint(ctx, closeX + g_config.render.closeButtonSize - 4, closeY + 4);
+        CGContextAddLineToPoint(ctx, closeX + 4, closeY + g_config.render.closeButtonSize - 4);
+        CGContextStrokePath(ctx);
+    }
 
     CGContextRestoreGState(ctx);
 }

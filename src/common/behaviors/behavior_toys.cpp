@@ -18,6 +18,7 @@ static constexpr float TOY_LIFETIME = 30.0f;
 static constexpr float TOY_FETCH_DISTANCE = 20.0f;
 static constexpr float STICK_LENGTH = 24.0f;
 static constexpr float STICK_WIDTH = 4.0f;
+static constexpr float BALL_RADIUS = 15.0f;
 
 static int FindInactiveToy(ToysState* state) {
     for (int i = 0; i < MAX_TOYS; ++i) {
@@ -75,27 +76,45 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
         }
     }
 
-    // Check if goose is near any toy and redirect to fetch it
+    // Find nearest active toy
+    int nearestIdx = -1;
+    float nearestDist = 1e9f;
     for (int i = 0; i < MAX_TOYS; ++i) {
         if (!state->toys[i].active) continue;
-
         float dist = Vector2::Distance(goose->pos, state->toys[i].pos);
-        if (dist < TOY_FETCH_DISTANCE) {
-            state->toys[i].active = false;
-            state->activeCount--;
+        if (dist < nearestDist) {
+            nearestDist = dist;
+            nearestIdx = i;
+        }
+    }
+
+    if (nearestIdx < 0) return;
+
+    // Goose reached toy — pick it up and transition to RETURNING
+    if (nearestDist < TOY_FETCH_DISTANCE) {
+        Toy::Type toyType = state->toys[nearestIdx].type;
+        state->toys[nearestIdx].active = false;
+        state->activeCount--;
+
+        if (!goose->heldItem) {
+            goose->heldItem = g_assets.CreateToyItem(toyType == Toy::Type::Stick);
+            goose->state = GooseState::RETURNING;
+            float screenW = (float)g_screenWidth / ctx.globalScale;
+            float screenH = (float)g_screenHeight / ctx.globalScale;
+            float margin = 100.0f;
+            goose->target = {
+                margin + (float)(rand() % (int)(screenW - margin * 2)),
+                margin + (float)(rand() % (int)(screenH - margin * 2))
+            };
+            g_assets.Bite();
             g_assets.Honk();
-
-            if (goose->state == GooseState::WANDER) {
-                goose->state = GooseState::CHASE_CURSOR;
-                goose->target = state->toys[i].pos;
-            }
-            break;
         }
+        return;
+    }
 
-        // Goose chases nearby toys when wandering
-        if (goose->state == GooseState::WANDER && dist < 200.0f) {
-            goose->target = state->toys[i].pos;
-        }
+    // Goose chases nearby toys when wandering
+    if (goose->state == GooseState::WANDER && nearestDist < 200.0f) {
+        goose->target = state->toys[nearestIdx].pos;
     }
 }
 
@@ -111,7 +130,7 @@ static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
     for (int i = 0; i < MAX_TOYS; ++i) {
         if (!state->toys[i].active) continue;
 
-        Vector2 devPos = WorldCoord::ToDevice(state->toys[i].pos, *goose);
+        Vector2 devPos = WorldCoord::ToDevice(state->toys[i].pos);
         float age = (float)(ctx.time - state->toys[i].time);
         float alpha = std::min(1.0f, age / 0.5f);
 
@@ -136,7 +155,7 @@ static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
             CGContextClosePath(cg);
             CGContextFillPath(cg);
         } else {
-            float radius = STICK_WIDTH * ctx.globalScale;
+            float radius = BALL_RADIUS * ctx.globalScale;
             CGRect rect = CGRectMake(devPos.x - radius, devPos.y - radius, radius * 2.0f, radius * 2.0f);
             CGContextSetRGBFillColor(cg, 0.8f, 0.2f, 0.2f, alpha);
             CGContextFillEllipseInRect(cg, rect);

@@ -161,10 +161,10 @@ TEST(ToysBehavior, ChaseRadius) {
 }
 
 TEST(ToysBehavior, ConfigPointer) {
-    EXPECT_EQ(g_config.behaviors.fun.toysEnabled, false);
-    g_config.behaviors.fun.toysEnabled = true;
     EXPECT_EQ(g_config.behaviors.fun.toysEnabled, true);
     g_config.behaviors.fun.toysEnabled = false;
+    EXPECT_EQ(g_config.behaviors.fun.toysEnabled, false);
+    g_config.behaviors.fun.toysEnabled = true;
 }
 
 // ===========================

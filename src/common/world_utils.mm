@@ -11,10 +11,46 @@
 
 void World_CleanupExpired(double currentTime) {
     g_droppedItems.remove_if([&](DroppedItem& i) {
-        bool exp = i.isExpired(currentTime);
+        float lifetime = g_config.item.itemLifetime;
+        if (i.data->type == ItemData::MEME) lifetime = g_config.item.memeLifetime;
+        else if (i.data->type == ItemData::TEXT) lifetime = g_config.item.textLifetime;
+
+        bool exp = !i.pinned && ((currentTime - i.timeDropped) > lifetime);
         if (exp) delete i.data;
         return exp;
     });
+
+    int memeCount = 0, textCount = 0;
+    for (const auto& item : g_droppedItems) {
+        if (item.data->type == ItemData::MEME) memeCount++;
+        else if (item.data->type == ItemData::TEXT) textCount++;
+    }
+
+    if (memeCount > g_config.item.maxDroppedMemes) {
+        int toRemove = memeCount - g_config.item.maxDroppedMemes;
+        for (auto it = g_droppedItems.begin(); it != g_droppedItems.end() && toRemove > 0; ) {
+            if (it->data->type == ItemData::MEME && !it->pinned) {
+                delete it->data;
+                it = g_droppedItems.erase(it);
+                toRemove--;
+            } else {
+                ++it;
+            }
+        }
+    }
+
+    if (textCount > g_config.item.maxDroppedTexts) {
+        int toRemove = textCount - g_config.item.maxDroppedTexts;
+        for (auto it = g_droppedItems.begin(); it != g_droppedItems.end() && toRemove > 0; ) {
+            if (it->data->type == ItemData::TEXT && !it->pinned) {
+                delete it->data;
+                it = g_droppedItems.erase(it);
+                toRemove--;
+            } else {
+                ++it;
+            }
+        }
+    }
 
     while (!g_footprints.empty()) {
         Footprint& fp = g_footprints.front();
@@ -51,7 +87,7 @@ void World_SpawnRandomLeafPile(float screenWidth, float screenHeight, double cur
 
 bool ItemHitTest(NSPoint p, float viewHeight, DroppedItem** hitItem, float closeButtonSize) {
     float worldX = p.x;
-    float worldY = viewHeight - p.y;
+    float worldY = p.y;
 
     for (auto it = g_droppedItems.rbegin(); it != g_droppedItems.rend(); ++it) {
         DroppedItem& item = *it;

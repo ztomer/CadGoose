@@ -40,6 +40,7 @@ public:
     ItemData* GetRandomMeme(int screenWidth = 1920, int screenHeight = 1080, float maxSizeFraction = 0.1f);
     ItemData* GetRandomText();
     ItemData* CreateTextItem(const std::string& text);
+    ItemData* CreateToyItem(bool isStick);
     void Honk();
     void Pat();
     void Bite();
