@@ -210,6 +210,11 @@ if(APPLE OR LINUX)
         tests/common/test_behavior_ball.cpp
         tests/common/test_behavior_breadcrumbs.cpp
         tests/common/test_behavior_hats.cpp
+        tests/common/test_behaviors_fun.cpp
+        tests/common/test_behaviors_pomodoro_portal.cpp
+        tests/common/test_behaviors_visual.cpp
+        tests/common/test_behaviors_control.cpp
+        tests/common/test_behaviors_registry_ai.cpp
         tests/common/test_hotkey.cpp
         tests/common/test_mcp_protocol.cpp
         tests/common/test_mcp_config.cpp

@@ -1,5 +1,6 @@
 #include "goose.h"
 #include "assets.h"
+#include "behavior.h"
 #include "config.h"
 #include "goose_math.h"
 #include "world.h"
@@ -23,6 +24,7 @@ static constexpr float kFetchCurvatureDivisor = 100.0f;
 static constexpr float kTwoPi = 2.0f * PI;
 static constexpr float kRadToDeg = 180.0f / PI;
 static constexpr float kDegToRad = PI / 180.0f;
+static constexpr double kStuckThresholdTime = 3.0;
 
 static FILE *s_debugLog = nullptr;
 
@@ -323,6 +325,32 @@ CursorAction Goose::Update(double dt, double time, int w, int h,
 
   pos = pos + vel * (float)dt;
   ClampToScreen(w, h);
+
+  // Stuck detection: only check during movement states, skip stationary modes
+  auto* jailState = BehaviorStateManager::Instance().Get<JailState>(id, "jail");
+  bool isJailed = (jailState && jailState->isJailed);
+  bool isStationary = isResting || isJailed || state == GooseState::SNATCH_CURSOR;
+  float distMoved = Vector2::Length(pos - stuckCheckPos);
+  if (!isStationary && (state == GooseState::WANDER || state == GooseState::CHASE_CURSOR || state == GooseState::FETCHING || state == GooseState::RETURNING)) {
+    if (distMoved > 10.0f) {
+      // Normal movement, reset tracker
+      stuckCheckPos = pos;
+      stuckCheckTime = time;
+    } else if (time - stuckCheckTime > kStuckThresholdTime) {
+      // Goose is stuck, pick new wander target
+      FILE *f = GetDebugLog();
+      fprintf(f, "[STUCK] t=%.1f g%d pos(%.0f,%.0f) state=%d vel(%.1f,%.1f)\n",
+              time, id, pos.x, pos.y, (int)state, vel.x, vel.y);
+      target = Vector2((float)(rand() % (int)w), (float)(rand() % (int)h));
+      stuckCheckPos = pos;
+      stuckCheckTime = time;
+    }
+  } else {
+    // Stationary mode or non-movement state, reset tracker
+    stuckCheckPos = pos;
+    stuckCheckTime = time;
+  }
+
   UpdateDirection();
   UpdateRig();
 
