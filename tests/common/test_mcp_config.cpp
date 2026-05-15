@@ -19,7 +19,6 @@ protected:
         savedJail = g_config.behaviors.control.jail;
         savedPortals = g_config.behaviors.control.portals;
         savedDrag = g_config.behaviors.control.drag;
-        savedBanish = g_config.behaviors.control.banish;
         savedNametag = g_config.behaviors.info.nametag;
         savedPresence = g_config.behaviors.info.presence;
         savedConfigGUI = g_config.behaviors.info.configGUI;
@@ -30,7 +29,6 @@ protected:
         savedHonkerHotkey = g_config.behaviors.honcker.hotkey;
         savedJailHotkeyO = g_config.behaviors.jail.hotkeyO;
         savedJailHotkeyP = g_config.behaviors.jail.hotkeyP;
-        savedBanishHotkey = g_config.behaviors.banish.hotkey;
         savedPortalHotkey1 = g_config.portal.hotkey1;
         savedPortalHotkey2 = g_config.portal.hotkey2;
         savedPortalHotkey0 = g_config.portal.hotkey0;
@@ -49,7 +47,6 @@ protected:
         g_config.behaviors.control.jail = savedJail;
         g_config.behaviors.control.portals = savedPortals;
         g_config.behaviors.control.drag = savedDrag;
-        g_config.behaviors.control.banish = savedBanish;
         g_config.behaviors.info.nametag = savedNametag;
         g_config.behaviors.info.presence = savedPresence;
         g_config.behaviors.info.configGUI = savedConfigGUI;
@@ -60,7 +57,6 @@ protected:
         g_config.behaviors.honcker.hotkey = savedHonkerHotkey;
         g_config.behaviors.jail.hotkeyO = savedJailHotkeyO;
         g_config.behaviors.jail.hotkeyP = savedJailHotkeyP;
-        g_config.behaviors.banish.hotkey = savedBanishHotkey;
         g_config.portal.hotkey1 = savedPortalHotkey1;
         g_config.portal.hotkey2 = savedPortalHotkey2;
         g_config.portal.hotkey0 = savedPortalHotkey0;
@@ -70,11 +66,11 @@ protected:
 private:
     bool savedBall, savedBreadcrumbs, savedHats, savedRainbow, savedAcid, savedAnger;
     bool savedAutumnLeaves;
-    bool savedHoncker, savedJail, savedPortals, savedDrag, savedBanish;
+    bool savedHoncker, savedJail, savedPortals, savedDrag;
     bool savedNametag, savedPresence, savedConfigGUI, savedVisible;
     bool savedHealth, savedAi, savedPomodoro;
     std::string savedHonkerHotkey, savedJailHotkeyO, savedJailHotkeyP;
-    std::string savedBanishHotkey, savedPortalHotkey1, savedPortalHotkey2;
+    std::string savedPortalHotkey1, savedPortalHotkey2;
     std::string savedPortalHotkey0, savedBreadcrumbsHotkey;
 };
 
@@ -86,7 +82,6 @@ TEST_F(MCPConfigTest, GetConfigReturnsAllSections) {
     EXPECT_NE(resp.find("info"), std::string::npos);
     EXPECT_NE(resp.find("systems"), std::string::npos);
     EXPECT_NE(resp.find("honcker_hotkey"), std::string::npos);
-    EXPECT_NE(resp.find("banish_hotkey"), std::string::npos);
     EXPECT_NE(resp.find("breadcrumbs_hotkey"), std::string::npos);
     EXPECT_NE(resp.find("jail_hotkey_o"), std::string::npos);
     EXPECT_NE(resp.find("jail_hotkey_p"), std::string::npos);
@@ -113,7 +108,6 @@ TEST_F(MCPConfigTest, SetConfigAllBoolsRoundTrip) {
         {"behaviors.control.jail", &g_config.behaviors.control.jail},
         {"behaviors.control.portals", &g_config.behaviors.control.portals},
         {"behaviors.control.drag", &g_config.behaviors.control.drag},
-        {"behaviors.control.banish", &g_config.behaviors.control.banish},
         {"behaviors.info.nametag", &g_config.behaviors.info.nametag},
         {"behaviors.info.presence", &g_config.behaviors.info.presence},
         {"behaviors.info.configGUI", &g_config.behaviors.info.configGUI},
@@ -172,7 +166,6 @@ TEST_F(MCPConfigTest, SetHotkeyAllFields) {
         {"honcker_hotkey", &g_config.behaviors.honcker.hotkey},
         {"jail_hotkey_o", &g_config.behaviors.jail.hotkeyO},
         {"jail_hotkey_p", &g_config.behaviors.jail.hotkeyP},
-        {"banish_hotkey", &g_config.behaviors.banish.hotkey},
         {"portal_hotkey_1", &g_config.portal.hotkey1},
         {"portal_hotkey_2", &g_config.portal.hotkey2},
         {"portal_hotkey_0", &g_config.portal.hotkey0},

@@ -16,7 +16,7 @@ TEST(BehaviorRegistry, AllBehaviorsRegistered) {
     auto& registry = BehaviorRegistry::Instance();
     size_t count = registry.GetBehaviorCount();
     fprintf(stderr, "[INFO] Registered %zu behaviors\n", count);
-    EXPECT_EQ(count, 16) << "Expected 16 behaviors to be registered";
+    EXPECT_EQ(count, 15) << "Expected 15 behaviors to be registered";
 
     auto* acid = registry.Get("acid");
     EXPECT_NE(acid, nullptr) << "acid should be registered";
@@ -26,9 +26,6 @@ TEST(BehaviorRegistry, AllBehaviorsRegistered) {
 
     auto* ball = registry.Get("ball");
     EXPECT_NE(ball, nullptr) << "ball should be registered";
-
-    auto* banish = registry.Get("banish");
-    EXPECT_NE(banish, nullptr) << "banish should be registered";
 
     auto* breadcrumbs = registry.Get("breadcrumbs");
     EXPECT_NE(breadcrumbs, nullptr) << "breadcrumbs should be registered";
@@ -195,7 +192,6 @@ TEST(BehaviorToggle, ConfigPtrMap) {
         {"acid",     &g_config.behaviors.fun.acid},
         {"anger",    &g_config.behaviors.fun.anger},
         {"ball",     &g_config.behaviors.fun.ball},
-        {"banish",   &g_config.behaviors.control.banish},
         {"breadcrumbs", &g_config.behaviors.fun.breadCrumbs},
         {"drag",     &g_config.behaviors.control.drag},
         {"hats",     &g_config.behaviors.fun.hats},

@@ -1,0 +1,216 @@
+Note: Google Test filter = SoakTest.TenMinuteGoose
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from SoakTest
+[ RUN      ] SoakTest.TenMinuteGoose
+[SOAK] t=5 pos(1091,1107) vel(48.4,44.9) spd=66.0 cs=180.0 W target(1450,1193) dist=369 cumul=838
+[FF] g42 ForceFetch type=0 w=2560 h=1440
+[FF] after StartFetch state=1 heldItem=0x0
+[SOAK] t=10 pos(322,850) vel(-463.1,-122.4) spd=479.0 cs=480.0 F target(-80,770) dist=410 cumul=2353
+[HF] g42 handleFetching called state=1
+[HF] g42 heldItem=0x104e423c0 image=0x0 after creation
+[HF] g42 -> RETURNING, dragPos=(0.0,0.0) dragInit=0
+[SOAK] t=15 pos(2005,480) vel(468.9,-98.2) spd=479.1 cs=480.0 R target(2301,397) dist=307 cumul=4813
+[SOAK] t=20 pos(1727,716) vel(-161.5,79.5) spd=180.0 cs=180.0 W target(1288,932) dist=489 cumul=5893
+[FF] g42 ForceFetch type=0 w=2560 h=1440
+[FF] after StartFetch state=1 heldItem=0x0
+[SOAK] t=25 pos(1880,197) vel(306.8,-368.3) spd=479.4 cs=479.8 F target(2118,-80) dist=365 cumul=7297
+[HF] g42 handleFetching called state=1
+[HF] g42 heldItem=0x104e42b70 image=0x0 after creation
+[HF] g42 -> RETURNING, dragPos=(2062.1,432.9) dragInit=0
+[SOAK] t=30 pos(608,546) vel(75.7,164.2) spd=180.8 cs=220.6 W target(1211,1128) dist=838 cumul=9498
+[FF] g42 ForceFetch type=0 w=2560 h=1440
+[FF] after StartFetch state=1 heldItem=0x0
+[SOAK] t=35 pos(1131,1184) vel(-263.9,185.2) spd=322.4 cs=424.8 F target(404,1520) dist=800 cumul=10417
+[HF] g42 handleFetching called state=1
+[HF] g42 heldItem=0x104e42bd0 image=0x0 after creation
+[HF] g42 -> RETURNING, dragPos=(909.9,408.4) dragInit=0
+[SOAK] t=40 pos(625,737) vel(151.0,103.9) spd=183.3 cs=183.3 W target(917,944) dist=358 cumul=12404
+[SOAK] t=45 pos(1092,789) vel(52.2,374.8) spd=378.4 cs=480.2 S target(1054,837) dist=62 cumul=13619
+[SOAK] t=50 pos(1758,450) vel(170.8,-56.9) spd=180.0 cs=180.0 W target(2147,320) dist=410 cumul=14711
+[SOAK] t=55 pos(1439,381) vel(-180.3,16.6) spd=181.0 cs=181.0 W target(664,452) dist=778 cumul=15799
+[SOAK] t=60 pos(554,125) vel(-47.8,-66.3) spd=81.7 cs=478.0 R target(550,61) dist=65 cumul=16835
+[SOAK] t=65 pos(1308,324) vel(135.3,-42.9) spd=141.9 cs=180.0 W target(1414,945) dist=630 cumul=17717
+[SOAK] t=70 pos(1628,968) vel(179.4,8.6) spd=179.6 cs=180.0 W target(1916,980) dist=289 cumul=18566
+[SOAK] t=75 pos(1335,650) vel(-157.6,-87.0) spd=180.0 cs=180.0 W target(834,373) dist=573 cumul=19494
+[SOAK] t=80 pos(1059,571) vel(136.4,117.2) spd=179.9 cs=180.0 W target(1120,624) dist=81 cumul=20337
+[SOAK] t=85 pos(1594,813) vel(17.4,179.1) spd=180.0 cs=180.0 W target(1630,1187) dist=375 cumul=21192
+[FF] g42 ForceFetch type=0 w=2560 h=1440
+[FF] after StartFetch state=1 heldItem=0x0
+[SOAK] t=90 pos(1728,916) vel(76.2,354.5) spd=362.6 cs=443.4 F target(1978,1520) dist=653 cumul=22048
+[HF] g42 handleFetching called state=1
+[HF] g42 heldItem=0x104e42ba0 image=0x0 after creation
+[HF] g42 -> RETURNING, dragPos=(620.2,133.7) dragInit=0
+[SOAK] t=95 pos(782,632) vel(-437.0,6.1) spd=437.0 cs=450.7 W target(435,250) dist=516 cumul=24359
+[SOAK] t=100 pos(674,599) vel(101.5,148.7) spd=180.0 cs=180.0 W target(726,675) dist=92 cumul=25286
+[SOAK] t=105 pos(1040,790) vel(179.9,-4.8) spd=180.0 cs=180.0 W target(1259,784) dist=219 cumul=26066
+[SOAK] t=110 pos(1932,688) vel(178.1,-25.8) spd=180.0 cs=180.0 W target(2168,654) dist=239 cumul=26964
+[SOAK] t=115 pos(1367,432) vel(-173.9,-46.6) spd=180.0 cs=180.0 W target(815,284) dist=572 cumul=28003
+[FF] g42 ForceFetch type=1 w=2560 h=1440
+[FF] after StartFetch state=1 heldItem=0x0
+[SOAK] t=120 pos(1088,973) vel(179.4,442.5) spd=477.5 cs=479.4 F target(1290,1520) dist=583 cumul=29292
+[HF] g42 handleFetching called state=1
+[HF] g42 heldItem=0x104e42720 image=0x0 after creation
+[HF] g42 -> RETURNING, dragPos=(983.3,628.0) dragInit=0
+[SOAK] t=125 pos(947,226) vel(183.3,0.1) spd=183.3 cs=183.3 W target(1502,235) dist=555 cumul=31431
+[SOAK] t=130 pos(1191,304) vel(-176.1,37.1) spd=179.9 cs=180.0 W target(866,372) dist=332 cumul=32272
+[SOAK] t=135 pos(1529,579) vel(172.6,51.5) spd=180.1 cs=180.1 W target(2148,764) dist=646 cumul=33269
+[SOAK] t=140 pos(1967,628) vel(-145.4,-105.1) spd=179.5 cs=180.0 W target(1430,240) dist=663 cumul=34111
+[SOAK] t=145 pos(1202,201) vel(-178.1,-25.8) spd=179.9 cs=180.0 W target(646,121) dist=562 cumul=35004
+[FF] g42 ForceFetch type=0 w=2560 h=1440
+[FF] after StartFetch state=1 heldItem=0x0
+[SOAK] t=150 pos(1099,717) vel(274.7,386.4) spd=474.1 cs=479.4 R target(1349,1190) dist=535 cumul=36289
+[SOAK] t=155 pos(1087,694) vel(-82.9,-159.8) spd=180.0 cs=180.0 W target(988,503) dist=215 cumul=37492
+[SOAK] t=160 pos(1109,939) vel(-161.5,-122.9) spd=203.0 cs=203.0 W target(304,324) dist=1013 cumul=38661
+[SOAK] t=165 pos(388,388) vel(-143.0,-109.4) spd=180.0 cs=180.0 W target(304,324) dist=106 cumul=39569
+[SOAK] t=170 pos(691,982) vel(112.2,105.1) spd=153.7 cs=180.0 W target(1281,1025) dist=592 cumul=40409
+[SOAK] t=175 pos(1431,855) vel(59.0,-119.1) spd=132.9 cs=180.0 W target(2135,349) dist=867 cumul=41263
+[SOAK] t=180 pos(2117,351) vel(-61.5,-26.3) spd=66.9 cs=180.0 W target(1112,433) dist=1008 cumul=42123
+[SOAK] t=185 pos(1248,421) vel(-179.3,16.0) spd=180.0 cs=180.0 W target(1112,433) dist=137 cumul=42996
+[SOAK] t=190 pos(700,1067) vel(-96.1,152.2) spd=180.0 cs=180.0 W target(646,1153) dist=102 cumul=43884
+[SOAK] t=195 pos(1389,1014) vel(171.5,-54.7) spd=180.0 cs=180.0 W target(1685,919) dist=311 cumul=44742
+[SOAK] t=200 pos(980,906) vel(-180.0,-1.9) spd=180.1 cs=180.1 W target(362,899) dist=618 cumul=45726
+[FF] g42 ForceFetch type=0 w=2560 h=1440
+[FF] after StartFetch state=1 heldItem=0x0
+[SOAK] t=205 pos(895,646) vel(422.7,-198.9) spd=467.1 cs=478.5 F target(1910,-80) dist=1248 cumul=46910
+[HF] g42 handleFetching called state=1
+[HF] g42 heldItem=0x104e42870 image=0x0 after creation
+[HF] g42 -> RETURNING, dragPos=(1062.9,854.8) dragInit=0
+[SOAK] t=210 pos(1346,884) vel(-235.0,402.0) spd=465.7 cs=480.0 R target(1307,1039) dist=160 cumul=49304
+[SOAK] t=215 pos(938,537) vel(-174.0,46.1) spd=180.0 cs=180.0 W target(802,573) dist=141 cumul=50649
+[SOAK] t=220 pos(1646,938) vel(166.0,69.5) spd=180.0 cs=180.0 W target(2085,1122) dist=476 cumul=51685
+[SOAK] t=225 pos(1895,1075) vel(42.3,-170.1) spd=175.3 cs=180.0 W target(1907,1035) dist=42 cumul=52500
+[SOAK] t=230 pos(1106,767) vel(-171.4,-54.8) spd=180.0 cs=180.0 W target(787,665) dist=335 cumul=53374
+[SOAK] t=235 pos(1284,868) vel(166.8,67.8) spd=180.0 cs=180.0 W target(1857,1101) dist=618 cumul=54213
+[SOAK] t=240 pos(2049,910) vel(121.6,-132.6) spd=179.9 cs=180.0 W target(2256,684) dist=306 cumul=55095
+[SOAK] t=245 pos(1433,427) vel(-477.6,-18.9) spd=478.0 cs=479.4 R target(208,379) dist=1226 cumul=56391
+[SOAK] t=250 pos(673,606) vel(172.1,67.1) spd=184.7 cs=184.7 W target(1476,919) dist=862 cumul=58236
+[SOAK] t=255 pos(1458,898) vel(-61.9,-84.1) spd=104.4 cs=180.0 W target(994,437) dist=654 cumul=59099
+[FF] g42 ForceFetch type=0 w=2560 h=1440
+[FF] after StartFetch state=1 heldItem=0x0
+[SOAK] t=260 pos(1461,408) vel(467.1,-17.2) spd=467.4 cs=476.4 F target(2640,381) dist=1179 cumul=60197
+[HF] g42 handleFetching called state=1
+[HF] g42 heldItem=0x104e42900 image=0x0 after creation
+[HF] g42 -> RETURNING, dragPos=(463.3,363.4) dragInit=0
+[SOAK] t=265 pos(1751,1151) vel(33.7,81.8) spd=88.4 cs=255.1 W target(2338,900) dist=638 cumul=62556
+[SOAK] t=270 pos(2252,685) vel(-75.1,-163.2) spd=179.7 cs=180.0 W target(2084,322) dist=400 cumul=63418
+[SOAK] t=275 pos(1876,755) vel(-74.4,163.9) spd=180.0 cs=180.0 W target(1739,1057) dist=331 cumul=64276
+[FF] g42 ForceFetch type=0 w=2560 h=1440
+[FF] after StartFetch state=1 heldItem=0x0
+[SOAK] t=280 pos(629,988) vel(-479.0,-29.9) spd=479.9 cs=480.0 R target(218,957) dist=413 cumul=65828
+[SOAK] t=285 pos(1286,758) vel(178.4,-27.1) spd=180.4 cs=180.4 W target(1995,650) dist=717 cumul=67444
+[SOAK] t=291 pos(2171,605) vel(173.7,-46.8) spd=179.9 cs=180.0 W target(2232,588) dist=64 cumul=68343
+[FF] g42 ForceFetch type=0 w=2560 h=1440
+[FF] after StartFetch state=1 heldItem=0x0
+[HF] g42 handleFetching called state=1
+[HF] g42 heldItem=0x104e428d0 image=0x0 after creation
+[HF] g42 -> RETURNING, dragPos=(467.0,950.3) dragInit=0
+[SOAK] t=296 pos(1849,1036) vel(-435.5,-81.1) spd=443.0 cs=468.0 W target(380,752) dist=1496 cumul=70104
+[SOAK] t=301 pos(689,812) vel(-176.7,-34.3) spd=180.0 cs=180.0 W target(380,752) dist=314 cumul=71286
+[SOAK] t=306 pos(846,462) vel(32.0,27.0) spd=41.9 cs=180.0 W target(537,976) dist=599 cumul=72125
+[FF] g42 ForceFetch type=1 w=2560 h=1440
+[FF] after StartFetch state=1 heldItem=0x0
+[SOAK] t=311 pos(222,511) vel(-253.6,-398.8) spd=472.7 cs=477.9 F target(-80,9) dist=586 cumul=73267
+[HF] g42 handleFetching called state=1
+[HF] g42 heldItem=0x104e42960 image=0x0 after creation
+[HF] g42 -> RETURNING, dragPos=(2277.3,606.8) dragInit=0
+[SOAK] t=316 pos(793,1224) vel(184.8,-19.4) spd=185.8 cs=185.8 W target(1616,1126) dist=829 cumul=75457
+[SOAK] t=321 pos(1560,1131) vel(-146.0,13.7) spd=146.7 cs=180.0 W target(464,1237) dist=1101 cumul=76308
+[SOAK] t=326 pos(669,1217) vel(-179.2,17.3) spd=180.0 cs=180.0 W target(464,1237) dist=206 cumul=77203
+[SOAK] t=331 pos(861,658) vel(103.8,-147.0) spd=180.0 cs=180.0 W target(1157,239) dist=512 cumul=78087
+[SOAK] t=336 pos(1079,595) vel(-41.3,175.2) spd=180.0 cs=180.0 W target(1043,748) dist=157 cumul=78933
+[SOAK] t=341 pos(1742,968) vel(172.6,51.1) spd=180.0 cs=180.0 W target(1993,1042) dist=262 cumul=79811
+[SOAK] t=346 pos(1038,798) vel(-174.7,-44.8) spd=180.3 cs=180.3 W target(356,623) dist=704 cumul=81026
+[SOAK] t=351 pos(735,651) vel(457.3,37.3) spd=458.8 cs=473.9 W target(2173,769) dist=1443 cumul=82076
+[SOAK] t=356 pos(1883,745) vel(179.4,14.7) spd=180.0 cs=180.0 W target(2173,769) dist=291 cumul=83228
+[FF] g42 ForceFetch type=0 w=2560 h=1440
+[FF] after StartFetch state=1 heldItem=0x0
+[SOAK] t=361 pos(722,995) vel(-473.7,77.2) spd=479.9 cs=480.0 R target(289,1071) dist=439 cumul=84958
+[SOAK] t=366 pos(1693,886) vel(-81.2,13.7) spd=82.3 cs=229.8 W target(821,1055) dist=888 cumul=86953
+[SOAK] t=371 pos(2052,221) vel(-281.3,59.3) spd=287.5 cs=480.0 W target(298,685) dist=1815 cumul=88375
+[SOAK] t=376 pos(729,570) vel(-173.9,46.4) spd=180.0 cs=180.0 W target(298,685) dist=446 cumul=89743
+[FF] g42 ForceFetch type=1 w=2560 h=1440
+[FF] after StartFetch state=1 heldItem=0x0
+[SOAK] t=381 pos(518,657) vel(265.4,356.7) spd=444.6 cs=469.3 F target(1128,1520) dist=1057 cumul=90726
+[HF] g42 handleFetching called state=1
+[HF] g42 heldItem=0x104e42930 image=0x0 after creation
+[HF] g42 -> RETURNING, dragPos=(1884.1,391.1) dragInit=0
+[SOAK] t=386 pos(1168,564) vel(19.4,53.6) spd=57.0 cs=185.5 W target(481,519) dist=688 cumul=92898
+[FF] g42 ForceFetch type=0 w=2560 h=1440
+[FF] after StartFetch state=1 heldItem=0x0
+[SOAK] t=391 pos(761,637) vel(411.8,158.5) spd=441.2 cs=469.3 F target(2390,1520) dist=1853 cumul=93863
+[SOAK] t=396 pos(704,133) vel(-123.6,-84.7) spd=149.9 cs=480.0 R target(684,27) dist=107 cumul=95945
+[SOAK] t=401 pos(1543,411) vel(167.9,64.8) spd=180.0 cs=180.0 W target(1960,572) dist=447 cumul=96927
+[FF] g42 ForceFetch type=0 w=2560 h=1440
+[FF] after StartFetch state=1 heldItem=0x0
+[SOAK] t=406 pos(912,479) vel(-477.4,-36.2) spd=478.8 cs=479.9 F target(-80,466) dist=992 cumul=98398
+[HF] g42 handleFetching called state=1
+[HF] g42 heldItem=0x104e42990 image=0x0 after creation
+[HF] g42 -> RETURNING, dragPos=(706.9,98.1) dragInit=0
+[SOAK] t=411 pos(1113,952) vel(65.9,-93.4) spd=114.3 cs=324.7 R target(847,427) dist=589 cumul=100654
+[SOAK] t=416 pos(1432,316) vel(179.9,3.1) spd=179.9 cs=180.0 W target(1479,317) dist=47 cumul=101909
+[FF] g42 ForceFetch type=0 w=2560 h=1440
+[FF] after StartFetch state=1 heldItem=0x0
+[SOAK] t=421 pos(373,721) vel(-410.3,221.0) spd=466.1 cs=478.8 F target(-80,1104) dist=593 cumul=103107
+[HF] g42 handleFetching called state=1
+[HF] g42 heldItem=0x104e429c0 image=0x0 after creation
+[HF] g42 -> RETURNING, dragPos=(970.6,583.6) dragInit=0
+[SOAK] t=426 pos(1608,753) vel(287.2,-279.2) spd=400.5 cs=400.5 W target(1914,421) dist=452 cumul=105478
+[SOAK] t=431 pos(2181,848) vel(91.6,155.0) spd=180.0 cs=180.0 W target(2267,993) dist=168 cumul=106417
+[FF] g42 ForceFetch type=0 w=2560 h=1440
+[FF] after StartFetch state=1 heldItem=0x0
+[SOAK] t=436 pos(791,403) vel(121.3,101.5) spd=158.2 cs=480.0 R target(1873,1067) dist=1270 cumul=108178
+[SOAK] t=441 pos(1288,1073) vel(-204.6,-30.9) spd=206.9 cs=206.9 W target(331,928) dist=968 cumul=110147
+[SOAK] t=446 pos(386,936) vel(-178.0,-26.9) spd=180.0 cs=180.0 W target(331,928) dist=56 cumul=111059
+[SOAK] t=451 pos(1321,1014) vel(179.3,15.7) spd=180.0 cs=180.0 W target(1701,1047) dist=381 cumul=112074
+[FF] g42 ForceFetch type=0 w=2560 h=1440
+[FF] after StartFetch state=1 heldItem=0x0
+[SOAK] t=456 pos(821,194) vel(-366.1,-304.9) spd=476.5 cs=480.0 F target(395,-80) dist=506 cumul=113656
+[SOAK] t=461 pos(847,1122) vel(208.5,-65.6) spd=218.6 cs=218.6 W target(1796,822) dist=995 cumul=115684
+[SOAK] t=466 pos(1720,846) vel(171.6,-54.3) spd=180.0 cs=180.0 W target(1796,822) dist=80 cumul=116600
+[SOAK] t=471 pos(1145,1170) vel(-180.7,-23.1) spd=182.1 cs=182.1 W target(321,1065) dist=831 cumul=117597
+[SOAK] t=476 pos(795,1117) vel(453.8,48.1) spd=456.3 cs=473.3 R target(1502,1192) dist=711 cumul=118635
+[SOAK] t=481 pos(1334,629) vel(-84.9,-158.7) spd=180.0 cs=180.0 W target(1132,251) dist=429 cumul=120011
+[SOAK] t=486 pos(936,657) vel(-74.2,164.0) spd=180.0 cs=180.0 W target(818,917) dist=285 cumul=120870
+[SOAK] t=491 pos(1415,763) vel(174.5,-70.8) spd=188.3 cs=188.3 W target(2243,427) dist=894 cumul=122245
+[SOAK] t=496 pos(2230,437) vel(-10.9,39.5) spd=41.0 cs=180.0 W target(1430,1122) dist=1053 cumul=123126
+[SOAK] t=501 pos(1571,1003) vel(-137.3,116.4) spd=180.0 cs=180.0 W target(1430,1122) dist=184 cumul=123995
+[SOAK] t=506 pos(718,1111) vel(-179.9,-4.7) spd=180.0 cs=180.0 W target(295,1100) dist=423 cumul=124889
+[SOAK] t=511 pos(1369,701) vel(450.6,-164.8) spd=479.8 cs=480.0 R target(1928,497) dist=595 cumul=126416
+[SOAK] t=516 pos(1892,1135) vel(-43.4,174.7) spd=180.0 cs=180.0 W target(1872,1215) dist=83 cumul=127722
+[FF] g42 ForceFetch type=0 w=2560 h=1440
+[FF] after StartFetch state=1 heldItem=0x0
+[HF] g42 handleFetching called state=1
+[HF] g42 heldItem=0x104e429f0 image=0x0 after creation
+[HF] g42 -> RETURNING, dragPos=(1687.7,546.4) dragInit=0
+[SOAK] t=521 pos(1699,871) vel(-398.8,261.5) spd=476.9 cs=480.0 R target(1403,1119) dist=386 cumul=129819
+[SOAK] t=526 pos(1418,916) vel(407.6,225.6) spd=465.8 cs=476.0 R target(1866,1165) dist=512 cumul=131211
+[SOAK] t=531 pos(1420,818) vel(-145.9,-105.4) spd=180.0 cs=180.0 W target(1301,732) dist=147 cumul=132405
+[SOAK] t=536 pos(1035,675) vel(-175.5,-40.1) spd=180.0 cs=180.0 W target(898,644) dist=141 cumul=133193
+[SOAK] t=541 pos(1852,683) vel(179.8,8.0) spd=180.0 cs=180.0 W target(2349,705) dist=498 cumul=134258
+[SOAK] t=546 pos(1975,724) vel(-179.8,8.5) spd=180.0 cs=180.0 W target(1585,743) dist=390 cumul=135100
+[FF] g42 ForceFetch type=0 w=2560 h=1440
+[FF] after StartFetch state=1 heldItem=0x0
+[SOAK] t=551 pos(378,511) vel(-456.0,-131.7) spd=474.6 cs=480.0 F target(-80,298) dist=505 cumul=136720
+[HF] g42 handleFetching called state=1
+[HF] g42 heldItem=0x104e42a20 image=0x0 after creation
+[HF] g42 -> RETURNING, dragPos=(1527.3,745.7) dragInit=0
+[SOAK] t=556 pos(1407,579) vel(169.9,-66.3) spd=182.4 cs=182.4 W target(1909,381) dist=539 cumul=138780
+[SOAK] t=561 pos(1484,412) vel(-425.8,-154.3) spd=452.9 cs=471.3 R target(1119,277) dist=390 cumul=139802
+[SOAK] t=566 pos(1833,706) vel(157.6,87.1) spd=180.0 cs=180.0 W target(2317,974) dist=553 cumul=141139
+[SOAK] t=571 pos(2037,817) vel(-157.1,-87.8) spd=179.9 cs=180.0 W target(1390,456) dist=741 cumul=141980
+[SOAK] t=576 pos(1318,584) vel(-75.2,160.8) spd=177.5 cs=180.0 W target(1139,984) dist=438 cumul=142856
+[FF] g42 ForceFetch type=0 w=2560 h=1440
+[FF] after StartFetch state=1 heldItem=0x0
+[SOAK] t=581 pos(989,932) vel(-371.6,-299.5) spd=477.3 cs=479.9 R target(47,145) dist=1227 cumul=144152
+[SOAK] t=586 pos(196,483) vel(54.5,173.0) spd=181.4 cs=181.4 W target(363,1013) dist=556 cumul=145649
+[SOAK] t=591 pos(1369,1025) vel(179.5,38.6) spd=183.6 cs=183.6 W target(1717,1100) dist=356 cumul=147065
+[SOAK] t=597 pos(284,798) vel(137.1,-119.8) spd=182.1 cs=182.1 W target(929,240) dist=853 cumul=148663
+[SOAK] Final: pos(756,389) vel(136.1,-117.8) speed=180.0 state=0
+[SOAK] Net traveled: 1228 px, Cumulative: 149288 px, stateChanges: 97, maxStuck: 0s, zeroVelFrames: 0
+[       OK ] SoakTest.TenMinuteGoose (31 ms)
+[----------] 1 test from SoakTest (31 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (31 ms total)
+[  PASSED  ] 1 test.

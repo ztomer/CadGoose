@@ -1,6 +1,7 @@
 #import "audio.h"
 #import <AVFoundation/AVFoundation.h>
 #import <Foundation/Foundation.h>
+#import "config.h"
 
 extern bool g_debugMode;
 
@@ -78,6 +79,7 @@ void Audio_Init() {
 }
 
 void Audio_PlayHonk() {
+    if (g_config.general.audioMuted) return;
     if (!g_audioInitialized) Audio_Init();
     
     int idx = arc4random_uniform(4);
@@ -91,6 +93,7 @@ void Audio_PlayHonk() {
 }
 
 void Audio_PlayPat() {
+    if (g_config.general.audioMuted) return;
     if (!g_audioInitialized) Audio_Init();
     
     int idx = arc4random_uniform(3);
@@ -103,6 +106,7 @@ void Audio_PlayPat() {
 }
 
 void Audio_PlayBite() {
+    if (g_config.general.audioMuted) return;
     if (!g_audioInitialized) Audio_Init();
     if (g_bitePlayer) {
         g_bitePlayer.currentTime = 0;
@@ -111,6 +115,7 @@ void Audio_PlayBite() {
 }
 
 void Audio_PlayMudSquish() {
+    if (g_config.general.audioMuted) return;
     if (!g_audioInitialized) Audio_Init();
     if (g_mudPlayer) {
         g_mudPlayer.currentTime = 0;

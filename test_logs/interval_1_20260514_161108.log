@@ -1,0 +1,212 @@
+[LOG] Log file: /tmp/CadGoose_20260514_161108.log
+[DEBUG] main() starting, argc=2
+[DEBUG] argv[0]=./CadGoose
+[DEBUG] argv[1]=--debug
+[DEBUG] AppCli_HandleCommand returned -1
+[DEBUG] Got NSApplication: 0x107370980, running=0
+[DEBUG] finishLaunching done, running=0
+[DEBUG] activated, running=0
+[16:11:08] DEBUG: Starting run loop...
+[16:11:08] DEBUG: App launching...
+[16:11:08] DEBUG: Config init done
+Asset root: "/Users/ztomer/Projects/CadGoose"
+Assets: 83 memes, 53 texts
+[16:11:08] DEBUG: Assets init done
+[AITEXT] Loaded 53 file texts
+[16:11:08] DEBUG: AI text memes loaded
+Initializing Cursor Backends...
+Selected Cursor Backend: MacCGEvent
+[16:11:08] DEBUG: Backend: MacCGEvent
+[16:11:08] DEBUG: Creating windows for 1 screens
+[16:11:08] DEBUG: WindowManager instance: 0x102d47020
+[16:11:08] DEBUG: GooseWindow initWithScreen START, rect={{0, 0}, {1800, 1169}}
+[16:11:08] DEBUG: GooseWindow super init done, self=0x102d63500
+[16:11:08] DEBUG:   level=3
+[16:11:08] DEBUG:   collectionBehavior set
+[16:11:08] DEBUG:   window props set: opaque=0, ignoresMouse=0
+[16:11:08] DEBUG:   creating GooseView with frame {{0, 0}, {1800, 1169}}
+[16:11:08] DEBUG: GooseView initWithFrame START, frame={{0, 0}, {1800, 1169}}
+[16:11:08] DEBUG:   super init done, self=0x102d65580
+[16:11:08] DEBUG:   wantsLayer=YES
+[16:11:08] DEBUG:   layer backgroundColor set
+[16:11:08] DEBUG:   PRIMARY GOOSE VIEW (will update geese)
+[16:11:08] DEBUG:   time/count initialized
+[16:11:08] DEBUG: GooseView initWithFrame END
+[16:11:08] DEBUG:   gooseView created: 0x102d65580
+[16:11:08] DEBUG:   contentView set
+[16:11:08] DEBUG: GooseWindow initWithScreen END
+[16:11:08] DEBUG: createWindowsForAllScreens completed
+[16:11:08] DEBUG: Windows created: 1
+[16:11:08] DEBUG: Processing window: 0x102d63500
+[16:11:08] DEBUG:   frame: {{0, 0}, {1800, 1169}}
+[16:11:08] DEBUG:   level: 3
+[16:11:08] DEBUG:   opaque: 0
+[16:11:08] DEBUG:   ignoresMouseEvents: 0
+[16:11:08] DEBUG:   gooseView: 0x102d65580
+[16:11:08] DEBUG:   gooseView.frame: {{0, 0}, {1800, 1169}}
+[16:11:08] DEBUG: GooseView startAnimation START
+[16:11:08] DEBUG:   stopped old timer
+[16:11:08] DEBUG:   timer created: 0x4afe23d3900
+[16:11:08] DEBUG:   timer scheduled
+[16:11:08] DEBUG:   event handler set
+[16:11:08] DEBUG:   timer resumed
+[16:11:08] DEBUG: GooseView startAnimation END
+[16:11:08] DEBUG:   startAnimation done
+[16:11:08] DEBUG:   orderFront done
+[16:11:08] DEBUG: Window setup complete for window 0x102d63500
+[16:11:08] INFO: Window setup complete, count: 1
+[16:11:08] DEBUG: Screen: 1800x1169
+[16:11:08] DEBUG: Geese spawned: 1
+[16:11:08] DEBUG: Goose 0 at 1189.0,797.0
+[16:11:08] DEBUG: Menubar created
+[16:11:08] DEBUG: App ready, entering run loop...
+[DEBUG] Assets path: /Users/ztomer/Projects/CadGoose/Assets
+[DEBUG] Loaded honk 1: /Users/ztomer/Projects/CadGoose/Assets/Sound/NotEmbedded/Honk1.mp3
+[DEBUG] Loaded honk 2: /Users/ztomer/Projects/CadGoose/Assets/Sound/NotEmbedded/Honk2.mp3
+[DEBUG] Loaded honk 3: /Users/ztomer/Projects/CadGoose/Assets/Sound/NotEmbedded/Honk3.mp3
+[DEBUG] Loaded honk 4: /Users/ztomer/Projects/CadGoose/Assets/Sound/NotEmbedded/Honk4.mp3
+[DEBUG] Audio initialized
+[16:11:09] DEBUG: Goose 0 pos: 1099.6,743.3 speed: 180.0
+[16:11:10] DEBUG: Goose 0 pos: 953.7,655.7 speed: 180.0
+[16:11:11] DEBUG: Goose 0 pos: 800.5,563.7 speed: 180.0
+[16:11:12] DEBUG: Goose 0 pos: 646.4,471.2 speed: 180.0
+[16:11:13] DEBUG: Goose 0 pos: 492.0,378.5 speed: 180.0
+[16:11:14] DEBUG: Goose 0 pos: 337.7,285.9 speed: 180.0
+[16:11:15] DEBUG: Goose 0 pos: 286.7,235.6 speed: 451.7
+[16:11:16] DEBUG: Goose 0 pos: 504.6,293.6 speed: 221.4
+[16:11:17] DEBUG: Goose 0 pos: 688.0,352.3 speed: 181.9
+[16:11:18] DEBUG: Goose 0 pos: 859.5,408.6 speed: 180.1
+[16:11:19] DEBUG: Goose 0 pos: 1030.5,464.9 speed: 180.0
+[16:11:20] DEBUG: Goose 0 pos: 1201.5,521.2 speed: 180.0
+[16:11:21] DEBUG: Goose 0 pos: 1372.4,577.6 speed: 180.0
+[DEBUG] Playing honk 1
+[16:11:22] DEBUG: Goose 0 pos: 1509.6,606.3 speed: 180.0
+[16:11:23] DEBUG: Goose 0 pos: 1470.6,495.6 speed: 180.0
+[16:11:24] DEBUG: Goose 0 pos: 1376.3,352.6 speed: 180.0
+[16:11:25] DEBUG: Goose 0 pos: 1299.8,284.2 speed: 180.0
+[16:11:26] DEBUG: Goose 0 pos: 1303.2,415.9 speed: 180.0
+[16:11:27] DEBUG: Goose 0 pos: 1328.6,587.6 speed: 180.0
+[16:11:28] DEBUG: Goose 0 pos: 1307.6,706.0 speed: 180.0
+[16:11:29] DEBUG: Goose 0 pos: 1178.7,653.8 speed: 180.0
+[16:11:30] DEBUG: Goose 0 pos: 1029.6,569.1 speed: 180.0
+[16:11:31] DEBUG: Goose 0 pos: 871.4,485.6 speed: 180.0
+[16:11:32] DEBUG: Goose 0 pos: 711.9,402.5 speed: 180.0
+[16:11:33] DEBUG: Goose 0 pos: 658.6,333.3 speed: 180.0
+[16:11:34] DEBUG: Goose 0 pos: 797.1,293.5 speed: 180.0
+[16:11:35] DEBUG: Goose 0 pos: 969.8,263.6 speed: 180.0
+[FF] g0 ForceFetch type=0 w=1800 h=1169
+[FF] after StartFetch state=1 heldItem=0x0
+[16:11:36] DEBUG: Goose 0 pos: 1150.6,246.4 speed: 348.0
+[16:11:37] DEBUG: Goose 0 pos: 1461.5,358.4 speed: 473.9
+[16:11:38] DEBUG: Goose 0 pos: 1846.4,402.2 speed: 479.7
+[HF] g0 handleFetching called state=1
+[HF] g0 heldItem=0x4afe2bad050 image=0x4afe1a612c0 after creation
+[HF] g0 -> RETURNING, dragPos=(0.0,0.0) dragInit=0
+[DEBUG] Playing honk 1
+[16:11:39] DEBUG: Goose 0 pos: 1437.4,260.4 speed: 480.0
+[16:11:40] DEBUG: Goose 0 pos: 1042.0,230.9 speed: 480.0
+[DEBUG] Playing honk 2
+[16:11:41] DEBUG: Goose 0 pos: 778.3,268.1 speed: 196.1
+[16:11:42] DEBUG: Goose 0 pos: 594.4,250.0 speed: 180.7
+[16:11:43] DEBUG: Goose 0 pos: 468.5,225.7 speed: 180.0
+[16:11:44] DEBUG: Goose 0 pos: 576.6,226.9 speed: 180.0
+[FF] g0 ForceFetch type=0 w=1800 h=1169
+[FF] after StartFetch state=1 heldItem=0x0
+[16:11:45] DEBUG: Goose 0 pos: 752.1,256.6 speed: 404.9
+[16:11:46] DEBUG: Goose 0 pos: 1057.8,421.7 speed: 476.5
+[16:11:47] DEBUG: Goose 0 pos: 1410.1,674.5 speed: 479.8
+[16:11:48] DEBUG: Goose 0 pos: 1701.2,1000.3 speed: 480.0
+[HF] g0 handleFetching called state=1
+[HF] g0 heldItem=0x4afe2bae0d0 image=0x4afe1a61f40 after creation
+[HF] g0 -> RETURNING, dragPos=(1155.7,177.4) dragInit=0
+[DEBUG] Playing honk 3
+[16:11:49] DEBUG: Goose 0 pos: 1755.8,932.7 speed: 480.0
+[16:11:50] DEBUG: Goose 0 pos: 1512.4,700.5 speed: 480.0
+[16:11:51] DEBUG: Goose 0 pos: 1082.8,707.1 speed: 480.0
+[16:11:52] DEBUG: Goose 0 pos: 634.3,740.9 speed: 480.0
+[DEBUG] Playing honk 4
+[16:11:53] DEBUG: Goose 0 pos: 336.7,645.8 speed: 218.6
+[16:11:54] DEBUG: Goose 0 pos: 343.2,662.7 speed: 181.8
+[DEBUG] Playing honk 4
+[16:11:55] DEBUG: Goose 0 pos: 478.1,726.3 speed: 326.1
+[16:11:56] DEBUG: Goose 0 pos: 469.5,604.6 speed: 472.9
+[DEBUG] Playing honk 1
+[DEBUG] Playing honk 1
+[16:11:57] DEBUG: Goose 0 pos: 276.6,270.8 speed: 359.3
+[16:11:58] DEBUG: Goose 0 pos: 214.6,96.4 speed: 190.6
+[16:11:59] DEBUG: Goose 0 pos: 309.0,62.1 speed: 180.5
+[DEBUG] Playing honk 1
+[16:12:00] DEBUG: Goose 0 pos: 434.5,50.4 speed: 180.0
+[16:12:01] DEBUG: Goose 0 pos: 597.3,78.8 speed: 180.0
+[DEBUG] Playing honk 4
+[DEBUG] Playing honk 2
+[16:12:02] DEBUG: Goose 0 pos: 669.1,210.1 speed: 445.2
+[16:12:03] DEBUG: Goose 0 pos: 533.0,555.0 speed: 478.4
+[16:12:04] DEBUG: Goose 0 pos: 326.8,942.1 speed: 479.9
+[16:12:05] DEBUG: Goose 0 pos: 218.9,1074.6 speed: 480.0
+[16:12:06] DEBUG: Goose 0 pos: 312.3,935.2 speed: 480.0
+[DEBUG] Playing honk 4
+[16:12:07] DEBUG: Goose 0 pos: 455.4,746.0 speed: 487.9
+[16:12:08] DEBUG: Goose 0 pos: 362.1,797.4 speed: 480.4
+[16:12:09] DEBUG: Goose 0 pos: 94.2,892.6 speed: 480.0
+[DEBUG] Playing honk 3
+[16:12:10] DEBUG: Goose 0 pos: 64.9,927.0 speed: 703.3
+[16:12:11] DEBUG: Goose 0 pos: 64.2,929.2 speed: 353.9
+[16:12:12] DEBUG: Goose 0 pos: 57.5,962.5 speed: 188.0
+[config] listWidth=432 descLabelX=173 maxNW=107 maxDW=247
+[16:12:14] DEBUG: Goose 0 pos: 53.0,986.1 speed: 180.4
+[16:12:15] DEBUG: Goose 0 pos: 49.9,1003.2 speed: 180.0
+[16:12:16] DEBUG: Goose 0 pos: 47.6,1016.1 speed: 180.0
+[16:12:17] DEBUG: Goose 0 pos: 45.7,1025.9 speed: 180.0
+[DEBUG] Playing honk 4
+[16:12:18] DEBUG: Goose 0 pos: 44.4,1028.6 speed: 180.0
+[16:12:19] DEBUG: Goose 0 pos: 43.2,1029.2 speed: 180.0
+[16:12:20] DEBUG: Goose 0 pos: 42.0,1029.4 speed: 180.0
+[16:12:21] DEBUG: Goose 0 pos: 40.7,1029.9 speed: 180.0
+[16:12:22] DEBUG: Goose 0 pos: 39.5,1030.0 speed: 180.0
+[16:12:23] DEBUG: Goose 0 pos: 38.4,1029.9 speed: 180.0
+[16:12:24] DEBUG: Goose 0 pos: 37.3,1029.8 speed: 180.0
+[16:12:25] DEBUG: Goose 0 pos: 36.1,1030.0 speed: 180.0
+[16:12:26] DEBUG: Goose 0 pos: 34.9,1030.2 speed: 180.0
+[16:12:27] DEBUG: Goose 0 pos: 34.1,1030.3 speed: 180.0
+[16:12:28] DEBUG: Goose 0 pos: 33.1,1029.8 speed: 180.0
+[16:12:29] DEBUG: Goose 0 pos: 32.1,1029.2 speed: 180.0
+[16:12:30] DEBUG: Goose 0 pos: 31.1,1028.7 speed: 180.0
+[16:12:31] DEBUG: Goose 0 pos: 30.3,1028.4 speed: 180.0
+[16:12:32] DEBUG: Goose 0 pos: 29.3,1028.3 speed: 180.0
+[16:12:33] DEBUG: Goose 0 pos: 28.3,1028.3 speed: 180.0
+[16:12:34] DEBUG: Goose 0 pos: 27.4,1028.0 speed: 180.0
+[16:12:35] DEBUG: Goose 0 pos: 26.5,1028.1 speed: 180.0
+[16:12:36] DEBUG: Goose 0 pos: 25.6,1028.3 speed: 180.0
+[16:12:37] DEBUG: Goose 0 pos: 24.7,1028.2 speed: 180.0
+[16:12:38] DEBUG: Goose 0 pos: 23.7,1028.6 speed: 180.0
+[16:12:39] DEBUG: Goose 0 pos: 24.3,1029.9 speed: 650.6
+[16:12:40] DEBUG: Goose 0 pos: 25.8,1031.0 speed: 500.1
+[16:12:41] DEBUG: Goose 0 pos: 27.7,1034.5 speed: 194.7
+[16:12:42] DEBUG: Goose 0 pos: 29.8,1039.5 speed: 180.7
+[16:12:43] DEBUG: Goose 0 pos: 31.6,1043.7 speed: 180.0
+[16:12:44] DEBUG: Goose 0 pos: 33.2,1046.6 speed: 180.0
+[16:12:45] DEBUG: Goose 0 pos: 35.9,1014.2 speed: 577.7
+[16:12:46] DEBUG: Goose 0 pos: 39.9,699.8 speed: 713.4
+[16:12:47] DEBUG: Goose 0 pos: 119.0,391.9 speed: 210.2
+[16:12:48] DEBUG: Goose 0 pos: 276.7,383.0 speed: 181.4
+[16:12:49] DEBUG: Goose 0 pos: 436.3,456.8 speed: 180.1
+[16:12:50] DEBUG: Goose 0 pos: 561.8,581.3 speed: 615.4
+[DEBUG] Playing honk 1
+[16:12:51] DEBUG: Goose 0 pos: 489.4,921.0 speed: 662.5
+[16:12:52] DEBUG: Goose 0 pos: 365.3,1069.8 speed: 202.2
+[16:12:53] DEBUG: Goose 0 pos: 334.4,954.6 speed: 181.0
+[16:12:54] DEBUG: Goose 0 pos: 334.0,782.0 speed: 180.0
+[16:12:55] DEBUG: Goose 0 pos: 338.8,603.0 speed: 180.0
+[16:12:56] DEBUG: Goose 0 pos: 344.5,423.3 speed: 180.0
+[16:12:57] DEBUG: Goose 0 pos: 350.6,244.7 speed: 180.0
+[16:12:58] DEBUG: Goose 0 pos: 429.6,228.2 speed: 180.0
+[16:12:59] DEBUG: Goose 0 pos: 558.3,327.3 speed: 180.0
+[16:13:00] DEBUG: Goose 0 pos: 692.6,443.6 speed: 180.0
+[16:13:01] DEBUG: Goose 0 pos: 827.4,562.4 speed: 180.0
+[16:13:02] DEBUG: Goose 0 pos: 962.2,681.6 speed: 180.0
+[16:13:03] DEBUG: Goose 0 pos: 1096.3,800.2 speed: 180.0
+[16:13:04] DEBUG: Goose 0 pos: 1099.4,790.8 speed: 180.0
+[16:13:05] DEBUG: Goose 0 pos: 994.5,676.6 speed: 180.0
+[16:13:06] DEBUG: Goose 0 pos: 873.8,547.5 speed: 180.0
+[16:13:07] DEBUG: Goose 0 pos: 751.0,416.5 speed: 180.0

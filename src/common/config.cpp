@@ -150,3 +150,19 @@ void Config_Init() {
         g_configLookup[ToLower(opt.key)] = &opt;
     }
 }
+
+std::string Config_EvilPersonality(float level) {
+    int state = std::min(static_cast<int>(round(level * 9)), 8);
+    switch (state) {
+        case 0: return "an adorable fluffy gosling";
+        case 1: return "a friendly goose";
+        case 2: return "a mischievous prankster goose";
+        case 3: return "a sarcastic goose with attitude";
+        case 4: return "a chaotic neutral goose";
+        case 5: return "a grumpy goose having a bad day";
+        case 6: return "a villainous goose scheming against humanity";
+        case 7: return "an evil overlord goose bent on world domination";
+        case 8: return "an absurdly eloquent goose dictator who has conquered Poland";
+        default: return "a goose";
+    }
+}

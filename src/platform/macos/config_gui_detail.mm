@@ -102,15 +102,6 @@
         y -= 25;
         [self addSliderWithLabel:@"Drag Radius" min:50.0f max:300.0f value:g_config.behaviors.drag.radius atY:y key:@"behaviors.control.drag.radius"];
         y -= 35;
-    } else if ([key isEqualToString:@"behaviors.control.banish"]) {
-        _titleLabel.stringValue = @"Banish Behavior";
-        NSString* k = @(g_config.behaviors.banish.hotkey.c_str());
-        [self addInstructionLabel:[NSString stringWithFormat:@"👻 Press %@ (or Ctrl+Alt+Middle Click) to banish\n   Respawns after the duration", k] atY:y];
-        y -= 42;
-        [self addHotkeyFieldWithLabel:@"Banish Key" value:@(g_config.behaviors.banish.hotkey.c_str()) atY:y key:@"banish_hotkey"];
-        y -= 30;
-        [self addSliderWithLabel:@"Duration (s)" min:1.0f max:60.0f value:g_config.behaviors.banish.duration atY:y key:@"behaviors.control.banish.duration"];
-        y -= 35;
     } else if ([key isEqualToString:@"behaviors.info.nametag"]) {
         _titleLabel.stringValue = @"Nametag & Geese";
         [self addSliderWithLabel:@"Font Size" min:8.0f max:40.0f value:g_config.behaviors.nametag.size atY:y key:@"behaviors.info.nametag.size"];
@@ -239,8 +230,6 @@
         g_config.portal.hotkey2 = value;
     } else if ([keyStr isEqualToString:@"hotkey0"]) {
         g_config.portal.hotkey0 = value;
-    } else if ([keyStr isEqualToString:@"banish_hotkey"]) {
-        g_config.behaviors.banish.hotkey = value;
     } else if ([keyStr isEqualToString:@"breadcrumbs_hotkey"]) {
         g_config.behaviors.breadCrumbs.hotkey = value;
     }

@@ -16,17 +16,25 @@ TEST(BehaviorToggles, AllBehaviorTogglesDirectAccess) {
     EXPECT_FALSE(g_config.behaviors.fun.acid);
     EXPECT_FALSE(g_config.behaviors.fun.anger);
     EXPECT_TRUE(g_config.behaviors.fun.autumnLeaves);
+    EXPECT_TRUE(g_config.behaviors.fun.avoidance);
     EXPECT_FALSE(g_config.behaviors.control.honcker);
     EXPECT_FALSE(g_config.behaviors.control.jail);
     EXPECT_FALSE(g_config.behaviors.control.portals);
     EXPECT_FALSE(g_config.behaviors.control.drag);
-    EXPECT_FALSE(g_config.behaviors.control.banish);
     EXPECT_FALSE(g_config.behaviors.info.nametag);
     EXPECT_FALSE(g_config.behaviors.info.presence);
     EXPECT_FALSE(g_config.behaviors.info.configGUI);
     EXPECT_FALSE(g_config.behaviors.systems.health);
     EXPECT_FALSE(g_config.behaviors.systems.ai);
     EXPECT_FALSE(g_config.behaviors.systems.pomodoro);
+    EXPECT_FALSE(g_config.behaviors.fun.interactiveDrops);
+    EXPECT_TRUE(g_config.behaviors.fun.avoidance);
+    EXPECT_FALSE(g_config.behaviors.fun.boredom);
+    EXPECT_TRUE(g_config.behaviors.fun.peeking);
+    EXPECT_FALSE(g_config.behaviors.fun.affirmations);
+    EXPECT_FALSE(g_config.behaviors.fun.interactiveDrops);
+    EXPECT_FALSE(g_config.behaviors.fun.sonicMode);
+    EXPECT_FALSE(g_config.behaviors.fun.toysEnabled);
 
     g_config.behaviors.fun.ball = true;
     EXPECT_TRUE(g_config.behaviors.fun.ball);
@@ -35,6 +43,14 @@ TEST(BehaviorToggles, AllBehaviorTogglesDirectAccess) {
     g_config.behaviors.systems.ai = true;
     EXPECT_TRUE(g_config.behaviors.systems.ai);
     g_config.behaviors.systems.ai = false;
+
+    g_config.behaviors.fun.sonicMode = true;
+    EXPECT_TRUE(g_config.behaviors.fun.sonicMode);
+    g_config.behaviors.fun.sonicMode = false;
+
+    g_config.behaviors.fun.toysEnabled = true;
+    EXPECT_TRUE(g_config.behaviors.fun.toysEnabled);
+    g_config.behaviors.fun.toysEnabled = false;
 }
 
 TEST(BehaviorToggles, AllRegisteredInRegistry) {
@@ -42,9 +58,11 @@ TEST(BehaviorToggles, AllRegisteredInRegistry) {
     const char* keys[] = {
         "ball_enabled", "breadcrumbs_enabled", "hats_enabled",
         "rainbow_enabled", "acid_enabled", "anger_enabled",
-        "autumn_leaves_enabled",
+        "autumn_leaves_enabled", "avoidance_enabled", "boredom_enabled",
+        "peeking_enabled", "affirmations_enabled", "interactive_drops_enabled",
+        "sonic_mode_enabled", "toys_enabled",
         "honcker_enabled", "jail_enabled", "portals_enabled",
-        "drag_enabled", "banish_enabled",
+        "drag_enabled",
         "nametag_enabled", "presence_enabled", "config_gui_enabled",
         "health_enabled", "ai_enabled", "pomodoro_enabled"
     };
@@ -59,7 +77,6 @@ TEST(BehaviorToggles, HotkeysRegisteredInRegistry) {
     Config_Init();
     const char* keys[] = {
         "honcker_hotkey", "jail_hotkey_o", "jail_hotkey_p",
-        "banish_hotkey",
         "portal_hotkey_1", "portal_hotkey_2", "portal_hotkey_0",
         "breadcrumbs_hotkey"
     };

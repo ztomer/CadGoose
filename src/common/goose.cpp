@@ -6,11 +6,29 @@
 #include <cmath>
 #include <cstdio>
 
+// --- Magic numbers extracted as named constants ---
+static constexpr const char* kDebugLogPath = "/tmp/goose_debug.log";
+static constexpr double kLogInterval = 0.1;
+static constexpr float kSpringForce = 50.0f;
+static constexpr float kSpringDamping = 0.80f;
+static constexpr float kSurprisedSpeedMultiplier = 1.5f;
+static constexpr float kEdgeAvoidMinForce = 0.1f;
+static constexpr float kSpeedEpsilon = 1e-4f;
+static constexpr float kNighttimeSpeedFactor = 0.6f;
+static constexpr int kNighttimeStartHour = 23;
+static constexpr int kNighttimeEndHour = 6;
+static constexpr float kFetchCurvatureRange = 200.0f;
+static constexpr float kFetchCurvatureCenter = 100.0f;
+static constexpr float kFetchCurvatureDivisor = 100.0f;
+static constexpr float kTwoPi = 2.0f * PI;
+static constexpr float kRadToDeg = 180.0f / PI;
+static constexpr float kDegToRad = PI / 180.0f;
+
 static FILE *s_debugLog = nullptr;
 
 static FILE *GetDebugLog() {
   if (!s_debugLog) {
-    s_debugLog = fopen("/tmp/goose_debug.log", "w");
+    s_debugLog = fopen(kDebugLogPath, "w");
     if (!s_debugLog)
       s_debugLog = stderr;
   }
@@ -226,7 +244,7 @@ void Goose::SolveFeet(double time) {
 void Goose::UpdateDirection() {
   if (state == GooseState::SNATCH_CURSOR) {
     Vector2 revDir = snatchFwd * g_config.physics.directionReverseMultiplier;
-    dir = std::atan2(revDir.y, revDir.x) * (float)(180.0 / PI);
+    dir = std::atan2(revDir.y, revDir.x) * kRadToDeg;
   } else if (Vector2::Length(vel) > g_config.physics.directionRotateMinVel) {
     Vector2 curDirVec = Vector2::FromAngleDegrees(dir);
     Vector2 targetDirVec = Vector2::Normalize(vel);
@@ -237,8 +255,23 @@ void Goose::UpdateDirection() {
 
     Vector2 blend = Vector2::Lerp(curDirVec, targetDirVec,
                                    g_config.movement.directionBlendRate);
-    dir = std::atan2(blend.y, blend.x) * (float)(180.0 / PI);
+    dir = std::atan2(blend.y, blend.x) * kRadToDeg;
   }
+}
+
+static float CalculateTargetSpeed(const Goose& g, float dist) {
+  bool needsRun = (dist > g_config.movement.runDistanceThreshold ||
+                   g.state == GooseState::FETCHING || g.state == GooseState::CHASE_CURSOR ||
+                   g.state == GooseState::SNATCH_CURSOR || g.state == GooseState::RETURNING);
+  float baseSpeed = needsRun ? g_config.movement.baseRunSpeed : g_config.movement.baseWalkSpeed;
+
+  time_t sysTime = std::time(nullptr);
+  struct tm* tm_info = std::localtime(&sysTime);
+  if (tm_info && (tm_info->tm_hour >= kNighttimeStartHour || tm_info->tm_hour < kNighttimeEndHour)) {
+    baseSpeed *= kNighttimeSpeedFactor;
+  }
+
+  return g.isSurprised ? g_config.movement.baseRunSpeed * kSurprisedSpeedMultiplier : baseSpeed;
 }
 
 CursorAction Goose::Update(double dt, double time, int w, int h,
@@ -255,7 +288,7 @@ CursorAction Goose::Update(double dt, double time, int w, int h,
   }
 
   s_lastLogTime += dt;
-  if (s_lastLogTime > 0.1 || s_stateChanged) {
+  if (s_lastLogTime > kLogInterval || s_stateChanged) {
     LogTick(time, cursor);
     s_lastLogTime = 0;
     s_stateChanged = false;
@@ -264,20 +297,7 @@ CursorAction Goose::Update(double dt, double time, int w, int h,
   CursorAction action = UpdateBehaviors(dt, time, w, h, cursor);
 
   float dist = Vector2::Length(target - pos);
-  float tSpeed = (dist > g_config.movement.runDistanceThreshold ||
-                  state == GooseState::FETCHING || state == GooseState::CHASE_CURSOR ||
-                  state == GooseState::SNATCH_CURSOR || state == GooseState::RETURNING)
-                     ? g_config.movement.baseRunSpeed
-                     : g_config.movement.baseWalkSpeed;
-
-  time_t sysTime = std::time(nullptr);
-  struct tm* tm_info = std::localtime(&sysTime);
-  if (tm_info && (tm_info->tm_hour >= 23 || tm_info->tm_hour < 6)) {
-      tSpeed *= 0.6f; // Nighttime mode: walk a bit slower
-  }
-  
-  if (isSurprised) tSpeed = g_config.movement.baseRunSpeed * 1.5f;
-
+  float tSpeed = CalculateTargetSpeed(*this, dist);
   currentSpeed = Lerp(currentSpeed, tSpeed, g_config.movement.speedLerpRate);
 
   Vector2 steerForce = CalculateSeekForce();
@@ -285,7 +305,7 @@ CursorAction Goose::Update(double dt, double time, int w, int h,
   steerForce += CalculateSeparationForce();
 
   Vector2 avoidance = CalculateEdgeAvoidance(w, h);
-  if (Vector2::Length(avoidance) > 0.1f) {
+  if (Vector2::Length(avoidance) > kEdgeAvoidMinForce) {
     steerForce += (avoidance - vel) * g_config.physics.edgeAvoidForce;
   }
 
@@ -297,7 +317,7 @@ CursorAction Goose::Update(double dt, double time, int w, int h,
   vel = vel + steerForce * (float)dt;
 
   float speed = Vector2::Length(vel);
-  if (speed > currentSpeed && speed > 1e-4f) {
+  if (speed > currentSpeed && speed > kSpeedEpsilon) {
     vel = vel * (currentSpeed / speed);
   }
 
@@ -372,7 +392,7 @@ void Goose::StartFetch(int w, int h, double time) {
     break;
   }
 
-  parabolicCurvature = ((rand() % 200) - 100) / 100.0f;
+  parabolicCurvature = ((rand() % (int)kFetchCurvatureRange) - (int)kFetchCurvatureCenter) / kFetchCurvatureDivisor;
 }
 
 void Goose::PickNewTarget(int w, int h) {
@@ -396,7 +416,7 @@ void Goose::UpdateDrag(double dt) {
 
   if (!dragInit) {
     dragPos = GetBeakTipDevice();
-    dragRot = dir * ((float)PI / 180.0f);
+    dragRot = dir * kDegToRad;
     dragVel = {0, 0};
     dragRotVel = 0.0f;
     dragInit = true;
@@ -407,19 +427,16 @@ void Goose::UpdateDrag(double dt) {
   Vector2 diff = targetPos - dragPos;
 
   // Spring physics
-  float springForce = 50.0f;
-  float damping = 0.80f;
-
-  dragVel = dragVel + diff * (springForce * (float)dt);
-  dragVel = dragVel * damping;
+  dragVel = dragVel + diff * (kSpringForce * (float)dt);
+  dragVel = dragVel * kSpringDamping;
   dragPos = dragPos + dragVel * (float)dt;
 
   if (Vector2::Length(dragVel) > g_config.physics.dragVelocityThreshold) {
       float targetRot = std::atan2(dragVel.y, dragVel.x);
       
       float rotDiff = targetRot - dragRot;
-      while (rotDiff > PI) rotDiff -= 2 * PI;
-      while (rotDiff < -PI) rotDiff += 2 * PI;
+      while (rotDiff > PI) rotDiff -= kTwoPi;
+      while (rotDiff < -PI) rotDiff += kTwoPi;
       
       dragRot += rotDiff * g_config.physics.dragRotationSpeed * (float)dt;
   }

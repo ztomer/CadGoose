@@ -6,6 +6,7 @@
 #include <vector>
 #include <functional>
 #include <toml.hpp>
+#include "ring_buffer.h"
 
 enum ConfigType { CFG_BOOL, CFG_INT, CFG_FLOAT, CFG_STRING };
 
@@ -61,6 +62,7 @@ static const int APPEARANCE_CUSTOM = 3;
 struct GeneralConfig {
   float globalScale = 1.0f;
   bool audioEnabled = true;
+  bool audioMuted = false;
   bool memesEnabled = true;
   bool canadaGooseMode = false; // deprecated, use appearanceMode
   int appearanceMode = APPEARANCE_SYSTEM;
@@ -347,6 +349,13 @@ struct BehaviorConfig {
     bool acid = false;
     bool anger = false;
     bool autumnLeaves = true;
+    bool avoidance = true;
+    bool boredom = false;
+    bool peeking = true;
+    bool affirmations = false;
+    bool interactiveDrops = false;
+    bool sonicMode = false;
+    bool toysEnabled = false;
   } fun;
 
   struct Control {
@@ -354,7 +363,6 @@ struct BehaviorConfig {
     bool jail = false;
     bool portals = false;
     bool drag = false;
-    bool banish = false;
   } control;
 
   struct Info {
@@ -373,7 +381,6 @@ struct BehaviorConfig {
   struct HonckerConfig { std::string hotkey = "f"; float size = 40.0f; float cooldown = 0.5f; } honcker;
   struct DragConfig { float radius = 45.0f; } drag;
   struct JailConfig { std::string hotkeyO = "o"; std::string hotkeyP = "p"; float size = 150.0f; } jail;
-  struct BanishConfig { float duration = 30.0f; std::string hotkey = "b"; } banish;
   struct NametagConfig { float size = 14.0f; } nametag;
   struct PresenceConfig { float interval = 1.0f; } presence;
   struct HealthConfig { float opacity = 0.8f; float maxHealth = 100.0f; float regenRate = 0.5f; float damageCooldown = 2.0f; float damageSpeedThreshold = 200.0f; float damageAmount = 5.0f; } health;
@@ -410,6 +417,16 @@ struct BehaviorConfig {
   } ball;
   struct BreadCrumbsConfig { int maxCrumbs = 50; float lifetime = 10.0f; float spawnDist = 15.0f; float size = 5.0f; std::string hotkey = "right shift"; } breadCrumbs;
   struct HatsConfig { std::string path; float sizeX = 32.0f; float sizeY = 24.0f; float offsetX = 0.0f; float offsetY = -15.0f; } hats;
+  struct AffirmationsConfig {
+    bool enabled = false;
+    float interval = 300.0f;
+    std::string customMessage;
+  } affirmations;
+  struct InteractiveDropsConfig {
+    float puddleLifetime = 30.0f;
+    float flowerGrowTime = 10.0f;
+    float dropInterval = 120.0f;
+  } interactiveDrops;
 };
 
 struct Config {
@@ -431,7 +448,7 @@ struct Config {
   ColorConfig color;
   BehaviorConfig behaviors;
 
-  enum ProviderType { kProviderOsaurus = 0, kProviderOllama = 1, kProviderCustom = 2 };
+   enum ProviderType { kProviderFoundation = 0, kProviderOsaurus = 1, kProviderOllama = 2, kProviderCustom = 3 };
   struct PortalConfig { std::string hotkey1 = "1"; std::string hotkey2 = "2"; std::string hotkey0 = "0"; float p1Width = 80.0f; float p1Height = 80.0f; float p2Width = 80.0f; float p2Height = 80.0f; float width = 80.0f; } portal;
   struct ModelProfile {
     std::string pattern;           // glob match on model name (e.g. "qwen*", "gemma*")
@@ -462,7 +479,9 @@ struct Config {
     int chatMaxHistory = 100;
     bool localLlmEnabled = false;
     std::string localLlmModelPath;
+    std::vector<std::string> localLlmSearchPaths; // Additional paths to search for CoreML models
   } ai;
+  RingBuffer<std::string, 10> gooseNames;
 };
 
 extern Config g_config;
@@ -488,5 +507,7 @@ bool Config_SaveNow(std::string *errorOut = nullptr);
 
 void Config_UpdateActiveTheme();
 bool Config_LoadThemeColors(const std::string& themeName, ColorRGB& body, ColorRGB& neck, ColorRGB& head, ColorRGB& beak, ColorRGB& eye, ColorRGB& outline);
+
+std::string Config_EvilPersonality(float level);
 
 #endif // CONFIG_H

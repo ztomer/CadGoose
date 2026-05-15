@@ -3,8 +3,8 @@
 #include <string>
 
 #define LIST_WIDTH 545 // computed at runtime in init, kept as default for header usage
-#define WINDOW_HEIGHT 830
-#define APPBAR_HEIGHT 38
+#define WINDOW_HEIGHT 520
+#define APPBAR_HEIGHT 44
 #define TABLE_HEIGHT (WINDOW_HEIGHT - APPBAR_HEIGHT)
 
 bool s_getBoolForKey(const std::string& key);
@@ -53,6 +53,25 @@ extern NSMutableArray* g_configItemsForAccess;
 @end
 
 @interface AITabView : NSView
+@property (nonatomic, strong) NSTextField* statusLabel;
+@property (nonatomic, strong) NSTextField* promptBody;
+@property (nonatomic, strong) NSTextField* endpointField;
+@property (nonatomic, strong) NSTextField* customModelField;
+@property (nonatomic, strong) NSTextField* portLabel;
+@property (nonatomic, strong) NSTextField* portField;
+@property (nonatomic, strong) NSTextField* modelLabel;
+@property (nonatomic, strong) NSPopUpButton* modelPopup;
+@property (nonatomic, strong) NSButton* refreshBtn;
+- (NSInteger)currentProvider;
+- (void)setProvider:(NSInteger)idx;
+- (int)currentPort;
+- (void)setPort:(int)port;
+- (NSString*)currentModelName;
+- (void)setModelName:(NSString*)name;
+- (void)updateCustomVisibility;
+- (NSString*)promptPreviewForEvilLevel:(float)level;
+- (NSString*)modelsEndpointForTest;
+- (void)refreshModels:(id)sender;
 @end
 
 @interface AppearanceTabView : NSView

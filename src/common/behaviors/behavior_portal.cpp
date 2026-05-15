@@ -31,8 +31,9 @@ static void init(BehaviorContext& ctx) {
         s_portalImages[0] = g_assets.GetBehaviorImage("Assets/Images/OtherGfx/p1.png");
         s_portalImages[1] = g_assets.GetBehaviorImage("Assets/Images/OtherGfx/p2.png");
     }
+    // Don't reset portal state on init - portals should persist across goose spawns
+    // Only create state if it doesn't exist, preserving any previously placed portals
     auto* state = BehaviorStateManager::Instance().GetOrCreate<PortalState>(ctx.goose->id, "portal");
-    state->Reset();
     s_portalsOn = true;
 }
 
@@ -67,12 +68,14 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
             goose->vel = {0, 0};
             g_assets.Honk();
             state->justTeleported = true;
+            fprintf(stderr, "[Portal] g%d teleported A->B at (%.0f,%.0f)\n", goose->id, state->portalB.x, state->portalB.y);
         } else if (inP2 && state->portalA.active) {
             goose->pos.x = state->portalA.x;
             goose->pos.y = state->portalA.y;
             goose->vel = {0, 0};
             g_assets.Honk();
             state->justTeleported = true;
+            fprintf(stderr, "[Portal] g%d teleported B->A at (%.0f,%.0f)\n", goose->id, state->portalA.x, state->portalA.y);
         }
     }
 
@@ -136,6 +139,8 @@ static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
         float h = (float)CGImageGetHeight(s_portalImages[0]);
         CGRect rect = CGRectMake(state->portalA.x - w/2, state->portalA.y - h/2, w, h);
         CGContextDrawImage(cg, rect, s_portalImages[0]);
+    } else if (state->portalA.active && !s_portalImages[0]) {
+        fprintf(stderr, "[Portal] g%d: portalA active but image[0] not loaded\n", goose->id);
     }
 
     if (state->portalB.active && s_portalImages[1]) {
@@ -143,6 +148,8 @@ static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
         float h = (float)CGImageGetHeight(s_portalImages[1]);
         CGRect rect = CGRectMake(state->portalB.x - w/2, state->portalB.y - h/2, w, h);
         CGContextDrawImage(cg, rect, s_portalImages[1]);
+    } else if (state->portalB.active && !s_portalImages[1]) {
+        fprintf(stderr, "[Portal] g%d: portalB active but image[1] not loaded\n", goose->id);
     }
 }
 

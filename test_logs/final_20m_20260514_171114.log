@@ -1,0 +1,382 @@
+[LOG] Log file: /tmp/CadGoose_20260514_171114.log
+[DEBUG] main() starting, argc=2
+[DEBUG] argv[0]=./build/CadGoose
+[DEBUG] argv[1]=--debug
+[DEBUG] AppCli_HandleCommand returned -1
+[DEBUG] Got NSApplication: 0x1012e0980, running=0
+[DEBUG] finishLaunching done, running=0
+[DEBUG] activated, running=0
+[17:11:14] DEBUG: Starting run loop...
+[17:11:14] DEBUG: App launching...
+[17:11:14] DEBUG: Config init done
+[MCP] Internal server started on /tmp/desktop-goose-mcp.sock
+[MCP-HTTP] Server started on port 31072
+Asset root: "/Users/ztomer/Projects/CadGoose"
+Assets: 83 memes, 53 texts
+[17:11:14] DEBUG: Assets init done
+Initializing Cursor Backends...
+Selected Cursor Backend: MacCGEvent
+[17:11:14] DEBUG: Backend: MacCGEvent
+[17:11:14] DEBUG: Creating windows for 1 screens
+[17:11:14] DEBUG: WindowManager instance: 0x1011c5920
+[17:11:14] DEBUG: GooseWindow initWithScreen START, rect={{0, 0}, {1800, 1169}}
+[AITEXT] Loaded 61 file texts
+[17:11:14] DEBUG: AI text memes loaded
+[17:11:14] DEBUG: GooseWindow super init done, self=0x1011e5300
+[17:11:14] DEBUG:   level=3
+[17:11:14] DEBUG:   collectionBehavior set
+[17:11:14] DEBUG:   window props set: opaque=0, ignoresMouse=0
+[17:11:14] DEBUG:   creating GooseView with frame {{0, 0}, {1800, 1169}}
+[17:11:14] DEBUG: GooseView initWithFrame START, frame={{0, 0}, {1800, 1169}}
+[17:11:14] DEBUG:   super init done, self=0x1011e6e80
+[17:11:14] DEBUG:   wantsLayer=YES
+[17:11:14] DEBUG:   layer backgroundColor set
+[17:11:14] DEBUG:   PRIMARY GOOSE VIEW (will update geese)
+[17:11:14] DEBUG:   time/count initialized
+[17:11:14] DEBUG: GooseView initWithFrame END
+[17:11:14] DEBUG:   gooseView created: 0x1011e6e80
+[17:11:14] DEBUG:   contentView set
+[17:11:14] DEBUG: GooseWindow initWithScreen END
+[17:11:14] DEBUG: createWindowsForAllScreens completed
+[17:11:14] DEBUG: Windows created: 1
+[17:11:14] DEBUG: Processing window: 0x1011e5300
+[17:11:14] DEBUG:   frame: {{0, 0}, {1800, 1169}}
+[17:11:14] DEBUG:   level: 3
+[17:11:14] DEBUG:   opaque: 0
+[17:11:14] DEBUG:   ignoresMouseEvents: 0
+[17:11:14] DEBUG:   gooseView: 0x1011e6e80
+[17:11:14] DEBUG:   gooseView.frame: {{0, 0}, {1800, 1169}}
+[17:11:14] DEBUG: GooseView startAnimation START
+[17:11:14] DEBUG:   stopped old timer
+[17:11:14] DEBUG:   timer created: 0x24c41ac1180
+[17:11:14] DEBUG:   timer scheduled
+[17:11:14] DEBUG:   event handler set
+[17:11:14] DEBUG:   timer resumed
+[17:11:14] DEBUG: GooseView startAnimation END
+[17:11:14] DEBUG:   startAnimation done
+[17:11:14] DEBUG:   orderFront done
+[17:11:14] DEBUG: Window setup complete for window 0x1011e5300
+[17:11:14] INFO: Window setup complete, count: 1
+[17:11:14] DEBUG: Screen: 1800x1169
+[17:11:14] DEBUG: Geese spawned: 1
+[17:11:14] DEBUG: Goose 0 at 1231.0,239.0
+[17:11:14] DEBUG: Menubar created
+[17:11:14] DEBUG: App ready, entering run loop...
+[AITEXT] Generating via HTTP... (ai_queue=0, temp=1.2)
+[AITEXT] Response in 0.0s
+[AITEXT] Request failed: Could not connect to the server.
+[DEBUG] Assets path: /Users/ztomer/Projects/CadGoose/Assets
+[DEBUG] Loaded honk 1: /Users/ztomer/Projects/CadGoose/Assets/Sound/NotEmbedded/Honk1.mp3
+[DEBUG] Loaded honk 2: /Users/ztomer/Projects/CadGoose/Assets/Sound/NotEmbedded/Honk2.mp3
+[DEBUG] Loaded honk 3: /Users/ztomer/Projects/CadGoose/Assets/Sound/NotEmbedded/Honk3.mp3
+[DEBUG] Loaded honk 4: /Users/ztomer/Projects/CadGoose/Assets/Sound/NotEmbedded/Honk4.mp3
+[DEBUG] Audio initialized
+[AITEXT] Generating via HTTP... (ai_queue=0, temp=1.2)
+[AITEXT] Response in 0.0s
+[AITEXT] Request failed: Could not connect to the server.
+[17:11:30] DEBUG: Goose 0 pos: 1293.2,322.7 speed: 180.0
+[17:11:31] DEBUG: Goose 0 pos: 1394.6,459.3 speed: 180.0
+[AITEXT] Generating via HTTP... (ai_queue=0, temp=1.2)
+[AITEXT] Response in 0.0s
+[AITEXT] Request failed: Could not connect to the server.
+[17:11:32] DEBUG: Goose 0 pos: 1501.1,602.8 speed: 180.0
+[17:11:33] DEBUG: Goose 0 pos: 1582.8,722.7 speed: 180.0
+[AITEXT] Generating via HTTP... (ai_queue=0, temp=1.2)
+[AITEXT] Response in 0.0s
+[AITEXT] Request failed: Could not connect to the server.
+[17:11:34] DEBUG: Goose 0 pos: 1492.5,684.9 speed: 180.0
+[17:11:35] DEBUG: Goose 0 pos: 1348.7,596.1 speed: 180.0
+[AITEXT] Generating via HTTP... (ai_queue=0, temp=1.2)
+[AITEXT] Response in 0.0s
+[AITEXT] Request failed: Could not connect to the server.
+[17:11:36] DEBUG: Goose 0 pos: 1198.1,500.1 speed: 180.0
+[DEBUG] Playing honk 4
+[17:11:37] DEBUG: Goose 0 pos: 1046.7,403.1 speed: 180.0
+[AITEXT] Generating via HTTP... (ai_queue=0, temp=1.2)
+[AITEXT] Response in 0.0s
+[AITEXT] Request failed: Could not connect to the server.
+[17:11:38] DEBUG: Goose 0 pos: 895.2,306.0 speed: 180.0
+[FF] g0 ForceFetch type=0 w=1800 h=1169
+[FF] after StartFetch state=1 heldItem=0x0
+[17:11:39] DEBUG: Goose 0 pos: 728.5,273.3 speed: 432.7
+[AITEXT] Generating via HTTP... (ai_queue=0, temp=1.2)
+[AITEXT] Response in 0.0s
+[AITEXT] Request failed: Could not connect to the server.
+[17:11:40] DEBUG: Goose 0 pos: 498.7,528.0 speed: 477.8
+[17:11:41] DEBUG: Goose 0 pos: 221.9,842.9 speed: 479.9
+[AITEXT] Generating via HTTP... (ai_queue=0, temp=1.2)
+[AITEXT] Response in 0.0s
+[AITEXT] Request failed: Could not connect to the server.
+[17:11:42] DEBUG: Goose 0 pos: 12.7,948.7 speed: 480.0
+[17:11:43] DEBUG: Goose 0 pos: 167.3,842.8 speed: 480.0
+[AITEXT] Generating via HTTP... (ai_queue=0, temp=1.2)
+[AITEXT] Response in 0.0s
+[AITEXT] Request failed: Could not connect to the server.
+[17:11:44] DEBUG: Goose 0 pos: 9.4,819.7 speed: 480.0
+[HF] g0 handleFetching called state=1
+[HF] g0 heldItem=0x24c4287e040 image=0x24c42853c00 after creation
+[HF] g0 -> RETURNING, dragPos=(0.0,0.0) dragInit=0
+[DEBUG] Playing honk 3
+[17:11:45] DEBUG: Goose 0 pos: 297.5,814.4 speed: 480.0
+[AITEXT] Generating via HTTP... (ai_queue=0, temp=1.2)
+[AITEXT] Response in 0.0s
+[AITEXT] Request failed: Could not connect to the server.
+[DEBUG] Playing honk 3
+[17:11:46] DEBUG: Goose 0 pos: 413.8,573.8 speed: 437.2
+[17:11:47] DEBUG: Goose 0 pos: 400.4,522.7 speed: 191.8
+[AITEXT] Generating via HTTP... (ai_queue=0, temp=1.2)
+[AITEXT] Response in 0.0s
+[AITEXT] Request failed: Could not connect to the server.
+[17:11:48] DEBUG: Goose 0 pos: 407.9,671.4 speed: 180.5
+[17:11:49] DEBUG: Goose 0 pos: 419.9,847.4 speed: 180.0
+[AITEXT] Generating via HTTP... (ai_queue=0, temp=1.2)
+[AITEXT] Response in 0.0s
+[AITEXT] Request failed: Could not connect to the server.
+[DEBUG] Playing honk 3
+[17:11:50] DEBUG: Goose 0 pos: 426.5,895.0 speed: 180.0
+[17:11:51] DEBUG: Goose 0 pos: 423.7,751.5 speed: 180.0
+[AITEXT] Generating via HTTP... (ai_queue=0, temp=1.2)
+[AITEXT] Response in 0.0s
+[AITEXT] Request failed: Could not connect to the server.
+[17:11:52] DEBUG: Goose 0 pos: 419.0,576.3 speed: 180.0
+[17:11:53] DEBUG: Goose 0 pos: 413.9,397.2 speed: 180.0
+[DEBUG] Playing honk 4
+[AITEXT] Generating via HTTP... (ai_queue=0, temp=1.2)
+[AITEXT] Response in 0.0s
+[AITEXT] Request failed: Could not connect to the server.
+[17:11:54] DEBUG: Goose 0 pos: 414.2,386.4 speed: 180.0
+[17:11:55] DEBUG: Goose 0 pos: 419.5,538.4 speed: 180.0
+[AITEXT] Generating via HTTP... (ai_queue=0, temp=1.2)
+[AITEXT] Response in 0.0s
+[AITEXT] Request failed: Could not connect to the server.
+[17:11:56] DEBUG: Goose 0 pos: 425.6,714.6 speed: 180.0
+[17:11:57] DEBUG: Goose 0 pos: 431.8,893.9 speed: 180.0
+[FF] g0 ForceFetch type=0 w=1800 h=1169
+[FF] after StartFetch state=1 heldItem=0x0
+[AITEXT] Generating via HTTP... (ai_queue=0, temp=1.2)
+[AITEXT] Response in 0.0s
+[AITEXT] Request failed: Could not connect to the server.
+[17:11:58] DEBUG: Goose 0 pos: 334.2,937.5 speed: 464.7
+[17:11:59] DEBUG: Goose 0 pos: 96.4,693.5 speed: 479.3
+[HF] g0 handleFetching called state=1
+[HF] g0 heldItem=0x24c4287e010 image=0x24c42854880 after creation
+[HF] g0 -> RETURNING, dragPos=(346.7,640.9) dragInit=0
+[DEBUG] Playing honk 3
+[AITEXT] Generating via HTTP... (ai_queue=0, temp=1.2)
+[AITEXT] Response in 0.0s
+[AITEXT] Request failed: Could not connect to the server.
+[17:12:00] DEBUG: Goose 0 pos: 266.0,524.3 speed: 480.0
+[17:12:01] DEBUG: Goose 0 pos: 604.4,685.1 speed: 480.0
+[DEBUG] Playing honk 4
+[AITEXT] Generating via HTTP... (ai_queue=0, temp=1.2)
+[AITEXT] Response in 0.0s
+[AITEXT] Request failed: Could not connect to the server.
+[17:12:02] DEBUG: Goose 0 pos: 792.1,910.6 speed: 213.1
+[17:12:03] DEBUG: Goose 0 pos: 883.7,849.7 speed: 181.5
+[AITEXT] Generating via HTTP... (ai_queue=0, temp=1.2)
+[AITEXT] Response in 0.0s
+[AITEXT] Request failed: Could not connect to the server.
+[17:12:04] DEBUG: Goose 0 pos: 775.2,817.3 speed: 180.1
+[17:12:05] DEBUG: Goose 0 pos: 609.2,850.7 speed: 180.0
+[AITEXT] Generating via HTTP... (ai_queue=0, temp=1.2)
+[AITEXT] Response in 0.0s
+[AITEXT] Request failed: Could not connect to the server.
+[17:12:06] DEBUG: Goose 0 pos: 436.5,896.1 speed: 180.0
+[17:12:07] DEBUG: Goose 0 pos: 295.7,930.3 speed: 180.0
+[AITEXT] Generating via HTTP... (ai_queue=0, temp=1.2)
+[AITEXT] Response in 0.0s
+[AITEXT] Request failed: Could not connect to the server.
+[17:12:08] DEBUG: Goose 0 pos: 369.7,869.9 speed: 180.0
+[17:12:09] DEBUG: Goose 0 pos: 513.5,781.4 speed: 180.0
+[DEBUG] Playing honk 4
+[AITEXT] Generating via HTTP... (ai_queue=0, temp=1.2)
+[AITEXT] Response in 0.0s
+[AITEXT] Request failed: Could not connect to the server.
+[17:12:10] DEBUG: Goose 0 pos: 738.1,698.0 speed: 453.1
+[17:12:11] DEBUG: Goose 0 pos: 1149.3,611.6 speed: 478.8
+[DEBUG] Playing honk 4
+[AITEXT] Generating via HTTP... (ai_queue=0, temp=1.2)
+[AITEXT] Response in 0.0s
+[AITEXT] Request failed: Could not connect to the server.
+[17:12:12] DEBUG: Goose 0 pos: 1487.7,539.0 speed: 216.6
+[17:12:13] DEBUG: Goose 0 pos: 1481.2,501.4 speed: 181.7
+[AITEXT] Generating via HTTP... (ai_queue=0, temp=1.2)
+[AITEXT] Response in 0.0s
+[AITEXT] Request failed: Could not connect to the server.
+[17:12:14] DEBUG: Goose 0 pos: 1325.0,485.9 speed: 180.1
+[17:12:15] DEBUG: Goose 0 pos: 1148.4,474.8 speed: 180.0
+[AITEXT] Generating via HTTP... (ai_queue=0, temp=1.2)
+[AITEXT] Response in 0.0s
+[AITEXT] Request failed: Could not connect to the server.
+[17:12:16] DEBUG: Goose 0 pos: 969.0,464.4 speed: 180.0
+[17:12:17] DEBUG: Goose 0 pos: 789.4,454.1 speed: 180.0
+[AITEXT] Generating via HTTP... (ai_queue=0, temp=1.2)
+[AITEXT] Response in 0.0s
+[AITEXT] Request failed: Could not connect to the server.
+[17:12:18] DEBUG: Goose 0 pos: 609.7,443.9 speed: 180.0
+[DEBUG] Playing honk 3
+[17:12:19] DEBUG: Goose 0 pos: 406.3,499.8 speed: 443.4
+[AITEXT] Generating via HTTP... (ai_queue=0, temp=1.2)
+[AITEXT] Response in 0.0s
+[AITEXT] Request failed: Could not connect to the server.
+[17:12:20] DEBUG: Goose 0 pos: 285.9,624.2 speed: 478.3
+[DEBUG] Playing honk 2
+[17:12:21] DEBUG: Goose 0 pos: 362.0,556.4 speed: 508.5
+[AITEXT] Generating via HTTP... (ai_queue=0, temp=1.2)
+[AITEXT] Response in 0.0s
+[AITEXT] Request failed: Could not connect to the server.
+[17:12:22] DEBUG: Goose 0 pos: 218.9,577.9 speed: 481.3
+[17:12:23] DEBUG: Goose 0 pos: 158.2,521.9 speed: 480.1
+[AITEXT] Generating via HTTP... (ai_queue=0, temp=1.2)
+[AITEXT] Response in 0.0s
+[AITEXT] Request failed: Could not connect to the server.
+[DEBUG] Playing honk 1
+[17:12:24] DEBUG: Goose 0 pos: 340.0,415.6 speed: 251.4
+[17:12:25] DEBUG: Goose 0 pos: 523.4,332.1 speed: 183.3
+[FF] g0 ForceFetch type=1 w=1800 h=1169
+[FF] after StartFetch state=1 heldItem=0x0
+[AITEXT] Generating via HTTP... (ai_queue=0, temp=1.2)
+[AITEXT] Response in 0.0s
+[AITEXT] Request failed: Could not connect to the server.
+[17:12:26] DEBUG: Goose 0 pos: 729.1,324.7 speed: 445.4
+[17:12:27] DEBUG: Goose 0 pos: 1079.7,500.8 speed: 478.4
+[AITEXT] Generating via HTTP... (ai_queue=0, temp=1.2)
+[AITEXT] Response in 0.0s
+[AITEXT] Request failed: Could not connect to the server.
+[17:12:28] DEBUG: Goose 0 pos: 1481.9,658.9 speed: 479.9
+[17:12:29] DEBUG: Goose 0 pos: 1824.0,644.8 speed: 480.0
+[HF] g0 handleFetching called state=1
+[HF] g0 heldItem=0x24c4287f840 image=0x0 after creation
+[HF] g0 -> RETURNING, dragPos=(1218.0,574.7) dragInit=0
+[DEBUG] Playing honk 3
+[AITEXT] Generating via HTTP... (ai_queue=0, temp=1.2)
+[AITEXT] Response in 0.0s
+[AITEXT] Request failed: Could not connect to the server.
+[17:12:30] DEBUG: Goose 0 pos: 1529.6,351.2 speed: 465.0
+[17:12:31] DEBUG: Goose 0 pos: 1408.2,159.4 speed: 193.1
+[AITEXT] Generating via HTTP... (ai_queue=0, temp=1.2)
+[AITEXT] Response in 0.0s
+[AITEXT] Request failed: Could not connect to the server.
+[17:12:32] DEBUG: Goose 0 pos: 1404.5,249.3 speed: 180.6
+[17:12:33] DEBUG: Goose 0 pos: 1438.0,414.4 speed: 180.0
+[AITEXT] Generating via HTTP... (ai_queue=0, temp=1.2)
+[AITEXT] Response in 0.0s
+[AITEXT] Request failed: Could not connect to the server.
+[17:12:34] DEBUG: Goose 0 pos: 1477.1,588.5 speed: 180.0
+[17:12:35] DEBUG: Goose 0 pos: 1517.1,763.8 speed: 180.0
+[AITEXT] Generating via HTTP... (ai_queue=0, temp=1.2)
+[AITEXT] Response in 0.0s
+[AITEXT] Request failed: Could not connect to the server.
+[17:12:36] DEBUG: Goose 0 pos: 1557.2,938.7 speed: 180.0
+[17:12:37] DEBUG: Goose 0 pos: 1501.5,969.4 speed: 180.0
+[AITEXT] Generating via HTTP... (ai_queue=0, temp=1.2)
+[AITEXT] Response in 0.0s
+[AITEXT] Request failed: Could not connect to the server.
+[17:12:38] DEBUG: Goose 0 pos: 1369.3,881.6 speed: 180.0
+[17:12:39] DEBUG: Goose 0 pos: 1227.0,776.0 speed: 180.0
+[AITEXT] Generating via HTTP... (ai_queue=0, temp=1.2)
+[AITEXT] Response in 0.0s
+[AITEXT] Request failed: Could not connect to the server.
+[17:12:40] DEBUG: Goose 0 pos: 1083.5,667.9 speed: 180.0
+[17:12:41] DEBUG: Goose 0 pos: 940.0,559.4 speed: 180.0
+[AITEXT] Generating via HTTP... (ai_queue=0, temp=1.2)
+[AITEXT] Response in 0.0s
+[AITEXT] Request failed: Could not connect to the server.
+[17:12:42] DEBUG: Goose 0 pos: 796.5,450.8 speed: 180.0
+[DEBUG] Playing honk 4
+[17:12:43] DEBUG: Goose 0 pos: 663.4,380.0 speed: 180.0
+[AITEXT] Generating via HTTP... (ai_queue=0, temp=1.2)
+[AITEXT] Response in 0.0s
+[AITEXT] Request failed: Could not connect to the server.
+[17:12:44] DEBUG: Goose 0 pos: 589.4,497.7 speed: 180.0
+[FF] g0 ForceFetch type=1 w=1800 h=1169
+[FF] after StartFetch state=1 heldItem=0x0
+[17:12:45] DEBUG: Goose 0 pos: 539.9,655.2 speed: 354.6
+[AITEXT] Generating via HTTP... (ai_queue=0, temp=1.2)
+[AITEXT] Response in 0.0s
+[AITEXT] Request failed: Could not connect to the server.
+[17:12:46] DEBUG: Goose 0 pos: 302.0,642.3 speed: 474.2
+[HF] g0 handleFetching called state=1
+[HF] g0 heldItem=0x24c4287ca50 image=0x0 after creation
+[HF] g0 -> RETURNING, dragPos=(1589.6,415.9) dragInit=0
+[DEBUG] Playing honk 4
+[17:12:47] DEBUG: Goose 0 pos: 72.5,520.1 speed: 479.7
+[AITEXT] Generating via HTTP... (ai_queue=0, temp=1.2)
+[AITEXT] Response in 0.0s
+[AITEXT] Request failed: Could not connect to the server.
+[17:12:48] DEBUG: Goose 0 pos: 425.9,663.3 speed: 480.0
+[17:12:49] DEBUG: Goose 0 pos: 506.4,972.0 speed: 480.0
+[DEBUG] Playing honk 3
+[AITEXT] Generating via HTTP... (ai_queue=0, temp=1.2)
+[AITEXT] Response in 0.0s
+[AITEXT] Request failed: Could not connect to the server.
+[17:12:50] DEBUG: Goose 0 pos: 508.0,1056.0 speed: 197.0
+[17:12:51] DEBUG: Goose 0 pos: 627.0,970.1 speed: 180.8
+[AITEXT] Generating via HTTP... (ai_queue=0, temp=1.2)
+[AITEXT] Response in 0.0s
+[AITEXT] Request failed: Could not connect to the server.
+[17:12:52] DEBUG: Goose 0 pos: 767.1,862.7 speed: 180.0
+[17:12:53] DEBUG: Goose 0 pos: 909.2,752.9 speed: 180.0
+[AITEXT] Generating via HTTP... (ai_queue=0, temp=1.2)
+[AITEXT] Response in 0.0s
+[AITEXT] Request failed: Could not connect to the server.
+[17:12:54] DEBUG: Goose 0 pos: 1051.4,642.7 speed: 180.0
+[FF] g0 ForceFetch type=0 w=1800 h=1169
+[FF] after StartFetch state=1 heldItem=0x0
+[17:12:55] DEBUG: Goose 0 pos: 1155.2,542.5 speed: 404.9
+[AITEXT] Generating via HTTP... (ai_queue=0, temp=1.2)
+[AITEXT] Response in 0.0s
+[AITEXT] Request failed: Could not connect to the server.
+[17:12:56] DEBUG: Goose 0 pos: 1003.2,584.8 speed: 476.5
+[17:12:57] DEBUG: Goose 0 pos: 681.9,804.8 speed: 479.8
+[AITEXT] Generating via HTTP... (ai_queue=0, temp=1.2)
+[AITEXT] Response in 0.0s
+[AITEXT] Request failed: Could not connect to the server.
+[17:12:58] DEBUG: Goose 0 pos: 306.7,987.0 speed: 480.0
+[17:12:59] DEBUG: Goose 0 pos: -37.4,980.7 speed: 480.0
+[AITEXT] Generating via HTTP... (ai_queue=0, temp=1.2)
+[AITEXT] Response in 0.0s
+[AITEXT] Request failed: Could not connect to the server.
+[17:13:00] DEBUG: Goose 0 pos: 146.8,799.7 speed: 480.0
+[17:13:01] DEBUG: Goose 0 pos: 44.8,769.2 speed: 480.0
+[HF] g0 handleFetching called state=1
+[HF] g0 heldItem=0x24c4287b220 image=0x24c42853980 after creation
+[HF] g0 -> RETURNING, dragPos=(447.5,880.2) dragInit=0
+[DEBUG] Playing honk 4
+[AITEXT] Generating via HTTP... (ai_queue=0, temp=1.2)
+[AITEXT] Response in 0.0s
+[AITEXT] Request failed: Could not connect to the server.
+[17:13:02] DEBUG: Goose 0 pos: 180.3,951.5 speed: 480.0
+[17:13:03] DEBUG: Goose 0 pos: 538.7,864.3 speed: 480.0
+[AITEXT] Generating via HTTP... (ai_queue=0, temp=1.2)
+[AITEXT] Response in 0.0s
+[AITEXT] Request failed: Could not connect to the server.
+[DEBUG] Playing honk 1
+[17:13:04] DEBUG: Goose 0 pos: 890.0,620.1 speed: 424.4
+[17:13:05] DEBUG: Goose 0 pos: 1104.6,517.9 speed: 191.3
+[AITEXT] Generating via HTTP... (ai_queue=0, temp=1.2)
+[AITEXT] Response in 0.0s
+[AITEXT] Request failed: Could not connect to the server.
+[17:13:06] DEBUG: Goose 0 pos: 1057.2,537.6 speed: 180.5
+[17:13:07] DEBUG: Goose 0 pos: 909.8,607.6 speed: 180.0
+[DEBUG] Playing honk 3
+[AITEXT] Generating via HTTP... (ai_queue=0, temp=1.2)
+[AITEXT] Response in 0.0s
+[AITEXT] Request failed: Could not connect to the server.
+[17:13:08] DEBUG: Goose 0 pos: 853.0,722.5 speed: 453.1
+[DEBUG] Playing honk 2
+[17:13:09] DEBUG: Goose 0 pos: 1089.7,886.3 speed: 286.3
+[AITEXT] Generating via HTTP... (ai_queue=0, temp=1.2)
+[AITEXT] Response in 0.0s
+[AITEXT] Request failed: Could not connect to the server.
+[17:13:10] DEBUG: Goose 0 pos: 1176.6,884.4 speed: 184.9
+[17:13:11] DEBUG: Goose 0 pos: 1073.6,786.7 speed: 180.2
+[AITEXT] Generating via HTTP... (ai_queue=0, temp=1.2)
+[AITEXT] Response in 0.0s
+[AITEXT] Request failed: Could not connect to the server.
+[17:13:12] DEBUG: Goose 0 pos: 935.8,678.6 speed: 180.0
+[17:13:13] DEBUG: Goose 0 pos: 809.7,558.4 speed: 180.0
+[AITEXT] Generating via HTTP... (ai_queue=0, temp=1.2)
+[AITEXT] Response in 0.0s
+[AITEXT] Request failed: Could not connect to the server.
+[17:13:14] DEBUG: Goose 0 pos: 707.1,412.8 speed: 180.0

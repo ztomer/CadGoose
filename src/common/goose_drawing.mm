@@ -16,6 +16,31 @@
 #include <CoreGraphics/CoreGraphics.h>
 #endif
 
+// --- Drawing constants ---
+static constexpr float kOutlineWidthAdd = 2.0f;
+static constexpr float kEyeLineWidth = 1.5f;
+static constexpr float kSurpriseMarkLineSize = 4.0f;
+static constexpr float kSurpriseMarkLineWidth = 3.0f;
+static constexpr float kSurpriseMarkOffsetY = 25.0f;
+static constexpr float kSurpriseMarkLineOffset = 3.0f;
+static constexpr float kSurpriseMarkDotOffset = 4.0f;
+static constexpr float kSurpriseMarkDotRadius = 2.0f;
+static constexpr float kHeldItemBeakOffset = 5.0f;
+static constexpr float kTextItemPadding = 5.0f;
+static constexpr float kTextItemFontSize = 10.0f;
+static constexpr float kAILabelFontSize = 8.0f;
+static constexpr float kAILabelPadding = 4.0f;
+static constexpr float kAILabelY = 2.0f;
+static constexpr float kLeafSizeBase = 5.0f;
+static constexpr float kLeafSizeScale = 5.0f;
+static constexpr float kLeafZScale = 900.0f;
+static constexpr float kLeafScaleFactor = 2.0f;
+static constexpr float kLeafHeightFactor = 0.6f;
+static constexpr float kLeafFadeStart = 8.0f;
+static constexpr float kLeafFadeDuration = 2.0f;
+static constexpr int kLeafColorCount = 4;
+static constexpr float kDebugOverlayBoxSize = 20.0f;
+
 static void DrawEllipse(CGContextRef ctx, Vector2 p, float rx, float ry, float r, float g, float b, float a) {
     CGContextSetRGBFillColor(ctx, r, g, b, a);
     CGContextFillEllipseInRect(ctx, CGRectMake(p.x - rx, p.y - ry, rx * 2, ry * 2));
@@ -100,10 +125,10 @@ void DrawGoose(Goose* g, CGContextRef ctx) {
         neckB = lerp(neckB, 0.0f, t * 0.4f);
     }
 
-    DrawLine(ctx, bodyFront, bodyBack, g_config.render.bodyWidth + 2.0f, outlineR, outlineG, outlineB, 1.0f);
-    DrawLine(ctx, g->rig.neckBase, g->rig.neckHead, g_config.render.neckSize + 2.0f, outlineR, outlineG, outlineB, 1.0f);
-    DrawLine(ctx, g->rig.neckHead, g->rig.head1, g_config.render.head1Size + 2.0f, outlineR, outlineG, outlineB, 1.0f);
-    DrawLine(ctx, g->rig.head1, g->rig.head2, g_config.render.head2Size + 2.0f, outlineR, outlineG, outlineB, 1.0f);
+    DrawLine(ctx, bodyFront, bodyBack, g_config.render.bodyWidth + kOutlineWidthAdd, outlineR, outlineG, outlineB, 1.0f);
+    DrawLine(ctx, g->rig.neckBase, g->rig.neckHead, g_config.render.neckSize + kOutlineWidthAdd, outlineR, outlineG, outlineB, 1.0f);
+    DrawLine(ctx, g->rig.neckHead, g->rig.head1, g_config.render.head1Size + kOutlineWidthAdd, outlineR, outlineG, outlineB, 1.0f);
+    DrawLine(ctx, g->rig.head1, g->rig.head2, g_config.render.head2Size + kOutlineWidthAdd, outlineR, outlineG, outlineB, 1.0f);
     DrawLine(ctx, underFront, underBack, g_config.render.bodyWidth - 7.0f, outlineR, outlineG, outlineB, 1.0f);
 
     CGContextSaveGState(ctx);
@@ -155,22 +180,42 @@ void DrawGoose(Goose* g, CGContextRef ctx) {
     float eyeLift = Lerp(0.0f, 1.5f, back);
     Vector2 eyeCenter = g->rig.neckHead + up * (-g_config.render.eyeOffsetY + eyeLift);
 
+    bool eyesClosed = g->isResting;
+
     if (back > g_config.render.eyeFacingThreshold) {
-        if (g->isResting) {
-            DrawLine(ctx, eyeCenter - side * (g_config.render.eyeSize / 2.0f), eyeCenter + side * (g_config.render.eyeSize / 2.0f), 1.5f, eyeR, eyeG, eyeB, 1.0f);
+        if (eyesClosed) {
+            DrawLine(ctx, eyeCenter - side * (g_config.render.eyeSize / 2.0f), eyeCenter + side * (g_config.render.eyeSize / 2.0f), kEyeLineWidth, eyeR, eyeG, eyeB, 1.0f);
+        } else if (g->isSurprised) {
+            DrawEllipse(ctx, eyeCenter, g_config.render.eyeSize * 0.8f, g_config.render.eyeSize * 0.8f, 1.0f, 1.0f, 1.0f, 1.0f);
+            DrawEllipse(ctx, eyeCenter, g_config.render.eyeSize * 0.3f, g_config.render.eyeSize * 0.3f, 0.0f, 0.0f, 0.0f, 1.0f);
         } else {
             DrawEllipse(ctx, eyeCenter, g_config.render.eyeSize / 2.0f, g_config.render.eyeSize / 2.0f, eyeR, eyeG, eyeB, 1.0f);
         }
     } else {
-        if (g->isResting) {
-            Vector2 lEye = eyeCenter - side * eyeSep;
-            Vector2 rEye = eyeCenter + side * eyeSep;
-            DrawLine(ctx, lEye - side * (g_config.render.eyeSize / 2.0f), lEye + side * (g_config.render.eyeSize / 2.0f), 1.5f, eyeR, eyeG, eyeB, 1.0f);
-            DrawLine(ctx, rEye - side * (g_config.render.eyeSize / 2.0f), rEye + side * (g_config.render.eyeSize / 2.0f), 1.5f, eyeR, eyeG, eyeB, 1.0f);
+        Vector2 lEye = eyeCenter - side * eyeSep;
+        Vector2 rEye = eyeCenter + side * eyeSep;
+        if (eyesClosed) {
+            DrawLine(ctx, lEye - side * (g_config.render.eyeSize / 2.0f), lEye + side * (g_config.render.eyeSize / 2.0f), kEyeLineWidth, eyeR, eyeG, eyeB, 1.0f);
+            DrawLine(ctx, rEye - side * (g_config.render.eyeSize / 2.0f), rEye + side * (g_config.render.eyeSize / 2.0f), kEyeLineWidth, eyeR, eyeG, eyeB, 1.0f);
+        } else if (g->isSurprised) {
+            DrawEllipse(ctx, lEye, g_config.render.eyeSize * 0.8f, g_config.render.eyeSize * 0.8f, 1.0f, 1.0f, 1.0f, 1.0f);
+            DrawEllipse(ctx, lEye, g_config.render.eyeSize * 0.3f, g_config.render.eyeSize * 0.3f, 0.0f, 0.0f, 0.0f, 1.0f);
+            DrawEllipse(ctx, rEye, g_config.render.eyeSize * 0.8f, g_config.render.eyeSize * 0.8f, 1.0f, 1.0f, 1.0f, 1.0f);
+            DrawEllipse(ctx, rEye, g_config.render.eyeSize * 0.3f, g_config.render.eyeSize * 0.3f, 0.0f, 0.0f, 0.0f, 1.0f);
         } else {
-            DrawEllipse(ctx, eyeCenter - side * eyeSep, g_config.render.eyeSize / 2.0f, g_config.render.eyeSize / 2.0f, eyeR, eyeG, eyeB, 1.0f);
-            DrawEllipse(ctx, eyeCenter + side * eyeSep, g_config.render.eyeSize / 2.0f, g_config.render.eyeSize / 2.0f, eyeR, eyeG, eyeB, 1.0f);
+            DrawEllipse(ctx, lEye, g_config.render.eyeSize / 2.0f, g_config.render.eyeSize / 2.0f, eyeR, eyeG, eyeB, 1.0f);
+            DrawEllipse(ctx, rEye, g_config.render.eyeSize / 2.0f, g_config.render.eyeSize / 2.0f, eyeR, eyeG, eyeB, 1.0f);
         }
+    }
+
+    // Surprise mark
+    if (g->isSurprised) {
+        Vector2 markPos = g->rig.neckHead + up * (-g_config.render.eyeOffsetY - kSurpriseMarkOffsetY);
+        CGContextSetRGBFillColor(ctx, 1.0f, 0.8f, 0.0f, 0.9f);
+        CGContextSetRGBStrokeColor(ctx, 0.0f, 0.0f, 0.0f, 1.0f);
+        CGContextSetLineWidth(ctx, kSurpriseMarkLineWidth);
+        DrawLine(ctx, markPos, markPos + up * (-kSurpriseMarkLineSize * kSurpriseMarkLineOffset), kSurpriseMarkLineWidth, 1.0f, 0.8f, 0.0f, 1.0f);
+        DrawEllipse(ctx, markPos + up * (-kSurpriseMarkLineSize * kSurpriseMarkLineOffset - kSurpriseMarkDotOffset), kSurpriseMarkDotRadius, kSurpriseMarkDotRadius, 1.0f, 0.8f, 0.0f, 1.0f);
     }
 
     if (g->heldItem && !facingBack) {
@@ -190,7 +235,7 @@ void DrawHeldItem(Goose* g, CGContextRef ctx) {
     CGContextRotateCTM(ctx, -dragRad);
     
     // Offset so the right edge of the item is at the beak, centered vertically
-    CGContextTranslateCTM(ctx, -g->heldItem->w - 5.0f, -g->heldItem->h / 2.0f);
+    CGContextTranslateCTM(ctx, -g->heldItem->w - kHeldItemBeakOffset, -g->heldItem->h / 2.0f);
 
     if (g->heldItem->type == ItemData::MEME && g->heldItem->image) {
         CGContextSaveGState(ctx);
@@ -219,12 +264,12 @@ void DrawHeldItem(Goose* g, CGContextRef ctx) {
         if (g->heldItem->textContent) {
 #ifdef __APPLE__
             NSString* text = [NSString stringWithUTF8String:g->heldItem->textContent->c_str()];
-            NSDictionary* attrs = @{NSFontAttributeName: [NSFont systemFontOfSize:10.0],
+            NSDictionary* attrs = @{NSFontAttributeName: [NSFont systemFontOfSize:kTextItemFontSize],
                                     NSForegroundColorAttributeName: [NSColor blackColor]};
-            float textX = 5;
-            float textY = 5;
-            float textW = g->heldItem->w - 10;
-            float textH = g->heldItem->h - 10;
+            float textX = kTextItemPadding;
+            float textY = kTextItemPadding;
+            float textW = g->heldItem->w - kTextItemPadding * 2;
+            float textH = g->heldItem->h - kTextItemPadding * 2;
             [text drawInRect:NSMakeRect(textX, textY, textW, textH) withAttributes:attrs];
 #endif
         }
@@ -266,8 +311,8 @@ void DrawLeaves(CGContextRef ctx, const std::list<LeafPile>& leafPiles, double c
         float alpha = 1.0f;
         if (tKicked > 0.0f) {
             float age = currentTime - tKicked;
-            if (age > 8.0f) {
-                alpha = std::max(0.0f, 1.0f - (age - 8.0f) / 2.0f);
+            if (age > kLeafFadeStart) {
+                alpha = std::max(0.0f, 1.0f - (age - kLeafFadeStart) / kLeafFadeDuration);
             }
         }
         if (alpha <= 0.0f) continue;
@@ -275,11 +320,11 @@ void DrawLeaves(CGContextRef ctx, const std::list<LeafPile>& leafPiles, double c
         for (int i = 0; i < pile.leaves.size(); i++) {
             const Leaf& leaf = pile.leaves[i];
             Vector2 p = leaf.GetScreenOffset(1.0f) + pile.pos;
-            float sz = 5.0f + 5.0f * (leaf.curPosZ / 900.0f);
-            sz *= 2.0f;
-            ColorRGB c = colors[leaf.colorIndex % 4];
+            float sz = kLeafSizeBase + kLeafSizeScale * (leaf.curPosZ / kLeafZScale);
+            sz *= kLeafScaleFactor;
+            ColorRGB c = colors[leaf.colorIndex % kLeafColorCount];
             CGContextSetRGBFillColor(ctx, c.r, c.g, c.b, alpha);
-            CGContextFillEllipseInRect(ctx, CGRectMake(p.x - sz/2.0f, p.y - (sz*0.6f)/2.0f, sz, sz*0.6f));
+            CGContextFillEllipseInRect(ctx, CGRectMake(p.x - sz/2.0f, p.y - (sz*kLeafHeightFactor)/2.0f, sz, sz*kLeafHeightFactor));
         }
     }
 #endif
@@ -373,6 +418,6 @@ void DrawDebugOverlay(CGContextRef ctx, const std::list<Goose>& geese) {
     CGContextSetRGBStrokeColor(ctx, 1, 0, 0, 1);
     CGContextSetLineWidth(ctx, 1);
     for (const auto& g : geese) {
-        CGContextStrokeRect(ctx, CGRectMake(g.pos.x - 20, g.pos.y - 20, 40, 40));
+        CGContextStrokeRect(ctx, CGRectMake(g.pos.x - kDebugOverlayBoxSize, g.pos.y - kDebugOverlayBoxSize, kDebugOverlayBoxSize * 2, kDebugOverlayBoxSize * 2));
     }
 }

@@ -383,6 +383,9 @@ TOML11_ENABLE_ACCESS_CHECK:BOOL=OFF
 //precompile toml11 library
 TOML11_PRECOMPILE:BOOL=OFF
 
+//Use mimalloc allocator
+USE_MIMALLOC:BOOL=ON
+
 //Value Computed by CMake
 toml11_BINARY_DIR:STATIC=/Users/ztomer/Projects/CadGoose/build/vendor/toml11
 

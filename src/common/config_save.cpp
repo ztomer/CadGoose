@@ -53,6 +53,14 @@ void Config_SaveAll() {
     config["color"]["customEye"] = toml::table{{"r", g_config.color.customEye.r}, {"g", g_config.color.customEye.g}, {"b", g_config.color.customEye.b}};
     config["color"]["customOutline"] = toml::table{{"r", g_config.color.customOutline.r}, {"g", g_config.color.customOutline.g}, {"b", g_config.color.customOutline.b}};
 
+    if (!g_config.gooseNames.empty()) {
+        toml::array namesArr;
+        for (const auto& name : g_config.gooseNames) {
+            namesArr.push_back(name);
+        }
+        config["goose"] = namesArr;
+    }
+
     ofs << toml::value(config) << "\n";
     ofs.close();
 

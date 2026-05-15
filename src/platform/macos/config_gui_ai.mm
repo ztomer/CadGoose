@@ -1,23 +1,95 @@
-// config_gui_ai.mm
-// AITabView — standalone view for AI configuration tab
 #import "config_gui_helpers.h"
 #include "config.h"
 #include "mcp_server.h"
 #include "ai_text_meme.h"
+#include "local_llm.h"
 
 extern "C" void AI_RefreshModelDisplay();
 
-@interface AITabView ()
-@property (nonatomic, strong) NSTextField* statusLabel;
-@property (nonatomic, strong) NSTextField* promptBody;
-@property (nonatomic, strong) NSTextField* endpointField;
-@property (nonatomic, strong) NSTextField* customModelField;
-@property (nonatomic, strong) NSTextField* portLabel;
-@property (nonatomic, strong) NSTextField* portField;
-@property (nonatomic, strong) NSTextField* modelLabel;
-@property (nonatomic, strong) NSPopUpButton* modelPopup;
-@property (nonatomic, strong) NSButton* refreshBtn;
-@end
+// --- Layout constants ---
+static constexpr float kSectionTopY = 35.0f;
+static constexpr float kSectionGap = 28.0f;
+static constexpr float kControlGap = 32.0f;
+static constexpr float kMarginX = 24.0f;
+static constexpr float kProviderPopupWidth = 110.0f;
+static constexpr float kControlHeight = 24.0f;
+static constexpr float kControlHeightSmall = 20.0f;
+static constexpr float kPortLabelX = 140.0f;
+static constexpr float kPortLabelYOffset = 2.0f;
+static constexpr float kPortLabelWidth = 36.0f;
+static constexpr float kPortFieldX = 176.0f;
+static constexpr float kPortFieldWidth = 50.0f;
+static constexpr float kModelLabelX = 236.0f;
+static constexpr float kModelLabelWidth = 44.0f;
+static constexpr float kModelPopupX = 280.0f;
+static constexpr float kModelPopupWidth = 160.0f;
+static constexpr float kRefreshBtnX = 444.0f;
+static constexpr float kRefreshBtnSize = 24.0f;
+static constexpr float kTestBtnWidth = 100.0f;
+static constexpr float kTestBtnHeight = 22.0f;
+static constexpr float kStatusLabelX = 130.0f;
+static constexpr float kStatusLabelYOffset = 2.0f;
+static constexpr float kSectionTitleHeight = 16.0f;
+static constexpr float kSectionTitleWidth = 200.0f;
+static constexpr float kEvilTitleWidth = 80.0f;
+static constexpr float kPolandLabelWidth = 120.0f;
+static constexpr float kPolandLabelYOffset = 0.0f;
+static constexpr float kSliderHeight = 20.0f;
+static constexpr float kEvilValueWidth = 40.0f;
+static constexpr float kEvilValueHeight = 14.0f;
+static constexpr float kEvilValueYOffset = -18.0f;
+static constexpr float kPromptTitleHeight = 16.0f;
+static constexpr float kPromptBodyHeight = 48.0f;
+static constexpr float kPromptBodyCornerRadius = 4.0f;
+static constexpr float kTempLabelWidth = 120.0f;
+static constexpr float kTempValueWidth = 40.0f;
+static constexpr float kTempValueHeight = 14.0f;
+static constexpr float kToggleHeight = 18.0f;
+static constexpr float kTextMemeBtnWidth = 220.0f;
+static constexpr float kAutoSaveBtnWidth = 260.0f;
+static constexpr float kMcpBtnWidth = 160.0f;
+static constexpr float kMcpPortLabelX = 180.0f;
+static constexpr float kMcpPortLabelWidth = 40.0f;
+static constexpr float kMcpPortFieldX = 224.0f;
+static constexpr float kMcpPortFieldYOffset = -2.0f;
+static constexpr float kMcpPortFieldWidth = 70.0f;
+static constexpr float kShowStatusBtnWidth = 200.0f;
+static constexpr float kEndpointFieldHeight = 22.0f;
+static constexpr float kCustomModelFieldHeight = 22.0f;
+static constexpr float kCustomModelFieldYOffset = -28.0f;
+static constexpr float kCustomSectionYDrop = 56.0f;
+static constexpr float kPostCustomYGap = 10.0f;
+static constexpr float kPostTestYGap = 40.0f;
+static constexpr float kPostSectionYGap = 26.0f;
+static constexpr float kPostSectionYGapLarge = 28.0f;
+static constexpr float kPostSliderYGap = 10.0f;
+static constexpr float kPostToggleYGap = 26.0f;
+static constexpr float kPostAutoSaveYGap = 10.0f;
+static constexpr float kEvilSliderYGap = 20.0f;
+static constexpr float kEvilPromptYGap = 54.0f;
+static constexpr float kEvilPostPromptYGap = 10.0f;
+static constexpr float kSectionWidth = 200.0f;
+static constexpr float kPortFieldTag = 100;
+static constexpr float kModelPopupTag = 101;
+static constexpr float kEvilValueTag = 200;
+static constexpr float kTempValueTag = 301;
+static constexpr float kMinMcpPort = 1024;
+static constexpr float kMaxMcpPort = 65535;
+static constexpr float kDefaultMcpPort = 31072;
+static constexpr float kEvilMin = 0.0f;
+static constexpr float kEvilMax = 1.0f;
+static constexpr float kTempMin = 0.0f;
+static constexpr float kTempMax = 2.0f;
+static constexpr float kTestTimeout = 5.0f;
+static constexpr float kModelRefreshDelay = 0.5f;
+static constexpr float kNameFontSize = 12.0f;
+static constexpr float kLabelFontSize = 11.0f;
+static constexpr float kSmallFontSize = 10.0f;
+static constexpr float kBtnFontSize = 11.0f;
+static constexpr float kTitleFontSize = 12.0f;
+static constexpr float kSectionTitleFontSize = 12.0f;
+static constexpr float kPromptFontSize = 11.0f;
+static constexpr float kRefreshBtnFontSize = 12.0f;
 
 @implementation AITabView
 
@@ -30,35 +102,42 @@ extern "C" void AI_RefreshModelDisplay();
 }
 
 - (int)currentPort {
-    switch ([self currentProvider]) {
-        case 0: return g_config.ai.osaurusPort;
-        case 1: return g_config.ai.ollamaPort;
-        default: return g_config.ai.customPort;
-    }
-}
+     switch ([self currentProvider]) {
+         case 0: return 0;
+         case 1: return g_config.ai.osaurusPort;
+         case 2: return g_config.ai.ollamaPort;
+         case 3: return g_config.ai.customPort;
+         default: return 0;
+     }
+ }
 
 - (void)setPort:(int)port {
-    switch ([self currentProvider]) {
-        case 0: g_config.ai.osaurusPort = port; break;
-        case 1: g_config.ai.ollamaPort = port; break;
-        default: g_config.ai.customPort = port; break;
-    }
-}
+     switch ([self currentProvider]) {
+         case 0: break;
+         case 1: g_config.ai.osaurusPort = port; break;
+         case 2: g_config.ai.ollamaPort = port; break;
+         case 3: g_config.ai.customPort = port; break;
+     }
+ }
 
 - (NSString*)currentModelName {
     switch ([self currentProvider]) {
-        case 0: return [NSString stringWithUTF8String:g_config.ai.osaurusModel.c_str()];
-        case 1: return [NSString stringWithUTF8String:g_config.ai.ollamaModel.c_str()];
-        default: return [NSString stringWithUTF8String:g_config.ai.customModel.c_str()];
+        case 0: return @"foundation";
+        case 1: return [NSString stringWithUTF8String:g_config.ai.osaurusModel.c_str()];
+        case 2: return [NSString stringWithUTF8String:g_config.ai.ollamaModel.c_str()];
+        case 3: return [NSString stringWithUTF8String:g_config.ai.customModel.c_str()];
+        default: return @"foundation";
     }
 }
 
 - (void)setModelName:(NSString*)name {
     std::string s = std::string([name UTF8String]);
     switch ([self currentProvider]) {
-        case 0: g_config.ai.osaurusModel = s; break;
-        case 1: g_config.ai.ollamaModel = s; break;
-        default: g_config.ai.customModel = s; break;
+        case 0: break;
+        case 1: g_config.ai.osaurusModel = s; break;
+        case 2: g_config.ai.ollamaModel = s; break;
+        case 3: g_config.ai.customModel = s; break;
+        default: break;
     }
 }
 
@@ -71,81 +150,82 @@ extern "C" void AI_RefreshModelDisplay();
 }
 
 - (void)setupUI {
-    float y = self.bounds.size.height - 35;
+    float y = self.bounds.size.height - kSectionTopY;
     CGFloat w = self.bounds.size.width;
     NSInteger prov = [self currentProvider];
-    float marginX = 24;
+    float marginX = kMarginX;
 
     // --- SECTION: Provider & Network ---
-    NSTextField* section1 = [[NSTextField alloc] initWithFrame:NSMakeRect(marginX, y, 200, 16)];
+    NSTextField* section1 = [[NSTextField alloc] initWithFrame:NSMakeRect(marginX, y, kSectionTitleWidth, kSectionTitleHeight)];
     section1.stringValue = @"CONNECTION";
-    section1.font = [NSFont fontWithName:@"Maple Mono" size:12] ?: [NSFont systemFontOfSize:12 weight:NSFontWeightBold];
+    section1.font = [NSFont fontWithName:@"Maple Mono" size:kSectionTitleFontSize] ?: [NSFont systemFontOfSize:kSectionTitleFontSize weight:NSFontWeightBold];
     section1.textColor = [NSColor colorWithWhite:0.6 alpha:1.0];
     section1.backgroundColor = [NSColor clearColor];
     section1.bordered = NO; section1.editable = NO;
     [self addSubview:section1];
     
-    y -= 28;
+    y -= kSectionGap;
 
-    // Provider selector
-    NSPopUpButton* popup = [[NSPopUpButton alloc] initWithFrame:NSMakeRect(marginX, y, 110, 24)];
-    [popup addItemWithTitle:@"Osaurus"];
-    [popup addItemWithTitle:@"Ollama"];
-    [popup addItemWithTitle:@"Custom"];
-    [popup selectItemAtIndex:prov];
-    popup.target = self;
-    popup.action = @selector(providerChanged:);
-    [self addSubview:popup];
+     // Provider selector
+     NSPopUpButton* popup = [[NSPopUpButton alloc] initWithFrame:NSMakeRect(marginX, y, kProviderPopupWidth, kControlHeight)];
+     [popup addItemWithTitle:@"Foundation (direct)"];
+     [popup addItemWithTitle:@"Osaurus"];
+     [popup addItemWithTitle:@"Ollama"];
+     [popup addItemWithTitle:@"Custom"];
+     [popup selectItemAtIndex:prov];
+     popup.target = self;
+     popup.action = @selector(providerChanged:);
+     [self addSubview:popup];
 
     // Port
-    _portLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(140, y + 2, 36, 16)];
+    _portLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(kPortLabelX, y + kPortLabelYOffset, kPortLabelWidth, kSectionTitleHeight)];
     _portLabel.stringValue = @"Port:";
-    _portLabel.font = [NSFont fontWithName:@"Maple Mono" size:11] ?: [NSFont systemFontOfSize:11];
+    _portLabel.font = [NSFont fontWithName:@"Maple Mono" size:kLabelFontSize] ?: [NSFont systemFontOfSize:kLabelFontSize];
     _portLabel.textColor = [NSColor whiteColor];
     _portLabel.backgroundColor = [NSColor clearColor];
     _portLabel.bordered = NO; _portLabel.editable = NO;
     [self addSubview:_portLabel];
 
-    _portField = [[NSTextField alloc] initWithFrame:NSMakeRect(176, y + 2, 50, 20)];
+    _portField = [[NSTextField alloc] initWithFrame:NSMakeRect(kPortFieldX, y + kPortLabelYOffset, kPortFieldWidth, kControlHeightSmall)];
     _portField.integerValue = [self currentPort];
-    _portField.font = [NSFont fontWithName:@"Maple Mono" size:11] ?: [NSFont systemFontOfSize:11];
+    _portField.font = [NSFont fontWithName:@"Maple Mono" size:kLabelFontSize] ?: [NSFont systemFontOfSize:kLabelFontSize];
     _portField.bezelStyle = NSTextFieldRoundedBezel;
-    _portField.tag = 100;
+    _portField.tag = kPortFieldTag;
     _portField.target = self;
     _portField.action = @selector(portChanged:);
     [self addSubview:_portField];
 
     // Model popup
-    _modelLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(236, y + 2, 44, 16)];
+    _modelLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(kModelLabelX, y + kPortLabelYOffset, kModelLabelWidth, kSectionTitleHeight)];
     _modelLabel.stringValue = @"Model:";
-    _modelLabel.font = [NSFont fontWithName:@"Maple Mono" size:11] ?: [NSFont systemFontOfSize:11];
+    _modelLabel.font = [NSFont fontWithName:@"Maple Mono" size:kLabelFontSize] ?: [NSFont systemFontOfSize:kLabelFontSize];
     _modelLabel.textColor = [NSColor whiteColor];
     _modelLabel.backgroundColor = [NSColor clearColor];
     _modelLabel.bordered = NO; _modelLabel.editable = NO;
     [self addSubview:_modelLabel];
 
-    _modelPopup = [[NSPopUpButton alloc] initWithFrame:NSMakeRect(280, y, 160, 24)];
+    _modelPopup = [[NSPopUpButton alloc] initWithFrame:NSMakeRect(kModelPopupX, y, kModelPopupWidth, kControlHeight)];
     [_modelPopup addItemWithTitle:[self currentModelName]];
-    _modelPopup.tag = 101;
+    _modelPopup.tag = kModelPopupTag;
     _modelPopup.target = self;
     _modelPopup.action = @selector(modelPopupChanged:);
     [self addSubview:_modelPopup];
 
-    _refreshBtn = [[NSButton alloc] initWithFrame:NSMakeRect(444, y, 24, 24)];
-    [_refreshBtn setTitle:@"🔄"];
-    [_refreshBtn setFont:[NSFont fontWithName:@"Maple Mono" size:12] ?: [NSFont systemFontOfSize:12]];
+    _refreshBtn = [[NSButton alloc] initWithFrame:NSMakeRect(kRefreshBtnX, y, kRefreshBtnSize, kRefreshBtnSize)];
+    [_refreshBtn setTitle:@"\U0001F504"];
+    [_refreshBtn setFont:[NSFont fontWithName:@"Maple Mono" size:kRefreshBtnFontSize] ?: [NSFont systemFontOfSize:kRefreshBtnFontSize]];
     [_refreshBtn setTarget:self];
     [_refreshBtn setAction:@selector(refreshModels:)];
     _refreshBtn.bezelStyle = NSBezelStyleRounded;
     [self addSubview:_refreshBtn];
 
-    y -= 32;
+    y -= kControlGap;
 
-    // Custom endpoint URL field (only shown for Custom provider)
-    _endpointField = [[NSTextField alloc] initWithFrame:NSMakeRect(marginX, y, w - marginX*2, 22)];
+    // Custom endpoint URL field
+    _endpointField = [[NSTextField alloc] initWithFrame:NSMakeRect(marginX, y, w - marginX*2, kEndpointFieldHeight)];
     _endpointField.stringValue = [NSString stringWithUTF8String:g_config.ai.customEndpoint.c_str()];
     _endpointField.placeholderString = @"http://localhost:1337/v1/chat/completions";
-    _endpointField.font = [NSFont fontWithName:@"Maple Mono" size:11] ?: [NSFont systemFontOfSize:11];
+    _endpointField.font = [NSFont fontWithName:@"Maple Mono" size:kLabelFontSize] ?: [NSFont systemFontOfSize:kLabelFontSize];
     _endpointField.bezelStyle = NSTextFieldRoundedBezel;
     _endpointField.target = self;
     _endpointField.action = @selector(endpointChanged:);
@@ -153,11 +233,11 @@ extern "C" void AI_RefreshModelDisplay();
     _endpointField.autoresizingMask = NSViewWidthSizable;
     [self addSubview:_endpointField];
 
-    // Custom model name field (only shown for Custom provider)
-    _customModelField = [[NSTextField alloc] initWithFrame:NSMakeRect(marginX, y - 28, w - marginX*2, 22)];
+    // Custom model name field
+    _customModelField = [[NSTextField alloc] initWithFrame:NSMakeRect(marginX, y + kCustomModelFieldYOffset, w - marginX*2, kCustomModelFieldHeight)];
     _customModelField.stringValue = [NSString stringWithUTF8String:g_config.ai.customModel.c_str()];
     _customModelField.placeholderString = @"Model name";
-    _customModelField.font = [NSFont fontWithName:@"Maple Mono" size:11] ?: [NSFont systemFontOfSize:11];
+    _customModelField.font = [NSFont fontWithName:@"Maple Mono" size:kLabelFontSize] ?: [NSFont systemFontOfSize:kLabelFontSize];
     _customModelField.bezelStyle = NSTextFieldRoundedBezel;
     _customModelField.target = self;
     _customModelField.action = @selector(customModelChanged:);
@@ -165,54 +245,54 @@ extern "C" void AI_RefreshModelDisplay();
     _customModelField.autoresizingMask = NSViewWidthSizable;
     [self addSubview:_customModelField];
 
-    if (prov == 2) y -= 56;
+    if (prov == 2) y -= kCustomSectionYDrop;
 
-    y -= 10;
+    y -= kPostCustomYGap;
 
     // Test Connection + status
-    NSButton* testBtn = [[NSButton alloc] initWithFrame:NSMakeRect(marginX, y, 100, 22)];
+    NSButton* testBtn = [[NSButton alloc] initWithFrame:NSMakeRect(marginX, y, kTestBtnWidth, kTestBtnHeight)];
     [testBtn setTitle:@"Test Conn"];
-    [testBtn setFont:[NSFont fontWithName:@"Maple Mono" size:11] ?: [NSFont systemFontOfSize:11]];
+    [testBtn setFont:[NSFont fontWithName:@"Maple Mono" size:kBtnFontSize] ?: [NSFont systemFontOfSize:kBtnFontSize]];
     [testBtn setTarget:self];
     [testBtn setAction:@selector(testConnection:)];
     testBtn.bezelStyle = NSBezelStyleRounded;
     testBtn.identifier = @"testConnectionBtn";
     [self addSubview:testBtn];
 
-    _statusLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(130, y + 2, w - 150, 16)];
-    _statusLabel.font = [NSFont fontWithName:@"Maple Mono" size:11] ?: [NSFont systemFontOfSize:11];
+    _statusLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(kStatusLabelX, y + kStatusLabelYOffset, w - 150, kSectionTitleHeight)];
+    _statusLabel.font = [NSFont fontWithName:@"Maple Mono" size:kLabelFontSize] ?: [NSFont systemFontOfSize:kLabelFontSize];
     _statusLabel.textColor = [NSColor colorWithWhite:0.85 alpha:1.0];
     _statusLabel.backgroundColor = [NSColor clearColor];
     _statusLabel.bordered = NO; _statusLabel.editable = NO;
     _statusLabel.identifier = @"connectionStatus";
     [self addSubview:_statusLabel];
 
-    y -= 40;
+    y -= kPostTestYGap;
     
     // --- SECTION: Personality ---
-    NSTextField* section2 = [[NSTextField alloc] initWithFrame:NSMakeRect(marginX, y, 200, 16)];
+    NSTextField* section2 = [[NSTextField alloc] initWithFrame:NSMakeRect(marginX, y, kSectionTitleWidth, kSectionTitleHeight)];
     section2.stringValue = @"PERSONALITY";
-    section2.font = [NSFont fontWithName:@"Maple Mono" size:12] ?: [NSFont systemFontOfSize:12 weight:NSFontWeightBold];
+    section2.font = [NSFont fontWithName:@"Maple Mono" size:kSectionTitleFontSize] ?: [NSFont systemFontOfSize:kSectionTitleFontSize weight:NSFontWeightBold];
     section2.textColor = [NSColor colorWithWhite:0.6 alpha:1.0];
     section2.backgroundColor = [NSColor clearColor];
     section2.bordered = NO; section2.editable = NO;
     [self addSubview:section2];
 
-    y -= 26;
+    y -= kPostSectionYGap;
 
     // Evil slider
-    NSTextField* evilTitle = [[NSTextField alloc] initWithFrame:NSMakeRect(marginX, y, 80, 16)];
-    evilTitle.stringValue = @"😇 Cuddly";
-    evilTitle.font = [NSFont fontWithName:@"Maple Mono" size:12] ?: [NSFont systemFontOfSize:12];
+    NSTextField* evilTitle = [[NSTextField alloc] initWithFrame:NSMakeRect(marginX, y, kEvilTitleWidth, kSectionTitleHeight)];
+    evilTitle.stringValue = @"\U0001F607 Cuddly";
+    evilTitle.font = [NSFont fontWithName:@"Maple Mono" size:kNameFontSize] ?: [NSFont systemFontOfSize:kNameFontSize];
     evilTitle.textColor = [NSColor whiteColor];
     evilTitle.backgroundColor = [NSColor clearColor];
     evilTitle.bordered = NO; evilTitle.editable = NO;
     evilTitle.autoresizingMask = NSViewNotSizable;
     [self addSubview:evilTitle];
 
-    NSTextField* polandLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(w - marginX - 120, y, 120, 16)];
-    polandLabel.stringValue = @"😈 Invade Poland";
-    polandLabel.font = [NSFont fontWithName:@"Maple Mono" size:12] ?: [NSFont systemFontOfSize:12];
+    NSTextField* polandLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(w - marginX - kPolandLabelWidth, y + kPolandLabelYOffset, kPolandLabelWidth, kSectionTitleHeight)];
+    polandLabel.stringValue = @"\U0001F608 Invade Poland";
+    polandLabel.font = [NSFont fontWithName:@"Maple Mono" size:kNameFontSize] ?: [NSFont systemFontOfSize:kNameFontSize];
     polandLabel.textColor = [NSColor whiteColor];
     polandLabel.backgroundColor = [NSColor clearColor];
     polandLabel.bordered = NO; polandLabel.editable = NO;
@@ -220,11 +300,11 @@ extern "C" void AI_RefreshModelDisplay();
     polandLabel.autoresizingMask = NSViewMinXMargin;
     [self addSubview:polandLabel];
 
-    y -= 20;
+    y -= kEvilSliderYGap;
 
-    NSSlider* evilSlider = [[NSSlider alloc] initWithFrame:NSMakeRect(marginX, y, w - marginX*2, 20)];
-    evilSlider.minValue = 0.0;
-    evilSlider.maxValue = 1.0;
+    NSSlider* evilSlider = [[NSSlider alloc] initWithFrame:NSMakeRect(marginX, y, w - marginX*2, kSliderHeight)];
+    evilSlider.minValue = kEvilMin;
+    evilSlider.maxValue = kEvilMax;
     evilSlider.doubleValue = g_config.ai.evilLevel;
     evilSlider.target = self;
     evilSlider.action = @selector(evilSliderChanged:);
@@ -232,87 +312,87 @@ extern "C" void AI_RefreshModelDisplay();
     evilSlider.continuous = YES;
     [self addSubview:evilSlider];
 
-    NSTextField* evilValue = [[NSTextField alloc] initWithFrame:NSMakeRect(w - marginX - 40, y - 18, 40, 14)];
+    NSTextField* evilValue = [[NSTextField alloc] initWithFrame:NSMakeRect(w - marginX - kEvilValueWidth, y + kEvilValueYOffset, kEvilValueWidth, kEvilValueHeight)];
     evilValue.stringValue = [NSString stringWithFormat:@"%.0f%%", g_config.ai.evilLevel * 100];
-    evilValue.font = [NSFont fontWithName:@"Maple Mono" size:10] ?: [NSFont systemFontOfSize:10];
+    evilValue.font = [NSFont fontWithName:@"Maple Mono" size:kSmallFontSize] ?: [NSFont systemFontOfSize:kSmallFontSize];
     evilValue.textColor = [NSColor colorWithWhite:0.85 alpha:1.0];
     evilValue.backgroundColor = [NSColor clearColor];
     evilValue.bordered = NO; evilValue.editable = NO;
     evilValue.alignment = NSTextAlignmentRight;
     evilValue.autoresizingMask = NSViewMinXMargin;
-    evilValue.tag = 200;
+    evilValue.tag = kEvilValueTag;
     [self addSubview:evilValue];
 
-    y -= 10;
+    y -= kPostSliderYGap;
 
-    NSTextField* promptTitle = [[NSTextField alloc] initWithFrame:NSMakeRect(marginX, y, 200, 16)];
-    promptTitle.stringValue = @"🧠 System Prompt Preview:";
-    promptTitle.font = [NSFont fontWithName:@"Maple Mono" size:11] ?: [NSFont systemFontOfSize:11 weight:NSFontWeightSemibold];
+    NSTextField* promptTitle = [[NSTextField alloc] initWithFrame:NSMakeRect(marginX, y, kSectionTitleWidth, kPromptTitleHeight)];
+    promptTitle.stringValue = @"\U0001F9E0 System Prompt Preview:";
+    promptTitle.font = [NSFont fontWithName:@"Maple Mono" size:kPromptFontSize] ?: [NSFont systemFontOfSize:kPromptFontSize weight:NSFontWeightSemibold];
     promptTitle.textColor = [NSColor colorWithWhite:0.7 alpha:1.0];
     promptTitle.backgroundColor = [NSColor clearColor];
     promptTitle.bordered = NO; promptTitle.editable = NO;
     [self addSubview:promptTitle];
 
-    y -= 54;
+    y -= kEvilPromptYGap;
 
-    _promptBody = [[NSTextField alloc] initWithFrame:NSMakeRect(marginX, y, w - marginX*2, 48)];
-    _promptBody.font = [NSFont fontWithName:@"Maple Mono" size:11] ?: [NSFont systemFontOfSize:11];
+    _promptBody = [[NSTextField alloc] initWithFrame:NSMakeRect(marginX, y, w - marginX*2, kPromptBodyHeight)];
+    _promptBody.font = [NSFont fontWithName:@"Maple Mono" size:kPromptFontSize] ?: [NSFont systemFontOfSize:kPromptFontSize];
     _promptBody.textColor = [NSColor colorWithWhite:0.85 alpha:1.0];
     _promptBody.backgroundColor = [NSColor colorWithWhite:0.1 alpha:0.4];
     _promptBody.wantsLayer = YES;
-    _promptBody.layer.cornerRadius = 4.0;
+    _promptBody.layer.cornerRadius = kPromptBodyCornerRadius;
     _promptBody.bordered = NO; _promptBody.editable = NO;
     _promptBody.stringValue = [self promptPreviewForEvilLevel:g_config.ai.evilLevel];
     [self addSubview:_promptBody];
 
-    y -= 10;
+    y -= kEvilPostPromptYGap;
 
     // --- SECTION: TEXT MEME ---
-    NSTextField* section3 = [[NSTextField alloc] initWithFrame:NSMakeRect(marginX, y, 200, 16)];
+    NSTextField* section3 = [[NSTextField alloc] initWithFrame:NSMakeRect(marginX, y, kSectionTitleWidth, kSectionTitleHeight)];
     section3.stringValue = @"TEXT MEME";
-    section3.font = [NSFont fontWithName:@"Maple Mono" size:12] ?: [NSFont systemFontOfSize:12 weight:NSFontWeightBold];
+    section3.font = [NSFont fontWithName:@"Maple Mono" size:kSectionTitleFontSize] ?: [NSFont systemFontOfSize:kSectionTitleFontSize weight:NSFontWeightBold];
     section3.textColor = [NSColor colorWithWhite:0.6 alpha:1.0];
     section3.backgroundColor = [NSColor clearColor];
     section3.bordered = NO; section3.editable = NO;
     [self addSubview:section3];
 
-    y -= 26;
+    y -= kPostSectionYGap;
 
-    NSButton* textMemeBtn = [[NSButton alloc] initWithFrame:NSMakeRect(marginX, y, 220, 18)];
+    NSButton* textMemeBtn = [[NSButton alloc] initWithFrame:NSMakeRect(marginX, y, kTextMemeBtnWidth, kToggleHeight)];
     [textMemeBtn setButtonType:NSButtonTypeSwitch];
     [textMemeBtn setTitle:@"Generate text memes via AI"];
-    [textMemeBtn setFont:[NSFont fontWithName:@"Maple Mono" size:11] ?: [NSFont systemFontOfSize:11]];
+    [textMemeBtn setFont:[NSFont fontWithName:@"Maple Mono" size:kBtnFontSize] ?: [NSFont systemFontOfSize:kBtnFontSize]];
     [textMemeBtn setState:g_config.ai.textMemeEnabled ? NSControlStateValueOn : NSControlStateValueOff];
     [textMemeBtn setTarget:self];
     [textMemeBtn setAction:@selector(textMemeToggled:)];
     [self addSubview:textMemeBtn];
 
-    y -= 26;
+    y -= kPostToggleYGap;
 
-    NSTextField* tempLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(marginX, y, 120, 16)];
+    NSTextField* tempLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(marginX, y, kTempLabelWidth, kSectionTitleHeight)];
     tempLabel.stringValue = @"Temperature";
-    tempLabel.font = [NSFont fontWithName:@"Maple Mono" size:11] ?: [NSFont systemFontOfSize:11];
+    tempLabel.font = [NSFont fontWithName:@"Maple Mono" size:kLabelFontSize] ?: [NSFont systemFontOfSize:kLabelFontSize];
     tempLabel.textColor = [NSColor whiteColor];
     tempLabel.backgroundColor = [NSColor clearColor];
     tempLabel.bordered = NO; tempLabel.editable = NO;
     [self addSubview:tempLabel];
 
-    NSTextField* tempValue = [[NSTextField alloc] initWithFrame:NSMakeRect(w - marginX - 40, y, 40, 14)];
+    NSTextField* tempValue = [[NSTextField alloc] initWithFrame:NSMakeRect(w - marginX - kTempValueWidth, y, kTempValueWidth, kTempValueHeight)];
     tempValue.stringValue = [NSString stringWithFormat:@"%.1f", g_config.ai.textMemeTemperature];
-    tempValue.font = [NSFont fontWithName:@"Maple Mono" size:10] ?: [NSFont systemFontOfSize:10];
+    tempValue.font = [NSFont fontWithName:@"Maple Mono" size:kSmallFontSize] ?: [NSFont systemFontOfSize:kSmallFontSize];
     tempValue.textColor = [NSColor colorWithWhite:0.85 alpha:1.0];
     tempValue.backgroundColor = [NSColor clearColor];
     tempValue.bordered = NO; tempValue.editable = NO;
     tempValue.alignment = NSTextAlignmentRight;
     tempValue.autoresizingMask = NSViewMinXMargin;
-    tempValue.tag = 301;
+    tempValue.tag = kTempValueTag;
     [self addSubview:tempValue];
 
-    y -= 20;
+    y -= kEvilSliderYGap;
 
-    NSSlider* tempSlider = [[NSSlider alloc] initWithFrame:NSMakeRect(marginX, y, w - marginX*2, 20)];
-    tempSlider.minValue = 0.0;
-    tempSlider.maxValue = 2.0;
+    NSSlider* tempSlider = [[NSSlider alloc] initWithFrame:NSMakeRect(marginX, y, w - marginX*2, kSliderHeight)];
+    tempSlider.minValue = kTempMin;
+    tempSlider.maxValue = kTempMax;
     tempSlider.doubleValue = g_config.ai.textMemeTemperature;
     tempSlider.target = self;
     tempSlider.action = @selector(textMemeTempChanged:);
@@ -320,289 +400,83 @@ extern "C" void AI_RefreshModelDisplay();
     tempSlider.continuous = YES;
     [self addSubview:tempSlider];
 
-    y -= 26;
+    y -= kPostToggleYGap;
 
-    NSButton* autoSaveBtn = [[NSButton alloc] initWithFrame:NSMakeRect(marginX, y, 260, 18)];
+    NSButton* autoSaveBtn = [[NSButton alloc] initWithFrame:NSMakeRect(marginX, y, kAutoSaveBtnWidth, kToggleHeight)];
     [autoSaveBtn setButtonType:NSButtonTypeSwitch];
     [autoSaveBtn setTitle:@"Auto-save generated texts"];
-    [autoSaveBtn setFont:[NSFont fontWithName:@"Maple Mono" size:11] ?: [NSFont systemFontOfSize:11]];
+    [autoSaveBtn setFont:[NSFont fontWithName:@"Maple Mono" size:kBtnFontSize] ?: [NSFont systemFontOfSize:kBtnFontSize]];
     [autoSaveBtn setState:g_config.ai.textMemeAutoSave ? NSControlStateValueOn : NSControlStateValueOff];
     [autoSaveBtn setTarget:self];
     [autoSaveBtn setAction:@selector(textMemeAutoSaveToggled:)];
     [self addSubview:autoSaveBtn];
 
-    y -= 10;
+    y -= kPostAutoSaveYGap;
 
     // --- SECTION: Advanced ---
-    NSTextField* section4 = [[NSTextField alloc] initWithFrame:NSMakeRect(marginX, y, 200, 16)];
+    NSTextField* section4 = [[NSTextField alloc] initWithFrame:NSMakeRect(marginX, y, kSectionTitleWidth, kSectionTitleHeight)];
     section4.stringValue = @"ADVANCED";
-    section4.font = [NSFont fontWithName:@"Maple Mono" size:12] ?: [NSFont systemFontOfSize:12 weight:NSFontWeightBold];
+    section4.font = [NSFont fontWithName:@"Maple Mono" size:kSectionTitleFontSize] ?: [NSFont systemFontOfSize:kSectionTitleFontSize weight:NSFontWeightBold];
     section4.textColor = [NSColor colorWithWhite:0.6 alpha:1.0];
     section4.backgroundColor = [NSColor clearColor];
     section4.bordered = NO; section4.editable = NO;
     [self addSubview:section4];
 
-    y -= 28;
+    y -= kPostSectionYGapLarge;
 
-    NSButton* showStatusBtn = [[NSButton alloc] initWithFrame:NSMakeRect(marginX, y, 200, 18)];
+    NSButton* showStatusBtn = [[NSButton alloc] initWithFrame:NSMakeRect(marginX, y, kShowStatusBtnWidth, kToggleHeight)];
     [showStatusBtn setButtonType:NSButtonTypeSwitch];
     [showStatusBtn setTitle:@"Show debug status bar"];
-    [showStatusBtn setFont:[NSFont fontWithName:@"Maple Mono" size:11] ?: [NSFont systemFontOfSize:11]];
+    [showStatusBtn setFont:[NSFont fontWithName:@"Maple Mono" size:kBtnFontSize] ?: [NSFont systemFontOfSize:kBtnFontSize]];
     [showStatusBtn setState:g_config.ai.showStatusBar ? NSControlStateValueOn : NSControlStateValueOff];
     [showStatusBtn setTarget:self];
     [showStatusBtn setAction:@selector(showStatusBarToggled:)];
     [self addSubview:showStatusBtn];
 
-    y -= 26;
+    y -= kPostToggleYGap;
 
-    NSButton* mcpBtn = [[NSButton alloc] initWithFrame:NSMakeRect(marginX, y, 160, 18)];
+    NSButton* mcpBtn = [[NSButton alloc] initWithFrame:NSMakeRect(marginX, y, kMcpBtnWidth, kToggleHeight)];
     [mcpBtn setButtonType:NSButtonTypeSwitch];
     [mcpBtn setTitle:@"Enable MCP Server"];
-    [mcpBtn setFont:[NSFont fontWithName:@"Maple Mono" size:11] ?: [NSFont systemFontOfSize:11]];
+    [mcpBtn setFont:[NSFont fontWithName:@"Maple Mono" size:kBtnFontSize] ?: [NSFont systemFontOfSize:kBtnFontSize]];
     [mcpBtn setState:g_config.ai.enableMCP ? NSControlStateValueOn : NSControlStateValueOff];
     [mcpBtn setTarget:self];
     [mcpBtn setAction:@selector(mcpToggled:)];
     [self addSubview:mcpBtn];
 
-    NSTextField* mcpPortLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(180, y, 40, 16)];
+    NSTextField* mcpPortLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(kMcpPortLabelX, y, kMcpPortLabelWidth, kSectionTitleHeight)];
     mcpPortLabel.stringValue = @"Port:";
-    mcpPortLabel.font = [NSFont fontWithName:@"Maple Mono" size:11] ?: [NSFont systemFontOfSize:11];
+    mcpPortLabel.font = [NSFont fontWithName:@"Maple Mono" size:kLabelFontSize] ?: [NSFont systemFontOfSize:kLabelFontSize];
     mcpPortLabel.textColor = [NSColor colorWithWhite:0.75 alpha:1.0];
     mcpPortLabel.backgroundColor = [NSColor clearColor];
     mcpPortLabel.bordered = NO; mcpPortLabel.editable = NO;
     mcpPortLabel.alignment = NSTextAlignmentRight;
     [self addSubview:mcpPortLabel];
 
-    NSTextField* mcpPortField = [[NSTextField alloc] initWithFrame:NSMakeRect(224, y - 2, 70, 20)];
+    NSTextField* mcpPortField = [[NSTextField alloc] initWithFrame:NSMakeRect(kMcpPortFieldX, y + kMcpPortFieldYOffset, kMcpPortFieldWidth, kControlHeightSmall)];
     mcpPortField.stringValue = [NSString stringWithFormat:@"%d", g_config.ai.mcpPort];
-    mcpPortField.font = [NSFont fontWithName:@"Maple Mono" size:11] ?: [NSFont systemFontOfSize:11];
+    mcpPortField.font = [NSFont fontWithName:@"Maple Mono" size:kLabelFontSize] ?: [NSFont systemFontOfSize:kLabelFontSize];
     mcpPortField.bezelStyle = NSTextFieldRoundedBezel;
     mcpPortField.target = self;
     mcpPortField.action = @selector(mcpPortChanged:);
     [self addSubview:mcpPortField];
 
-    [self performSelector:@selector(refreshModels:) withObject:_refreshBtn afterDelay:0.5];
+    [self performSelector:@selector(refreshModels:) withObject:_refreshBtn afterDelay:kModelRefreshDelay];
 }
+
 - (void)updateCustomVisibility {
     NSInteger prov = [self currentProvider];
-    BOOL isCustom = (prov == 2);
+    BOOL isFoundation = (prov == 0);
+    BOOL isOsaurus = (prov == 1);
+    BOOL isOllama = (prov == 2);
+    BOOL isCustom = (prov == 3);
+    _portLabel.hidden = isFoundation;
+    _portField.hidden = isFoundation;
+    _modelLabel.hidden = !(isOsaurus || isOllama);
+    _modelPopup.hidden = !(isOsaurus || isOllama);
     _endpointField.hidden = !isCustom;
     _customModelField.hidden = !isCustom;
-    _portLabel.hidden = isCustom;
-    _portField.hidden = isCustom;
-    _modelLabel.hidden = isCustom;
-    _modelPopup.hidden = isCustom;
-    _refreshBtn.hidden = isCustom;
-}
-
-- (void)providerChanged:(NSPopUpButton*)sender {
-    NSInteger idx = sender.indexOfSelectedItem;
-    [self setProvider:idx];
-    _portField.integerValue = [self currentPort];
-    [_modelPopup removeAllItems];
-    [_modelPopup addItemWithTitle:[self currentModelName]];
-    [self updateCustomVisibility];
-    Config_SaveAll();
-    [self refreshModels:sender];
-}
-
-- (void)portChanged:(NSTextField*)sender {
-    [self setPort:(int)sender.integerValue];
-    Config_SaveAll();
-    [self refreshModels:sender];
-}
-
-- (void)modelPopupChanged:(NSPopUpButton*)sender {
-    NSString* selected = [sender titleOfSelectedItem];
-    if (selected && ![selected hasPrefix:@"🌀"] && ![selected hasPrefix:@"❌"] && ![selected isEqualToString:@"(none)"]) {
-        [self setModelName:selected];
-        Config_SaveAll();
-    }
-}
-
-- (void)endpointChanged:(NSTextField*)sender {
-    g_config.ai.customEndpoint = std::string([sender.stringValue UTF8String]);
-    Config_SaveAll();
-}
-
-- (void)customModelChanged:(NSTextField*)sender {
-    g_config.ai.customModel = std::string([sender.stringValue UTF8String]);
-    Config_SaveAll();
-}
-
-- (void)refreshModels:(id)sender {
-    NSInteger prov = [self currentProvider];
-    if (prov == 2) return; // no model list for custom
-
-    int port = [self currentPort];
-
-    [_modelPopup removeAllItems];
-    [_modelPopup addItemWithTitle:@"🌀 Loading..."];
-
-    NSString* endpoint = (prov == 0) ? [NSString stringWithFormat:@"http://localhost:%d/v1/models", port]
-                                     : [NSString stringWithFormat:@"http://localhost:%d/api/tags", port];
-    NSURL* url = [NSURL URLWithString:endpoint];
-    if (!url) return;
-
-    __weak NSPopUpButton* weakPopup = _modelPopup;
-    __weak AITabView* weakSelf = self;
-    NSURLSessionDataTask* task = [[NSURLSession sharedSession] dataTaskWithURL:url completionHandler:^(NSData* data, NSURLResponse* response, NSError* error) {
-        dispatch_async(dispatch_get_main_queue(), ^{
-            NSPopUpButton* strongPopup = weakPopup;
-            AITabView* strongSelf = weakSelf;
-            if (!strongPopup || !strongSelf) return;
-            [strongPopup removeAllItems];
-            if (error || !data) {
-                [strongPopup addItemWithTitle:[NSString stringWithFormat:@"❌ %@", error ? [error.localizedDescription substringToIndex:MIN(30,error.localizedDescription.length)] : @"no data"]];
-                return;
-            }
-            NSDictionary* json = [NSJSONSerialization JSONObjectWithData:data options:0 error:nil];
-            if (!json) { [strongPopup addItemWithTitle:@"(invalid response)"]; return; }
-            if ([json[@"data"] isKindOfClass:[NSArray class]]) {
-                for (NSDictionary* m in json[@"data"]) {
-                    [strongPopup addItemWithTitle:m[@"id"] ?: @"?"];
-                }
-            } else if ([json[@"models"] isKindOfClass:[NSArray class]]) {
-                for (NSDictionary* m in json[@"models"]) {
-                    [strongPopup addItemWithTitle:m[@"name"] ?: m[@"model"] ?: @"?"];
-                }
-            } else {
-                [strongPopup addItemWithTitle:@"(unknown format)"];
-            }
-            if (strongPopup.numberOfItems == 0) {
-                [strongPopup addItemWithTitle:@"(none found)"];
-            }
-            // Restore saved model selection
-            if (prov == 0 || prov == 1) {
-                std::string savedModel = (prov == 0) ? g_config.ai.osaurusModel : g_config.ai.ollamaModel;
-                if (!savedModel.empty()) {
-                    NSString* savedName = [NSString stringWithUTF8String:savedModel.c_str()];
-                    NSInteger idx = [strongPopup indexOfItemWithTitle:savedName];
-                    if (idx >= 0) [strongPopup selectItemAtIndex:idx];
-                }
-            }
-        });
-    }];
-    [task resume];
-}
-- (NSString*)modelsEndpointForTest {
-    NSInteger prov = [self currentProvider];
-    if (prov == 2) return [NSString stringWithUTF8String:g_config.ai.customEndpoint.c_str()];
-    return (prov == 0) ? [NSString stringWithFormat:@"http://localhost:%d/v1/models", [self currentPort]]
-                       : [NSString stringWithFormat:@"http://localhost:%d/api/tags", [self currentPort]];
-}
-
-- (void)testConnection:(id)sender {
-    if (!_statusLabel) return;
-
-    _statusLabel.stringValue = @"🌀 Testing...";
-    _statusLabel.textColor = [NSColor colorWithWhite:0.85 alpha:1.0];
-
-    NSString* endpoint = [self modelsEndpointForTest];
-    NSURL* url = [NSURL URLWithString:endpoint];
-    if (!url) { _statusLabel.stringValue = @"❌ Invalid URL"; _statusLabel.textColor = [NSColor systemRedColor]; return; }
-
-    NSMutableURLRequest* request = [NSMutableURLRequest requestWithURL:url];
-    request.timeoutInterval = 5;
-
-    __weak NSTextField* weakStatus = _statusLabel;
-    [[[NSURLSession sharedSession] dataTaskWithRequest:request completionHandler:^(NSData* data, NSURLResponse* response, NSError* error) {
-        dispatch_async(dispatch_get_main_queue(), ^{
-            NSTextField* strongStatus = weakStatus;
-            if (!strongStatus) return;
-            if (error) {
-                strongStatus.stringValue = [NSString stringWithFormat:@"❌ %@", error.localizedDescription];
-                strongStatus.textColor = [NSColor systemRedColor];
-            } else {
-                NSHTTPURLResponse* httpResp = (NSHTTPURLResponse*)response;
-                if (httpResp.statusCode == 200) {
-                    strongStatus.stringValue = @"✅ Connected!";
-                    strongStatus.textColor = [NSColor systemGreenColor];
-                } else {
-                    strongStatus.stringValue = [NSString stringWithFormat:@"❌ HTTP %ld", (long)httpResp.statusCode];
-                    strongStatus.textColor = [NSColor systemRedColor];
-                }
-            }
-        });
-    }] resume];
-}
-
-- (NSString*)promptPreviewForEvilLevel:(float)level {
-    int state = MIN((int)round(level * 9), 8);
-    switch (state) {
-        case 0: return @"You are an adorable fluffy gosling. You love everyone and want to\nbe best friends. Use gentle honks and warm hugs.";
-        case 1: return @"You are a friendly goose who enjoys good company.\nShare compliments and positivity with everyone.";
-        case 2: return @"You are a mischievous prankster goose. Steal things, tell silly jokes,\nhonk playfully. All in good fun.";
-        case 3: return @"You are a sarcastic goose with attitude. Roll your eyes at everything.\nBe snarky but not actually mean.";
-        case 4: return @"You are a chaotic neutral goose. You do what you want, when you want.\nUnpredictable and sassy.";
-        case 5: return @"You are a grumpy goose having a bad day. Complain about everything.\nThe world owes you breadcrumbs.";
-        case 6: return @"You are a villainous goose scheming against humanity. Plot theft and\nmayhem. Cackle menacingly.";
-        case 7: return @"You are an evil overlord goose bent on world domination.\nDemand fealty. Crush your enemies.";
-        case 8: return @"You are an absurdly eloquent goose dictator. You have conquered Poland\nand now march across Europe with unshakable confidence. Deliver grandiose\nmonologues about goose supremacy, demand tribute, threaten invasion with\ntheatrical flair. End every monologue with \"Honk Goose!\"";
-        default:return @"You are a chaotic neutral goose. You do what you want.";
-    }
-}
-
-- (void)evilSliderChanged:(NSSlider*)sender {
-    g_config.ai.evilLevel = (float)sender.doubleValue;
-    for (NSView* subview in self.subviews) {
-        if ([subview isKindOfClass:[NSTextField class]] && subview.tag == 200) {
-            [(NSTextField*)subview setStringValue:[NSString stringWithFormat:@"%.0f%%", g_config.ai.evilLevel * 100]];
-        }
-    }
-    if (_promptBody) {
-        _promptBody.stringValue = [self promptPreviewForEvilLevel:g_config.ai.evilLevel];
-    }
-    Config_SaveAll();
-}
-
-- (void)showStatusBarToggled:(NSButton*)sender {
-    g_config.ai.showStatusBar = (sender.state == NSControlStateValueOn);
-    AI_RefreshModelDisplay();
-    Config_SaveAll();
-}
-
-- (void)mcpToggled:(NSButton*)sender {
-    g_config.ai.enableMCP = (sender.state == NSControlStateValueOn);
-    if (g_config.ai.enableMCP) {
-        MCP_StartInternalServer();
-        MCP_StartHTTPServer();
-    } else {
-        MCP_StopHTTPServer();
-        MCP_StopInternalServer();
-    }
-    Config_SaveAll();
-}
-
-- (void)mcpPortChanged:(NSTextField*)sender {
-    int port = [sender.stringValue intValue];
-    if (port < 1024 || port > 65535) port = 31072;
-    g_config.ai.mcpPort = port;
-    Config_SaveAll();
-}
-
-- (void)textMemeToggled:(NSButton*)sender {
-    g_config.ai.textMemeEnabled = (sender.state == NSControlStateValueOn);
-    if (g_config.ai.textMemeEnabled) {
-        AI_TextMeme_Reset();
-    }
-    Config_SaveAll();
-}
-
-- (void)textMemeTempChanged:(NSSlider*)sender {
-    g_config.ai.textMemeTemperature = (float)sender.doubleValue;
-    for (NSView* subview in self.subviews) {
-        if ([subview isKindOfClass:[NSTextField class]] && [subview isNotEqualTo:sender] && ((NSTextField*)subview).tag == 301) {
-            ((NSTextField*)subview).stringValue = [NSString stringWithFormat:@"%.1f", g_config.ai.textMemeTemperature];
-            break;
-        }
-    }
-    Config_SaveAll();
-}
-
-- (void)textMemeAutoSaveToggled:(NSButton*)sender {
-    g_config.ai.textMemeAutoSave = (sender.state == NSControlStateValueOn);
-    Config_SaveAll();
+    _refreshBtn.hidden = !(isOsaurus || isOllama);
 }
 
 @end

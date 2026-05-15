@@ -1,0 +1,250 @@
+[LOG] Log file: /tmp/CadGoose_20260514_172327.log
+[DEBUG] main() starting, argc=2
+[DEBUG] argv[0]=./build/CadGoose
+[DEBUG] argv[1]=--debug
+[DEBUG] AppCli_HandleCommand returned -1
+[DEBUG] Got NSApplication: 0x107e70980, running=0
+[DEBUG] finishLaunching done, running=0
+[DEBUG] activated, running=0
+[17:23:27] DEBUG: Starting run loop...
+[17:23:27] DEBUG: App launching...
+[17:23:27] DEBUG: Config init done
+[MCP] Internal server started on /tmp/desktop-goose-mcp.sock
+[MCP-HTTP] Server started on port 31072
+Asset root: "/Users/ztomer/Projects/CadGoose"
+Assets: 83 memes, 53 texts
+[17:23:27] DEBUG: Assets init done
+Initializing Cursor Backends...
+Selected Cursor Backend: MacCGEvent
+[17:23:27] DEBUG: Backend: MacCGEvent
+[17:23:27] DEBUG: Creating windows for 1 screens
+[17:23:27] DEBUG: WindowManager instance: 0x1030d5920
+[17:23:27] DEBUG: GooseWindow initWithScreen START, rect={{0, 0}, {1800, 1169}}
+[AITEXT] Loaded 66 file texts
+[17:23:27] DEBUG: AI text memes loaded
+[17:23:27] DEBUG: GooseWindow super init done, self=0x1030f5300
+[17:23:27] DEBUG:   level=3
+[17:23:27] DEBUG:   collectionBehavior set
+[17:23:27] DEBUG:   window props set: opaque=0, ignoresMouse=0
+[17:23:27] DEBUG:   creating GooseView with frame {{0, 0}, {1800, 1169}}
+[17:23:27] DEBUG: GooseView initWithFrame START, frame={{0, 0}, {1800, 1169}}
+[17:23:27] DEBUG:   super init done, self=0x1030f6e80
+[17:23:27] DEBUG:   wantsLayer=YES
+[17:23:27] DEBUG:   layer backgroundColor set
+[17:23:27] DEBUG:   PRIMARY GOOSE VIEW (will update geese)
+[17:23:27] DEBUG:   time/count initialized
+[17:23:27] DEBUG: GooseView initWithFrame END
+[17:23:27] DEBUG:   gooseView created: 0x1030f6e80
+[17:23:27] DEBUG:   contentView set
+[17:23:27] DEBUG: GooseWindow initWithScreen END
+[17:23:27] DEBUG: createWindowsForAllScreens completed
+[17:23:27] DEBUG: Windows created: 1
+[17:23:27] DEBUG: Processing window: 0x1030f5300
+[17:23:27] DEBUG:   frame: {{0, 0}, {1800, 1169}}
+[17:23:27] DEBUG:   level: 3
+[17:23:27] DEBUG:   opaque: 0
+[17:23:27] DEBUG:   ignoresMouseEvents: 0
+[17:23:27] DEBUG:   gooseView: 0x1030f6e80
+[17:23:27] DEBUG:   gooseView.frame: {{0, 0}, {1800, 1169}}
+[17:23:27] DEBUG: GooseView startAnimation START
+[17:23:27] DEBUG:   stopped old timer
+[17:23:27] DEBUG:   timer created: 0x368a96d2500
+[17:23:27] DEBUG:   timer scheduled
+[17:23:27] DEBUG:   event handler set
+[17:23:27] DEBUG:   timer resumed
+[17:23:27] DEBUG: GooseView startAnimation END
+[17:23:27] DEBUG:   startAnimation done
+[17:23:27] DEBUG:   orderFront done
+[17:23:27] DEBUG: Window setup complete for window 0x1030f5300
+[17:23:27] INFO: Window setup complete, count: 1
+[17:23:27] DEBUG: Screen: 1800x1169
+[17:23:27] DEBUG: Geese spawned: 1
+[17:23:27] DEBUG: Goose 0 at 762.0,903.0
+[17:23:27] DEBUG: Menubar created
+[17:23:27] DEBUG: App ready, entering run loop...
+[AITEXT] Generating via HTTP... (ai_queue=0, temp=1.2)
+[DEBUG] Assets path: /Users/ztomer/Projects/CadGoose/Assets
+[DEBUG] Loaded honk 1: /Users/ztomer/Projects/CadGoose/Assets/Sound/NotEmbedded/Honk1.mp3
+[DEBUG] Loaded honk 2: /Users/ztomer/Projects/CadGoose/Assets/Sound/NotEmbedded/Honk2.mp3
+[DEBUG] Loaded honk 3: /Users/ztomer/Projects/CadGoose/Assets/Sound/NotEmbedded/Honk3.mp3
+[DEBUG] Loaded honk 4: /Users/ztomer/Projects/CadGoose/Assets/Sound/NotEmbedded/Honk4.mp3
+[DEBUG] Audio initialized
+[17:23:28] DEBUG: Goose 0 pos: 850.8,848.3 speed: 180.0
+[AITEXT] Generating via HTTP... (ai_queue=0, temp=1.2)
+[17:23:29] DEBUG: Goose 0 pos: 995.7,759.1 speed: 180.0
+[17:23:30] DEBUG: Goose 0 pos: 1147.8,665.4 speed: 180.0
+[AITEXT] Generating via HTTP... (ai_queue=0, temp=1.2)
+[17:23:31] DEBUG: Goose 0 pos: 1301.0,571.1 speed: 180.0
+[AITEXT] Response in 5.4s
+[AITEXT] Empty response
+[17:23:32] DEBUG: Goose 0 pos: 1437.6,479.6 speed: 354.6
+[17:23:33] DEBUG: Goose 0 pos: 1318.4,409.9 speed: 242.0
+[17:23:34] DEBUG: Goose 0 pos: 1122.2,378.9 speed: 182.9
+[17:23:35] DEBUG: Goose 0 pos: 942.4,358.9 speed: 180.1
+[17:23:36] DEBUG: Goose 0 pos: 763.4,340.3 speed: 180.0
+[AITEXT] Response in 8.3s
+[AITEXT] Empty response
+[17:23:37] DEBUG: Goose 0 pos: 584.3,321.9 speed: 180.0
+[17:23:38] DEBUG: Goose 0 pos: 405.2,303.5 speed: 180.0
+[DEBUG] Playing honk 2
+[FF] g0 ForceFetch type=0 w=1800 h=1169
+[FF] after StartFetch state=1 heldItem=0x0
+[HF] g0 handleFetching called state=1
+[HF] g0 heldItem=0x368aa64e4c0 image=0x368aa575000 after creation
+[HF] g0 -> RETURNING, dragPos=(0.0,0.0) dragInit=0
+[DEBUG] Playing honk 3
+[17:23:39] DEBUG: Goose 0 pos: 256.7,316.1 speed: 186.6
+[17:23:40] DEBUG: Goose 0 pos: 202.1,462.5 speed: 180.3
+[DEBUG] Playing honk 3
+[17:23:41] DEBUG: Goose 0 pos: 156.8,624.1 speed: 180.0
+[AITEXT] Response in 11.3s
+[AITEXT] Empty response
+[17:23:42] DEBUG: Goose 0 pos: 94.8,772.5 speed: 180.0
+[17:23:43] DEBUG: Goose 0 pos: 55.1,904.1 speed: 180.0
+[FF] g0 ForceFetch type=0 w=1800 h=1169
+[FF] after StartFetch state=1 heldItem=0x0
+[17:23:44] DEBUG: Goose 0 pos: 108.0,949.0 speed: 427.6
+[17:23:45] DEBUG: Goose 0 pos: 445.6,941.7 speed: 477.6
+[17:23:46] DEBUG: Goose 0 pos: 893.3,939.5 speed: 479.9
+[17:23:47] DEBUG: Goose 0 pos: 1352.0,980.9 speed: 480.0
+[17:23:48] DEBUG: Goose 0 pos: 1778.5,1120.8 speed: 480.0
+[HF] g0 handleFetching called state=1
+[HF] g0 heldItem=0x368aa64e160 image=0x368aa573ac0 after creation
+[HF] g0 -> RETURNING, dragPos=(266.1,260.1) dragInit=0
+[DEBUG] Playing honk 1
+[17:23:49] DEBUG: Goose 0 pos: 1451.7,911.7 speed: 480.0
+[17:23:50] DEBUG: Goose 0 pos: 1013.8,733.7 speed: 480.0
+[17:23:51] DEBUG: Goose 0 pos: 597.4,528.2 speed: 480.0
+[DEBUG] Playing honk 4
+[17:23:53] DEBUG: Goose 0 pos: 281.4,230.4 speed: 389.5
+[17:23:54] DEBUG: Goose 0 pos: 188.6,52.1 speed: 474.3
+[17:23:55] DEBUG: Goose 0 pos: 328.4,101.2 speed: 437.0
+[17:23:56] DEBUG: Goose 0 pos: 564.8,181.8 speed: 191.8
+[17:23:57] DEBUG: Goose 0 pos: 738.7,240.8 speed: 180.5
+[17:23:58] DEBUG: Goose 0 pos: 909.3,298.6 speed: 180.0
+[17:23:59] DEBUG: Goose 0 pos: 1079.8,356.3 speed: 180.0
+[AITEXT] Generating via HTTP... (ai_queue=0, temp=1.2)
+[17:24:00] DEBUG: Goose 0 pos: 1250.3,414.0 speed: 180.0
+[17:24:01] DEBUG: Goose 0 pos: 1420.5,471.7 speed: 180.0
+[FF] g0 ForceFetch type=0 w=1800 h=1169
+[FF] after StartFetch state=1 heldItem=0x0
+[AITEXT] Generating via HTTP... (ai_queue=0, temp=1.2)
+[17:24:02] DEBUG: Goose 0 pos: 1617.4,647.5 speed: 466.2
+[17:24:03] DEBUG: Goose 0 pos: 1848.0,996.7 speed: 479.4
+[HF] g0 handleFetching called state=1
+[HF] g0 heldItem=0x368aa64d260 image=0x368aa573c00 after creation
+[HF] g0 -> RETURNING, dragPos=(434.2,348.8) dragInit=0
+[DEBUG] Playing honk 2
+[AITEXT] Generating via HTTP... (ai_queue=0, temp=1.2)
+[17:24:04] DEBUG: Goose 0 pos: 1635.0,867.7 speed: 480.0
+[AITEXT] Response in 5.0s
+[AITEXT] Empty response
+[17:24:05] DEBUG: Goose 0 pos: 1235.7,649.2 speed: 480.0
+[17:24:06] DEBUG: Goose 0 pos: 790.8,492.2 speed: 480.0
+[17:24:07] DEBUG: Goose 0 pos: 386.4,276.6 speed: 480.0
+[DEBUG] Playing honk 2
+[17:24:08] DEBUG: Goose 0 pos: 166.7,98.5 speed: 480.0
+[17:24:09] DEBUG: Goose 0 pos: 189.2,159.9 speed: 480.0
+[AITEXT] Response in 8.0s
+[AITEXT] Empty response
+[17:24:10] DEBUG: Goose 0 pos: 406.2,457.9 speed: 480.0
+[config] listWidth=432 descLabelX=173 maxNW=107 maxDW=247
+[17:24:11] DEBUG: Goose 0 pos: 683.0,831.9 speed: 480.0
+[DEBUG] Playing honk 4
+[17:24:12] DEBUG: Goose 0 pos: 908.4,966.0 speed: 194.5
+[17:24:13] DEBUG: Goose 0 pos: 1085.4,917.6 speed: 180.7
+[17:24:14] DEBUG: Goose 0 pos: 1247.4,838.9 speed: 180.0
+[AITEXT] Response in 11.2s
+[AITEXT] Empty response
+[17:24:15] DEBUG: Goose 0 pos: 1374.1,774.4 speed: 180.0
+[17:24:16] DEBUG: Goose 0 pos: 1306.3,843.6 speed: 180.0
+[17:24:17] DEBUG: Goose 0 pos: 1207.5,910.3 speed: 180.0
+[17:24:18] DEBUG: Goose 0 pos: 1252.9,805.7 speed: 180.0
+[17:24:19] DEBUG: Goose 0 pos: 1339.4,658.0 speed: 180.0
+[17:24:20] DEBUG: Goose 0 pos: 1432.3,505.2 speed: 180.0
+[FF] g0 ForceFetch type=0 w=1800 h=1169
+[FF] after StartFetch state=1 heldItem=0x0
+[17:24:21] DEBUG: Goose 0 pos: 1413.3,362.5 speed: 453.1
+[17:24:22] DEBUG: Goose 0 pos: 1084.2,288.6 speed: 478.8
+[17:24:23] DEBUG: Goose 0 pos: 660.8,218.5 speed: 479.9
+[17:24:24] DEBUG: Goose 0 pos: 336.0,10.9 speed: 480.0
+[17:24:25] DEBUG: Goose 0 pos: 300.8,119.4 speed: 480.0
+[17:24:26] DEBUG: Goose 0 pos: 412.0,71.6 speed: 480.0
+[HF] g0 handleFetching called state=1
+[HF] g0 heldItem=0x368ae1fe430 image=0x368af328e80 after creation
+[HF] g0 -> RETURNING, dragPos=(589.9,724.7) dragInit=0
+[DEBUG] Playing honk 2
+[17:24:27] DEBUG: Goose 0 pos: 510.4,229.9 speed: 480.0
+[17:24:28] DEBUG: Goose 0 pos: 872.2,436.4 speed: 480.0
+[17:24:29] DEBUG: Goose 0 pos: 1277.9,605.4 speed: 480.0
+[DEBUG] Playing honk 2
+[17:24:30] DEBUG: Goose 0 pos: 1489.7,855.2 speed: 225.0
+[17:24:31] DEBUG: Goose 0 pos: 1478.3,895.5 speed: 182.1
+[AITEXT] Generating via HTTP... (ai_queue=0, temp=1.2)
+[17:24:32] DEBUG: Goose 0 pos: 1356.6,804.4 speed: 180.1
+[17:24:33] DEBUG: Goose 0 pos: 1219.8,692.9 speed: 180.0
+[AITEXT] Generating via HTTP... (ai_queue=0, temp=1.2)
+[17:24:34] DEBUG: Goose 0 pos: 1081.4,578.5 speed: 180.0
+[17:24:35] DEBUG: Goose 0 pos: 942.8,463.8 speed: 180.0
+[AITEXT] Generating via HTTP... (ai_queue=0, temp=1.2)
+[17:24:36] DEBUG: Goose 0 pos: 850.9,374.0 speed: 180.0
+[AITEXT] Response in 4.9s
+[AITEXT] Empty response
+[17:24:37] DEBUG: Goose 0 pos: 962.4,394.2 speed: 180.0
+[17:24:38] DEBUG: Goose 0 pos: 1125.6,445.9 speed: 180.0
+[17:24:39] DEBUG: Goose 0 pos: 1295.1,502.7 speed: 180.0
+[FF] g0 ForceFetch type=0 w=1800 h=1169
+[FF] after StartFetch state=1 heldItem=0x0
+[17:24:40] DEBUG: Goose 0 pos: 1489.9,589.2 speed: 435.0
+[AITEXT] Response in 7.8s
+[AITEXT] Empty response
+[17:24:41] DEBUG: Goose 0 pos: 1823.4,807.7 speed: 477.9
+[HF] g0 handleFetching called state=1
+[HF] g0 heldItem=0x368ae1f0fc0 image=0x368af323c00 after creation
+[HF] g0 -> RETURNING, dragPos=(1312.3,589.0) dragInit=0
+[DEBUG] Playing honk 2
+[17:24:42] DEBUG: Goose 0 pos: 1384.9,900.5 speed: 479.9
+[17:24:43] DEBUG: Goose 0 pos: 1009.3,689.0 speed: 480.0
+[DEBUG] Playing honk 4
+[17:24:44] DEBUG: Goose 0 pos: 681.1,360.2 speed: 400.5
+[17:24:45] DEBUG: Goose 0 pos: 464.3,259.2 speed: 190.2
+[AITEXT] Response in 10.7s
+[AITEXT] Empty response
+[17:24:46] DEBUG: Goose 0 pos: 447.8,272.8 speed: 180.5
+[17:24:47] DEBUG: Goose 0 pos: 598.2,291.4 speed: 180.0
+[17:24:48] DEBUG: Goose 0 pos: 773.5,310.3 speed: 180.0
+[17:24:49] DEBUG: Goose 0 pos: 952.0,329.2 speed: 180.0
+[17:24:50] DEBUG: Goose 0 pos: 1131.0,348.1 speed: 180.0
+[17:24:51] DEBUG: Goose 0 pos: 1310.0,367.0 speed: 180.0
+[17:24:52] DEBUG: Goose 0 pos: 1447.1,397.1 speed: 180.0
+[17:24:53] DEBUG: Goose 0 pos: 1369.2,486.2 speed: 180.0
+[17:24:54] DEBUG: Goose 0 pos: 1231.1,588.0 speed: 180.0
+[17:24:55] DEBUG: Goose 0 pos: 1084.4,690.4 speed: 180.0
+[17:24:56] DEBUG: Goose 0 pos: 936.5,792.7 speed: 180.0
+[FF] g0 ForceFetch type=1 w=1800 h=1169
+[FF] after StartFetch state=1 heldItem=0x0
+[17:24:57] DEBUG: Goose 0 pos: 863.2,919.0 speed: 439.4
+[17:24:58] DEBUG: Goose 0 pos: 1070.8,1172.2 speed: 478.1
+[HF] g0 handleFetching called state=1
+[HF] g0 heldItem=0x368ae1fd980 image=0x0 after creation
+[HF] g0 -> RETURNING, dragPos=(849.6,477.8) dragInit=0
+[DEBUG] Playing honk 4
+[17:24:59] DEBUG: Goose 0 pos: 1327.5,940.4 speed: 479.9
+[17:25:00] DEBUG: Goose 0 pos: 1264.2,828.9 speed: 480.0
+[17:25:01] DEBUG: Goose 0 pos: 905.6,826.1 speed: 480.0
+[DEBUG] Playing honk 2
+[AITEXT] Generating via HTTP... (ai_queue=0, temp=1.2)
+[17:25:02] DEBUG: Goose 0 pos: 490.0,922.1 speed: 305.4
+[17:25:03] DEBUG: Goose 0 pos: 333.7,878.5 speed: 185.8
+[AITEXT] Generating via HTTP... (ai_queue=0, temp=1.2)
+[17:25:04] DEBUG: Goose 0 pos: 365.7,728.8 speed: 180.3
+[17:25:05] DEBUG: Goose 0 pos: 436.4,567.3 speed: 180.0
+[AITEXT] Generating via HTTP... (ai_queue=0, temp=1.2)
+[17:25:06] DEBUG: Goose 0 pos: 513.8,405.3 speed: 180.0
+[AITEXT] Response in 5.0s
+[AITEXT] Empty response
+[17:25:07] DEBUG: Goose 0 pos: 631.7,218.7 speed: 630.3
+[17:25:08] DEBUG: Goose 0 pos: 816.5,125.9 speed: 593.7
+[17:25:09] DEBUG: Goose 0 pos: 844.9,152.2 speed: 199.1
+[MCP-HTTP] Server stopped
+[MCP] Internal server stopped

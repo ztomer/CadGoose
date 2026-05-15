@@ -73,6 +73,18 @@ static NSString* s_fallbackResponseForMessage(NSString* message, NSString* goose
 
 #pragma mark - AIHTTPClient
 
+struct AIState : public BehaviorState {
+    std::vector<std::string> conversationHistory;
+    double lastQuestionTime = 0;
+    bool awaitingResponse = false;
+
+    void Reset() override {
+        conversationHistory.clear();
+        lastQuestionTime = 0;
+        awaitingResponse = false;
+    }
+};
+
 @interface AIHTTPClient : NSObject
 @property (nonatomic, strong) NSMutableArray* history;
 @property (nonatomic) BOOL connected;
@@ -82,6 +94,7 @@ static NSString* s_fallbackResponseForMessage(NSString* message, NSString* goose
 - (const struct BuiltinProfile*)currentProfile;
 - (void)sendMessage:(NSString*)message completion:(void(^)(NSString* response, NSError* error))completion;
 - (void)checkConnectionWithCompletion:(void(^)(BOOL connected, NSString* message))completion;
+- (void)refreshConnection;
 @end
 
 #pragma mark - AIChatWindowController
@@ -134,16 +147,22 @@ static NSString* s_fallbackResponseForMessage(NSString* message, NSString* goose
 
     NSFont* chatFont = [NSFont fontWithName:@"Maple Mono" size:13] ?: [NSFont systemFontOfSize:13];
 
-    // Appbar: [traffic lights | goose selector | pin]
+    // Appbar: [traffic lights | goose selector | pin] with liquid glass
     NSView* appBar = [[NSView alloc] initWithFrame:NSMakeRect(0, 322, 420, 38)];
-    appBar.wantsLayer = YES;
-    appBar.layer.backgroundColor = [[NSColor colorWithWhite:0.2 alpha:1.0] CGColor];
     appBar.autoresizingMask = NSViewWidthSizable | NSViewMinYMargin;
     [contentView addSubview:appBar];
 
+    // Liquid glass effect for appbar
+    NSVisualEffectView* appBarGlass = [[NSVisualEffectView alloc] initWithFrame:appBar.bounds];
+    appBarGlass.autoresizingMask = NSViewWidthSizable | NSViewHeightSizable;
+    appBarGlass.blendingMode = NSVisualEffectBlendingModeBehindWindow;
+    appBarGlass.material = NSVisualEffectMaterialTitlebar;
+    appBarGlass.state = NSVisualEffectStateActive;
+    [appBar addSubview:appBarGlass];
+
     NSView* sep = [[NSView alloc] initWithFrame:NSMakeRect(0, 0, 420, 1)];
     sep.wantsLayer = YES;
-    sep.layer.backgroundColor = [[NSColor colorWithWhite:0.35 alpha:1.0] CGColor];
+    sep.layer.backgroundColor = [[NSColor separatorColor] CGColor];
     sep.autoresizingMask = NSViewWidthSizable;
     [appBar addSubview:sep];
 
@@ -167,8 +186,8 @@ static NSString* s_fallbackResponseForMessage(NSString* message, NSString* goose
     self.pinButton.autoresizingMask = NSViewMinXMargin;
     [appBar addSubview:self.pinButton];
 
-    // Chat scrollview
-    NSScrollView* scrollView = [[NSScrollView alloc] initWithFrame:NSMakeRect(10, 60, 400, 214)];
+    // Chat scrollview - fills space between input and appbar (no empty gap)
+    NSScrollView* scrollView = [[NSScrollView alloc] initWithFrame:NSMakeRect(10, 56, 400, 258)];
     scrollView.hasVerticalScroller = YES;
     scrollView.autoresizingMask = NSViewWidthSizable | NSViewHeightSizable;
     scrollView.drawsBackground = NO;
@@ -249,6 +268,10 @@ static NSString* s_fallbackResponseForMessage(NSString* message, NSString* goose
     NSString* message = self.inputField.stringValue;
     if (message.length == 0) return;
 
+    // Update awaiting state
+    auto* aiState = BehaviorStateManager::Instance().GetOrCreate<AIState>(0, "ai");
+    aiState->awaitingResponse = true;
+
     NSString* chatText = self.chatView.string;
     chatText = [chatText stringByAppendingFormat:@"You: %@\n", message];
     self.chatView.string = chatText;
@@ -263,6 +286,8 @@ static NSString* s_fallbackResponseForMessage(NSString* message, NSString* goose
         dispatch_async(dispatch_get_main_queue(), ^{
             AIChatWindowController* strong = weakSelf;
             if (!strong) return;
+            auto* s = BehaviorStateManager::Instance().GetOrCreate<AIState>(0, "ai");
+            s->awaitingResponse = false;
             strong.sendButton.enabled = YES;
             if (response && response.length > 0 && !error) {
                 [strong appendResponse:response];
@@ -343,6 +368,7 @@ static NSString* s_fallbackResponseForMessage(NSString* message, NSString* goose
 }
 
 - (void)windowDidBecomeKey:(NSNotification*)notification {
+    [self.httpClient refreshConnection];
     [self updateModelDisplay];
 }
 
@@ -353,18 +379,6 @@ static NSString* s_fallbackResponseForMessage(NSString* message, NSString* goose
 static AIHTTPClient* g_httpClient = nil;
 static AIChatWindowController* g_chatController = nil;
 #endif
-
-struct AIState : public BehaviorState {
-    std::vector<std::string> conversationHistory;
-    double lastQuestionTime = 0;
-    bool awaitingResponse = false;
-
-    void Reset() override {
-        conversationHistory.clear();
-        lastQuestionTime = 0;
-        awaitingResponse = false;
-    }
-};
 
 extern "C" void AI_OpenChat(const char* gooseName) {
 #ifdef __APPLE__

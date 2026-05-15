@@ -19,7 +19,7 @@ TEST(BehaviorStates, AllBehaviorStatesExist) {
         {"honcker", "honcker"}, {"drag", "drag"}, {"jail", "jail"},
         {"portal", "portal"}, {"anger", "anger"}, {"ball", "ball"},
         {"breadcrumbs", "breadcrumbs"}, {"health", "health"},
-        {"banish", "banish"}, {"acid", "acid"}, {"rainbow", "rainbow"},
+        {"acid", "acid"}, {"rainbow", "rainbow"},
         {"pomodoro", "pomodoro"},
         {"presence", "presence"}
     };
@@ -69,17 +69,6 @@ TEST(BehaviorStates, PortalStateCreate) {
     state->Reset();
     EXPECT_FALSE(state->portalA.active);
     EXPECT_FALSE(state->portalB.active);
-}
-
-TEST(BehaviorStates, BanishStateCreate) {
-    auto& registry = BehaviorRegistry::Instance();
-    ASSERT_NE(registry.Get("banish"), nullptr) << "banish behavior should be registered";
-
-    auto& mgr = BehaviorStateManager::Instance();
-    auto* state = mgr.GetOrCreate<BanishState>(0, "banish");
-    ASSERT_NE(state, nullptr);
-    state->Reset();
-    EXPECT_EQ(state->fadeProgress, 0.0f);
 }
 
 TEST(BehaviorStates, RainbowStateCreate) {

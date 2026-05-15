@@ -11,7 +11,6 @@ protected:
         savedBall = g_config.behaviors.fun.ball;
         savedHoncker = g_config.behaviors.control.honcker;
         savedHats = g_config.behaviors.fun.hats;
-        savedBanish = g_config.behaviors.control.banish;
         savedRainbow = g_config.behaviors.fun.rainbow;
         savedAcid = g_config.behaviors.fun.acid;
         savedBreadcrumbs = g_config.behaviors.fun.breadCrumbs;
@@ -25,7 +24,6 @@ protected:
         g_config.behaviors.fun.ball = savedBall;
         g_config.behaviors.control.honcker = savedHoncker;
         g_config.behaviors.fun.hats = savedHats;
-        g_config.behaviors.control.banish = savedBanish;
         g_config.behaviors.fun.rainbow = savedRainbow;
         g_config.behaviors.fun.acid = savedAcid;
         g_config.behaviors.fun.breadCrumbs = savedBreadcrumbs;
@@ -36,7 +34,7 @@ protected:
         g_config.behaviors.systems.pomodoro = savedPomodoro;
     }
 private:
-    bool savedBall, savedHoncker, savedHats, savedBanish, savedRainbow, savedAcid;
+    bool savedBall, savedHoncker, savedHats, savedRainbow, savedAcid;
     bool savedBreadcrumbs, savedJail, savedNametag, savedHealth, savedAi, savedPomodoro;
 };
 

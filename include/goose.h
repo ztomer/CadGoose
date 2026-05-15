@@ -89,10 +89,7 @@ public:
     float mudLifetime = 15.0f;
 
     // Joy state
-    bool isPetted = false;
-    double pettedTime = 0.0;
     Vector2 lastCursorPos{};
-    float cursorWiggleAmount = 0.0f;
 
     bool isSurprised = false;
     double surprisedTime = 0.0;
@@ -125,6 +122,12 @@ public:
     bool isChewing = false;
     double chewingStartTime = 0.0;
     double lastUpdateTime = 0.0;
+
+    // Stuck detection
+    Vector2 stuckCheckPos{};
+    double stuckCheckTime = 0.0;
+    static constexpr double STUCK_THRESHOLD_TIME = 3.0;
+    static constexpr float STUCK_THRESHOLD_DIST = 5.0f;
 
     // Behavior system enabled flag
     bool behaviorsEnabled = true;
