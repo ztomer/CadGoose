@@ -219,6 +219,7 @@ if(APPLE OR LINUX)
         tests/common/test_mcp_protocol.cpp
         tests/common/test_mcp_config.cpp
         tests/common/test_mcp_resources.cpp
+        tests/common/test_mcp_integration.cpp
         tests/common/test_ai_tokens.cpp
         tests/common/test_ai_routing.cpp
         tests/common/test_ai_bridge.cpp

@@ -2632,6 +2632,30 @@ tests/common/test_mcp_config.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/tests/common/test_mcp_config.cpp.s
 .PHONY : tests/common/test_mcp_config.cpp.s
 
+tests/common/test_mcp_integration.o: tests/common/test_mcp_integration.cpp.o
+.PHONY : tests/common/test_mcp_integration.o
+
+# target to build an object file
+tests/common/test_mcp_integration.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/tests/common/test_mcp_integration.cpp.o
+.PHONY : tests/common/test_mcp_integration.cpp.o
+
+tests/common/test_mcp_integration.i: tests/common/test_mcp_integration.cpp.i
+.PHONY : tests/common/test_mcp_integration.i
+
+# target to preprocess a source file
+tests/common/test_mcp_integration.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/tests/common/test_mcp_integration.cpp.i
+.PHONY : tests/common/test_mcp_integration.cpp.i
+
+tests/common/test_mcp_integration.s: tests/common/test_mcp_integration.cpp.s
+.PHONY : tests/common/test_mcp_integration.s
+
+# target to generate assembly for a file
+tests/common/test_mcp_integration.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/tests/common/test_mcp_integration.cpp.s
+.PHONY : tests/common/test_mcp_integration.cpp.s
+
 tests/common/test_mcp_protocol.o: tests/common/test_mcp_protocol.cpp.o
 .PHONY : tests/common/test_mcp_protocol.o
 
@@ -3125,6 +3149,9 @@ help:
 	@echo "... tests/common/test_mcp_config.o"
 	@echo "... tests/common/test_mcp_config.i"
 	@echo "... tests/common/test_mcp_config.s"
+	@echo "... tests/common/test_mcp_integration.o"
+	@echo "... tests/common/test_mcp_integration.i"
+	@echo "... tests/common/test_mcp_integration.s"
 	@echo "... tests/common/test_mcp_protocol.o"
 	@echo "... tests/common/test_mcp_protocol.i"
 	@echo "... tests/common/test_mcp_protocol.s"
