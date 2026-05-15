@@ -2336,6 +2336,126 @@ tests/common/test_behavior_typed.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/tests/common/test_behavior_typed.cpp.s
 .PHONY : tests/common/test_behavior_typed.cpp.s
 
+tests/common/test_behaviors_control.o: tests/common/test_behaviors_control.cpp.o
+.PHONY : tests/common/test_behaviors_control.o
+
+# target to build an object file
+tests/common/test_behaviors_control.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/tests/common/test_behaviors_control.cpp.o
+.PHONY : tests/common/test_behaviors_control.cpp.o
+
+tests/common/test_behaviors_control.i: tests/common/test_behaviors_control.cpp.i
+.PHONY : tests/common/test_behaviors_control.i
+
+# target to preprocess a source file
+tests/common/test_behaviors_control.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/tests/common/test_behaviors_control.cpp.i
+.PHONY : tests/common/test_behaviors_control.cpp.i
+
+tests/common/test_behaviors_control.s: tests/common/test_behaviors_control.cpp.s
+.PHONY : tests/common/test_behaviors_control.s
+
+# target to generate assembly for a file
+tests/common/test_behaviors_control.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/tests/common/test_behaviors_control.cpp.s
+.PHONY : tests/common/test_behaviors_control.cpp.s
+
+tests/common/test_behaviors_fun.o: tests/common/test_behaviors_fun.cpp.o
+.PHONY : tests/common/test_behaviors_fun.o
+
+# target to build an object file
+tests/common/test_behaviors_fun.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/tests/common/test_behaviors_fun.cpp.o
+.PHONY : tests/common/test_behaviors_fun.cpp.o
+
+tests/common/test_behaviors_fun.i: tests/common/test_behaviors_fun.cpp.i
+.PHONY : tests/common/test_behaviors_fun.i
+
+# target to preprocess a source file
+tests/common/test_behaviors_fun.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/tests/common/test_behaviors_fun.cpp.i
+.PHONY : tests/common/test_behaviors_fun.cpp.i
+
+tests/common/test_behaviors_fun.s: tests/common/test_behaviors_fun.cpp.s
+.PHONY : tests/common/test_behaviors_fun.s
+
+# target to generate assembly for a file
+tests/common/test_behaviors_fun.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/tests/common/test_behaviors_fun.cpp.s
+.PHONY : tests/common/test_behaviors_fun.cpp.s
+
+tests/common/test_behaviors_pomodoro_portal.o: tests/common/test_behaviors_pomodoro_portal.cpp.o
+.PHONY : tests/common/test_behaviors_pomodoro_portal.o
+
+# target to build an object file
+tests/common/test_behaviors_pomodoro_portal.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/tests/common/test_behaviors_pomodoro_portal.cpp.o
+.PHONY : tests/common/test_behaviors_pomodoro_portal.cpp.o
+
+tests/common/test_behaviors_pomodoro_portal.i: tests/common/test_behaviors_pomodoro_portal.cpp.i
+.PHONY : tests/common/test_behaviors_pomodoro_portal.i
+
+# target to preprocess a source file
+tests/common/test_behaviors_pomodoro_portal.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/tests/common/test_behaviors_pomodoro_portal.cpp.i
+.PHONY : tests/common/test_behaviors_pomodoro_portal.cpp.i
+
+tests/common/test_behaviors_pomodoro_portal.s: tests/common/test_behaviors_pomodoro_portal.cpp.s
+.PHONY : tests/common/test_behaviors_pomodoro_portal.s
+
+# target to generate assembly for a file
+tests/common/test_behaviors_pomodoro_portal.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/tests/common/test_behaviors_pomodoro_portal.cpp.s
+.PHONY : tests/common/test_behaviors_pomodoro_portal.cpp.s
+
+tests/common/test_behaviors_registry_ai.o: tests/common/test_behaviors_registry_ai.cpp.o
+.PHONY : tests/common/test_behaviors_registry_ai.o
+
+# target to build an object file
+tests/common/test_behaviors_registry_ai.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/tests/common/test_behaviors_registry_ai.cpp.o
+.PHONY : tests/common/test_behaviors_registry_ai.cpp.o
+
+tests/common/test_behaviors_registry_ai.i: tests/common/test_behaviors_registry_ai.cpp.i
+.PHONY : tests/common/test_behaviors_registry_ai.i
+
+# target to preprocess a source file
+tests/common/test_behaviors_registry_ai.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/tests/common/test_behaviors_registry_ai.cpp.i
+.PHONY : tests/common/test_behaviors_registry_ai.cpp.i
+
+tests/common/test_behaviors_registry_ai.s: tests/common/test_behaviors_registry_ai.cpp.s
+.PHONY : tests/common/test_behaviors_registry_ai.s
+
+# target to generate assembly for a file
+tests/common/test_behaviors_registry_ai.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/tests/common/test_behaviors_registry_ai.cpp.s
+.PHONY : tests/common/test_behaviors_registry_ai.cpp.s
+
+tests/common/test_behaviors_visual.o: tests/common/test_behaviors_visual.cpp.o
+.PHONY : tests/common/test_behaviors_visual.o
+
+# target to build an object file
+tests/common/test_behaviors_visual.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/tests/common/test_behaviors_visual.cpp.o
+.PHONY : tests/common/test_behaviors_visual.cpp.o
+
+tests/common/test_behaviors_visual.i: tests/common/test_behaviors_visual.cpp.i
+.PHONY : tests/common/test_behaviors_visual.i
+
+# target to preprocess a source file
+tests/common/test_behaviors_visual.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/tests/common/test_behaviors_visual.cpp.i
+.PHONY : tests/common/test_behaviors_visual.cpp.i
+
+tests/common/test_behaviors_visual.s: tests/common/test_behaviors_visual.cpp.s
+.PHONY : tests/common/test_behaviors_visual.s
+
+# target to generate assembly for a file
+tests/common/test_behaviors_visual.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/tests/common/test_behaviors_visual.cpp.s
+.PHONY : tests/common/test_behaviors_visual.cpp.s
+
 tests/common/test_config_get_set.o: tests/common/test_config_get_set.cpp.o
 .PHONY : tests/common/test_config_get_set.o
 
@@ -2968,6 +3088,21 @@ help:
 	@echo "... tests/common/test_behavior_typed.o"
 	@echo "... tests/common/test_behavior_typed.i"
 	@echo "... tests/common/test_behavior_typed.s"
+	@echo "... tests/common/test_behaviors_control.o"
+	@echo "... tests/common/test_behaviors_control.i"
+	@echo "... tests/common/test_behaviors_control.s"
+	@echo "... tests/common/test_behaviors_fun.o"
+	@echo "... tests/common/test_behaviors_fun.i"
+	@echo "... tests/common/test_behaviors_fun.s"
+	@echo "... tests/common/test_behaviors_pomodoro_portal.o"
+	@echo "... tests/common/test_behaviors_pomodoro_portal.i"
+	@echo "... tests/common/test_behaviors_pomodoro_portal.s"
+	@echo "... tests/common/test_behaviors_registry_ai.o"
+	@echo "... tests/common/test_behaviors_registry_ai.i"
+	@echo "... tests/common/test_behaviors_registry_ai.s"
+	@echo "... tests/common/test_behaviors_visual.o"
+	@echo "... tests/common/test_behaviors_visual.i"
+	@echo "... tests/common/test_behaviors_visual.s"
 	@echo "... tests/common/test_config_get_set.o"
 	@echo "... tests/common/test_config_get_set.i"
 	@echo "... tests/common/test_config_get_set.s"
