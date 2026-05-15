@@ -13,7 +13,6 @@
 #include <CoreText/CoreText.h>
 #endif
 
-static bool s_enabled = true;
 static bool s_oWasKeyDown = false;
 static bool s_pWasKeyDown = false;
 static constexpr size_t kMaxJails = 10;
@@ -100,9 +99,6 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
 }
 
 static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
-    if (!g_config.behaviors.control.jail) return;
-
-    // Only render jails once per frame. We can cheat by only drawing them for goose id 0
     if (goose->id != 0 || s_jails.empty()) return;
 
 #ifdef __APPLE__
@@ -156,19 +152,10 @@ static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
 #endif
 }
 
-static Behavior g_jailBehavior = {
-    .id = "jail",
-    .name = "Jail",
-    .description = "Press O to set jail position, P to trap goose. Based on GooseJail by WackyModer",
-    .enabledPtr = &s_enabled,
-    .configPtr = &g_config.behaviors.control.jail,
-    .init = init,
-    .tick = tick,
-    .render = render,
-    .cleanup = [](BehaviorContext&) { cleanupJailFont(); },
-    .conflicts = nullptr,
-    .priority = 0,
-    .config = { .requiresAccessibility = false, .isStarter = true }
-};
+static Behavior g_jailBehavior = BEHAVIOR_DEF_CUSTOM(
+    "jail", "Jail", "Press O to set jail position, P to trap goose. Based on GooseJail by WackyModer",
+    g_config.behaviors.control.jail, init, tick, render,
+    [](BehaviorContext&) { cleanupJailFont(); }, true, false
+);
 
 REGISTER_BEHAVIOR(g_jailBehavior);

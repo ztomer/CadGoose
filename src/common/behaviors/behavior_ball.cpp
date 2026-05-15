@@ -8,7 +8,6 @@
 #include <CoreGraphics/CoreGraphics.h>
 #include <cmath>
 
-static bool s_enabled = true;
 static CGImageRef s_ballImages[3] = {nullptr, nullptr, nullptr};
 
 static constexpr float KICK_SPEED = 500.0f;
@@ -43,7 +42,6 @@ static void init(BehaviorContext& ctx) {
 }
 
 static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
-    if (!g_config.behaviors.fun.ball) return;
     if (!s_ballActive) return;
 
     float ballSize = GetBallSize();
@@ -157,7 +155,6 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
 }
 
 static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
-    if (!g_config.behaviors.fun.ball) return;
     if (!s_ballActive) return;
 
     CGContextRef cg = (CGContextRef)renderCtx;
@@ -181,19 +178,9 @@ static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
     }
 }
 
-static Behavior g_ballBehavior = {
-    .id = "ball",
-    .name = "Ball",
-    .description = "Ball that goose chases and kicks. Based on BallMod by TheOrlando",
-    .enabledPtr = &s_enabled,
-    .configPtr = &g_config.behaviors.fun.ball,
-    .init = init,
-    .tick = tick,
-    .render = render,
-    .cleanup = nullptr,
-    .conflicts = nullptr,
-    .priority = 0,
-    .config = { .requiresAccessibility = false, .isStarter = true }
-};
+static Behavior g_ballBehavior = BEHAVIOR_DEF_STARTER(
+    "ball", "Ball", "Ball that goose chases and kicks. Based on BallMod by TheOrlando",
+    g_config.behaviors.fun.ball, init, tick, render
+);
 
 REGISTER_BEHAVIOR(g_ballBehavior);

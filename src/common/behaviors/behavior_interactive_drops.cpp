@@ -7,7 +7,6 @@
 #include <ctime>
 #include <cmath>
 
-static bool s_enabled = true;
 
 static void init(BehaviorContext& ctx) {
     auto* state = BehaviorStateManager::Instance().GetOrCreate<InteractiveDropsState>(ctx.goose->id, "interactive_drops");
@@ -15,7 +14,6 @@ static void init(BehaviorContext& ctx) {
 }
 
 static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
-    if (!g_config.behaviors.fun.interactiveDrops) return;
     auto* state = BehaviorStateManager::Instance().GetOrCreate<InteractiveDropsState>(goose->id, "interactive_drops");
 
     if (goose->heldItem) return;
@@ -94,7 +92,6 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
 }
 
 static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
-    if (!g_config.behaviors.fun.interactiveDrops) return;
     auto* state = BehaviorStateManager::Instance().GetOrCreate<InteractiveDropsState>(goose->id, "interactive_drops");
 
 #ifdef __APPLE__
@@ -138,20 +135,9 @@ static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
 #endif
 }
 
-static Behavior g_interactiveDropsBehavior = {
-    .id = "interactive_drops",
-    .name = "Interactive Drops",
-    .description = "Goose drops puddles that splash and flowers that grow",
-    .enabledPtr = &s_enabled,
-    .configPtr = &g_config.behaviors.fun.interactiveDrops,
-    .init = init,
-    .tick = tick,
-    .render = render,
-    .cleanup = nullptr,
-    .renderOnGround = true,
-    .conflicts = nullptr,
-    .priority = 0,
-    .config = { .requiresAccessibility = false, .isStarter = false }
-};
+static Behavior g_interactiveDropsBehavior = BEHAVIOR_DEF_GROUND(
+    "interactive_drops", "Interactive Drops", "Goose drops puddles that splash and flowers that grow",
+    g_config.behaviors.fun.interactiveDrops, init, tick, render
+);
 
 REGISTER_BEHAVIOR(g_interactiveDropsBehavior);

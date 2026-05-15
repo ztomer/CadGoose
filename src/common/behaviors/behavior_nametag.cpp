@@ -10,7 +10,6 @@
 #include <CoreText/CoreText.h>
 #include <cstring>
 
-static bool s_enabled = true;
 
 static CTFontRef s_nameFont = nullptr;
 static CGColorRef s_nameWhite = nullptr;
@@ -36,12 +35,9 @@ static void init(BehaviorContext& ctx) {
 }
 
 static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
-    if (!g_config.behaviors.info.nametag) return;
 }
 
 static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
-    if (!g_config.behaviors.info.nametag) return;
-
 #ifdef __APPLE__
     CGContextRef cg = (CGContextRef)renderCtx;
     if (!cg) return;
@@ -93,19 +89,9 @@ static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
 #endif
 }
 
-static Behavior g_nametagBehavior = {
-    .id = "nametag",
-    .name = "Nametag",
-    .description = "Shows the goose's name above its head",
-    .enabledPtr = &s_enabled,
-    .configPtr = &g_config.behaviors.info.nametag,
-    .init = init,
-    .tick = tick,
-    .render = render,
-    .cleanup = cleanupNameFont,
-    .conflicts = nullptr,
-    .priority = 0,
-    .config = { .requiresAccessibility = false, .isStarter = false }
-};
+static Behavior g_nametagBehavior = BEHAVIOR_DEF_CUSTOM(
+    "nametag", "Nametag", "Shows the goose's name above its head",
+    g_config.behaviors.info.nametag, init, tick, render, cleanupNameFont, false, false
+);
 
 REGISTER_BEHAVIOR(g_nametagBehavior);

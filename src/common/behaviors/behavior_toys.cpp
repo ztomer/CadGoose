@@ -11,7 +11,6 @@
 #include <CoreGraphics/CoreGraphics.h>
 #include <cmath>
 
-static bool s_enabled = true;
 
 static constexpr int MAX_TOYS = 5;
 static constexpr float TOY_SPAWN_INTERVAL = 5.0f;
@@ -46,8 +45,6 @@ static void init(BehaviorContext& ctx) {
 }
 
 static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
-    if (!g_config.behaviors.fun.toysEnabled) return;
-
     auto* state = BehaviorStateManager::Instance().GetOrCreate<ToysState>(goose->id, "toys");
 
     // Spawn new toys periodically
@@ -103,8 +100,6 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
 }
 
 static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
-    if (!g_config.behaviors.fun.toysEnabled) return;
-
     auto* state = BehaviorStateManager::Instance().GetOrCreate<ToysState>(goose->id, "toys");
     if (state->activeCount == 0) return;
 
@@ -151,19 +146,9 @@ static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
     CGContextRestoreGState(cg);
 }
 
-static Behavior g_toysBehavior = {
-    .id = "toys",
-    .name = "Toys",
-    .description = "Spawns stick and ball toys that the goose can chase and fetch",
-    .enabledPtr = &s_enabled,
-    .configPtr = &g_config.behaviors.fun.toysEnabled,
-    .init = init,
-    .tick = tick,
-    .render = render,
-    .cleanup = nullptr,
-    .conflicts = nullptr,
-    .priority = 0,
-    .config = { .requiresAccessibility = false, .isStarter = false }
-};
+static Behavior g_toysBehavior = BEHAVIOR_DEF(
+    "toys", "Toys", "Spawns stick and ball toys that the goose can chase and fetch",
+    g_config.behaviors.fun.toysEnabled, init, tick, render
+);
 
 REGISTER_BEHAVIOR(g_toysBehavior);

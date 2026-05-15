@@ -10,8 +10,6 @@ extern "C" void AI_RefreshModelDisplay();
 static constexpr float kMinMcpPort = 1024;
 static constexpr float kMaxMcpPort = 65535;
 static constexpr float kDefaultMcpPort = 31072;
-static constexpr float kEvilValueTag = 200;
-static constexpr float kTempValueTag = 301;
 
 @implementation AITabView (Handlers)
 

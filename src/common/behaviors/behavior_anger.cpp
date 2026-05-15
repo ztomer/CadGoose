@@ -5,7 +5,6 @@
 #include "cursor_io.h"
 #include <cmath>
 
-static bool s_enabled = true;
 
 static void init(BehaviorContext& ctx) {
     auto* state = BehaviorStateManager::Instance().GetOrCreate<AngerState>(ctx.goose->id, "anger");
@@ -19,8 +18,6 @@ float Anger_GetLevel(int gooseId) {
 }
 
 static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
-    if (!g_config.behaviors.fun.anger) return;
-
     auto* state = BehaviorStateManager::Instance().GetOrCreate<AngerState>(goose->id, "anger");
 
     float distToCursor = 1000.0f;
@@ -83,19 +80,9 @@ static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
 #endif
 }
 
-static Behavior g_angerBehavior = {
-    .id = "anger",
-    .name = "Anger",
-    .description = "Goose gets angry near the cursor and punches. Based on OnePunchGoose by VisualError",
-    .enabledPtr = &s_enabled,
-    .configPtr = &g_config.behaviors.fun.anger,
-    .init = init,
-    .tick = tick,
-    .render = render,
-    .cleanup = nullptr,
-    .conflicts = nullptr,
-    .priority = 0,
-    .config = { .requiresAccessibility = false, .isStarter = true }
-};
+static Behavior g_angerBehavior = BEHAVIOR_DEF_STARTER(
+    "anger", "Anger", "Goose gets angry near the cursor and punches. Based on OnePunchGoose by VisualError",
+    g_config.behaviors.fun.anger, init, tick, render
+);
 
 REGISTER_BEHAVIOR(g_angerBehavior);

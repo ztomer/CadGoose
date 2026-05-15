@@ -6,7 +6,6 @@
 #include <CoreGraphics/CoreGraphics.h>
 #include <cmath>
 
-static bool s_enabled = true;
 static CGImageRef s_hatImage = nullptr;
 static CGImageRef s_hatScaled = nullptr;
 static float s_hatScaledSize = 0;
@@ -25,8 +24,6 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
 }
 
 static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
-    if (!g_config.behaviors.fun.hats) return;
-
     CGContextRef cg = (CGContextRef)renderCtx;
     if (!cg) return;
     if (!s_hatImage) return;
@@ -83,19 +80,9 @@ static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
     CGContextRestoreGState(cg);
 }
 
-static Behavior g_hatsBehavior = {
-    .id = "hats",
-    .name = "Hats",
-    .description = "Put hats on geese. Based on HatGoos by DaNike",
-    .enabledPtr = &s_enabled,
-    .configPtr = &g_config.behaviors.fun.hats,
-    .init = init,
-    .tick = tick,
-    .render = render,
-    .cleanup = cleanupHat,
-    .conflicts = nullptr,
-    .priority = 0,
-    .config = { .requiresAccessibility = false, .isStarter = false }
-};
+static Behavior g_hatsBehavior = BEHAVIOR_DEF_CUSTOM(
+    "hats", "Hats", "Put hats on geese. Based on HatGoos by DaNike",
+    g_config.behaviors.fun.hats, init, tick, render, cleanupHat, false, false
+);
 
 REGISTER_BEHAVIOR(g_hatsBehavior);

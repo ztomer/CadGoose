@@ -13,7 +13,6 @@
 #include <ApplicationServices/ApplicationServices.h>
 #include <CoreGraphics/CoreGraphics.h>
 
-static bool s_enabled = true;
 static bool s_wasPressed = false;
 static CGImageRef s_honkImage = nullptr;
 
@@ -28,8 +27,6 @@ static void init(BehaviorContext& ctx) {
 }
 
 static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
-    if (!g_config.behaviors.control.honcker) return;
-
     int keyCode = KeyNameToKeyCode(g_config.behaviors.honcker.hotkey);
     bool pressed = IsKeyPressed(keyCode);
 
@@ -49,8 +46,6 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
 }
 
 static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
-    if (!g_config.behaviors.control.honcker) return;
-
     auto* state = BehaviorStateManager::Instance().Get<HonckerState>(goose->id, "honcker");
     if (!state || !state->visible) return;
 
@@ -74,20 +69,10 @@ static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
     }
 }
 
-static Behavior g_honckerBehavior = {
-    .id = "honcker",
-    .name = "Honcker",
-    .description = "Press F to make the goose honk. Based on Honcker by DesktopGooseUnofficial",
-    .enabledPtr = &s_enabled,
-    .configPtr = &g_config.behaviors.control.honcker,
-    .init = init,
-    .tick = tick,
-    .render = render,
-    .cleanup = nullptr,
-    .conflicts = nullptr,
-    .priority = 0,
-    .config = { .requiresAccessibility = false, .isStarter = true }
-};
+static Behavior g_honckerBehavior = BEHAVIOR_DEF_STARTER(
+    "honcker", "Honcker", "Press F to make the goose honk. Based on Honcker by DesktopGooseUnofficial",
+    g_config.behaviors.control.honcker, init, tick, render
+);
 
 REGISTER_BEHAVIOR(g_honckerBehavior);
 

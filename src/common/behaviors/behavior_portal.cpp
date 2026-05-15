@@ -15,7 +15,6 @@
 #include <CoreGraphics/CoreGraphics.h>
 #include <ApplicationServices/ApplicationServices.h>
 
-static bool s_enabled = true;
 static bool s_portalsOn = true;
 static bool s_p0Pressed = false;
 static bool s_p1Pressed = false;
@@ -38,8 +37,6 @@ static void init(BehaviorContext& ctx) {
 }
 
 static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
-    if (!g_config.behaviors.control.portals) return;
-
     auto* state = BehaviorStateManager::Instance().GetOrCreate<PortalState>(goose->id, "portal");
 
     float p1w = g_config.portal.p1Width;
@@ -127,8 +124,6 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
 }
 
 static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
-    if (!g_config.behaviors.control.portals || !s_portalsOn) return;
-
     auto* state = BehaviorStateManager::Instance().GetOrCreate<PortalState>(goose->id, "portal");
 
     CGContextRef cg = (CGContextRef)renderCtx;
@@ -153,19 +148,9 @@ static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
     }
 }
 
-static Behavior g_portalBehavior = {
-    .id = "portal",
-    .name = "Portal",
-    .description = "Press 1/2 to place portals at cursor, 0 to toggle. Based on PortalGoos by Moonaliss1",
-    .enabledPtr = &s_enabled,
-    .configPtr = &g_config.behaviors.control.portals,
-    .init = init,
-    .tick = tick,
-    .render = render,
-    .cleanup = nullptr,
-    .conflicts = nullptr,
-    .priority = 0,
-    .config = { .requiresAccessibility = false, .isStarter = true }
-};
+static Behavior g_portalBehavior = BEHAVIOR_DEF_STARTER(
+    "portal", "Portal", "Press 1/2 to place portals at cursor, 0 to toggle. Based on PortalGoos by Moonaliss1",
+    g_config.behaviors.control.portals, init, tick, render
+);
 
 REGISTER_BEHAVIOR(g_portalBehavior);

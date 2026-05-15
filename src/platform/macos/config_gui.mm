@@ -211,50 +211,47 @@ void s_setBoolValue(const std::string& key, bool value) {
     [self.configItems removeAllObjects];
 
     [self.configItems addObject:@{@"name": @"FUN", @"type": @"header"}];
-    [self addRow:@"Ball" key:@"behaviors.fun.ball" desc:@"Pushable balls that bounce around"];
-    {
-        NSString* hk = @(g_config.behaviors.breadCrumbs.hotkey.c_str());
-        [self addRow:@"Breadcrumbs" key:@"behaviors.fun.breadCrumbs" desc:[NSString stringWithFormat:@"Hold %@ to drop breadcrumbs at cursor. Crumbs expire after %.0fs", hk, g_config.behaviors.breadCrumbs.lifetime]];
-    }
-    [self addRow:@"Hats" key:@"behaviors.fun.hats" desc:@"Put various hats on geese"];
-    [self addRow:@"Rainbow" key:@"behaviors.fun.rainbow" desc:@"Cycle colors on all geese"];
-    [self addRow:@"Acid" key:@"behaviors.fun.acid" desc:@"Geese spin and honk rapidly"];
-    [self addRow:@"Anger" key:@"behaviors.fun.anger" desc:@"Geese get angry and punch things"];
-    [self addRow:@"Autumn Leaves" key:@"behaviors.fun.autumnLeaves" desc:@"Piles of leaves accumulate on screen"];
+    [self addRow:@"Ball" key:@"ball_enabled" desc:@"Pushable balls that bounce around"];
+    [self addRow:@"Breadcrumbs" key:@"breadcrumbs_enabled" desc:@"Hold key to drop breadcrumbs at cursor. Configure lifetime in settings"];
+    [self addRow:@"Hats" key:@"hats_enabled" desc:@"Put various hats on geese"];
+    [self addRow:@"Rainbow" key:@"rainbow_enabled" desc:@"Cycle colors on all geese"];
+    [self addRow:@"Acid" key:@"acid_enabled" desc:@"Geese spin and honk rapidly"];
+    [self addRow:@"Anger" key:@"anger_enabled" desc:@"Geese get angry and punch things"];
+    [self addRow:@"Autumn Leaves" key:@"autumn_leaves_enabled" desc:@"Piles of leaves accumulate on screen"];
     
     [self.configItems addObject:@{@"name": @"JOY", @"type": @"header"}];
-    [self addRow:@"Avoidance" key:@"behaviors.fun.avoidance" desc:@"Goose dodges fast-moving cursor"];
-    [self addRow:@"Boredom Sigh" key:@"behaviors.fun.boredom" desc:@"Goose sighs dramatically after 10+ minutes idle"];
-    [self addRow:@"Window Peeking" key:@"behaviors.fun.peeking" desc:@"Goose peeks head around monitor bezel at screen edges"];
-    [self addRow:@"Custom Affirmations" key:@"behaviors.fun.affirmations" desc:@"Goose drops configurable positive messages"];
-    [self addRow:@"Interactive Drops" key:@"behaviors.fun.interactiveDrops" desc:@"Goose drops puddles that splash or flowers that grow"];
-    [self addRow:@"Sonic Mode" key:@"behaviors.fun.sonicMode" desc:@"Goose moves at supersonic speed"];
-    [self addRow:@"Toys" key:@"behaviors.fun.toysEnabled" desc:@"Scatter interactive toys for the goose"];
+    [self addRow:@"Avoidance" key:@"avoidance_enabled" desc:@"Goose dodges fast-moving cursor"];
+    [self addRow:@"Boredom Sigh" key:@"boredom_enabled" desc:@"Goose sighs dramatically after 10+ minutes idle"];
+    [self addRow:@"Window Peeking" key:@"peeking_enabled" desc:@"Goose peeks head around monitor bezel at screen edges"];
+    [self addRow:@"Custom Affirmations" key:@"affirmations_enabled" desc:@"Goose drops configurable positive messages"];
+    [self addRow:@"Interactive Drops" key:@"interactive_drops_enabled" desc:@"Goose drops puddles that splash or flowers that grow"];
+    [self addRow:@"Sonic Mode" key:@"sonic_mode_enabled" desc:@"Goose moves at supersonic speed"];
+    [self addRow:@"Toys" key:@"toys_enabled" desc:@"Scatter interactive toys for the goose"];
 
     [self.configItems addObject:@{@"name": @"CONTROL", @"type": @"header"}];
     {
         NSString* hk = @(g_config.behaviors.honcker.hotkey.c_str());
-        [self addRow:@"Honcker" key:@"behaviors.control.honcker" desc:[NSString stringWithFormat:@"Press %@ to honk at cursor", hk]];
+        [self addRow:@"Honcker" key:@"honcker_enabled" desc:[NSString stringWithFormat:@"Press %@ to honk at cursor", hk]];
     }
     {
         NSString* kO = @(g_config.behaviors.jail.hotkeyO.c_str());
         NSString* kP = @(g_config.behaviors.jail.hotkeyP.c_str());
-        [self addRow:@"Jail" key:@"behaviors.control.jail" desc:[NSString stringWithFormat:@"Set traps with %@, trigger with %@", kO, kP]];
+        [self addRow:@"Jail" key:@"jail_enabled" desc:[NSString stringWithFormat:@"Set traps with %@, trigger with %@", kO, kP]];
     }
     {
         NSString* k1 = @(g_config.portal.hotkey1.c_str());
         NSString* k2 = @(g_config.portal.hotkey2.c_str());
         NSString* k0 = @(g_config.portal.hotkey0.c_str());
-        [self addRow:@"Portals" key:@"behaviors.control.portals" desc:[NSString stringWithFormat:@"Press %@/%@ to place portals, %@ to toggle. Based on PortalGoos by Moonaliss1", k1, k2, k0]];
+        [self addRow:@"Portals" key:@"portals_enabled" desc:[NSString stringWithFormat:@"Press %@/%@ to place portals, %@ to toggle. Based on PortalGoos by Moonaliss1", k1, k2, k0]];
     }
-    [self addRow:@"Drag" key:@"behaviors.control.drag" desc:@"Click and drag geese around"];
+    [self addRow:@"Drag" key:@"drag_enabled" desc:@"Click and drag geese around"];
 
     [self.configItems addObject:@{@"name": @"INFO", @"type": @"header"}];
-    [self addRow:@"Nametag" key:@"behaviors.info.nametag" desc:@"Show goose name above head"];
+    [self addRow:@"Nametag" key:@"nametag_enabled" desc:@"Show goose name above head"];
 
     [self.configItems addObject:@{@"name": @"SYSTEMS", @"type": @"header"}];
-    [self addRow:@"Health" key:@"behaviors.systems.health" desc:@"Health bar system for geese"];
-    [self addRow:@"Pomodoro" key:@"behaviors.systems.pomodoro" desc:@"Pomodoro timer behavior"];
+    [self addRow:@"Health" key:@"health_enabled" desc:@"Health bar system for geese"];
+    [self addRow:@"Pomodoro" key:@"pomodoro_enabled" desc:@"Pomodoro timer behavior"];
 
     if (self.behaviorsTable) {
         [self.behaviorsTable reloadData];
@@ -297,6 +294,7 @@ void s_setBoolValue(const std::string& key, bool value) {
 }
 
 - (void)tableViewSelectionDidChange:(NSNotification*)note {
+    NSInteger prevRow = self.selectedRowIndex;
     NSInteger row = self.behaviorsTable.selectedRow;
     if (row >= 0 && row < (NSInteger)self.configItems.count) {
         NSDictionary* item = self.configItems[row];
@@ -309,7 +307,18 @@ void s_setBoolValue(const std::string& key, bool value) {
     } else {
         self.selectedRowIndex = -1;
     }
-    [self.behaviorsTable reloadData];
+    // Only reload affected rows instead of full table reload
+    NSIndexSet* rowsToReload = nil;
+    if (prevRow >= 0 && row >= 0 && prevRow != row) {
+        rowsToReload = [NSIndexSet indexSetWithIndexesInRange:NSMakeRange((NSUInteger)MIN(prevRow, row), (NSUInteger)ABS(row - prevRow) + 1)];
+    } else if (prevRow >= 0) {
+        rowsToReload = [NSIndexSet indexSetWithIndex:(NSUInteger)prevRow];
+    } else if (row >= 0) {
+        rowsToReload = [NSIndexSet indexSetWithIndex:(NSUInteger)row];
+    }
+    if (rowsToReload) {
+        [self.behaviorsTable reloadDataForRowIndexes:rowsToReload columnIndexes:[NSIndexSet indexSetWithIndex:0]];
+    }
 }
 
 - (CGFloat)tableView:(NSTableView*)tableView heightOfRow:(NSInteger)row {

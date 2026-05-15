@@ -171,13 +171,12 @@ TEST(BehaviorToggle, AllBehaviorsHaveConfigPtr) {
     }
 }
 
-TEST(BehaviorToggle, EnabledPtrStaysTrue) {
-    // enabledPtr must always be true — the outer tick loop gate that passes
-    // through to the internal config bool check (the real runtime gate).
-    // If s_enabled were false, no amount of config toggling would run the behavior.
+TEST(BehaviorToggle, EnabledPtrPointsToConfigBool) {
+    // enabledPtr now points to the same config bool as configPtr — the behavior
+    // system gates on enabledPtr, and the internal config check is redundant.
     auto& registry = BehaviorRegistry::Instance();
     for (const auto* b : registry.GetAll()) {
-        EXPECT_TRUE(*b->enabledPtr) << "Behavior " << b->id << " enabledPtr should be true";
+        EXPECT_EQ(b->enabledPtr, b->configPtr) << "Behavior " << b->id << " enabledPtr should equal configPtr";
     }
 }
 
@@ -282,15 +281,15 @@ TEST(BehaviorToggle, DisableViaConfigPtrThenReEnable) {
     *ball->configPtr = saved;
 }
 
-TEST(BehaviorToggle, ConfigPtrAndEnabledPtrAreDistinct) {
-    // enabledPtr and configPtr must point to different locations
-    // (s_enabled in behavior file vs g_config.behaviors.X.Y)
+TEST(BehaviorToggle, ConfigPtrAndEnabledPtrAreSame) {
+    // enabledPtr and configPtr point to the same config bool field.
+    // The behavior system gates on enabledPtr, making internal config checks redundant.
     auto& reg = BehaviorRegistry::Instance();
     for (const auto* b : reg.GetAll()) {
         ASSERT_NE(b->enabledPtr, nullptr);
         ASSERT_NE(b->configPtr, nullptr);
-        EXPECT_NE(b->enabledPtr, b->configPtr)
-            << "Behavior " << b->id << ": enabledPtr and configPtr should be distinct";
+        EXPECT_EQ(b->enabledPtr, b->configPtr)
+            << "Behavior " << b->id << ": enabledPtr and configPtr should be the same";
     }
 }
 
@@ -299,16 +298,16 @@ TEST(BehaviorToggle, SetConfigBoolThenTickGateRespectsIt) {
 
     auto* ball = BehaviorRegistry::Instance().Get("ball");
     ASSERT_NE(ball, nullptr);
-    ASSERT_TRUE(*ball->enabledPtr);
 
     bool saved = g_config.behaviors.fun.ball;
 
     g_config.behaviors.fun.ball = false;
-    ASSERT_TRUE(*ball->enabledPtr);
     EXPECT_FALSE(g_config.behaviors.fun.ball) << "With ball disabled, internal gate should block";
+    EXPECT_FALSE(*ball->enabledPtr) << "enabledPtr should reflect config bool";
 
     g_config.behaviors.fun.ball = true;
     EXPECT_TRUE(g_config.behaviors.fun.ball) << "With ball enabled, internal gate should pass";
+    EXPECT_TRUE(*ball->enabledPtr) << "enabledPtr should reflect config bool";
 
     g_config.behaviors.fun.ball = saved;
 }

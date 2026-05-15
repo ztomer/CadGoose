@@ -6,7 +6,6 @@
 #include <CoreGraphics/CoreGraphics.h>
 #include <cmath>
 
-static bool s_enabled = true;
 
 static void init(BehaviorContext& ctx) {
     auto* state = BehaviorStateManager::Instance().GetOrCreate<PeekingState>(ctx.goose->id, "peeking");
@@ -14,7 +13,6 @@ static void init(BehaviorContext& ctx) {
 }
 
 static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
-    if (!g_config.behaviors.fun.peeking) return;
     auto* state = BehaviorStateManager::Instance().GetOrCreate<PeekingState>(goose->id, "peeking");
 
     if (state->isPeeking) {
@@ -48,7 +46,6 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
 }
 
 static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
-    if (!g_config.behaviors.fun.peeking) return;
     auto* state = BehaviorStateManager::Instance().GetOrCreate<PeekingState>(goose->id, "peeking");
     if (!state->isPeeking) return;
 
@@ -72,19 +69,9 @@ static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
 #endif
 }
 
-static Behavior g_peekingBehavior = {
-    .id = "peeking",
-    .name = "Window Peeking",
-    .description = "Goose peeks head around monitor bezel at screen edges",
-    .enabledPtr = &s_enabled,
-    .configPtr = &g_config.behaviors.fun.peeking,
-    .init = init,
-    .tick = tick,
-    .render = render,
-    .cleanup = nullptr,
-    .conflicts = nullptr,
-    .priority = 0,
-    .config = { .requiresAccessibility = false, .isStarter = false }
-};
+static Behavior g_peekingBehavior = BEHAVIOR_DEF(
+    "peeking", "Window Peeking", "Goose peeks head around monitor bezel at screen edges",
+    g_config.behaviors.fun.peeking, init, tick, render
+);
 
 REGISTER_BEHAVIOR(g_peekingBehavior);

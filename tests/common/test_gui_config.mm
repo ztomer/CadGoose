@@ -4,45 +4,62 @@
 
 #import <gtest/gtest.h>
 #include "config.h"
+#include <set>
+#include <vector>
 
-// All toggle bool keys used in the GUI (matched to addRow: calls in config_gui.mm)
-// These are the "visible" toggle keys — the ones the user sees in the preferences window.
+// All toggle bool keys used in the GUI addRow: calls in config_gui.mm
+// These MUST match the registry keys (not dot-notation struct paths)
 static const std::vector<std::pair<const char*, bool*>> kGUIVisibleToggleKeys = {
-    {"behaviors.fun.ball",             &g_config.behaviors.fun.ball},
-    {"behaviors.fun.breadCrumbs",      &g_config.behaviors.fun.breadCrumbs},
-    {"behaviors.fun.hats",             &g_config.behaviors.fun.hats},
-    {"behaviors.fun.rainbow",          &g_config.behaviors.fun.rainbow},
-    {"behaviors.fun.acid",              &g_config.behaviors.fun.acid},
-    {"behaviors.fun.anger",            &g_config.behaviors.fun.anger},
-    {"behaviors.fun.autumnLeaves",     &g_config.behaviors.fun.autumnLeaves},
-    {"behaviors.control.honcker",      &g_config.behaviors.control.honcker},
-    {"behaviors.control.jail",         &g_config.behaviors.control.jail},
-    {"behaviors.control.portals",      &g_config.behaviors.control.portals},
-    {"behaviors.control.drag",         &g_config.behaviors.control.drag},
-    {"behaviors.info.nametag",         &g_config.behaviors.info.nametag},
-    {"behaviors.systems.health",       &g_config.behaviors.systems.health},
-    {"behaviors.systems.pomodoro",     &g_config.behaviors.systems.pomodoro},
+    {"ball_enabled",                   &g_config.behaviors.fun.ball},
+    {"breadcrumbs_enabled",            &g_config.behaviors.fun.breadCrumbs},
+    {"hats_enabled",                   &g_config.behaviors.fun.hats},
+    {"rainbow_enabled",                &g_config.behaviors.fun.rainbow},
+    {"acid_enabled",                   &g_config.behaviors.fun.acid},
+    {"anger_enabled",                  &g_config.behaviors.fun.anger},
+    {"autumn_leaves_enabled",          &g_config.behaviors.fun.autumnLeaves},
+    {"avoidance_enabled",              &g_config.behaviors.fun.avoidance},
+    {"boredom_enabled",                &g_config.behaviors.fun.boredom},
+    {"peeking_enabled",                &g_config.behaviors.fun.peeking},
+    {"affirmations_enabled",           &g_config.behaviors.fun.affirmations},
+    {"interactive_drops_enabled",      &g_config.behaviors.fun.interactiveDrops},
+    {"sonic_mode_enabled",             &g_config.behaviors.fun.sonicMode},
+    {"toys_enabled",                   &g_config.behaviors.fun.toysEnabled},
+    {"honcker_enabled",                &g_config.behaviors.control.honcker},
+    {"jail_enabled",                   &g_config.behaviors.control.jail},
+    {"portals_enabled",                &g_config.behaviors.control.portals},
+    {"drag_enabled",                   &g_config.behaviors.control.drag},
+    {"nametag_enabled",                &g_config.behaviors.info.nametag},
+    {"health_enabled",                 &g_config.behaviors.systems.health},
+    {"pomodoro_enabled",               &g_config.behaviors.systems.pomodoro},
 };
 
 // All toggle bool keys handled by s_getBoolForKey/s_setBoolValue (including hidden ones)
 static const std::vector<std::pair<const char*, bool*>> kAllToggleKeys = {
-    {"behaviors.fun.ball",             &g_config.behaviors.fun.ball},
-    {"behaviors.fun.breadCrumbs",      &g_config.behaviors.fun.breadCrumbs},
-    {"behaviors.fun.hats",             &g_config.behaviors.fun.hats},
-    {"behaviors.fun.rainbow",          &g_config.behaviors.fun.rainbow},
-    {"behaviors.fun.acid",              &g_config.behaviors.fun.acid},
-    {"behaviors.fun.anger",            &g_config.behaviors.fun.anger},
-    {"behaviors.fun.autumnLeaves",     &g_config.behaviors.fun.autumnLeaves},
-    {"behaviors.control.honcker",      &g_config.behaviors.control.honcker},
-    {"behaviors.control.jail",         &g_config.behaviors.control.jail},
-    {"behaviors.control.portals",      &g_config.behaviors.control.portals},
-    {"behaviors.control.drag",         &g_config.behaviors.control.drag},
-    {"behaviors.info.nametag",         &g_config.behaviors.info.nametag},
-    {"behaviors.info.presence",        &g_config.behaviors.info.presence},
-    {"behaviors.info.configGUI",       &g_config.behaviors.info.configGUI},
-    {"behaviors.systems.health",       &g_config.behaviors.systems.health},
-    {"behaviors.systems.ai",           &g_config.behaviors.systems.ai},
-    {"behaviors.systems.pomodoro",     &g_config.behaviors.systems.pomodoro},
+    {"ball_enabled",                   &g_config.behaviors.fun.ball},
+    {"breadcrumbs_enabled",            &g_config.behaviors.fun.breadCrumbs},
+    {"hats_enabled",                   &g_config.behaviors.fun.hats},
+    {"rainbow_enabled",                &g_config.behaviors.fun.rainbow},
+    {"acid_enabled",                   &g_config.behaviors.fun.acid},
+    {"anger_enabled",                  &g_config.behaviors.fun.anger},
+    {"autumn_leaves_enabled",          &g_config.behaviors.fun.autumnLeaves},
+    {"avoidance_enabled",              &g_config.behaviors.fun.avoidance},
+    {"boredom_enabled",                &g_config.behaviors.fun.boredom},
+    {"peeking_enabled",                &g_config.behaviors.fun.peeking},
+    {"affirmations_enabled",           &g_config.behaviors.fun.affirmations},
+    {"interactive_drops_enabled",      &g_config.behaviors.fun.interactiveDrops},
+    {"sonic_mode_enabled",             &g_config.behaviors.fun.sonicMode},
+    {"toys_enabled",                   &g_config.behaviors.fun.toysEnabled},
+    {"honcker_enabled",                &g_config.behaviors.control.honcker},
+    {"jail_enabled",                   &g_config.behaviors.control.jail},
+    {"portals_enabled",                &g_config.behaviors.control.portals},
+    {"drag_enabled",                   &g_config.behaviors.control.drag},
+    {"nametag_enabled",                &g_config.behaviors.info.nametag},
+    {"presence_enabled",               &g_config.behaviors.info.presence},
+    {"config_gui_enabled",             &g_config.behaviors.info.configGUI},
+    {"visible_enabled",                &g_config.behaviors.info.visible},
+    {"health_enabled",                 &g_config.behaviors.systems.health},
+    {"ai_enabled",                     &g_config.behaviors.systems.ai},
+    {"pomodoro_enabled",               &g_config.behaviors.systems.pomodoro},
 };
 
 // Config struct field names that must have a CORRESPONDING entry in the struct
@@ -51,6 +68,42 @@ struct FieldCheck {
     size_t offset;  // offset into Fun/Control/Info/Systems
     bool expectedDefault;
 };
+
+// ============================================================
+// Regression test: every GUI addRow: key must exist in registry
+// Prevents the bug where dot-notation keys (behaviors.fun.ball)
+// were used instead of registry keys (ball_enabled), causing
+// s_setBoolValue to silently fail and toggles to always reset.
+// ============================================================
+TEST(GUIConfigRegression, AllGUIKeysExistInRegistry) {
+    Config_Init();
+    for (const auto& [key, ptr] : kGUIVisibleToggleKeys) {
+        const ConfigOption* opt = Config_FindOptionByKey(key);
+        ASSERT_NE(opt, nullptr) << "GUI key \"" << key << "\" not found in config registry — toggle will silently fail";
+        EXPECT_EQ(opt->type, CFG_BOOL) << "GUI key \"" << key << "\" is not a bool in registry";
+        EXPECT_EQ(opt->ptr, ptr) << "GUI key \"" << key << "\" points to wrong config field";
+    }
+}
+
+// Every registry behavior toggle must have a GUI row (no orphaned toggles)
+TEST(GUIConfigRegression, AllRegistryTogglesHaveGUIRows) {
+    Config_Init();
+    for (const auto& [key, ptr] : kAllToggleKeys) {
+        const ConfigOption* opt = Config_FindOptionByKey(key);
+        ASSERT_NE(opt, nullptr) << "Registry key \"" << key << "\" not found";
+        EXPECT_EQ(opt->ptr, ptr) << "Registry key \"" << key << "\" points to wrong config field";
+    }
+}
+
+// No key should be registered twice with different pointers
+TEST(GUIConfigRegression, NoDuplicateRegistryEntries) {
+    Config_Init();
+    std::set<const void*> seenPtrs;
+    for (const auto& [key, ptr] : kAllToggleKeys) {
+        EXPECT_FALSE(seenPtrs.count(ptr)) << "Key \"" << key << "\" shares pointer with another key";
+        seenPtrs.insert(ptr);
+    }
+}
 
 TEST(GUIConfigTest, AllGUIVisibleKeysAreInToggleList) {
     // Every key used in addRow: must be in the full toggle list
@@ -76,17 +129,17 @@ TEST(GUIConfigTest, AllToggleKeysAreUnique) {
 TEST(GUIConfigTest, AllGUIVisibleKeysAreUnique) {
     for (size_t i = 0; i < kGUIVisibleToggleKeys.size(); i++) {
         for (size_t j = i + 1; j < kGUIVisibleToggleKeys.size(); j++) {
-            EXPECT_NE(std::string(kGUIVisibleToggleKeys[i].first), kGUIVisibleToggleKeys[j].first)
+            EXPECT_NE(std::string(kGUIVisibleToggleKeys[i].first), kAllToggleKeys[j].first)
                 << "Duplicate GUI key: " << kGUIVisibleToggleKeys[i].first;
         }
     }
 }
 
 TEST(GUIConfigTest, ToggleCount) {
-    EXPECT_EQ(kGUIVisibleToggleKeys.size(), 14)
-        << "Should be exactly 14 GUI-visible toggle keys";
-    EXPECT_EQ(kAllToggleKeys.size(), 17)
-        << "Should be exactly 17 total toggle keys (14 visible + 3 hidden: presence, configGUI, ai)";
+    EXPECT_EQ(kGUIVisibleToggleKeys.size(), 21)
+        << "Should be exactly 21 GUI-visible toggle keys";
+    EXPECT_EQ(kAllToggleKeys.size(), 25)
+        << "Should be exactly 25 total toggle keys (21 visible + 4 hidden: presence, configGUI, visible, ai)";
 }
 
 TEST(GUIConfigTest, ReadWriteRoundTrip) {
@@ -112,6 +165,13 @@ TEST(GUIConfigTest, DefaultValues) {
     EXPECT_FALSE(g_config.behaviors.fun.acid);
     EXPECT_FALSE(g_config.behaviors.fun.anger);
     EXPECT_TRUE(g_config.behaviors.fun.autumnLeaves);
+    EXPECT_TRUE(g_config.behaviors.fun.avoidance);
+    EXPECT_FALSE(g_config.behaviors.fun.boredom);
+    EXPECT_TRUE(g_config.behaviors.fun.peeking);
+    EXPECT_FALSE(g_config.behaviors.fun.affirmations);
+    EXPECT_FALSE(g_config.behaviors.fun.interactiveDrops);
+    EXPECT_FALSE(g_config.behaviors.fun.sonicMode);
+    EXPECT_FALSE(g_config.behaviors.fun.toysEnabled);
     EXPECT_FALSE(g_config.behaviors.control.honcker);
     EXPECT_FALSE(g_config.behaviors.control.jail);
     EXPECT_FALSE(g_config.behaviors.control.portals);
@@ -119,6 +179,7 @@ TEST(GUIConfigTest, DefaultValues) {
     EXPECT_FALSE(g_config.behaviors.info.nametag);
     EXPECT_FALSE(g_config.behaviors.info.presence);
     EXPECT_FALSE(g_config.behaviors.info.configGUI);
+    EXPECT_TRUE(g_config.behaviors.info.visible);  // visible defaults to true
     EXPECT_FALSE(g_config.behaviors.systems.health);
     EXPECT_FALSE(g_config.behaviors.systems.ai);
     EXPECT_FALSE(g_config.behaviors.systems.pomodoro);

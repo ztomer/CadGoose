@@ -67,6 +67,8 @@ static void DrawLine(CGContextRef ctx, Vector2 a, Vector2 b, float width, float 
 @property (nonatomic, strong) dispatch_source_t timer;
 @property (nonatomic, assign) DroppedItem* draggedItem;
 @property (nonatomic, assign) NSPoint dragOffset;
+@property (nonatomic, assign) NSPoint lastMouseLoc;
+@property (nonatomic, assign) int lastItemCount;
 - (void)handleKeyDown:(NSEvent*)event;
 @end
 
@@ -217,19 +219,29 @@ static BOOL s_hasPrimary = NO;
         NSPoint mouseLoc = [NSEvent mouseLocation];
         NSRect windowRect = [self.window convertRectFromScreen:NSMakeRect(mouseLoc.x, mouseLoc.y, 0, 0)];
         NSPoint p = [self convertPoint:windowRect.origin fromView:nil];
-        
-        for (auto it = g_droppedItems.rbegin(); it != g_droppedItems.rend(); ++it) {
-            DroppedItem& item = *it;
-            float dx = p.x - item.pos.x;
-            float dy = p.y - item.pos.y;
-            float cosA = cos(item.rotation);
-            float sinA = sin(item.rotation);
-            float lx = dx * cosA - dy * sinA;
-            float ly = dx * sinA + dy * cosA;
-            if (lx >= -item.data->w/2.0f && lx <= item.data->w/2.0f &&
-                ly >= -item.data->h/2.0f && ly <= item.data->h/2.0f) {
-                shouldAcceptMouse = true;
-                break;
+        int itemCount = (int)g_droppedItems.size();
+
+        // Only re-check hit-testing when mouse moves or items change
+        bool needsCheck = (itemCount != self.lastItemCount ||
+                           fabs(p.x - self.lastMouseLoc.x) > 1.0f ||
+                           fabs(p.y - self.lastMouseLoc.y) > 1.0f);
+        if (needsCheck) {
+            self.lastMouseLoc = p;
+            self.lastItemCount = itemCount;
+
+            for (auto it = g_droppedItems.rbegin(); it != g_droppedItems.rend(); ++it) {
+                DroppedItem& item = *it;
+                float dx = p.x - item.pos.x;
+                float dy = p.y - item.pos.y;
+                float cosA = cos(item.rotation);
+                float sinA = sin(item.rotation);
+                float lx = dx * cosA - dy * sinA;
+                float ly = dx * sinA + dy * cosA;
+                if (lx >= -item.data->w/2.0f && lx <= item.data->w/2.0f &&
+                    ly >= -item.data->h/2.0f && ly <= item.data->h/2.0f) {
+                    shouldAcceptMouse = true;
+                    break;
+                }
             }
         }
     }

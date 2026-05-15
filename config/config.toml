@@ -1,4 +1,4 @@
-goose = ["Goosling"]
+goose = ["Goose 0"]
 
 [Debug]
 to_terminal = false
@@ -351,7 +351,7 @@ boredom_enabled = false
 breadcrumbs_enabled = false
 peeking_enabled = true
 acid_enabled = false
-ball_enabled = true
+ball_enabled = false
 honcker_hotkey = "f"
 interactive_drops_enabled = false
 sonic_mode_enabled = false

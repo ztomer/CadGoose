@@ -93,6 +93,7 @@ static bool OpenPreferencesViaMenu(AXUIElementRef appElem) {
 static NSArray* BehaviorDisplayNames() {
     return @[
         @"Ball", @"Breadcrumbs", @"Hats", @"Rainbow", @"Acid", @"Anger", @"Autumn Leaves",
+        @"Avoidance", @"Boredom Sigh", @"Window Peeking", @"Custom Affirmations", @"Interactive Drops", @"Sonic Mode", @"Toys",
         @"Honcker", @"Jail", @"Portals", @"Drag",
         @"Nametag",
         @"Health", @"Pomodoro"
@@ -263,8 +264,8 @@ static NSArray* CollectCheckboxes(AXUIElementRef root) {
 TEST_F(AccessibilityGUITest, AllBehaviorTogglesExist) {
     ASSERT_NE(s_prefsWindow, nullptr);
     NSArray* boxes = CollectCheckboxes(s_prefsWindow);
-    // 15 behavior toggles (headers don't have checkboxes)
-    EXPECT_EQ(boxes.count, 15) << "Expected 15 toggle switches in Preferences window";
+    // 21 behavior toggles (headers don't have checkboxes)
+    EXPECT_EQ(boxes.count, 21) << "Expected 21 toggle switches in Preferences window";
 }
 
 TEST_F(AccessibilityGUITest, ToggleBallAndVerifyStateChange) {
@@ -328,5 +329,5 @@ TEST_F(AccessibilityGUITest, AllTogglesRespondToPress) {
         pressed++;
     }
 
-    EXPECT_EQ(pressed, 15) << "Should have pressed all 15 behavior toggles";
+    EXPECT_EQ(pressed, 21) << "Should have pressed all 21 behavior toggles";
 }

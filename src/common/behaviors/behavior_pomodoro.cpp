@@ -63,7 +63,6 @@ static constexpr float kAngleFull = 360.0f;
 static constexpr float kDirTurnSpeed = 5.0f;
 static constexpr float kWalkSpeedMultiplier = 1.0f;
 
-static bool s_enabled = true;
 static CGImageRef s_bedImage = nullptr;
 static CGImageRef s_zzzImages[3] = {nullptr, nullptr, nullptr};
 
@@ -93,8 +92,6 @@ static double GetPhaseDuration(PomodoroPhase phase) {
 }
 
 static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
-    if (!g_config.behaviors.systems.pomodoro) return;
-
     auto* state = BehaviorStateManager::Instance().GetOrCreate<PomodoroState>(goose->id, "pomodoro");
     const auto& cfg = g_config.behaviors.pomodoro;
 
@@ -230,8 +227,6 @@ static void ensurePomoFont() {
 }
 
 static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
-    if (!g_config.behaviors.systems.pomodoro) return;
-
 #ifdef __APPLE__
     CGContextRef cg = (CGContextRef)renderCtx;
     if (!cg) return;
@@ -364,19 +359,9 @@ static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
 #endif
 }
 
-static Behavior g_pomodoroBehavior = {
-    .id = "pomodoro",
-    .name = "Pomodoro",
-    .description = "Pomodoro timer: goose rests during work, goes wild during break",
-    .enabledPtr = &s_enabled,
-    .configPtr = &g_config.behaviors.systems.pomodoro,
-    .init = init,
-    .tick = tick,
-    .render = render,
-    .cleanup = cleanupPomoFont,
-    .conflicts = nullptr,
-    .priority = 10,
-    .config = { .requiresAccessibility = false, .isStarter = false }
-};
+static Behavior g_pomodoroBehavior = BEHAVIOR_DEF_CUSTOM(
+    "pomodoro", "Pomodoro", "Pomodoro timer: goose rests during work, goes wild during break",
+    g_config.behaviors.systems.pomodoro, init, tick, render, cleanupPomoFont, false, false
+);
 
 REGISTER_BEHAVIOR(g_pomodoroBehavior);
