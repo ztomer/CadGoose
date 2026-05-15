@@ -229,7 +229,7 @@ static constexpr float kRefreshBtnFontSize = 12.0f;
     _endpointField.bezelStyle = NSTextFieldRoundedBezel;
     _endpointField.target = self;
     _endpointField.action = @selector(endpointChanged:);
-    _endpointField.hidden = (prov != 2);
+    _endpointField.hidden = (prov != 2 && prov != 3);
     _endpointField.autoresizingMask = NSViewWidthSizable;
     [self addSubview:_endpointField];
 
@@ -241,11 +241,11 @@ static constexpr float kRefreshBtnFontSize = 12.0f;
     _customModelField.bezelStyle = NSTextFieldRoundedBezel;
     _customModelField.target = self;
     _customModelField.action = @selector(customModelChanged:);
-    _customModelField.hidden = (prov != 2);
+    _customModelField.hidden = (prov != 2 && prov != 3);
     _customModelField.autoresizingMask = NSViewWidthSizable;
     [self addSubview:_customModelField];
 
-    if (prov == 2) y -= kCustomSectionYDrop;
+    if (prov == 2 || prov == 3) y -= kCustomSectionYDrop;
 
     y -= kPostCustomYGap;
 
@@ -335,14 +335,16 @@ static constexpr float kRefreshBtnFontSize = 12.0f;
 
     y -= kEvilPromptYGap;
 
-    _promptBody = [[NSTextField alloc] initWithFrame:NSMakeRect(marginX, y, w - marginX*2, kPromptBodyHeight)];
+    _promptBody = [[NSTextView alloc] initWithFrame:NSMakeRect(marginX, y, w - marginX*2, kPromptBodyHeight)];
     _promptBody.font = [NSFont fontWithName:@"Maple Mono" size:kPromptFontSize] ?: [NSFont systemFontOfSize:kPromptFontSize];
     _promptBody.textColor = [NSColor colorWithWhite:0.85 alpha:1.0];
     _promptBody.backgroundColor = [NSColor colorWithWhite:0.1 alpha:0.4];
     _promptBody.wantsLayer = YES;
     _promptBody.layer.cornerRadius = kPromptBodyCornerRadius;
-    _promptBody.bordered = NO; _promptBody.editable = NO;
-    _promptBody.stringValue = [self promptPreviewForEvilLevel:g_config.ai.evilLevel];
+    _promptBody.editable = NO;
+    _promptBody.selectable = YES;
+    _promptBody.drawsBackground = NO;
+    _promptBody.string = [self promptPreviewForEvilLevel:g_config.ai.evilLevel];
     [self addSubview:_promptBody];
 
     y -= kEvilPostPromptYGap;

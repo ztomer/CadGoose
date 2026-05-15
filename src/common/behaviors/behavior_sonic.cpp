@@ -10,8 +10,6 @@
 #include <CoreGraphics/CoreGraphics.h>
 #include <cmath>
 
-static bool s_enabled = true;
-
 static constexpr float SONIC_SPEED_MULTIPLIER = 2.5f;
 static constexpr float TRAIL_CIRCLE_RADIUS = 6.0f;
 static constexpr float TRAIL_SPAWN_INTERVAL = 0.03f;
@@ -24,8 +22,6 @@ static void init(BehaviorContext& ctx) {
 }
 
 static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
-    if (!g_config.behaviors.fun.sonicMode) return;
-
     auto* state = BehaviorStateManager::Instance().GetOrCreate<SonicState>(goose->id, "sonic");
 
     // Increase goose speed by 2.5x
@@ -53,8 +49,6 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
 }
 
 static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
-    if (!g_config.behaviors.fun.sonicMode) return;
-
     auto* state = BehaviorStateManager::Instance().GetOrCreate<SonicState>(goose->id, "sonic");
     if (state->trails.empty()) return;
 
@@ -78,19 +72,9 @@ static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
     CGContextRestoreGState(cg);
 }
 
-static Behavior g_sonicBehavior = {
-    .id = "sonic",
-    .name = "Sonic Mode",
-    .description = "Goose moves at 2.5x speed with a blue trail effect and frequent honks",
-    .enabledPtr = &s_enabled,
-    .configPtr = &g_config.behaviors.fun.sonicMode,
-    .init = init,
-    .tick = tick,
-    .render = render,
-    .cleanup = nullptr,
-    .conflicts = nullptr,
-    .priority = 0,
-    .config = { .requiresAccessibility = false, .isStarter = false }
-};
+static Behavior g_sonicBehavior = BEHAVIOR_DEF(
+    "sonic", "Sonic Mode", "Goose moves at 2.5x speed with a blue trail effect and frequent honks",
+    g_config.behaviors.fun.sonicMode, init, tick, render
+);
 
 REGISTER_BEHAVIOR(g_sonicBehavior);

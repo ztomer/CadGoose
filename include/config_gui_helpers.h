@@ -54,7 +54,7 @@ extern NSMutableArray* g_configItemsForAccess;
 
 @interface AITabView : NSView
 @property (nonatomic, strong) NSTextField* statusLabel;
-@property (nonatomic, strong) NSTextField* promptBody;
+@property (nonatomic, strong) NSTextView* promptBody;
 @property (nonatomic, strong) NSTextField* endpointField;
 @property (nonatomic, strong) NSTextField* customModelField;
 @property (nonatomic, strong) NSTextField* portLabel;

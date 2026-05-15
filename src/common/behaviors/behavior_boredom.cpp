@@ -6,7 +6,6 @@
 #include <CoreGraphics/CoreGraphics.h>
 #include <cmath>
 
-static bool s_enabled = true;
 
 static void init(BehaviorContext& ctx) {
     auto* state = BehaviorStateManager::Instance().GetOrCreate<BoredomState>(ctx.goose->id, "boredom");
@@ -14,7 +13,6 @@ static void init(BehaviorContext& ctx) {
 }
 
 static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
-    if (!g_config.behaviors.fun.boredom) return;
     auto* state = BehaviorStateManager::Instance().GetOrCreate<BoredomState>(goose->id, "boredom");
 
     if (state->isLyingDown) {
@@ -58,7 +56,6 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
 }
 
 static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
-    if (!g_config.behaviors.fun.boredom) return;
     auto* state = BehaviorStateManager::Instance().GetOrCreate<BoredomState>(goose->id, "boredom");
 
 #ifdef __APPLE__
@@ -106,19 +103,9 @@ static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
 #endif
 }
 
-static Behavior g_boredomBehavior = {
-    .id = "boredom",
-    .name = "Boredom Sigh",
-    .description = "Goose sighs dramatically and lies down after 10+ minutes idle",
-    .enabledPtr = &s_enabled,
-    .configPtr = &g_config.behaviors.fun.boredom,
-    .init = init,
-    .tick = tick,
-    .render = render,
-    .cleanup = nullptr,
-    .conflicts = nullptr,
-    .priority = 0,
-    .config = { .requiresAccessibility = false, .isStarter = false }
-};
+static Behavior g_boredomBehavior = BEHAVIOR_DEF(
+    "boredom", "Boredom Sigh", "Goose sighs dramatically and lies down after 10+ minutes idle",
+    g_config.behaviors.fun.boredom, init, tick, render
+);
 
 REGISTER_BEHAVIOR(g_boredomBehavior);

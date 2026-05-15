@@ -6,7 +6,6 @@
 #include "goose.h"
 #include "config.h"
 
-static bool s_enabled = true;
 
 static void init(BehaviorContext& ctx) {
     auto* state = BehaviorStateManager::Instance().GetOrCreate<RainbowState>(ctx.goose->id, "rainbow");
@@ -14,8 +13,6 @@ static void init(BehaviorContext& ctx) {
 }
 
 static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
-    if (!g_config.behaviors.fun.rainbow) return;
-
     auto* state = BehaviorStateManager::Instance().GetOrCreate<RainbowState>(goose->id, "rainbow");
     
     state->hue += g_config.behaviors.rainbow.hueSpeed * dt;
@@ -39,19 +36,9 @@ void Rainbow_SetHue(int gooseId, float hue) {
     state->hue = hue;
 }
 
-static Behavior g_rainbowBehavior = {
-    .id = "rainbow",
-    .name = "Rainbow",
-    .description = "Goose cycles through rainbow colors",
-    .enabledPtr = &s_enabled,
-    .configPtr = &g_config.behaviors.fun.rainbow,
-    .init = init,
-    .tick = tick,
-    .render = render,
-    .cleanup = nullptr,
-    .conflicts = nullptr,
-    .priority = 0,
-    .config = { .requiresAccessibility = false, .isStarter = true }
-};
+static Behavior g_rainbowBehavior = BEHAVIOR_DEF_STARTER(
+    "rainbow", "Rainbow", "Goose cycles through rainbow colors",
+    g_config.behaviors.fun.rainbow, init, tick, render
+);
 
 REGISTER_BEHAVIOR(g_rainbowBehavior);

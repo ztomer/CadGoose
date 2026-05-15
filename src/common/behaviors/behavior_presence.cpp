@@ -10,7 +10,6 @@
 extern "C" void Presence_UpdateStatusFromBehavior(const char* status);
 extern "C" void Presence_SetGooseWindowVisible(bool visible);
 
-static bool s_enabled = true;
 static bool s_lastVisible = true;
 
 static void init(BehaviorContext& ctx) {
@@ -18,8 +17,6 @@ static void init(BehaviorContext& ctx) {
 }
 
 static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
-    if (!g_config.behaviors.info.presence) return;
-
     static double lastUpdate = 0.0;
     if (time - lastUpdate < 0.5) return;
     lastUpdate = time;
@@ -47,19 +44,9 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
 static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
 }
 
-static Behavior g_presenceBehavior = {
-    .id = "presence",
-    .name = "Presence",
-    .description = "Shows goose state in menu bar and controls goose window visibility",
-    .enabledPtr = &s_enabled,
-    .configPtr = &g_config.behaviors.info.presence,
-    .init = init,
-    .tick = tick,
-    .render = render,
-    .cleanup = nullptr,
-    .conflicts = nullptr,
-    .priority = 0,
-    .config = { .requiresAccessibility = false, .isStarter = false }
-};
+static Behavior g_presenceBehavior = BEHAVIOR_DEF(
+    "presence", "Presence", "Shows goose state in menu bar and controls goose window visibility",
+    g_config.behaviors.info.presence, init, tick, render
+);
 
 REGISTER_BEHAVIOR(g_presenceBehavior);

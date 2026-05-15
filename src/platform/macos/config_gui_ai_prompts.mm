@@ -4,7 +4,6 @@
 #include "config.h"
 
 static constexpr int kEvilStates = 9;
-static constexpr float kEvilValueTag = 200;
 
 @implementation AITabView (Prompts)
 
@@ -32,7 +31,7 @@ static constexpr float kEvilValueTag = 200;
         }
     }
     if (self.promptBody) {
-        self.promptBody.stringValue = [self promptPreviewForEvilLevel:g_config.ai.evilLevel];
+        self.promptBody.string = [self promptPreviewForEvilLevel:g_config.ai.evilLevel];
     }
     Config_SaveAll();
 }

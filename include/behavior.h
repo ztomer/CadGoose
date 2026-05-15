@@ -515,6 +515,77 @@ private:
         _register_##b##_ctor() { _register_##b##_helper(); } \
     } _register_##b##_instance;
 
+// Centralized behavior constructor — enabledPtr and configPtr always
+// point to the same config bool, preventing the toggle-desync bug
+// where behaviors kept running after the user disabled them.
+// Note: parameter names (bid, bname, etc.) deliberately differ from
+// struct field names (.id, .name, etc.) to avoid preprocessor substitution.
+#define BEHAVIOR_DEF(bid, bname, bdesc, configBool, initFn, tickFn, renderFn) \
+    Behavior { \
+        .id = bid, \
+        .name = bname, \
+        .description = bdesc, \
+        .enabledPtr = &configBool, \
+        .configPtr = &configBool, \
+        .init = initFn, \
+        .tick = tickFn, \
+        .render = renderFn, \
+        .cleanup = nullptr, \
+        .conflicts = nullptr, \
+        .priority = 0, \
+        .config = { .requiresAccessibility = false, .isStarter = false } \
+    }
+
+#define BEHAVIOR_DEF_STARTER(bid, bname, bdesc, configBool, initFn, tickFn, renderFn) \
+    Behavior { \
+        .id = bid, \
+        .name = bname, \
+        .description = bdesc, \
+        .enabledPtr = &configBool, \
+        .configPtr = &configBool, \
+        .init = initFn, \
+        .tick = tickFn, \
+        .render = renderFn, \
+        .cleanup = nullptr, \
+        .conflicts = nullptr, \
+        .priority = 0, \
+        .config = { .requiresAccessibility = false, .isStarter = true } \
+    }
+
+#define BEHAVIOR_DEF_GROUND(bid, bname, bdesc, configBool, initFn, tickFn, renderFn) \
+    Behavior { \
+        .id = bid, \
+        .name = bname, \
+        .description = bdesc, \
+        .enabledPtr = &configBool, \
+        .configPtr = &configBool, \
+        .init = initFn, \
+        .tick = tickFn, \
+        .render = renderFn, \
+        .cleanup = nullptr, \
+        .conflicts = nullptr, \
+        .priority = 0, \
+        .renderOnGround = true, \
+        .config = { .requiresAccessibility = false, .isStarter = false } \
+    }
+
+#define BEHAVIOR_DEF_CUSTOM(bid, bname, bdesc, configBool, initFn, tickFn, renderFn, cleanupFn, starterFlag, groundFlag) \
+    Behavior { \
+        .id = bid, \
+        .name = bname, \
+        .description = bdesc, \
+        .enabledPtr = &configBool, \
+        .configPtr = &configBool, \
+        .init = initFn, \
+        .tick = tickFn, \
+        .render = renderFn, \
+        .cleanup = cleanupFn, \
+        .conflicts = nullptr, \
+        .priority = 0, \
+        .renderOnGround = groundFlag, \
+        .config = { .requiresAccessibility = false, .isStarter = starterFlag } \
+    }
+
 #define BEHAVIOR_ENABLED(goose, name) \
     ([]() { \
         auto* _b = BehaviorRegistry::Instance().Get(name); \

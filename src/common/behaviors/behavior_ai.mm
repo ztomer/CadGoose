@@ -138,7 +138,6 @@ static constexpr float kSendButtonWidth = 46.0f;
 static constexpr float kSendButtonHeight = kInputFieldHeight;
 static constexpr float kSendButtonFontSize = 16.0f;
 static constexpr float kChatFontSize = 13.0f;
-static constexpr float kChatFontWeight = 13.0f;
 
 @interface AIChatWindowController : NSWindowController <NSWindowDelegate>
 @property (nonatomic, copy) NSString* gooseName;
@@ -247,7 +246,7 @@ static constexpr float kChatFontWeight = 13.0f;
     self.spinner.style = NSProgressIndicatorStyleSpinning;
     self.spinner.controlSize = NSControlSizeSmall;
     self.spinner.hidden = YES;
-    self.spinner.autoresizingMask = NSViewMaxXMargin;
+    self.spinner.autoresizingMask = NSViewMinXMargin | NSViewMinYMargin;
     [contentView addSubview:self.spinner];
 
     // Status bar: model name between chat and input
@@ -360,10 +359,12 @@ static constexpr float kChatFontWeight = 13.0f;
 - (void)appendResponse:(NSString*)response {
     dispatch_async(dispatch_get_main_queue(), ^{
         NSString* current = self.chatView.string;
-        NSRange honkRange = [current rangeOfString:@"Goose: HONK..."];
+        // Search backwards to find the most recent "Goose: HONK..." marker
+        NSRange honkRange = [current rangeOfString:@"Goose: HONK..." options:NSBackwardsSearch];
         if (honkRange.location != NSNotFound) {
             NSString* before = [current substringToIndex:honkRange.location];
-            self.chatView.string = [before stringByAppendingFormat:@"Goose: %@\n\n", response];
+            NSString* after = [current substringFromIndex:honkRange.location + honkRange.length];
+            self.chatView.string = [before stringByAppendingFormat:@"Goose: %@\n\n%@", response, after];
         }
     });
 }
@@ -470,7 +471,6 @@ extern "C" void AI_SendMessage(const char* message) {
 #endif
 }
 
-static bool s_enabled = true;
 
 static void init(BehaviorContext& ctx) {
     auto* state = BehaviorStateManager::Instance().GetOrCreate<AIState>(ctx.goose->id, "ai");
@@ -483,19 +483,9 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
 static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
 }
 
-static Behavior g_aiBehavior = {
-    .id = "ai",
-    .name = "AI",
-    .description = "Chat with the goose using AI. Enable and click goose to open chat.",
-    .enabledPtr = &s_enabled,
-    .configPtr = &g_config.behaviors.systems.ai,
-    .init = init,
-    .tick = tick,
-    .render = render,
-    .cleanup = nullptr,
-    .conflicts = nullptr,
-    .priority = 0,
-    .config = { .requiresAccessibility = false, .isStarter = false }
-};
+static Behavior g_aiBehavior = BEHAVIOR_DEF(
+    "ai", "AI", "Chat with the goose using AI. Enable and click goose to open chat.",
+    g_config.behaviors.systems.ai, init, tick, render
+);
 
 REGISTER_BEHAVIOR(g_aiBehavior);

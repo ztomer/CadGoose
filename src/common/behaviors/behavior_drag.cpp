@@ -8,15 +8,12 @@
 #include "config.h"
 #include "world.h"
 
-static bool s_enabled = true;
 
 static constexpr float DRAG_RADIUS = 45.0f;
 
 static void init(BehaviorContext& ctx) {}
 
 static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
-    if (!g_config.behaviors.control.drag) return;
-
     Vector2 cursorPos{-1, -1};
     if (g_cursorProvider) {
         CursorState state = g_cursorProvider->Read();
@@ -48,19 +45,9 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
 static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
 }
 
-static Behavior g_dragBehavior = {
-    .id = "drag",
-    .name = "Drag",
-    .description = "Drag the goose with your cursor. Be careful - he may bite! Based on DragGoose by Straaft",
-    .enabledPtr = &s_enabled,
-    .configPtr = &g_config.behaviors.control.drag,
-    .init = init,
-    .tick = tick,
-    .render = render,
-    .cleanup = nullptr,
-    .conflicts = nullptr,
-    .priority = 0,
-    .config = { .requiresAccessibility = false, .isStarter = true }
-};
+static Behavior g_dragBehavior = BEHAVIOR_DEF_STARTER(
+    "drag", "Drag", "Drag the goose with your cursor. Be careful - he may bite! Based on DragGoose by Straaft",
+    g_config.behaviors.control.drag, init, tick, render
+);
 
 REGISTER_BEHAVIOR(g_dragBehavior);

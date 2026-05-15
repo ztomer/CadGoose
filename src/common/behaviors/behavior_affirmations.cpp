@@ -6,7 +6,6 @@
 #include "ai_text_meme.h"
 #include <ctime>
 
-static bool s_enabled = true;
 
 static const char* s_defaultMessages[] = {
     "You're doing great!",
@@ -27,7 +26,6 @@ static void init(BehaviorContext& ctx) {
 }
 
 static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
-    if (!g_config.behaviors.fun.affirmations) return;
     auto* state = BehaviorStateManager::Instance().GetOrCreate<BehaviorState>(goose->id, "affirmations");
 
     if (goose->heldItem) return;
@@ -67,19 +65,9 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
 static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
 }
 
-static Behavior g_affirmationsBehavior = {
-    .id = "affirmations",
-    .name = "Custom Affirmations",
-    .description = "Goose drops positive affirmation messages",
-    .enabledPtr = &s_enabled,
-    .configPtr = &g_config.behaviors.fun.affirmations,
-    .init = init,
-    .tick = tick,
-    .render = render,
-    .cleanup = nullptr,
-    .conflicts = nullptr,
-    .priority = 0,
-    .config = { .requiresAccessibility = false, .isStarter = false }
-};
+static Behavior g_affirmationsBehavior = BEHAVIOR_DEF(
+    "affirmations", "Custom Affirmations", "Goose drops positive affirmation messages",
+    g_config.behaviors.fun.affirmations, init, tick, render
+);
 
 REGISTER_BEHAVIOR(g_affirmationsBehavior);

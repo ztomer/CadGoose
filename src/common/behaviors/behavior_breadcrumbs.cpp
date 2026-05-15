@@ -12,7 +12,6 @@
 
 #include "ring_buffer.h"
 
-static bool s_enabled = true;
 static CGImageRef s_crumbImage = nullptr;
 static bool s_wasKeyDown = false;
 static double s_lastKeyCheck = 0;
@@ -44,7 +43,6 @@ static void init(BehaviorContext& ctx) {
 }
 
 static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
-    if (!g_config.behaviors.fun.breadCrumbs) return;
     if (time - s_lastKeyCheck < 0.016) return;
     s_lastKeyCheck = time;
 
@@ -110,7 +108,6 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
 }
 
 static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
-    if (!g_config.behaviors.fun.breadCrumbs) return;
     if (s_crumbs.empty()) return;
 
     CGContextRef cg = (CGContextRef)renderCtx;
@@ -141,20 +138,9 @@ static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
     CGContextRestoreGState(cg);
 }
 
-static Behavior g_breadcrumbBehavior = {
-    .id = "breadcrumbs",
-    .name = "Bread Crumbs",
-    .description = "Hold hotkey to drop breadcrumbs at cursor. Based on BreadCrumbs by Straaft",
-    .enabledPtr = &s_enabled,
-    .configPtr = &g_config.behaviors.fun.breadCrumbs,
-    .init = init,
-    .tick = tick,
-    .render = render,
-    .cleanup = nullptr,
-    .renderOnGround = true,
-    .conflicts = nullptr,
-    .priority = 0,
-    .config = { .requiresAccessibility = false, .isStarter = false }
-};
+static Behavior g_breadcrumbBehavior = BEHAVIOR_DEF_GROUND(
+    "breadcrumbs", "Bread Crumbs", "Hold hotkey to drop breadcrumbs at cursor. Based on BreadCrumbs by Straaft",
+    g_config.behaviors.fun.breadCrumbs, init, tick, render
+);
 
 REGISTER_BEHAVIOR(g_breadcrumbBehavior);

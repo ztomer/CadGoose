@@ -6,23 +6,28 @@
 @implementation BehaviorRowView
 
 + (NSString*)iconForConfigKey:(NSString*)key {
-    if ([key hasSuffix:@"ball"]) return @"⚽";
-    if ([key hasSuffix:@"breadCrumbs"]) return @"🍞";
-    if ([key hasSuffix:@"hats"]) return @"🎩";
-    if ([key hasSuffix:@"rainbow"]) return @"🌈";
-    if ([key hasSuffix:@"acid"]) return @"🧪";
-    if ([key hasSuffix:@"anger"]) return @"😠";
-    if ([key hasSuffix:@"autumnLeaves"]) return @"🍂";
-    if ([key hasSuffix:@"honcker"]) return @"📯";
-    if ([key hasSuffix:@"jail"]) return @"🔒";
-    if ([key hasSuffix:@"portals"]) return @"🌀";
-    if ([key hasSuffix:@"drag"]) return @"🖱️";
-    if ([key hasSuffix:@"nametag"]) return @"🏷️";
-    if ([key hasSuffix:@"health"]) return @"❤️";
-    if ([key hasSuffix:@"ai"]) return @"🤖";
-    if ([key hasSuffix:@"pomodoro"]) return @"⏰";
-    if ([key hasSuffix:@"sonicMode"]) return @"💨";
-    if ([key hasSuffix:@"toysEnabled"]) return @"🧸";
+    if ([key isEqualToString:@"ball_enabled"]) return @"⚽";
+    if ([key isEqualToString:@"breadcrumbs_enabled"]) return @"🍞";
+    if ([key isEqualToString:@"hats_enabled"]) return @"🎩";
+    if ([key isEqualToString:@"rainbow_enabled"]) return @"🌈";
+    if ([key isEqualToString:@"acid_enabled"]) return @"🧪";
+    if ([key isEqualToString:@"anger_enabled"]) return @"😠";
+    if ([key isEqualToString:@"autumn_leaves_enabled"]) return @"🍂";
+    if ([key isEqualToString:@"honcker_enabled"]) return @"📯";
+    if ([key isEqualToString:@"jail_enabled"]) return @"🔒";
+    if ([key isEqualToString:@"portals_enabled"]) return @"🌀";
+    if ([key isEqualToString:@"drag_enabled"]) return @"🖱️";
+    if ([key isEqualToString:@"nametag_enabled"]) return @"🏷️";
+    if ([key isEqualToString:@"health_enabled"]) return @"❤️";
+    if ([key isEqualToString:@"ai_enabled"]) return @"🤖";
+    if ([key isEqualToString:@"pomodoro_enabled"]) return @"⏰";
+    if ([key isEqualToString:@"sonic_mode_enabled"]) return @"💨";
+    if ([key isEqualToString:@"toys_enabled"]) return @"🧸";
+    if ([key isEqualToString:@"avoidance_enabled"]) return @"🏃";
+    if ([key isEqualToString:@"boredom_enabled"]) return @"😮‍💨";
+    if ([key isEqualToString:@"peeking_enabled"]) return @"👀";
+    if ([key isEqualToString:@"affirmations_enabled"]) return @"💬";
+    if ([key isEqualToString:@"interactive_drops_enabled"]) return @"💧";
     if ([key isEqualToString:@"appearance.colors"]) return @"🎨";
     return @"🦆";
 }
@@ -79,11 +84,11 @@
 
 - (void)mouseUp:(NSEvent*)event {
     NSPoint pt = [self convertPoint:event.locationInWindow fromView:nil];
-    if (NSPointInRect(pt, _toggle.frame)) {
-        [_toggle performClick:nil];
-        return;
+    // Only open detail panel if click is outside the toggle switch
+    // The toggle handles its own clicks natively — don't double-fire
+    if (!NSPointInRect(pt, _toggle.frame)) {
+        [self openDetail];
     }
-    [self openDetail];
 }
 
 - (void)setSelected:(BOOL)selected {

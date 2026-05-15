@@ -14,7 +14,6 @@ extern void Audio_PlayHonk();
 #define PLAY_HONK() fprintf(stderr, "[ACID] Honk!\n")
 #endif
 
-static bool s_enabled = true;
 
 static void init(BehaviorContext& ctx) {
     auto* state = BehaviorStateManager::Instance().GetOrCreate<AcidState>(ctx.goose->id, "acid");
@@ -22,8 +21,6 @@ static void init(BehaviorContext& ctx) {
 }
 
 static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
-    if (!g_config.behaviors.fun.acid) return;
-
     auto* state = BehaviorStateManager::Instance().GetOrCreate<AcidState>(goose->id, "acid");
 
     if (!state->isSpinning) {
@@ -53,19 +50,9 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
 static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
 }
 
-static Behavior g_acidBehavior = {
-    .id = "acid",
-    .name = "Acid",
-    .description = "Goose spins wildly with honks. Based on AcidGoose by F!NN",
-    .enabledPtr = &s_enabled,
-    .configPtr = &g_config.behaviors.fun.acid,
-    .init = init,
-    .tick = tick,
-    .render = render,
-    .cleanup = nullptr,
-    .conflicts = nullptr,
-    .priority = 0,
-    .config = { .requiresAccessibility = false, .isStarter = false }
-};
+static Behavior g_acidBehavior = BEHAVIOR_DEF(
+    "acid", "Acid", "Goose spins wildly with honks. Based on AcidGoose by F!NN",
+    g_config.behaviors.fun.acid, init, tick, render
+);
 
 REGISTER_BEHAVIOR(g_acidBehavior);

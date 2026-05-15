@@ -6,7 +6,6 @@
 #include "goose.h"
 #include "config.h"
 
-static bool s_enabled = true;
 
 static void init(BehaviorContext& ctx) {
     auto* state = BehaviorStateManager::Instance().GetOrCreate<HealthState>(ctx.goose->id, "health");
@@ -14,8 +13,6 @@ static void init(BehaviorContext& ctx) {
 }
 
 static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
-    if (!g_config.behaviors.systems.health) return;
-
     auto* state = BehaviorStateManager::Instance().GetOrCreate<HealthState>(goose->id, "health");
 
     if (state->isDead) return;
@@ -38,8 +35,6 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
 }
 
 static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
-    if (!g_config.behaviors.systems.health) return;
-
     auto* state = BehaviorStateManager::Instance().GetOrCreate<HealthState>(goose->id, "health");
 
 #ifdef __APPLE__
@@ -73,19 +68,9 @@ void Health_Heal(Goose* goose, float amount) {
     state->currentHealth = std::min(state->maxHealth, state->currentHealth + amount);
 }
 
-static Behavior g_healthBehavior = {
-    .id = "health",
-    .name = "Health",
-    .description = "Health system for geese",
-    .enabledPtr = &s_enabled,
-    .configPtr = &g_config.behaviors.systems.health,
-    .init = init,
-    .tick = tick,
-    .render = render,
-    .cleanup = nullptr,
-    .conflicts = nullptr,
-    .priority = 0,
-    .config = { .requiresAccessibility = false, .isStarter = false }
-};
+static Behavior g_healthBehavior = BEHAVIOR_DEF(
+    "health", "Health", "Health system for geese",
+    g_config.behaviors.systems.health, init, tick, render
+);
 
 REGISTER_BEHAVIOR(g_healthBehavior);
