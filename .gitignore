@@ -3,6 +3,7 @@
 !README.md
 
 build/
+test_logs/
 CMakeFiles/
 CMakeCache.txt
 CTestTestfile.cmake

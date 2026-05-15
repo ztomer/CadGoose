@@ -665,6 +665,7 @@ src/common/behaviors/behavior_affirmations.o: src/common/behaviors/behavior_affi
 # target to build an object file
 src/common/behaviors/behavior_affirmations.cpp.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/common/behaviors/behavior_affirmations.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/src/common/behaviors/behavior_affirmations.cpp.o
 .PHONY : src/common/behaviors/behavior_affirmations.cpp.o
 
 src/common/behaviors/behavior_affirmations.i: src/common/behaviors/behavior_affirmations.cpp.i
@@ -673,6 +674,7 @@ src/common/behaviors/behavior_affirmations.i: src/common/behaviors/behavior_affi
 # target to preprocess a source file
 src/common/behaviors/behavior_affirmations.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/common/behaviors/behavior_affirmations.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/src/common/behaviors/behavior_affirmations.cpp.i
 .PHONY : src/common/behaviors/behavior_affirmations.cpp.i
 
 src/common/behaviors/behavior_affirmations.s: src/common/behaviors/behavior_affirmations.cpp.s
@@ -681,6 +683,7 @@ src/common/behaviors/behavior_affirmations.s: src/common/behaviors/behavior_affi
 # target to generate assembly for a file
 src/common/behaviors/behavior_affirmations.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/common/behaviors/behavior_affirmations.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/src/common/behaviors/behavior_affirmations.cpp.s
 .PHONY : src/common/behaviors/behavior_affirmations.cpp.s
 
 src/common/behaviors/behavior_ai.o: src/common/behaviors/behavior_ai.mm.o
@@ -752,6 +755,7 @@ src/common/behaviors/behavior_boredom.o: src/common/behaviors/behavior_boredom.c
 # target to build an object file
 src/common/behaviors/behavior_boredom.cpp.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/common/behaviors/behavior_boredom.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/src/common/behaviors/behavior_boredom.cpp.o
 .PHONY : src/common/behaviors/behavior_boredom.cpp.o
 
 src/common/behaviors/behavior_boredom.i: src/common/behaviors/behavior_boredom.cpp.i
@@ -760,6 +764,7 @@ src/common/behaviors/behavior_boredom.i: src/common/behaviors/behavior_boredom.c
 # target to preprocess a source file
 src/common/behaviors/behavior_boredom.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/common/behaviors/behavior_boredom.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/src/common/behaviors/behavior_boredom.cpp.i
 .PHONY : src/common/behaviors/behavior_boredom.cpp.i
 
 src/common/behaviors/behavior_boredom.s: src/common/behaviors/behavior_boredom.cpp.s
@@ -768,6 +773,7 @@ src/common/behaviors/behavior_boredom.s: src/common/behaviors/behavior_boredom.c
 # target to generate assembly for a file
 src/common/behaviors/behavior_boredom.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/common/behaviors/behavior_boredom.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/src/common/behaviors/behavior_boredom.cpp.s
 .PHONY : src/common/behaviors/behavior_boredom.cpp.s
 
 src/common/behaviors/behavior_breadcrumbs.o: src/common/behaviors/behavior_breadcrumbs.cpp.o
@@ -911,6 +917,7 @@ src/common/behaviors/behavior_interactive_drops.o: src/common/behaviors/behavior
 # target to build an object file
 src/common/behaviors/behavior_interactive_drops.cpp.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/common/behaviors/behavior_interactive_drops.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/src/common/behaviors/behavior_interactive_drops.cpp.o
 .PHONY : src/common/behaviors/behavior_interactive_drops.cpp.o
 
 src/common/behaviors/behavior_interactive_drops.i: src/common/behaviors/behavior_interactive_drops.cpp.i
@@ -919,6 +926,7 @@ src/common/behaviors/behavior_interactive_drops.i: src/common/behaviors/behavior
 # target to preprocess a source file
 src/common/behaviors/behavior_interactive_drops.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/common/behaviors/behavior_interactive_drops.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/src/common/behaviors/behavior_interactive_drops.cpp.i
 .PHONY : src/common/behaviors/behavior_interactive_drops.cpp.i
 
 src/common/behaviors/behavior_interactive_drops.s: src/common/behaviors/behavior_interactive_drops.cpp.s
@@ -927,6 +935,7 @@ src/common/behaviors/behavior_interactive_drops.s: src/common/behaviors/behavior
 # target to generate assembly for a file
 src/common/behaviors/behavior_interactive_drops.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/common/behaviors/behavior_interactive_drops.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/src/common/behaviors/behavior_interactive_drops.cpp.s
 .PHONY : src/common/behaviors/behavior_interactive_drops.cpp.s
 
 src/common/behaviors/behavior_jail.o: src/common/behaviors/behavior_jail.cpp.o
@@ -989,6 +998,7 @@ src/common/behaviors/behavior_peeking.o: src/common/behaviors/behavior_peeking.c
 # target to build an object file
 src/common/behaviors/behavior_peeking.cpp.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/common/behaviors/behavior_peeking.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/src/common/behaviors/behavior_peeking.cpp.o
 .PHONY : src/common/behaviors/behavior_peeking.cpp.o
 
 src/common/behaviors/behavior_peeking.i: src/common/behaviors/behavior_peeking.cpp.i
@@ -997,6 +1007,7 @@ src/common/behaviors/behavior_peeking.i: src/common/behaviors/behavior_peeking.c
 # target to preprocess a source file
 src/common/behaviors/behavior_peeking.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/common/behaviors/behavior_peeking.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/src/common/behaviors/behavior_peeking.cpp.i
 .PHONY : src/common/behaviors/behavior_peeking.cpp.i
 
 src/common/behaviors/behavior_peeking.s: src/common/behaviors/behavior_peeking.cpp.s
@@ -1005,6 +1016,7 @@ src/common/behaviors/behavior_peeking.s: src/common/behaviors/behavior_peeking.c
 # target to generate assembly for a file
 src/common/behaviors/behavior_peeking.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/common/behaviors/behavior_peeking.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/src/common/behaviors/behavior_peeking.cpp.s
 .PHONY : src/common/behaviors/behavior_peeking.cpp.s
 
 src/common/behaviors/behavior_pomodoro.o: src/common/behaviors/behavior_pomodoro.cpp.o
@@ -1114,6 +1126,60 @@ src/common/behaviors/behavior_rainbow.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/common/behaviors/behavior_rainbow.cpp.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/src/common/behaviors/behavior_rainbow.cpp.s
 .PHONY : src/common/behaviors/behavior_rainbow.cpp.s
+
+src/common/behaviors/behavior_sonic.o: src/common/behaviors/behavior_sonic.cpp.o
+.PHONY : src/common/behaviors/behavior_sonic.o
+
+# target to build an object file
+src/common/behaviors/behavior_sonic.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/common/behaviors/behavior_sonic.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/src/common/behaviors/behavior_sonic.cpp.o
+.PHONY : src/common/behaviors/behavior_sonic.cpp.o
+
+src/common/behaviors/behavior_sonic.i: src/common/behaviors/behavior_sonic.cpp.i
+.PHONY : src/common/behaviors/behavior_sonic.i
+
+# target to preprocess a source file
+src/common/behaviors/behavior_sonic.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/common/behaviors/behavior_sonic.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/src/common/behaviors/behavior_sonic.cpp.i
+.PHONY : src/common/behaviors/behavior_sonic.cpp.i
+
+src/common/behaviors/behavior_sonic.s: src/common/behaviors/behavior_sonic.cpp.s
+.PHONY : src/common/behaviors/behavior_sonic.s
+
+# target to generate assembly for a file
+src/common/behaviors/behavior_sonic.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/common/behaviors/behavior_sonic.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/src/common/behaviors/behavior_sonic.cpp.s
+.PHONY : src/common/behaviors/behavior_sonic.cpp.s
+
+src/common/behaviors/behavior_toys.o: src/common/behaviors/behavior_toys.cpp.o
+.PHONY : src/common/behaviors/behavior_toys.o
+
+# target to build an object file
+src/common/behaviors/behavior_toys.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/common/behaviors/behavior_toys.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/src/common/behaviors/behavior_toys.cpp.o
+.PHONY : src/common/behaviors/behavior_toys.cpp.o
+
+src/common/behaviors/behavior_toys.i: src/common/behaviors/behavior_toys.cpp.i
+.PHONY : src/common/behaviors/behavior_toys.i
+
+# target to preprocess a source file
+src/common/behaviors/behavior_toys.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/common/behaviors/behavior_toys.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/src/common/behaviors/behavior_toys.cpp.i
+.PHONY : src/common/behaviors/behavior_toys.cpp.i
+
+src/common/behaviors/behavior_toys.s: src/common/behaviors/behavior_toys.cpp.s
+.PHONY : src/common/behaviors/behavior_toys.s
+
+# target to generate assembly for a file
+src/common/behaviors/behavior_toys.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/common/behaviors/behavior_toys.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/src/common/behaviors/behavior_toys.cpp.s
+.PHONY : src/common/behaviors/behavior_toys.cpp.s
 
 src/common/behaviors/local_llm_inference.o: src/common/behaviors/local_llm_inference.mm.o
 .PHONY : src/common/behaviors/local_llm_inference.o
@@ -2761,6 +2827,12 @@ help:
 	@echo "... src/common/behaviors/behavior_rainbow.o"
 	@echo "... src/common/behaviors/behavior_rainbow.i"
 	@echo "... src/common/behaviors/behavior_rainbow.s"
+	@echo "... src/common/behaviors/behavior_sonic.o"
+	@echo "... src/common/behaviors/behavior_sonic.i"
+	@echo "... src/common/behaviors/behavior_sonic.s"
+	@echo "... src/common/behaviors/behavior_toys.o"
+	@echo "... src/common/behaviors/behavior_toys.i"
+	@echo "... src/common/behaviors/behavior_toys.s"
 	@echo "... src/common/behaviors/local_llm_inference.o"
 	@echo "... src/common/behaviors/local_llm_model.o"
 	@echo "... src/common/behaviors/local_llm_tokenizer.o"

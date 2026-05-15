@@ -197,12 +197,14 @@ static BOOL s_hasPrimary = NO;
         World_CleanupExpired(self.currentTime);
     }
 
-    if (rand() % 600 == 0) {
+    if (rand() % 600 == 0 && g_config.behaviors.fun.autumnLeaves) {
         World_SpawnRandomLeafPile(self.bounds.size.width, self.bounds.size.height, self.currentTime);
     }
 
-    World_TickLeafPiles(self.currentTime, g_config.render.frameDt,
-                        g_geese.empty() ? nullptr : &g_geese.front());
+    if (g_config.behaviors.fun.autumnLeaves) {
+        World_TickLeafPiles(self.currentTime, g_config.render.frameDt,
+                            g_geese.empty() ? nullptr : &g_geese.front());
+    }
 
     bool shouldAcceptMouse = (self.draggedItem != nullptr);
     if (!shouldAcceptMouse && ShouldAcceptMouseEvents()) {
@@ -327,7 +329,9 @@ static BOOL s_hasPrimary = NO;
     }
 
     DrawFootprints(ctx, g_footprints, self.currentTime);
-    DrawLeaves(ctx, g_leafPiles, self.currentTime);
+    if (g_config.behaviors.fun.autumnLeaves) {
+        DrawLeaves(ctx, g_leafPiles, self.currentTime);
+    }
 
     for (auto& g : g_geese) {
         BehaviorRegistry::Instance().RenderPass(&g, ctx, true);

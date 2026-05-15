@@ -1,4 +1,4 @@
-goose = ["Goose 0"]
+goose = ["Goosling"]
 
 [Debug]
 to_terminal = false
@@ -354,6 +354,11 @@ acid_enabled = false
 ball_enabled = true
 honcker_hotkey = "f"
 interactive_drops_enabled = false
+sonic_mode_enabled = false
+portal_hotkey_2 = "2"
+breadcrumbs_hotkey = "i"
+interactive_drops_flower_grow_time = 10.0
+toys_enabled = false
 jail_enabled = false
 drag_enabled = true
 nametag_enabled = true
@@ -366,14 +371,11 @@ config_gui_enabled = false
 honcker_enabled = false
 visible_enabled = true
 hats_enabled = true
-ai_enabled = false
 health_enabled = false
 portals_enabled = true
+ai_enabled = false
 pomodoro_enabled = false
 jail_hotkey_p = "p"
-portal_hotkey_2 = "2"
-breadcrumbs_hotkey = "i"
-interactive_drops_flower_grow_time = 10.0
 portal_hotkey_0 = "0"
 interactive_drops_drop_interval = 120.0
 

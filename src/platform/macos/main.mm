@@ -168,8 +168,44 @@ bool Config_IsSystemDarkTheme();
 }
 
 - (void)updateMuteMenuItem {
-    NSImageName imageName = g_config.general.audioMuted ? NSImageNameTouchBarAudioOutputMuteTemplate : NSImageNameTouchBarAudioInputTemplate;
-    NSImage* icon = [NSImage imageNamed:imageName];
+    NSSize size = NSMakeSize(16, 16);
+    NSImage* icon = [[NSImage alloc] initWithSize:size];
+    [icon lockFocus];
+    NSRect rect = NSMakeRect(0, 0, size.width, size.height);
+    [[NSColor labelColor] set];
+    
+    // Speaker shape: trapezoid + rectangle
+    NSBezierPath* speaker = [NSBezierPath bezierPath];
+    [speaker moveToPoint:NSMakePoint(4, 5)];
+    [speaker lineToPoint:NSMakePoint(4, 11)];
+    [speaker lineToPoint:NSMakePoint(8, 11)];
+    [speaker lineToPoint:NSMakePoint(12, 14)];
+    [speaker lineToPoint:NSMakePoint(12, 2)];
+    [speaker lineToPoint:NSMakePoint(8, 5)];
+    [speaker closePath];
+    [speaker fill];
+    
+    if (g_config.general.audioMuted) {
+        // Add slash for muted state
+        NSBezierPath* slash = [NSBezierPath bezierPath];
+        [slash setLineWidth:2];
+        [slash moveToPoint:NSMakePoint(2, 14)];
+        [slash lineToPoint:NSMakePoint(14, 2)];
+        [slash stroke];
+    } else {
+        // Add sound waves for unmuted state
+        NSBezierPath* wave1 = [NSBezierPath bezierPath];
+        [wave1 setLineWidth:1.5];
+        [wave1 appendBezierPathWithArcFromPoint:NSMakePoint(14, 5) toPoint:NSMakePoint(14, 11) radius:3];
+        [wave1 stroke];
+        
+        NSBezierPath* wave2 = [NSBezierPath bezierPath];
+        [wave2 setLineWidth:1.5];
+        [wave2 appendBezierPathWithArcFromPoint:NSMakePoint(15, 3) toPoint:NSMakePoint(15, 13) radius:5];
+        [wave2 stroke];
+    }
+    
+    [icon unlockFocus];
     self.muteMenuItem.image = icon;
     self.muteMenuItem.title = g_config.general.audioMuted ? @"Unmute" : @"Mute";
 }
