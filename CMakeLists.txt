@@ -262,6 +262,12 @@ if(APPLE OR LINUX)
         src/common/behaviors/behavior_anger.cpp
         src/common/behaviors/behavior_nametag.cpp
         src/common/behaviors/behavior_presence.cpp
+        src/common/behaviors/behavior_sonic.cpp
+        src/common/behaviors/behavior_toys.cpp
+        src/common/behaviors/behavior_boredom.cpp
+        src/common/behaviors/behavior_peeking.cpp
+        src/common/behaviors/behavior_affirmations.cpp
+        src/common/behaviors/behavior_interactive_drops.cpp
         src/common/behaviors/behavior_ai.mm
         src/common/behaviors/ai_http_client.mm
         src/common/behaviors/ai_text_meme.mm

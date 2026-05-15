@@ -5,6 +5,11 @@
 #include "config.h"
 #include "toml.hpp"
 #include "../../src/common/config_helpers.h"
+#include "behavior.h"
+#include "world.h"
+
+extern int g_screenWidth;
+extern int g_screenHeight;
 
 TEST(BehaviorToggles, AllBehaviorTogglesDirectAccess) {
     Config_Init();
@@ -197,4 +202,115 @@ TEST(ConfigThemes, UpdateActiveTheme) {
 
     EXPECT_FLOAT_EQ(g_config.color.currentBody.r, 1.0f);
     EXPECT_FLOAT_EQ(g_config.color.currentBody.g, 0.0f);
+}
+
+TEST(BehaviorToggles, SonicModeBehaviorRegistered) {
+    Config_Init();
+    Behavior* sonic = BehaviorRegistry::Instance().Get("sonic");
+    ASSERT_NE(sonic, nullptr);
+    EXPECT_STREQ(sonic->id, "sonic");
+    EXPECT_EQ(sonic->configPtr, &g_config.behaviors.fun.sonicMode);
+}
+
+TEST(BehaviorToggles, ToysBehaviorRegistered) {
+    Config_Init();
+    Behavior* toys = BehaviorRegistry::Instance().Get("toys");
+    ASSERT_NE(toys, nullptr);
+    EXPECT_STREQ(toys->id, "toys");
+    EXPECT_EQ(toys->configPtr, &g_config.behaviors.fun.toysEnabled);
+}
+
+TEST(BehaviorToggles, SonicStateManagement) {
+    Config_Init();
+    BehaviorStateManager::Instance().ClearAll();
+
+    int testGooseId = 999;
+    auto* state = BehaviorStateManager::Instance().GetOrCreate<SonicState>(testGooseId, "sonic");
+    ASSERT_NE(state, nullptr);
+    EXPECT_TRUE(state->trails.empty());
+    EXPECT_DOUBLE_EQ(state->lastTrailTime, 0);
+    EXPECT_DOUBLE_EQ(state->lastHonkTime, 0);
+
+    state->trails.push_back(SonicTrail{{100, 200}, 1.0});
+    EXPECT_EQ(state->trails.size(), 1u);
+
+    state->Reset();
+    EXPECT_TRUE(state->trails.empty());
+
+    BehaviorStateManager::Instance().ClearAll();
+}
+
+TEST(BehaviorToggles, ToysStateManagement) {
+    Config_Init();
+    BehaviorStateManager::Instance().ClearAll();
+
+    int testGooseId = 998;
+    auto* state = BehaviorStateManager::Instance().GetOrCreate<ToysState>(testGooseId, "toys");
+    ASSERT_NE(state, nullptr);
+    EXPECT_EQ(state->activeCount, 0);
+    EXPECT_DOUBLE_EQ(state->lastSpawnTime, 0);
+
+    state->toys[0].active = true;
+    state->toys[0].pos = {150, 250};
+    state->toys[0].type = Toy::Type::Stick;
+    state->activeCount = 1;
+
+    EXPECT_TRUE(state->toys[0].active);
+    EXPECT_FLOAT_EQ(state->toys[0].pos.x, 150);
+
+    state->Reset();
+    EXPECT_FALSE(state->toys[0].active);
+    EXPECT_EQ(state->activeCount, 0);
+
+    BehaviorStateManager::Instance().ClearAll();
+}
+
+TEST(BehaviorToggles, SonicModeConfigToggle) {
+    Config_Init();
+    EXPECT_FALSE(g_config.behaviors.fun.sonicMode);
+
+    g_config.behaviors.fun.sonicMode = true;
+    EXPECT_TRUE(g_config.behaviors.fun.sonicMode);
+
+    g_config.behaviors.fun.sonicMode = false;
+    EXPECT_FALSE(g_config.behaviors.fun.sonicMode);
+}
+
+TEST(BehaviorToggles, ToysEnabledConfigToggle) {
+    Config_Init();
+    EXPECT_FALSE(g_config.behaviors.fun.toysEnabled);
+
+    g_config.behaviors.fun.toysEnabled = true;
+    EXPECT_TRUE(g_config.behaviors.fun.toysEnabled);
+
+    g_config.behaviors.fun.toysEnabled = false;
+    EXPECT_FALSE(g_config.behaviors.fun.toysEnabled);
+}
+
+TEST(BehaviorToggles, SonicModeLoadFromToml) {
+    Config_Init();
+
+    auto tbl = toml::parse_str(
+        "[Behavior]\n"
+        "sonic_mode_enabled = true\n"
+    );
+    Config_Load(tbl);
+
+    EXPECT_TRUE(g_config.behaviors.fun.sonicMode);
+
+    g_config.behaviors.fun.sonicMode = false;
+}
+
+TEST(BehaviorToggles, ToysEnabledLoadFromToml) {
+    Config_Init();
+
+    auto tbl = toml::parse_str(
+        "[Behavior]\n"
+        "toys_enabled = true\n"
+    );
+    Config_Load(tbl);
+
+    EXPECT_TRUE(g_config.behaviors.fun.toysEnabled);
+
+    g_config.behaviors.fun.toysEnabled = false;
 }

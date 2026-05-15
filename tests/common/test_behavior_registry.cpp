@@ -16,16 +16,22 @@ TEST(BehaviorRegistry, AllBehaviorsRegistered) {
     auto& registry = BehaviorRegistry::Instance();
     size_t count = registry.GetBehaviorCount();
     fprintf(stderr, "[INFO] Registered %zu behaviors\n", count);
-    EXPECT_EQ(count, 15) << "Expected 15 behaviors to be registered";
+    EXPECT_EQ(count, 21) << "Expected 21 behaviors to be registered";
 
     auto* acid = registry.Get("acid");
     EXPECT_NE(acid, nullptr) << "acid should be registered";
+
+    auto* affirmations = registry.Get("affirmations");
+    EXPECT_NE(affirmations, nullptr) << "affirmations should be registered";
 
     auto* anger = registry.Get("anger");
     EXPECT_NE(anger, nullptr) << "anger should be registered";
 
     auto* ball = registry.Get("ball");
     EXPECT_NE(ball, nullptr) << "ball should be registered";
+
+    auto* boredom = registry.Get("boredom");
+    EXPECT_NE(boredom, nullptr) << "boredom should be registered";
 
     auto* breadcrumbs = registry.Get("breadcrumbs");
     EXPECT_NE(breadcrumbs, nullptr) << "breadcrumbs should be registered";
@@ -62,6 +68,18 @@ TEST(BehaviorRegistry, AllBehaviorsRegistered) {
 
     auto* ai = registry.Get("ai");
     EXPECT_NE(ai, nullptr) << "ai should be registered";
+
+    auto* sonic = registry.Get("sonic");
+    EXPECT_NE(sonic, nullptr) << "sonic should be registered";
+
+    auto* toys = registry.Get("toys");
+    EXPECT_NE(toys, nullptr) << "toys should be registered";
+
+    auto* interactiveDrops = registry.Get("interactive_drops");
+    EXPECT_NE(interactiveDrops, nullptr) << "interactive_drops should be registered";
+
+    auto* peeking = registry.Get("peeking");
+    EXPECT_NE(peeking, nullptr) << "peeking should be registered";
 }
 
 TEST(BehaviorRegistry, AllBehaviorsHaveTick) {
@@ -204,6 +222,12 @@ TEST(BehaviorToggle, ConfigPtrMap) {
         {"presence", &g_config.behaviors.info.presence},
         {"rainbow",  &g_config.behaviors.fun.rainbow},
         {"ai",       &g_config.behaviors.systems.ai},
+        {"sonic",    &g_config.behaviors.fun.sonicMode},
+        {"toys",     &g_config.behaviors.fun.toysEnabled},
+        {"interactive_drops", &g_config.behaviors.fun.interactiveDrops},
+        {"peeking",  &g_config.behaviors.fun.peeking},
+        {"affirmations", &g_config.behaviors.fun.affirmations},
+        {"boredom",  &g_config.behaviors.fun.boredom},
     };
 
     for (const auto& entry : map) {
