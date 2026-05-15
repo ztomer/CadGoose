@@ -350,25 +350,28 @@ bool AI_TextMeme_HasAvailable() {
 }
 
 std::string AI_TextMeme_Dequeue() {
-    std::lock_guard<std::mutex> lock(s_mutex);
-    if (!s_aiQueue.empty()) {
-        std::string text = s_aiQueue.front();
-        s_aiQueue.pop();
-        return text;
-    }
-    if (!s_fileQueue.empty()) {
-        std::string text = s_fileQueue.front();
-        s_fileQueue.pop();
-        // Reload when we're low
-        if (s_fileQueue.size() < 5) {
-            // Schedule async reload
-            dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0), ^{
-                AI_TextMeme_LoadFileTexts();
-            });
+    bool needReload = false;
+    std::string result;
+    {
+        std::lock_guard<std::mutex> lock(s_mutex);
+        if (!s_aiQueue.empty()) {
+            result = s_aiQueue.front();
+            s_aiQueue.pop();
+            return result;
         }
-        return text;
+        if (!s_fileQueue.empty()) {
+            result = s_fileQueue.front();
+            s_fileQueue.pop();
+            needReload = s_fileQueue.size() < 5;
+        }
     }
-    return "";
+    // Dispatch after mutex is released to avoid deadlock
+    if (needReload) {
+        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0), ^{
+            AI_TextMeme_LoadFileTexts();
+        });
+    }
+    return result;
 }
 
 int AI_TextMeme_QueueSize() {

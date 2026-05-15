@@ -18,6 +18,21 @@ static constexpr float kSpeedEpsilon = 1e-4f;
 static constexpr float kNighttimeSpeedFactor = 0.6f;
 static constexpr int kNighttimeStartHour = 23;
 static constexpr int kNighttimeEndHour = 6;
+static constexpr int kNighttimeCheckIntervalSec = 60;
+
+static bool IsNighttime() {
+    static time_t s_lastCheck = 0;
+    static bool s_isNight = false;
+    time_t now = std::time(nullptr);
+    if (now - s_lastCheck >= kNighttimeCheckIntervalSec) {
+        struct tm* tm_info = std::localtime(&now);
+        if (tm_info) {
+            s_isNight = (tm_info->tm_hour >= kNighttimeStartHour || tm_info->tm_hour < kNighttimeEndHour);
+        }
+        s_lastCheck = now;
+    }
+    return s_isNight;
+}
 static constexpr float kFetchCurvatureRange = 200.0f;
 static constexpr float kFetchCurvatureCenter = 100.0f;
 static constexpr float kFetchCurvatureDivisor = 100.0f;
@@ -25,6 +40,8 @@ static constexpr float kTwoPi = 2.0f * PI;
 static constexpr float kRadToDeg = 180.0f / PI;
 static constexpr float kDegToRad = PI / 180.0f;
 static constexpr double kStuckThresholdTime = 3.0;
+static constexpr float kStuckMinMovementThreshold = 10.0f;
+static constexpr float kStuckRecoveryMargin = 50.0f;
 
 static FILE *s_debugLog = nullptr;
 
@@ -61,7 +78,12 @@ static void LogTick(double time, const CursorState &cursor) {
 static bool s_stateChanged = true;
 static double s_lastLogTime = 0;
 
-static void CloseDebugLog() { s_debugLog = nullptr; }
+static void CloseDebugLog() {
+    if (s_debugLog && s_debugLog != stderr) {
+        fclose(s_debugLog);
+    }
+    s_debugLog = nullptr;
+}
 
 Goose::Goose(int id_, const std::string &name_, int screenW, int screenH)
     : id(id_), name(name_) {
@@ -267,9 +289,7 @@ static float CalculateTargetSpeed(const Goose& g, float dist) {
                    g.state == GooseState::SNATCH_CURSOR || g.state == GooseState::RETURNING);
   float baseSpeed = needsRun ? g_config.movement.baseRunSpeed : g_config.movement.baseWalkSpeed;
 
-  time_t sysTime = std::time(nullptr);
-  struct tm* tm_info = std::localtime(&sysTime);
-  if (tm_info && (tm_info->tm_hour >= kNighttimeStartHour || tm_info->tm_hour < kNighttimeEndHour)) {
+  if (IsNighttime()) {
     baseSpeed *= kNighttimeSpeedFactor;
   }
 
@@ -332,7 +352,7 @@ CursorAction Goose::Update(double dt, double time, int w, int h,
   bool isStationary = isResting || isJailed || state == GooseState::SNATCH_CURSOR;
   float distMoved = Vector2::Length(pos - stuckCheckPos);
   if (!isStationary && (state == GooseState::WANDER || state == GooseState::CHASE_CURSOR || state == GooseState::FETCHING || state == GooseState::RETURNING)) {
-    if (distMoved > 10.0f) {
+    if (distMoved > kStuckMinMovementThreshold) {
       // Normal movement, reset tracker
       stuckCheckPos = pos;
       stuckCheckTime = time;

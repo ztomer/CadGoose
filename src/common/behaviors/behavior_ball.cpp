@@ -28,12 +28,6 @@ static float GetBallSize() {
     return g_config.behaviors.ball.size;
 }
 
-static Vector2 NormalizeVec(Vector2 v) {
-    float len = Vector2::Length(v);
-    if (len < 0.001f) return Vector2{0, 0};
-    return v / len;
-}
-
 static void init(BehaviorContext& ctx) {
     if (!s_ballImages[0]) {
         s_ballImages[0] = g_assets.GetBehaviorImage("Assets/Images/OtherGfx/ball.png");
@@ -78,7 +72,7 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
             s_lastAnimateTime = time;
         }
 
-        Vector2 norm = NormalizeVec(s_ballVel);
+        Vector2 norm = Vector2::Normalize(s_ballVel);
         s_ballVel = norm * s_ballSpeed;
         s_ballPos.x += s_ballVel.x * (float)dt;
         s_ballPos.y += s_ballVel.y * (float)dt;
@@ -126,7 +120,7 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
     if (cursorDist < ballSize / 2.0f && s_ballSpeed <= SPEED_THRESHOLD) {
         s_ballSpeed = KICK_SPEED;
         Vector2 dir = Vector2{ballCenterX - cursorX, ballCenterY - cursorY};
-        s_ballVel = NormalizeVec(dir) * s_ballSpeed;
+        s_ballVel = Vector2::Normalize(dir) * s_ballSpeed;
         s_lastKickTime = time;
 
         if (goose) {
@@ -146,7 +140,7 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
         if (gooseDist < ballSize * 0.8f) {
             s_ballSpeed = KICK_SPEED * 0.7f;
             Vector2 dir = Vector2{ballCenterX - gooseWorldX, ballCenterY - gooseWorldY};
-            s_ballVel = NormalizeVec(dir) * s_ballSpeed;
+            s_ballVel = Vector2::Normalize(dir) * s_ballSpeed;
             s_lastKickTime = time;
             goose->target = Vector2{ballCenterDevX, ballCenterDevY};
             if (goose->state == GooseState::WANDER) {

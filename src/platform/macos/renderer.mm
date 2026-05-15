@@ -40,6 +40,12 @@ extern bool g_debugMode;
 }
 #endif
 
+// --- Timer and rendering constants ---
+static constexpr int kTargetFPS = 60;
+static constexpr int kTimerJitterToleranceHz = 600;
+static constexpr int kWorldCleanupTickInterval = 60;
+static constexpr int kLeafSpawnProbabilityDenominator = 600;
+
 static void DrawEllipse(CGContextRef ctx, Vector2 p, float rx, float ry, float r, float g, float b, float a) {
     CGContextSetRGBFillColor(ctx, r, g, b, a);
     CGContextFillEllipseInRect(ctx, CGRectMake(p.x - rx, p.y - ry, rx * 2, ry * 2));
@@ -116,7 +122,7 @@ static BOOL s_hasPrimary = NO;
     self.timer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, dispatch_get_main_queue());
     DEBUG_LOG("  timer created: %p", self.timer);
 
-    dispatch_source_set_timer(self.timer, dispatch_time(DISPATCH_TIME_NOW, 0), NSEC_PER_SEC/60, NSEC_PER_SEC/600);
+    dispatch_source_set_timer(self.timer, dispatch_time(DISPATCH_TIME_NOW, 0), NSEC_PER_SEC/kTargetFPS, NSEC_PER_SEC/kTimerJitterToleranceHz);
     DEBUG_LOG("  timer scheduled");
 
     __weak GooseView* weakSelf = self;
@@ -193,11 +199,11 @@ static BOOL s_hasPrimary = NO;
         g_cursorProvider->Execute(action);
     }
 
-    if (self.tickCount % 60 == 0) {
+    if (self.tickCount % kWorldCleanupTickInterval == 0) {
         World_CleanupExpired(self.currentTime);
     }
 
-    if (rand() % 600 == 0 && g_config.behaviors.fun.autumnLeaves) {
+    if (rand() % kLeafSpawnProbabilityDenominator == 0 && g_config.behaviors.fun.autumnLeaves) {
         World_SpawnRandomLeafPile(self.bounds.size.width, self.bounds.size.height, self.currentTime);
     }
 

@@ -85,9 +85,9 @@ static void init(BehaviorContext& ctx) {
 static double GetPhaseDuration(PomodoroPhase phase) {
     const auto& cfg = g_config.behaviors.pomodoro;
     switch (phase) {
-        case PomodoroPhase::Work: return cfg.workMinutes * 60.0;
-        case PomodoroPhase::Break: return cfg.breakMinutes * 60.0;
-        case PomodoroPhase::LongBreak: return cfg.longBreakMinutes * 60.0;
+        case PomodoroPhase::Work: return cfg.workMinutes * kSecondsPerMinute;
+        case PomodoroPhase::Break: return cfg.breakMinutes * kSecondsPerMinute;
+        case PomodoroPhase::LongBreak: return cfg.longBreakMinutes * kSecondsPerMinute;
     }
     return kDefaultWorkMinutes * kSecondsPerMinute;
 }
@@ -241,8 +241,8 @@ static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
 
     double elapsed = ctx.time - state->phaseStartTime;
     double remaining = GetPhaseDuration(state->phase) - elapsed;
-    int minutes = (int)(remaining / 60.0);
-    int seconds = (int)fmod(remaining, 60.0);
+    int minutes = (int)(remaining / kSecondsPerMinute);
+    int seconds = (int)fmod(remaining, kSecondsPerMinute);
 
     const char* phaseLabel = "R";
     float bgR = kFallbackBgR, bgG = kFallbackBgG, bgB = kFallbackBgB;

@@ -42,6 +42,8 @@ static void WriteAll(int fd, const std::string& data) {
     }
 }
 
+static constexpr size_t kMaxRequestSize = 64 * 1024; // 64KB max request
+
 static void HandleConnection(int clientFd) {
     std::string data;
     char buffer[4096];
@@ -50,6 +52,10 @@ static void HandleConnection(int clientFd) {
         if (rc <= 0) break;
         buffer[rc] = '\0';
         data += buffer;
+        if (data.size() > kMaxRequestSize) {
+            fprintf(stderr, "[MCP] Request too large (%zu bytes), closing connection\n", data.size());
+            return;
+        }
         if (data.find('\n') != std::string::npos) break;
     }
 
