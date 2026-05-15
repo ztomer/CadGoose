@@ -389,11 +389,36 @@ static const BuiltinProfile* MatchProfile(const char* modelName) {
 #pragma mark - Connection Health Check
 
 - (void)checkConnectionWithCompletion:(void(^)(BOOL connected, NSString* message))completion {
+    // Foundation provider uses local CoreML LLM, not HTTP
+    if (g_config.ai.providerType == 0) {
+        LocalLLM_Init();
+        LocalLLMState state = LocalLLM_GetState();
+        switch (state) {
+            case LocalLLMState::Ready:
+                self.connected = YES;
+                if (completion) completion(YES, @"Local LLM ready");
+                break;
+            case LocalLLMState::Loading:
+                self.connected = NO;
+                if (completion) completion(NO, @"Local LLM still loading");
+                break;
+            case LocalLLMState::Error:
+                self.connected = NO;
+                if (completion) completion(NO, @"Local LLM error");
+                break;
+            case LocalLLMState::Unavailable:
+                self.connected = NO;
+                if (completion) completion(NO, @"No local model found");
+                break;
+        }
+        return;
+    }
+
     NSString* endpoint = @"";
     switch (g_config.ai.providerType) {
-        case 0: endpoint = [NSString stringWithFormat:@"http://localhost:%d/v1/models", g_config.ai.osaurusPort]; break;
-        case 1: endpoint = [NSString stringWithFormat:@"http://localhost:%d/api/tags", g_config.ai.ollamaPort]; break;
-        case 2: endpoint = [NSString stringWithUTF8String:g_config.ai.customEndpoint.c_str()]; break;
+        case 1: endpoint = [NSString stringWithFormat:@"http://localhost:%d/v1/models", g_config.ai.osaurusPort]; break;
+        case 2: endpoint = [NSString stringWithFormat:@"http://localhost:%d/api/tags", g_config.ai.ollamaPort]; break;
+        case 3: endpoint = [NSString stringWithUTF8String:g_config.ai.customEndpoint.c_str()]; break;
         default: endpoint = @"http://localhost:1337/v1/models"; break;
     }
 
