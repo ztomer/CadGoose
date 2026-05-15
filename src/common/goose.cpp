@@ -318,29 +318,35 @@ CursorAction Goose::Update(double dt, double time, int w, int h,
 
   CursorAction action = UpdateBehaviors(dt, time, w, h, cursor);
 
-  float dist = Vector2::Length(target - pos);
-  float tSpeed = CalculateTargetSpeed(*this, dist);
-  currentSpeed = Lerp(currentSpeed, tSpeed, g_config.movement.speedLerpRate);
+  if (isResting) {
+    vel = {0, 0};
+    currentSpeed = 0.0f;
+    target = pos;
+  } else {
+    float dist = Vector2::Length(target - pos);
+    float tSpeed = CalculateTargetSpeed(*this, dist);
+    currentSpeed = Lerp(currentSpeed, tSpeed, g_config.movement.speedLerpRate);
 
-  Vector2 steerForce = CalculateSeekForce();
-  steerForce += CalculateCurveForce(dist);
-  steerForce += CalculateSeparationForce();
+    Vector2 steerForce = CalculateSeekForce();
+    steerForce += CalculateCurveForce(dist);
+    steerForce += CalculateSeparationForce();
 
-  Vector2 avoidance = CalculateEdgeAvoidance(w, h);
-  if (Vector2::Length(avoidance) > kEdgeAvoidMinForce) {
-    steerForce += (avoidance - vel) * g_config.physics.edgeAvoidForce;
-  }
+    Vector2 avoidance = CalculateEdgeAvoidance(w, h);
+    if (Vector2::Length(avoidance) > kEdgeAvoidMinForce) {
+      steerForce += (avoidance - vel) * g_config.physics.edgeAvoidForce;
+    }
 
-  float steerMag = Vector2::Length(steerForce);
-  if (steerMag > g_config.movement.maxForce) {
-    steerForce = steerForce * (g_config.movement.maxForce / steerMag);
-  }
+    float steerMag = Vector2::Length(steerForce);
+    if (steerMag > g_config.movement.maxForce) {
+      steerForce = steerForce * (g_config.movement.maxForce / steerMag);
+    }
 
-  vel = vel + steerForce * (float)dt;
+    vel = vel + steerForce * (float)dt;
 
-  float speed = Vector2::Length(vel);
-  if (speed > currentSpeed && speed > kSpeedEpsilon) {
-    vel = vel * (currentSpeed / speed);
+    float speed = Vector2::Length(vel);
+    if (speed > currentSpeed && speed > kSpeedEpsilon) {
+      vel = vel * (currentSpeed / speed);
+    }
   }
 
   pos = pos + vel * (float)dt;

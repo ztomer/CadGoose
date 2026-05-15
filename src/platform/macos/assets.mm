@@ -252,6 +252,40 @@ ItemData* AssetManager::CreateTextItem(const std::string& text) {
     return data;
 }
 
+ItemData* AssetManager::CreateToyItem(bool isStick) {
+    ItemData* data = new ItemData();
+    data->type = ItemData::TOY;
+
+    int toyW = isStick ? 32 : 20;
+    int toyH = isStick ? 8 : 20;
+    data->w = toyW;
+    data->h = toyH;
+
+#ifdef __APPLE__
+    CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
+    CGContextRef ctx = CGBitmapContextCreate(nullptr, toyW, toyH, 8, 0, colorSpace, kCGImageAlphaPremultipliedFirst);
+    CGColorSpaceRelease(colorSpace);
+
+    if (ctx) {
+        if (isStick) {
+            CGContextSetRGBFillColor(ctx, 0.55f, 0.35f, 0.15f, 1.0f);
+            CGContextFillRect(ctx, CGRectMake(0, 0, toyW, toyH));
+        } else {
+            CGContextSetRGBFillColor(ctx, 0.8f, 0.2f, 0.2f, 1.0f);
+            CGContextFillEllipseInRect(ctx, CGRectMake(0, 0, toyW, toyH));
+        }
+
+        CGImageRef img = CGBitmapContextCreateImage(ctx);
+        if (img) {
+            data->image = CGImageRetain(img);
+        }
+        CGContextRelease(ctx);
+    }
+#endif
+
+    return data;
+}
+
 void AssetManager::Honk() {
     Audio_PlayHonk();
 }

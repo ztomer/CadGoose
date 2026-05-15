@@ -1,72 +1,74 @@
-# Plan
+# Bug & Feature Investigation Plan
 
-> **Note**: This plan is historical. See [AGENTS.md](/AGENTS.md) for current project state and active context.
+## Issues
 
-## DONE ✅
-- Memory growth fixes (@autoreleasepool, CoreText caching, hat bitmap caching)
-- CI/CD pipeline (PR check + build/release workflows)
-- macOS bundle crash documentation
-- Fetch loop stuck fix (edge margin > screen clamp)
-- AI text meme generator (paper canvas, cooldown fix, timeout 30→60s)
-- Breadcrumbs render order (two-pass ground/overlay)
-- Breadcrumbs eating mechanic (goose proximity removes crumbs + chewing animation)
-- RightShift reference file fix
-- Ring buffer for all unbounded containers
-- Local CoreML LLM (direct MLModel integration)
-- Two-pool text system (AI + file pool)
-- Local LLM API contract tests (11 tests)
-- Chewing/swallowing animation (split-beak open/close)
-- Joy & Delight Features (pet goose, cursor avoidance, nighttime mode, weekend vibes, idle preening, boredom sigh, window peeking, custom affirmations, interactive drops, AI typing sounds)
-- All-Behavior Profile (MEM) - vmmap + sample with all behaviors shows stable memory (~468.8M RSS)
-- AI Text Meme — Full Integration Test - Osaurus server integration verified, memes generated and saved to queue
-- Memory Allocator Investigation - mimalloc vs system malloc evaluated (~14MB savings with mimalloc), USE_MIMALLOC CMake option added
-- Unwired Joy Features Audit - verified all joy feature toggles properly wired in code
-- MTLCompilerService Bundle Crash - documented (requires Apple Developer signing + hardened runtime + com.apple.security.cs.allow-jit entitlement; workaround: use ./build/CadGoose directly)
-- Additional UI Improvements - Added JOY category to Preferences → Behaviors panel with individual toggles; fixed separator crash using layer-backed approach
+### 1. Toys should NOT have a close button
+**Status**: Not started  
+**Description**: Dropped toy items (sticks/balls) currently show the close button (X) in the bottom-left corner like memes/texts. Toys should not have this — they're meant to be picked up by the goose, not dismissed by the user.  
+**Files**: `src/common/goose_drawing.mm:DrawDroppedItem()`, `src/platform/macos/renderer.mm:hitTest:`, `mouseDown:`  
+**Approach**: `DrawDroppedItem()` unconditionally draws the close button for all `DroppedItem`s. Need to skip it for `ItemData::TOY` type. Also need to skip close-button hit-test in `hitTest:` and `mouseDown:` for toy items.
 
-## ACTIVE PLAN (2026-05-15)
+### 2. Only sticks render for toys
+**Status**: Not started  
+**Description**: Ball toys (`Toy::Type::Ball`) are not visible on screen — only sticks appear.  
+**Files**: `src/common/behaviors/behavior_toys.cpp:tick()` (spawn), `src/common/behaviors/behavior_toys.cpp:render()`  
+**Approach**: 
+- Check spawn logic: `rand() % 2` determines type — both Stick and Ball should spawn equally
+- Check render logic: Ball rendering uses `STICK_WIDTH * ctx.globalScale` as radius — that's `4.0 * scale` which is very small (~4-8px). Compare with stick rendering which uses `STICK_LENGTH=24` × `STICK_WIDTH=4`
+- Ball radius should be larger (e.g., 12-15px) to be visible
 
-### Preferences Panel
-- [x] **Fix AI provider selection** — Foundation→CoreML, Osaurus→osaurus, Ollama→ollama, Custom→custom
-- [x] **Model switching reflected in AI chat** — refreshConnection() on window focus
-- [x] **Move goose preview to the right of color selectors**
-- [x] **Reorganize Behaviors tab layout** — Increased row height (44→52px), padding (12→16px), description width
-- [x] **Remove yellow/green traffic lights** from preferences panel
-- [x] **Sonic/Toys toggles** — Added sonicMode and toysEnabled to config + UI + tests
+### 3. Dragging meme images and text doesn't work
+**Status**: Fixed  
+**Description**: Click-and-drag on dropped memes/texts doesn't move them.  
+**Files**: `src/platform/macos/renderer.mm:hitTest:`, `mouseDown:`, `mouseDragged:`, `tick:`  
+**Root cause**: `item.pos` is in **device coordinates** (top-left origin, Y-down, matching the `isFlipped=YES` view). But the hit-test code did `dy = (height - p.y) - item.pos.y` which **double-flips** Y, putting mouse and item in different coordinate spaces. The mouse was over the item but the hit-test computed a large `dy` offset and always missed.  
+**Fix**: Removed Y-flip in all four hit-test locations (`tick:`, `hitTest:`, `mouseDown:`, `mouseDragged:`). Now `dx = p.x - item.pos.x`, `dy = p.y - item.pos.y` — same coordinate space.  
+**Also fixed**: `world_utils.mm:ItemHitTest()` had the same bug. Updated `test_dropped_item_hit.cpp` to match the corrected model.
 
-### Removed Features
-- [x] Weekend mode (removed)
-- [x] Petting behavior (removed, kept avoidance)
-- [x] Nighttime mode (removed)
-- [x] AI typing sounds (removed)
-- [x] Banish (completely removed)
-- [x] Idle Preening (completely removed)
+**Config additions needed** (memes/images only, separate from toys):
+- `max_dropped_memes` (int, default 20) — auto-delete oldest when exceeded
+- `max_dropped_texts` (int, default 20) — auto-delete oldest when exceeded
+- `meme_lifetime` (float, default 30s) — already exists as `g_config.item.itemLifetime`
+- `text_lifetime` (float, default 30s)
 
-### AI Chat
-- [x] **Remove empty space between appbar and chat text**
-- [x] **Add liquid glass effects to appbar**
+### 4. Sonic mode - entire screen turns blue
+**Status**: Fixed  
+**Description**: Instead of a trail behind the goose, the entire screen fills with blue circles.  
+**Files**: `src/common/behaviors/behavior_sonic.cpp:render()`  
+**Root cause**: `goose->pos` is in **device coordinates** (screen pixels), initialized from `screenW/screenH`. Sonic stores `trail.pos = goose->pos` (already device coords), then `ToDevice(trail.pos)` double-scales it by `globalScale` → positions become huge, filling the screen.  
+**Fix**: Use `trail.pos` directly without `ToDevice()` since it's already in device coordinates.
 
-### General
-- [x] **Fix freeze on startup** — Already async
-- [x] **Fix goose getting stuck in place** — Stuck detection (5px/3s → new target)
-- [x] **Pomodoro rest mode improvements** — Walk to corner, sleep with bed + ZZZ animation
-- [x] **Regression: Goose stopped fetching memes and texts** — Added detailed [FETCH] logging
-- [x] **Add mute option** — Apple B&W icons after Honk! in menubar
-- [x] **Local model detection bug on macOS 26.5** — Added logging + 4 fallback paths + config search paths
-- [x] **Persist geese names across sessions** — RingBuffer<std::string, 10>
-- [x] **Fix portals disappearing** — Removed state->Reset() from init()
+### 5. Architectural reflection: what would we do differently?
+**Status**: Documented  
+**File**: `docs/ARCHITECTURE_REFLECTION.md`  
+**Key findings**:
+1. **Coordinate system** — three spaces (world/device/screen) with ambiguous boundaries caused sonic blue screen, toy position bugs, and dragging Y-flip regression
+2. **Item system** — type creep (`MEME` → `MEME/TEXT/TOY`) without unified rendering strategy
+3. **Config system** — four layers of indirection (TOML → registry → struct → GUI)
+4. **Test coverage** — 29 AX tests skipped, UI regressions not caught by CI
+5. **Platform split** — macOS vs Linux code paths diverge significantly
 
-### Code Quality
-- [x] **No hardcoded values** — Extracted magic numbers to named constants in headers
-- [x] **No files above 500 LOC** — Split local_llm.mm into tokenizer/model/inference modules
-- [x] **Prompts in TOML** — All AI prompts moved to Assets/prompts.toml
-- [x] **Local LLM search paths in config** — Added localLlmSearchPaths vector to AIConfig
+---
 
-### Ports/Integrations
-- [x] **Port Sonigoose mod** — Analyzed, most features already exist
-- [x] **Port Toys mod** — Bed assets downloaded, integrated into pomodoro rest
-- [x] **Reevaluate breadcrumbs behavior** — Compared with DLL, CadGoose has improvements
+## Execution Order
 
-## BACKLOG
+| # | Issue | Dependencies | Est. Complexity | Status |
+|---|-------|-------------|-----------------|--------|
+| 1 | #2 Toys ball rendering | None | Low (1-line fix) | ✅ Done |
+| 2 | #1 Toys NO close button | None | Low (skip for TOY type) | ✅ Done |
+| 3 | #4 Sonic screen-blue | None | Low (use trail.pos directly) | ✅ Done |
+| 4 | #3 Dragging Y-flip bug | None | Low (remove double-flip) | ✅ Done |
+| 5 | #3 Config additions | None | Low | ✅ Done |
+| 6 | #5 Architecture reflection | None | Medium (analysis) | ✅ Done |
 
-All planned items from this historical plan have been completed. See [AGENTS.md](/AGENTS.md) for current project state and active development focus.
+**Rationale**: Fix the trivial visual bugs first (#2 ball size, #1 close button verify). Then tackle sonic mode (#4) since it's a single behavior file. Then the dragging investigation (#3) which requires systematic logging. Config additions are quick. Architecture reflection is independent and can be done anytime.
+
+---
+
+## Clarifying Questions (Answered)
+
+1. **Toys close button**: Toys should NOT have a close button. ✅ Fixed — skipped for `ItemData::TOY`.
+2. **Sonic mode**: Blue covers entire screen immediately on enabling. ✅ Fixed — `goose->pos` is device coords, removed `ToDevice()` double-scaling.
+3. **Dragging**: Nothing happens when clicking. ✅ Fixed — Y-flip was applied twice in hit-test.
+4. **Config for items**: Separate lifecycle for memes/texts (not toys). ✅ Done — `meme_lifetime`, `text_lifetime`, `max_dropped_memes`, `max_dropped_texts`.
+5. **Architecture reflection**: Documentation first, implementation later. ✅ Done — `docs/ARCHITECTURE_REFLECTION.md`.

@@ -39,7 +39,7 @@ TEST(BehaviorToggles, AllBehaviorTogglesDirectAccess) {
     EXPECT_FALSE(g_config.behaviors.fun.affirmations);
     EXPECT_FALSE(g_config.behaviors.fun.interactiveDrops);
     EXPECT_FALSE(g_config.behaviors.fun.sonicMode);
-    EXPECT_FALSE(g_config.behaviors.fun.toysEnabled);
+    EXPECT_TRUE(g_config.behaviors.fun.toysEnabled);
 
     g_config.behaviors.fun.ball = true;
     EXPECT_TRUE(g_config.behaviors.fun.ball);
@@ -53,9 +53,9 @@ TEST(BehaviorToggles, AllBehaviorTogglesDirectAccess) {
     EXPECT_TRUE(g_config.behaviors.fun.sonicMode);
     g_config.behaviors.fun.sonicMode = false;
 
-    g_config.behaviors.fun.toysEnabled = true;
-    EXPECT_TRUE(g_config.behaviors.fun.toysEnabled);
     g_config.behaviors.fun.toysEnabled = false;
+    EXPECT_FALSE(g_config.behaviors.fun.toysEnabled);
+    g_config.behaviors.fun.toysEnabled = true;
 }
 
 TEST(BehaviorToggles, AllRegisteredInRegistry) {
@@ -278,13 +278,13 @@ TEST(BehaviorToggles, SonicModeConfigToggle) {
 
 TEST(BehaviorToggles, ToysEnabledConfigToggle) {
     Config_Init();
-    EXPECT_FALSE(g_config.behaviors.fun.toysEnabled);
-
-    g_config.behaviors.fun.toysEnabled = true;
     EXPECT_TRUE(g_config.behaviors.fun.toysEnabled);
 
     g_config.behaviors.fun.toysEnabled = false;
     EXPECT_FALSE(g_config.behaviors.fun.toysEnabled);
+
+    g_config.behaviors.fun.toysEnabled = true;
+    EXPECT_TRUE(g_config.behaviors.fun.toysEnabled);
 }
 
 TEST(BehaviorToggles, SonicModeLoadFromToml) {

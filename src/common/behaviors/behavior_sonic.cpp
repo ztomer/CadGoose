@@ -24,8 +24,12 @@ static void init(BehaviorContext& ctx) {
 static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
     auto* state = BehaviorStateManager::Instance().GetOrCreate<SonicState>(goose->id, "sonic");
 
-    // Increase goose speed by 2.5x
-    goose->currentSpeed *= SONIC_SPEED_MULTIPLIER;
+    // Apply speed multiplier once per tick (not compounded)
+    // Store original speed before first multiplication, then scale from base
+    if (state->trails.empty() || state->lastTrailTime == 0) {
+        state->baseSpeed = goose->currentSpeed;
+    }
+    goose->currentSpeed = state->baseSpeed * SONIC_SPEED_MULTIPLIER;
 
     // Spawn trail circles behind goose
     if (time - state->lastTrailTime >= TRAIL_SPAWN_INTERVAL) {
@@ -60,10 +64,9 @@ static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
     for (const auto& trail : state->trails) {
         float age = (float)(ctx.time - trail.time);
         float alpha = std::max(0.0f, 1.0f - age / TRAIL_LIFETIME);
-        float radius = TRAIL_CIRCLE_RADIUS * alpha;
+        float radius = TRAIL_CIRCLE_RADIUS * ctx.globalScale * alpha;
 
-        Vector2 devPos = WorldCoord::ToDevice(trail.pos, *goose);
-        CGRect rect = CGRectMake(devPos.x - radius, devPos.y - radius, radius * 2.0f, radius * 2.0f);
+        CGRect rect = CGRectMake(trail.pos.x - radius, trail.pos.y - radius, radius * 2.0f, radius * 2.0f);
 
         CGContextSetRGBFillColor(cg, 0.2f, 0.5f, 1.0f, alpha * 0.6f);
         CGContextFillEllipseInRect(cg, rect);
@@ -72,9 +75,19 @@ static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
     CGContextRestoreGState(cg);
 }
 
-static Behavior g_sonicBehavior = BEHAVIOR_DEF(
+static void cleanup(BehaviorContext& ctx) {
+    auto* state = BehaviorStateManager::Instance().Get<SonicState>(ctx.goose->id, "sonic");
+    if (state) {
+        state->trails.clear();
+        state->baseSpeed = 0;
+        state->lastTrailTime = 0;
+        state->lastHonkTime = 0;
+    }
+}
+
+static Behavior g_sonicBehavior = BEHAVIOR_DEF_CUSTOM(
     "sonic", "Sonic Mode", "Goose moves at 2.5x speed with a blue trail effect and frequent honks",
-    g_config.behaviors.fun.sonicMode, init, tick, render
+    g_config.behaviors.fun.sonicMode, init, tick, render, cleanup, false, false
 );
 
 REGISTER_BEHAVIOR(g_sonicBehavior);

@@ -2552,6 +2552,30 @@ tests/common/test_config_toggles.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/tests/common/test_config_toggles.cpp.s
 .PHONY : tests/common/test_config_toggles.cpp.s
 
+tests/common/test_dropped_item_hit.o: tests/common/test_dropped_item_hit.cpp.o
+.PHONY : tests/common/test_dropped_item_hit.o
+
+# target to build an object file
+tests/common/test_dropped_item_hit.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/tests/common/test_dropped_item_hit.cpp.o
+.PHONY : tests/common/test_dropped_item_hit.cpp.o
+
+tests/common/test_dropped_item_hit.i: tests/common/test_dropped_item_hit.cpp.i
+.PHONY : tests/common/test_dropped_item_hit.i
+
+# target to preprocess a source file
+tests/common/test_dropped_item_hit.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/tests/common/test_dropped_item_hit.cpp.i
+.PHONY : tests/common/test_dropped_item_hit.cpp.i
+
+tests/common/test_dropped_item_hit.s: tests/common/test_dropped_item_hit.cpp.s
+.PHONY : tests/common/test_dropped_item_hit.s
+
+# target to generate assembly for a file
+tests/common/test_dropped_item_hit.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/tests/common/test_dropped_item_hit.cpp.s
+.PHONY : tests/common/test_dropped_item_hit.cpp.s
+
 tests/common/test_gui_config.o: tests/common/test_gui_config.mm.o
 .PHONY : tests/common/test_gui_config.o
 
@@ -2727,6 +2751,14 @@ tests/common/test_presence.s: tests/common/test_presence.cpp.s
 tests/common/test_presence.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/tests/common/test_presence.cpp.s
 .PHONY : tests/common/test_presence.cpp.s
+
+tests/platform/macos/test_dragging_integration.o: tests/platform/macos/test_dragging_integration.mm.o
+.PHONY : tests/platform/macos/test_dragging_integration.o
+
+# target to build an object file
+tests/platform/macos/test_dragging_integration.mm.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/tests/platform/macos/test_dragging_integration.mm.o
+.PHONY : tests/platform/macos/test_dragging_integration.mm.o
 
 tests/platform/macos/test_gui_accessibility.o: tests/platform/macos/test_gui_accessibility.mm.o
 .PHONY : tests/platform/macos/test_gui_accessibility.o
@@ -3139,6 +3171,9 @@ help:
 	@echo "... tests/common/test_config_toggles.o"
 	@echo "... tests/common/test_config_toggles.i"
 	@echo "... tests/common/test_config_toggles.s"
+	@echo "... tests/common/test_dropped_item_hit.o"
+	@echo "... tests/common/test_dropped_item_hit.i"
+	@echo "... tests/common/test_dropped_item_hit.s"
 	@echo "... tests/common/test_gui_config.o"
 	@echo "... tests/common/test_hotkey.o"
 	@echo "... tests/common/test_hotkey.i"
@@ -3161,6 +3196,7 @@ help:
 	@echo "... tests/common/test_presence.o"
 	@echo "... tests/common/test_presence.i"
 	@echo "... tests/common/test_presence.s"
+	@echo "... tests/platform/macos/test_dragging_integration.o"
 	@echo "... tests/platform/macos/test_gui_accessibility.o"
 	@echo "... tests/platform/macos/test_renderer.o"
 	@echo "... tests/test_goose_behavior.o"

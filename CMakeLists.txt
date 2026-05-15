@@ -227,6 +227,7 @@ if(APPLE OR LINUX)
         tests/common/test_config_get_set.cpp
         tests/common/test_config_load_save.cpp
         tests/common/test_config_toggles.cpp
+        tests/common/test_dropped_item_hit.cpp
         tests/common/test_gui_config.mm
         tests/common/test_ai_text_meme.cpp
         tests/common/test_local_llm.cpp
@@ -301,6 +302,7 @@ if(APPLE OR LINUX)
             tests/common/test_presence.cpp
             tests/platform/macos/test_renderer.mm
             tests/platform/macos/test_gui_accessibility.mm
+            tests/platform/macos/test_dragging_integration.mm
         )
     target_link_libraries(CadGooseTests
         toml11
@@ -308,6 +310,7 @@ if(APPLE OR LINUX)
         ${AVFOUNDATION_LIBRARY}
         ${COREGRAPHICS_LIBRARY}
         ${COREAUDIO_LIBRARY}
+        ${APPLICATIONSERVICES_LIBRARY}
         ${APPLICATIONSERVICES_LIBRARY}
         ${CURL_LIBRARY}
         ${COREML_LIBRARY}

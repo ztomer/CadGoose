@@ -134,6 +134,37 @@ ItemData* AssetManager::CreateTextItem(const std::string& text) {
     return item;
 }
 
+ItemData* AssetManager::CreateToyItem(bool isStick) {
+    ItemData* item = new ItemData();
+    item->type = ItemData::TOY;
+
+    int toyW = isStick ? 32 : 20;
+    int toyH = isStick ? 8 : 20;
+    item->w = toyW;
+    item->h = toyH;
+
+    GdkPixbuf* pb = gdk_pixbuf_new(GDK_COLORSPACE_RGB, TRUE, 8, toyW, toyH);
+    if (pb) {
+        guchar* pixels = gdk_pixbuf_get_pixels(pb);
+        int stride = gdk_pixbuf_get_rowstride(pb);
+        int channels = gdk_pixbuf_get_n_channels(pb);
+
+        for (int y = 0; y < toyH; y++) {
+            for (int x = 0; x < toyW; x++) {
+                guchar* p = pixels + y * stride + x * channels;
+                if (isStick) {
+                    p[0] = 140; p[1] = 90; p[2] = 38; p[3] = 255;
+                } else {
+                    p[0] = 204; p[1] = 51; p[2] = 51; p[3] = 255;
+                }
+            }
+        }
+        item->pixbuf = pb;
+    }
+
+    return item;
+}
+
 void AssetManager::Honk() { if(g_config.audioEnabled && !honks.empty()) Mix_PlayChannel(-1, honks[rand()%honks.size()], 0); }
 void AssetManager::Pat()  { if(g_config.audioEnabled && !pats.empty())  Mix_PlayChannel(-1, pats[rand()%pats.size()], 0); }
 

@@ -330,6 +330,14 @@ static void RegisterItem(std::vector<ConfigOption>& r) {
         &g_config.item.pickupCooldown, 0.0f, 10.0f, 0.1f, OnConfigChange));
     r.push_back(CONFIG_FLOAT("Item", "item_lifetime", "Item Lifetime",
         &g_config.item.itemLifetime, 0.0f, 3600.0f, 1.0f, OnConfigChange));
+    r.push_back(CONFIG_FLOAT("Item", "meme_lifetime", "Meme Lifetime",
+        &g_config.item.memeLifetime, 0.0f, 3600.0f, 1.0f, OnConfigChange));
+    r.push_back(CONFIG_FLOAT("Item", "text_lifetime", "Text Lifetime",
+        &g_config.item.textLifetime, 0.0f, 3600.0f, 1.0f, OnConfigChange));
+    r.push_back(CONFIG_INT("Item", "max_dropped_memes", "Max Dropped Memes",
+        &g_config.item.maxDroppedMemes, 0, 100, OnConfigChange));
+    r.push_back(CONFIG_INT("Item", "max_dropped_texts", "Max Dropped Texts",
+        &g_config.item.maxDroppedTexts, 0, 100, OnConfigChange));
     r.push_back(CONFIG_INT("Item", "meme_pickup_chance", "Meme Pickup Chance",
         &g_config.item.memePickupChance, 0, 100, OnConfigChange));
     r.push_back(CONFIG_INT("Item", "fetch_base_chance", "Fetch Base Chance",

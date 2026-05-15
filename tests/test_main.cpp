@@ -304,3 +304,10 @@ void AssetManager::Pat() {}
 void AssetManager::Bite() {}
 void AssetManager::MudSquish() {}
 CGImageRef AssetManager::GetBehaviorImage(const std::string&) { return nullptr; }
+ItemData* AssetManager::CreateToyItem(bool isStick) {
+    ItemData* i = new ItemData();
+    i->type = ItemData::TOY;
+    i->w = isStick ? 32 : 20;
+    i->h = isStick ? 8 : 20;
+    return i;
+}

@@ -14,7 +14,7 @@
 #include "config.h"
 
 struct ItemData {
-    enum Type { MEME, TEXT } type;
+    enum Type { MEME, TEXT, TOY } type;
 
 #ifdef __linux__
     GdkPixbuf* pixbuf = nullptr;

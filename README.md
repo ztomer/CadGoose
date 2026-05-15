@@ -126,53 +126,46 @@ The application supports multiple simultaneous geese, each with its own name and
 
 **Behaviors System**
 
-CadGoose includes a comprehensive behavior system inspired by Desktop Goose ResourceHub mods. Behaviors are organized into four categories:
+CadGoose includes a comprehensive behavior system with 21 toggleable behaviors organized into five categories. All behaviors use `BEHAVIOR_DEF*` macros that enforce `enabledPtr == configPtr`, preventing toggle-desync bugs.
 
 **Fun Behaviors:**
 
 - **Ball**: Push balls around the screen (soccer, beach, generic)
-- **BreadCrumbs**: Leave a trail of breadcrumbs
+- **Breadcrumbs**: Hold RightShift to drop crumbs at cursor (goose eats them on proximity)
 - **Hats**: Put hats on geese
 - **Rainbow**: Cycle through rainbow colors
 - **Acid**: Spin wildly with honks
+- **Anger**: Goose gets angry near cursor and punches
+- **Autumn Leaves**: Piles of leaves accumulate on screen
+
+**Joy Behaviors:**
+
+- **Avoidance**: Goose dodges fast-moving cursor
+- **Boredom Sigh**: Goose sighs dramatically after 10+ minutes idle
+- **Window Peeking**: Goose peeks head around monitor bezel at screen edges
+- **Custom Affirmations**: Goose drops configurable positive messages
+- **Interactive Drops**: Goose drops puddles that splash or flowers that grow
+- **Sonic Mode**: Goose moves at 2.5x speed with blue trail and frequent honks
+- **Toys**: Scatter interactive toys for the goose to chase
 
 **Control Behaviors:**
 
 - **Honcker**: Press F to make the goose honk
 - **Jail**: Press O to set position, P to trap
-- **Portals**: Hold P + 1/2 to place portals
+- **Portals**: Press 1/2 to place portals, 0 to toggle
 - **Drag**: Click and drag the goose
-- **Banish**: Ctrl+Alt+Middle Click to banish goose
 
 **Info Behaviors:**
 
 - **Nametag**: Shows goose name above head
-- **Debugoose**: Debug overlay with state info
-- **Presence**: Shows goose state in menu bar
-- **Config GUI**: Preferences window with Behaviors, Appearance, and AI tabs
-- **Clicker**: Random cursor clicks
-- **GooseManager**: Control goose tasks and speeds
 
 **Systems Behaviors:**
 
 - **Health**: Health bar system for geese
 - **AI**: Chat with the goose (requires API configuration)
-- **Pomodoro**: Work/rest timer mode
+- **Pomodoro**: Work/rest timer mode (work=rest with bed+ZZZ, break=manic)
 
-**Joy & Delight Behaviors** (Disabled by default in Preferences → Behaviors → JOY category):
-
-- **Petting**: Pet the goose with left mouse button for happy response
-- **Avoidance**: Goose avoids cursor when petted too much
-- **Nighttime**: Special behaviors between 10pm-6am (yawns, sleepy eyes)
-- **Weekend**: Extra playful behavior on Saturdays and Sundays
-- **Preening**: Goose cleans itself with happy sounds
-- **Boredom**: Goose looks for interaction when idle
-- **Peeking**: Goose peeks at user from screen edges
-- **Affirmations**: Goose gives encouraging messages
-- **Interactive Drops**: Goose responds to dropped items with thoughts
-- **AI Typing Sounds**: Audio feedback when AI is generating responses
-
-Enable behaviors via the Behaviors menu in the status bar.
+Enable/disable behaviors via Preferences → Behaviors tab. Each behavior has a detail panel with configurable parameters (size, speed, hotkeys, etc.).
 
 ---
 

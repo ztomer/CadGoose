@@ -30,47 +30,44 @@
         [subview removeFromSuperview];
     }
 
-    _titleLabel.stringValue = [NSString stringWithFormat:@"Settings for %@", [key lastPathComponent]];
-
-    float y = _contentView.bounds.size.height - 40;
-
-    if ([key isEqualToString:@"behaviors.fun.ball"]) {
+    if ([key isEqualToString:@"ball_enabled"]) {
         _titleLabel.stringValue = @"Ball Behavior";
+        float y = _contentView.bounds.size.height - 40;
         [self addSliderWithLabel:@"Ball Size" min:5.0f max:50.0f value:g_config.behaviors.ball.size atY:y key:@"behaviors.fun.ball.size"];
-        y -= 35;
-    } else if ([key isEqualToString:@"behaviors.fun.breadCrumbs"]) {
+    } else if ([key isEqualToString:@"breadcrumbs_enabled"]) {
         _titleLabel.stringValue = @"Breadcrumbs Behavior";
+        float y = _contentView.bounds.size.height - 40;
         [self addHotkeyFieldWithLabel:@"Trigger Key" value:@(g_config.behaviors.breadCrumbs.hotkey.c_str()) atY:y key:@"breadcrumbs_hotkey"];
         y -= 30;
         [self addSliderWithLabel:@"Max Crumbs" min:10.0f max:200.0f value:g_config.behaviors.breadCrumbs.maxCrumbs atY:y key:@"behaviors.fun.breadCrumbs.max"];
-        y -= 35;
-    } else if ([key isEqualToString:@"behaviors.fun.hats"]) {
+    } else if ([key isEqualToString:@"hats_enabled"]) {
         _titleLabel.stringValue = @"Hats Behavior";
+        float y = _contentView.bounds.size.height - 40;
         [self addSliderWithLabel:@"Hat Size" min:4.0f max:128.0f value:g_config.behaviors.hats.sizeX atY:y key:@"behaviors.fun.hats.size"];
-        y -= 35;
-    } else if ([key isEqualToString:@"behaviors.fun.rainbow"]) {
+    } else if ([key isEqualToString:@"rainbow_enabled"]) {
         _titleLabel.stringValue = @"Rainbow Behavior";
+        float y = _contentView.bounds.size.height - 40;
         [self addSliderWithLabel:@"Hue Speed" min:0.1f max:5.0f value:g_config.behaviors.rainbow.hueSpeed atY:y key:@"behaviors.fun.rainbow.speed"];
-        y -= 35;
-    } else if ([key isEqualToString:@"behaviors.fun.acid"]) {
+    } else if ([key isEqualToString:@"acid_enabled"]) {
         _titleLabel.stringValue = @"Acid Behavior";
+        float y = _contentView.bounds.size.height - 40;
         [self addSliderWithLabel:@"Spin Speed" min:0.1f max:5.0f value:g_config.behaviors.acid.spinSpeed atY:y key:@"behaviors.fun.acid.speed"];
-        y -= 35;
-    } else if ([key isEqualToString:@"behaviors.fun.anger"]) {
+    } else if ([key isEqualToString:@"anger_enabled"]) {
         _titleLabel.stringValue = @"Anger Behavior";
+        float y = _contentView.bounds.size.height - 40;
         [self addSliderWithLabel:@"Max Anger" min:0.0f max:200.0f value:g_config.behaviors.anger.maxAnger atY:y key:@"behaviors.fun.anger.max"];
-        y -= 35;
-    } else if ([key isEqualToString:@"behaviors.control.honcker"]) {
+    } else if ([key isEqualToString:@"honcker_enabled"]) {
         _titleLabel.stringValue = @"Honcker Behavior";
+        float y = _contentView.bounds.size.height - 40;
         NSString* k = @(g_config.behaviors.honcker.hotkey.c_str());
         [self addInstructionLabel:[NSString stringWithFormat:@"🦆 Press %@ to honk at cursor location", k] atY:y];
         y -= 25;
         [self addHotkeyFieldWithLabel:@"Honk Key" value:@(g_config.behaviors.honcker.hotkey.c_str()) atY:y key:@"hotkey"];
         y -= 30;
         [self addSliderWithLabel:@"Honk Cooldown" min:0.1f max:10.0f value:g_config.behaviors.honcker.cooldown atY:y key:@"behaviors.control.honcker.cooldown"];
-        y -= 35;
-    } else if ([key isEqualToString:@"behaviors.control.jail"]) {
+    } else if ([key isEqualToString:@"jail_enabled"]) {
         _titleLabel.stringValue = @"Jail Behavior";
+        float y = _contentView.bounds.size.height - 40;
         NSString* kO = @(g_config.behaviors.jail.hotkeyO.c_str());
         NSString* kP = @(g_config.behaviors.jail.hotkeyP.c_str());
         [self addInstructionLabel:[NSString stringWithFormat:@"🔒 %@ = set cursor as jail position\n   %@ = toggle jail on/off", kO, kP] atY:y];
@@ -80,9 +77,9 @@
         [self addHotkeyFieldWithLabel:@"Toggle Key" value:@(g_config.behaviors.jail.hotkeyP.c_str()) atY:y key:@"hotkeyP"];
         y -= 30;
         [self addSliderWithLabel:@"Jail Size" min:50.0f max:300.0f value:g_config.behaviors.jail.size atY:y key:@"behaviors.control.jail.size"];
-        y -= 35;
-    } else if ([key isEqualToString:@"behaviors.control.portals"]) {
+    } else if ([key isEqualToString:@"portals_enabled"]) {
         _titleLabel.stringValue = @"Portal Behavior";
+        float y = _contentView.bounds.size.height - 40;
         NSString* k1 = @(g_config.portal.hotkey1.c_str());
         NSString* k2 = @(g_config.portal.hotkey2.c_str());
         NSString* k0 = @(g_config.portal.hotkey0.c_str());
@@ -95,36 +92,38 @@
         [self addHotkeyFieldWithLabel:@"Toggle" value:@(g_config.portal.hotkey0.c_str()) atY:y key:@"hotkey0"];
         y -= 30;
         [self addSliderWithLabel:@"Portal Width" min:30.0f max:200.0f value:g_config.portal.width atY:y key:@"behaviors.control.portals.width"];
-        y -= 35;
-    } else if ([key isEqualToString:@"behaviors.control.drag"]) {
+    } else if ([key isEqualToString:@"drag_enabled"]) {
         _titleLabel.stringValue = @"Drag Behavior";
+        float y = _contentView.bounds.size.height - 40;
         [self addInstructionLabel:@"🖱️ Click and drag the goose" atY:y];
         y -= 25;
         [self addSliderWithLabel:@"Drag Radius" min:50.0f max:300.0f value:g_config.behaviors.drag.radius atY:y key:@"behaviors.control.drag.radius"];
-        y -= 35;
-    } else if ([key isEqualToString:@"behaviors.info.nametag"]) {
+    } else if ([key isEqualToString:@"nametag_enabled"]) {
         _titleLabel.stringValue = @"Nametag & Geese";
+        float y = _contentView.bounds.size.height - 40;
         [self addSliderWithLabel:@"Font Size" min:8.0f max:40.0f value:g_config.behaviors.nametag.size atY:y key:@"behaviors.info.nametag.size"];
         y -= 35;
-        y = [self addGeeseListAtY:y];
-    } else if ([key isEqualToString:@"behaviors.systems.health"]) {
+        [self addGeeseListAtY:y];
+    } else if ([key isEqualToString:@"health_enabled"]) {
         _titleLabel.stringValue = @"Health System";
+        float y = _contentView.bounds.size.height - 40;
         [self addSliderWithLabel:@"Opacity" min:0.2f max:1.0f value:g_config.behaviors.health.opacity atY:y key:@"behaviors.systems.health.opacity"];
-        y -= 35;
-    } else if ([key isEqualToString:@"behaviors.systems.pomodoro"]) {
+    } else if ([key isEqualToString:@"pomodoro_enabled"]) {
         _titleLabel.stringValue = @"Pomodoro Timer";
+        float y = _contentView.bounds.size.height - 40;
         [self addSliderWithLabel:@"Work (min)" min:1.0f max:60.0f value:g_config.behaviors.pomodoro.workMinutes atY:y key:@"behaviors.systems.pomodoro.workDuration"];
         y -= 35;
         [self addSliderWithLabel:@"Break (min)" min:1.0f max:30.0f value:g_config.behaviors.pomodoro.breakMinutes atY:y key:@"behaviors.systems.pomodoro.breakDuration"];
-        y -= 35;
     } else {
+        _titleLabel.stringValue = [BehaviorRowView iconForConfigKey:key] ? [NSString stringWithFormat:@"%@ Settings", [BehaviorRowView iconForConfigKey:key]] : @"Settings";
+        float y = _contentView.bounds.size.height - 40;
         NSTextField* desc = [[NSTextField alloc] initWithFrame:NSMakeRect(12, y, self.bounds.size.width - 24, 30)];
         desc.font = [NSFont systemFontOfSize:12];
         desc.textColor = [NSColor colorWithWhite:0.85 alpha:1.0];
         desc.backgroundColor = [NSColor clearColor];
         desc.bordered = NO;
         desc.editable = NO;
-        desc.stringValue = [NSString stringWithFormat:@"No settings for %@", [key lastPathComponent]];
+        desc.stringValue = @"No additional settings for this behavior.";
         [_contentView addSubview:desc];
     }
 }
