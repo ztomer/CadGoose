@@ -290,6 +290,7 @@ if(APPLE)
             tests/common/test_local_llm.cpp
             tests/common/test_behavior_ai.mm
             src/common/goose_drawing.mm
+            src/common/item_renderer.mm
             src/common/world_utils.mm
             src/common/behaviors/behavior_ai.mm
             src/common/behaviors/ai_http_client.mm

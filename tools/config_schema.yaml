@@ -1,0 +1,398 @@
+# CadGoose Config Schema
+# Single source of truth for config registry and GUI generation.
+# Run: python3 tools/generate_config.py config_schema.yaml
+#
+# Types: bool, int, float, string
+# Sections map to GUI tabs/categories.
+
+sections:
+  Debug:
+    fields:
+      - name: toTerminal
+        type: bool
+        key: to_terminal
+        label: "To Terminal"
+      - name: visuals
+        type: bool
+        key: visuals
+        label: "Visuals"
+
+  General:
+    fields:
+      - name: globalScale
+        type: float
+        key: global_scale
+        label: "Global Scale"
+        min: 0.0
+        max: 10.0
+        step: 0.1
+        explanation: "Multiplier for goose size and speeds (0.1 - 10.0)"
+      - name: audioEnabled
+        type: bool
+        key: audio_enabled
+        label: "Audio Enabled"
+        explanation: "Play honk sounds when goose moves"
+      - name: audioMuted
+        type: bool
+        key: audio_muted
+        label: "Audio Muted"
+      - name: memesEnabled
+        type: bool
+        key: memes_enabled
+        label: "Memes Enabled"
+        explanation: "Allow picking up images and text as items"
+      - name: appearanceMode
+        type: int
+        key: appearance_mode
+        label: "Appearance Mode"
+        min: 0
+        max: 3
+        explanation: "0=Light, 1=Dark, 2=System (follow macOS), 3=Custom"
+      - name: lightThemeRole
+        type: string
+        key: light_theme_role
+        label: "Light Theme Role"
+      - name: darkThemeRole
+        type: string
+        key: dark_theme_role
+        label: "Dark Theme Role"
+      - name: failsafeHotkey
+        type: string
+        key: failsafe_hotkey
+        label: "Failsafe Hotkey"
+
+  Screen:
+    fields:
+      - name: defaultWidth
+        type: int
+        key: default_width
+        label: "Default Width"
+        min: 0
+        max: 10000
+      - name: defaultHeight
+        type: int
+        key: default_height
+        label: "Default Height"
+        min: 0
+        max: 10000
+
+  Asset:
+    fields:
+      - name: memePlaceholderW
+        type: int
+        key: meme_placeholder_w
+        label: "Meme Placeholder W"
+        min: 0
+        max: 1000
+      - name: memePlaceholderH
+        type: int
+        key: meme_placeholder_h
+        label: "Meme Placeholder H"
+        min: 0
+        max: 1000
+      - name: textPlaceholderW
+        type: int
+        key: text_placeholder_w
+        label: "Text Placeholder W"
+        min: 0
+        max: 1000
+      - name: textPlaceholderH
+        type: int
+        key: text_placeholder_h
+        label: "Text Placeholder H"
+        min: 0
+        max: 1000
+      - name: notePlaceholderW
+        type: int
+        key: note_placeholder_w
+        label: "Note Placeholder W"
+        min: 0
+        max: 1000
+      - name: notePlaceholderH
+        type: int
+        key: note_placeholder_h
+        label: "Note Placeholder H"
+        min: 0
+        max: 1000
+
+  Cursor:
+    fields:
+      - name: chaseEnabled
+        type: bool
+        key: chase_enabled
+        label: "Chase Enabled"
+      - name: chaseChance
+        type: int
+        key: chase_chance
+        label: "Chase Chance"
+        min: 0
+        max: 100
+      - name: multiMonitorEnabled
+        type: bool
+        key: multi_monitor_enabled
+        label: "Multi Monitor Enabled"
+
+  Movement:
+    fields:
+      - name: baseWalkSpeed
+        type: float
+        key: base_walk_speed
+        label: "Base Walk Speed"
+        min: 0.0
+        max: 1000.0
+        step: 0.1
+      - name: baseRunSpeed
+        type: float
+        key: base_run_speed
+        label: "Base Run Speed"
+        min: 0.0
+        max: 1000.0
+        step: 0.1
+      - name: maxForce
+        type: float
+        key: max_force
+        label: "Max Force"
+        min: 0.0
+        max: 1000.0
+        step: 0.1
+      - name: moveDistanceThreshold
+        type: float
+        key: move_distance_threshold
+        label: "Move Distance Threshold"
+        min: 0.0
+        max: 1000.0
+        step: 0.1
+      - name: friction
+        type: float
+        key: friction
+        label: "Friction"
+        min: 0.0
+        max: 1000.0
+        step: 0.1
+      - name: maxSpeed
+        type: float
+        key: max_speed
+        label: "Max Speed"
+        min: 0.0
+        max: 1000.0
+        step: 0.1
+      - name: runSpeedMultiplier
+        type: float
+        key: run_speed_multiplier
+        label: "Run Speed Multiplier"
+        min: 0.0
+        max: 10.0
+        step: 0.1
+      - name: initDirectionMax
+        type: float
+        key: init_direction_max
+        label: "Init Direction Max"
+        min: 0.0
+        max: 360.0
+        step: 1.0
+      - name: speedLerpRate
+        type: float
+        key: speed_lerp_rate
+        label: "Speed Lerp Rate"
+        min: 0.0
+        max: 1.0
+        step: 0.01
+      - name: arrivalRadius
+        type: float
+        key: arrival_radius
+        label: "Arrival Radius"
+        min: 0.0
+        max: 1000.0
+        step: 1.0
+      - name: runDistanceThreshold
+        type: float
+        key: run_distance_threshold
+        label: "Run Distance Threshold"
+        min: 0.0
+        max: 2000.0
+        step: 1.0
+      - name: directionBlendRate
+        type: float
+        key: direction_blend_rate
+        label: "Direction Blend Rate"
+        min: 0.0
+        max: 1.0
+        step: 0.01
+
+  Physics:
+    fields:
+      - name: screenMargin
+        type: float
+        key: screen_margin
+        label: "Screen Margin"
+        min: 0.0
+        max: 500.0
+        step: 1.0
+      - name: bounceFactorWall
+        type: float
+        key: bounce_factor_wall
+        label: "Bounce Factor Wall"
+        min: 0.0
+        max: 2.0
+        step: 0.1
+      - name: bounceFactorCorner
+        type: float
+        key: bounce_factor_corner
+        label: "Bounce Factor Corner"
+        min: 0.0
+        max: 2.0
+        step: 0.1
+      - name: cornerMargin
+        type: float
+        key: corner_margin
+        label: "Corner Margin"
+        min: 0.0
+        max: 500.0
+        step: 1.0
+      - name: dragMinDt
+        type: float
+        key: drag_min_dt
+        label: "Drag Min Dt"
+        min: 0.0
+        max: 1.0
+        step: 0.01
+      - name: dragVelocityThreshold
+        type: float
+        key: drag_velocity_threshold
+        label: "Drag Velocity Threshold"
+        min: 0.0
+        max: 1000.0
+        step: 1.0
+      - name: dragRotationSpeed
+        type: float
+        key: drag_rotation_speed
+        label: "Drag Rotation Speed"
+        min: 0.0
+        max: 10.0
+        step: 0.1
+      - name: isoScaleX
+        type: float
+        key: iso_scale_x
+        label: "Iso Scale X"
+        min: 0.1
+        max: 2.0
+        step: 0.01
+      - name: isoScaleY
+        type: float
+        key: iso_scale_y
+        label: "Iso Scale Y"
+        min: 0.1
+        max: 2.0
+        step: 0.01
+      - name: edgeAvoidMargin
+        type: float
+        key: edge_avoid_margin
+        label: "Edge Avoid Margin"
+        min: 0.0
+        max: 200.0
+        step: 1.0
+      - name: edgeLookAheadSpeed
+        type: float
+        key: edge_look_ahead_speed
+        label: "Edge Look Ahead Speed"
+        min: 0.0
+        max: 1.0
+        step: 0.01
+      - name: edgeLookAheadBase
+        type: float
+        key: edge_look_ahead_base
+        label: "Edge Look Ahead Base"
+        min: 0.0
+        max: 200.0
+        step: 1.0
+      - name: edgeAvoidForce
+        type: float
+        key: edge_avoid_force
+        label: "Edge Avoid Force"
+        min: 0.0
+        max: 10.0
+        step: 0.1
+      - name: screenClampTight
+        type: float
+        key: screen_clamp_tight
+        label: "Screen Clamp Tight"
+        min: 0.0
+        max: 200.0
+        step: 1.0
+      - name: screenClampExpanded
+        type: float
+        key: screen_clamp_expanded
+        label: "Screen Clamp Expanded"
+        min: 0.0
+        max: 200.0
+        step: 1.0
+      - name: screenClampBounce
+        type: float
+        key: screen_clamp_bounce
+        label: "Screen Clamp Bounce"
+        min: 0.0
+        max: 200.0
+        step: 1.0
+      - name: steerSeekForce
+        type: float
+        key: steer_seek_force
+        label: "Steer Seek Force"
+        min: 0.0
+        max: 20.0
+        step: 0.1
+      - name: curveFadeDistance
+        type: float
+        key: curve_fade_distance
+        label: "Curve Fade Distance"
+        min: 0.0
+        max: 1000.0
+        step: 1.0
+      - name: curveTangentForce
+        type: float
+        key: curve_tangent_force
+        label: "Curve Tangent Force"
+        min: 0.0
+        max: 5.0
+        step: 0.1
+      - name: curveFadeMinVel
+        type: float
+        key: curve_fade_min_vel
+        label: "Curve Fade Min Vel"
+        min: 0.0
+        max: 100.0
+        step: 1.0
+      - name: directionRotateMinVel
+        type: float
+        key: direction_rotate_min_vel
+        label: "Direction Rotate Min Vel"
+        min: 0.0
+        max: 100.0
+        step: 1.0
+      - name: directionToCursorDist
+        type: float
+        key: direction_to_cursor_dist
+        label: "Direction To Cursor Dist"
+        min: 0.0
+        max: 10.0
+        step: 0.1
+      - name: snapDistance
+        type: float
+        key: snap_distance
+        label: "Snap Distance"
+        min: 0.0
+        max: 10.0
+        step: 0.1
+      - name: directionReverseMultiplier
+        type: float
+        key: direction_reverse_multiplier
+        label: "Direction Reverse Multiplier"
+        min: -1.0
+        max: 1.0
+        step: 0.1
+      - name: minValidScale
+        type: float
+        key: min_valid_scale
+        label: "Min Valid Scale"
+        min: 0.0
+        max: 1.0
+        step: 0.01

@@ -16,6 +16,7 @@
 #include "goose_math.h"
 
 struct Goose;
+class IRenderer;
 
 struct BehaviorContext {
     Goose* goose = nullptr;
@@ -23,6 +24,7 @@ struct BehaviorContext {
     float globalScale = 1.0f;
     bool isJailed = false;
     void* stats = nullptr;
+    IRenderer* renderer = nullptr; // Platform-agnostic rendering interface
 };
 
 struct BehaviorStats {

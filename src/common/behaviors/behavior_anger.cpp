@@ -3,6 +3,8 @@
 #include "config.h"
 #include "world.h"
 #include "cursor_io.h"
+#include "renderer_interface.h"
+#include "cg_renderer.h"
 #include <cmath>
 
 
@@ -56,6 +58,8 @@ static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
     CGContextRef cg = (CGContextRef)renderCtx;
     if (!cg) return;
 
+    CGRenderer renderer(cg);
+
     auto* state = BehaviorStateManager::Instance().GetOrCreate<AngerState>(goose->id, "anger");
     if (state->angerLevel < 10.0f) return;
 
@@ -65,18 +69,14 @@ static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
     if (punching) {
         float flashAlpha = 0.4f + 0.3f * sin(ctx.time * 60.0f);
         float flashRadius = 40.0f + 20.0f * intensity;
-        CGContextSetRGBFillColor(cg, 1.0f, 0.3f, 0.0f, flashAlpha);
-        CGContextFillEllipseInRect(cg, CGRectMake(
-            goose->pos.x - flashRadius, goose->pos.y - flashRadius,
-            flashRadius * 2, flashRadius * 2));
+        renderer.DrawEllipse({goose->pos.x, goose->pos.y}, flashRadius, flashRadius,
+                            RenderColor{1.0f, 0.3f, 0.0f, flashAlpha});
     }
 
     float auraAlpha = intensity * 0.3f;
     float auraRadius = 15.0f + intensity * 20.0f;
-    CGContextSetRGBFillColor(cg, 1.0f, 0.1f, 0.0f, auraAlpha);
-    CGContextFillEllipseInRect(cg, CGRectMake(
-        goose->pos.x - auraRadius, goose->pos.y - auraRadius,
-        auraRadius * 2, auraRadius * 2));
+    renderer.DrawEllipse({goose->pos.x, goose->pos.y}, auraRadius, auraRadius,
+                        RenderColor{1.0f, 0.1f, 0.0f, auraAlpha});
 #endif
 }
 

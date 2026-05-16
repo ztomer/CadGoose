@@ -1619,6 +1619,15 @@ src/common/hotkey.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/src/common/hotkey.cpp.s
 .PHONY : src/common/hotkey.cpp.s
 
+src/common/item_renderer.o: src/common/item_renderer.mm.o
+.PHONY : src/common/item_renderer.o
+
+# target to build an object file
+src/common/item_renderer.mm.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/common/item_renderer.mm.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/src/common/item_renderer.mm.o
+.PHONY : src/common/item_renderer.mm.o
+
 src/common/items.o: src/common/items.cpp.o
 .PHONY : src/common/items.o
 
@@ -2774,6 +2783,14 @@ tests/platform/macos/test_gui_accessibility.mm.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/tests/platform/macos/test_gui_accessibility.mm.o
 .PHONY : tests/platform/macos/test_gui_accessibility.mm.o
 
+tests/platform/macos/test_headless_rendering.o: tests/platform/macos/test_headless_rendering.mm.o
+.PHONY : tests/platform/macos/test_headless_rendering.o
+
+# target to build an object file
+tests/platform/macos/test_headless_rendering.mm.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/tests/platform/macos/test_headless_rendering.mm.o
+.PHONY : tests/platform/macos/test_headless_rendering.mm.o
+
 tests/platform/macos/test_renderer.o: tests/platform/macos/test_renderer.mm.o
 .PHONY : tests/platform/macos/test_renderer.o
 
@@ -3064,6 +3081,7 @@ help:
 	@echo "... src/common/hotkey.o"
 	@echo "... src/common/hotkey.i"
 	@echo "... src/common/hotkey.s"
+	@echo "... src/common/item_renderer.o"
 	@echo "... src/common/items.o"
 	@echo "... src/common/items.i"
 	@echo "... src/common/items.s"
@@ -3205,6 +3223,7 @@ help:
 	@echo "... tests/common/test_timer.s"
 	@echo "... tests/platform/macos/test_dragging_integration.o"
 	@echo "... tests/platform/macos/test_gui_accessibility.o"
+	@echo "... tests/platform/macos/test_headless_rendering.o"
 	@echo "... tests/platform/macos/test_renderer.o"
 	@echo "... tests/test_goose_behavior.o"
 	@echo "... tests/test_goose_behavior.i"
