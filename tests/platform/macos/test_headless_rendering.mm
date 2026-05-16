@@ -265,17 +265,18 @@ static ItemData* CreateTestItem(int w, int h, ItemData::Type type) {
 
 TEST(HeadlessRendering, DragController_HitAndDrag) {
     g_droppedItems.clear();
+    g_config.general.globalScale = 1.0f;
     ItemData* data = CreateTestItem(100, 80, ItemData::MEME);
     DroppedItem item;
     item.data = data;
-    item.pos = {500, 400};
+    item.pos = {450, 360};  // top-left corner (center will be at 500, 400)
     item.rotation = 0;
     item.pinned = false;
     g_droppedItems.push_back(item);
 
     ItemDragController controller;
 
-    // Hit center
+    // Hit center (500, 400)
     DevicePoint mouseDown{500, 400};
     EXPECT_TRUE(controller.OnMouseDown(mouseDown));
     EXPECT_NE(controller.GetDraggedItem(), nullptr);
@@ -284,8 +285,8 @@ TEST(HeadlessRendering, DragController_HitAndDrag) {
     // Drag to new position
     DevicePoint mouseDrag{600, 500};
     controller.OnMouseDragged(mouseDrag);
-    EXPECT_FLOAT_EQ(controller.GetDraggedItem()->pos.x, 600);
-    EXPECT_FLOAT_EQ(controller.GetDraggedItem()->pos.y, 500);
+    EXPECT_FLOAT_EQ(controller.GetDraggedItem()->pos.x, 550);  // 600 + (450-500)
+    EXPECT_FLOAT_EQ(controller.GetDraggedItem()->pos.y, 460);  // 500 + (360-400)
 
     // Release
     controller.OnMouseUp();
@@ -297,10 +298,11 @@ TEST(HeadlessRendering, DragController_HitAndDrag) {
 
 TEST(HeadlessRendering, DragController_Miss) {
     g_droppedItems.clear();
+    g_config.general.globalScale = 1.0f;
     ItemData* data = CreateTestItem(100, 80, ItemData::MEME);
     DroppedItem item;
     item.data = data;
-    item.pos = {500, 400};
+    item.pos = {450, 360};  // top-left (center at 500, 400)
     item.rotation = 0;
     item.pinned = false;
     g_droppedItems.push_back(item);
@@ -318,17 +320,18 @@ TEST(HeadlessRendering, DragController_Miss) {
 
 TEST(HeadlessRendering, DragController_CloseButtonDeletes) {
     g_droppedItems.clear();
+    g_config.general.globalScale = 1.0f;
     ItemData* data = CreateTestItem(100, 80, ItemData::MEME);
     DroppedItem item;
     item.data = data;
-    item.pos = {500, 400};
+    item.pos = {450, 360};  // top-left (center at 500, 400)
     item.rotation = 0;
     item.pinned = false;
     g_droppedItems.push_back(item);
 
     ItemDragController controller;
 
-    // Click on close button (top-left corner)
+    // Click on close button (top-left corner of item, near 450, 360)
     DevicePoint mouseDown{455, 365};
     EXPECT_TRUE(controller.OnMouseDown(mouseDown));
     EXPECT_EQ(controller.GetDraggedItem(), nullptr); // Item deleted, no drag
@@ -339,10 +342,11 @@ TEST(HeadlessRendering, DragController_CloseButtonDeletes) {
 
 TEST(HeadlessRendering, DragController_ToyNoCloseButton) {
     g_droppedItems.clear();
+    g_config.general.globalScale = 1.0f;
     ItemData* data = CreateTestItem(100, 80, ItemData::TOY);
     DroppedItem item;
     item.data = data;
-    item.pos = {500, 400};
+    item.pos = {450, 360};  // top-left (center at 500, 400)
     item.rotation = 0;
     item.pinned = false;
     g_droppedItems.push_back(item);
@@ -362,27 +366,30 @@ TEST(HeadlessRendering, DragController_ToyNoCloseButton) {
 
 TEST(HeadlessRendering, DragController_DragOffsetPreserved) {
     g_droppedItems.clear();
+    g_config.general.globalScale = 1.0f;
     ItemData* data = CreateTestItem(100, 80, ItemData::MEME);
     DroppedItem item;
     item.data = data;
-    item.pos = {500, 400};
+    item.pos = {450, 360};  // top-left (center at 500, 400)
     item.rotation = 0;
     item.pinned = false;
     g_droppedItems.push_back(item);
 
     ItemDragController controller;
 
-    // Click off-center
-    DevicePoint mouseDown{480, 380};
-    controller.OnMouseDown(mouseDown);
+    // Click off-center (bottom-right area, away from close button)
+    DevicePoint mouseDown{540, 430};
+    bool hit = controller.OnMouseDown(mouseDown);
+    EXPECT_TRUE(hit);
+    ASSERT_NE(controller.GetDraggedItem(), nullptr);
 
     // Drag — offset should be preserved
-    DevicePoint mouseDrag{580, 480};
+    DevicePoint mouseDrag{640, 530};
     controller.OnMouseDragged(mouseDrag);
 
     // Item moved by the same delta as the cursor
-    EXPECT_FLOAT_EQ(controller.GetDraggedItem()->pos.x, 600); // 580 + (500-480)
-    EXPECT_FLOAT_EQ(controller.GetDraggedItem()->pos.y, 500); // 480 + (400-380)
+    EXPECT_FLOAT_EQ(controller.GetDraggedItem()->pos.x, 550);  // 640 + (450-540)
+    EXPECT_FLOAT_EQ(controller.GetDraggedItem()->pos.y, 460);  // 530 + (360-430)
 
     controller.OnMouseUp();
     delete data;
@@ -391,12 +398,13 @@ TEST(HeadlessRendering, DragController_DragOffsetPreserved) {
 
 TEST(HeadlessRendering, DragController_MultipleItems_TopmostWins) {
     g_droppedItems.clear();
+    g_config.general.globalScale = 1.0f;
 
     // Bottom item (larger)
     ItemData* data1 = CreateTestItem(100, 80, ItemData::MEME);
     DroppedItem item1;
     item1.data = data1;
-    item1.pos = {500, 400};
+    item1.pos = {450, 360};  // top-left (center at 500, 400)
     item1.rotation = 0;
     item1.pinned = false;
     g_droppedItems.push_back(item1);
@@ -405,14 +413,14 @@ TEST(HeadlessRendering, DragController_MultipleItems_TopmostWins) {
     ItemData* data2 = CreateTestItem(60, 60, ItemData::TEXT);
     DroppedItem item2;
     item2.data = data2;
-    item2.pos = {500, 400};
+    item2.pos = {470, 370};  // top-left (center at 500, 400)
     item2.rotation = 0;
     item2.pinned = false;
     g_droppedItems.push_back(item2);
 
     ItemDragController controller;
 
-    // Click center — should hit top item (smaller one)
+    // Click center (500, 400) — should hit top item (smaller one)
     DevicePoint mouseDown{500, 400};
     controller.OnMouseDown(mouseDown);
 

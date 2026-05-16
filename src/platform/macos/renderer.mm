@@ -109,34 +109,46 @@ static BOOL s_hasPrimary = NO;
             [NSEvent addLocalMonitorForEventsMatchingMask:NSEventMaskLeftMouseDown handler:^NSEvent*(NSEvent* event) {
                 GooseView* view = weakView;
                 if (!view || !view.window) return event;
-                // SCREEN coords (top-left origin, Y-down)
+
                 NSPoint screenPt = [NSEvent mouseLocation];
-                NSRect frame = view.window.frame;
-                // WINDOW coords (relative to window origin)
-                NSPoint windowPt = NSMakePoint(screenPt.x - frame.origin.x, screenPt.y - frame.origin.y);
-                // VIEW coords (isFlipped=YES, so top-left origin, Y-down)
-                NSPoint viewPt = [view convertPoint:windowPt fromView:nil];
-                // DEVICE coords (viewY is Y after flip, same as device Y)
-                float viewY = view.bounds.size.height - viewPt.y;
-                [view mouseDownAtPoint:viewPt viewY:viewY];
+                for (NSWindow* window in [NSApp windows]) {
+                    if (![window isKindOfClass:[GooseWindow class]]) continue;
+                    if (!window.isVisible) continue;
+
+                    NSRect windowFrame = [window frame];
+                    NSPoint windowPt = NSMakePoint(screenPt.x - windowFrame.origin.x, screenPt.y - windowFrame.origin.y);
+                    if (!NSPointInRect(windowPt, NSMakeRect(0, 0, windowFrame.size.width, windowFrame.size.height))) continue;
+
+                    GooseView* gooseView = (GooseView*)window.contentView;
+                    if (!gooseView) continue;
+                    NSPoint viewPt = [gooseView convertPoint:windowPt fromView:nil];
+
+                    DevicePoint mousePt = {(float)viewPt.x, (float)viewPt.y};
+                    if (gooseView.dragController->OnMouseDown(mousePt)) {
+                        [gooseView mouseDownAtPoint:viewPt viewY:viewPt.y];
+                        return nil;
+                    }
+                }
                 return event;
             }];
             [NSEvent addLocalMonitorForEventsMatchingMask:NSEventMaskLeftMouseDragged handler:^NSEvent*(NSEvent* event) {
                 GooseView* view = weakView;
                 if (!view || !view.window) return event;
-                // SCREEN → WINDOW → VIEW → DEVICE (same transform as mouseDown)
-                NSPoint screenPt = [NSEvent mouseLocation];
-                NSRect frame = view.window.frame;
-                NSPoint windowPt = NSMakePoint(screenPt.x - frame.origin.x, screenPt.y - frame.origin.y);
-                NSPoint viewPt = [view convertPoint:windowPt fromView:nil];
-                float viewY = view.bounds.size.height - viewPt.y;
-                [view mouseDraggedAtPoint:viewPt viewY:viewY];
+                if (view.dragController->GetDraggedItem()) {
+                    NSPoint screenPt = [NSEvent mouseLocation];
+                    NSRect frame = view.window.frame;
+                    NSPoint windowPt = NSMakePoint(screenPt.x - frame.origin.x, screenPt.y - frame.origin.y);
+                    NSPoint viewPt = [view convertPoint:windowPt fromView:nil];
+                    [view mouseDraggedAtPoint:viewPt viewY:viewPt.y];
+                    [view setNeedsDisplay:YES];
+                    return nil;
+                }
                 return event;
             }];
             [NSEvent addLocalMonitorForEventsMatchingMask:NSEventMaskLeftMouseUp handler:^NSEvent*(NSEvent* event) {
                 GooseView* view = weakView;
                 if (!view) return event;
-                [view mouseUpAtPoint:NSZeroPoint];
+                view.dragController->OnMouseUp();
                 return event;
             }];
             DEBUG_LOG("  event monitors installed");
@@ -264,10 +276,12 @@ static BOOL s_hasPrimary = NO;
                             g_geese.empty() ? nullptr : &g_geese.front());
     }
 
-    bool shouldAcceptMouse = (self.dragController->GetDraggedItem() != nullptr);
-
-    if (self.window.ignoresMouseEvents != !shouldAcceptMouse) {
-        self.window.ignoresMouseEvents = !shouldAcceptMouse;
+    // Window stays click-through (ignoresMouseEvents=YES) so it doesn't block
+    // other apps. Item dragging is handled by local event monitors installed
+    // in initWithFrame: which fire at the application level regardless of
+    // window mouse settings.
+    if (!self.window.ignoresMouseEvents) {
+        self.window.ignoresMouseEvents = YES;
     }
 
     [self setNeedsDisplay:YES];

@@ -45,6 +45,8 @@ public:
     virtual void DrawLine(RenderPoint a, RenderPoint b, RenderColor color, float lineWidth) = 0;
     virtual void DrawRect(RenderRect rect, RenderColor fill) = 0;
     virtual void DrawRectOutline(RenderRect rect, RenderColor stroke, float lineWidth) = 0;
+    virtual void DrawRoundedRect(RenderRect rect, float cornerRadius, RenderColor fill) = 0;
+    virtual void DrawPolygon(const RenderPoint* points, int count, RenderColor fill) = 0;
 
     // Image drawing (platform-specific image handle)
     virtual void DrawImage(void* image, RenderRect destRect) = 0;

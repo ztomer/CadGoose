@@ -393,23 +393,36 @@ static const BuiltinProfile* MatchProfile(const char* modelName) {
     if (g_config.ai.providerType == 0) {
         LocalLLM_Init();
         LocalLLMState state = LocalLLM_GetState();
-        switch (state) {
-            case LocalLLMState::Ready:
-                self.connected = YES;
-                if (completion) completion(YES, @"Local LLM ready");
-                break;
-            case LocalLLMState::Loading:
-                self.connected = NO;
-                if (completion) completion(NO, @"Local LLM still loading");
-                break;
-            case LocalLLMState::Error:
-                self.connected = NO;
-                if (completion) completion(NO, @"Local LLM error");
-                break;
-            case LocalLLMState::Unavailable:
-                self.connected = NO;
-                if (completion) completion(NO, @"No local model found");
-                break;
+        if (state == LocalLLMState::Ready) {
+            self.connected = YES;
+            if (completion) completion(YES, @"Local LLM ready");
+        } else if (state == LocalLLMState::Loading) {
+            // Poll for ready state with retries
+            AIHTTPClient* __weak weakSelf = self;
+            __block int attempts = 0;
+            void (^checkAgain)(void) = ^{
+                LocalLLMState s = LocalLLM_GetState();
+                if (s == LocalLLMState::Ready) {
+                    weakSelf.connected = YES;
+                    if (completion) completion(YES, @"Local LLM ready");
+                } else if (s == LocalLLMState::Loading && attempts < 10) {
+                    attempts++;
+                    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), checkAgain);
+                } else if (s == LocalLLMState::Error) {
+                    weakSelf.connected = NO;
+                    if (completion) completion(NO, @"Local LLM error");
+                } else {
+                    weakSelf.connected = NO;
+                    if (completion) completion(NO, @"No local model found");
+                }
+            };
+            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), checkAgain);
+        } else if (state == LocalLLMState::Error) {
+            self.connected = NO;
+            if (completion) completion(NO, @"Local LLM error");
+        } else {
+            self.connected = NO;
+            if (completion) completion(NO, @"No local model found");
         }
         return;
     }
@@ -429,7 +442,7 @@ static const BuiltinProfile* MatchProfile(const char* modelName) {
     }
 
     NSMutableURLRequest* request = [NSMutableURLRequest requestWithURL:url];
-    request.timeoutInterval = 5;
+    request.timeoutInterval = 30;
 
     fprintf(stderr, "[AI] Health check: GET %s\n", endpoint.UTF8String);
     NSURLSession* session = [NSURLSession sharedSession];

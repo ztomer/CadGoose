@@ -10,8 +10,9 @@
 #include "world.h"
 #include "assets.h"
 #include "hotkey.h"
+#include "renderer_interface.h"
+#include "cg_renderer.h"
 #include <ApplicationServices/ApplicationServices.h>
-#include <CoreGraphics/CoreGraphics.h>
 
 static bool s_wasPressed = false;
 static CGImageRef s_honkImage = nullptr;
@@ -49,8 +50,11 @@ static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
     auto* state = BehaviorStateManager::Instance().Get<HonckerState>(goose->id, "honcker");
     if (!state || !state->visible) return;
 
+#ifdef __APPLE__
     CGContextRef cg = (CGContextRef)renderCtx;
     if (!cg) return;
+
+    CGRenderer renderer(cg);
 
     Vector2 headPos = goose->rig.neckHead;
     float size = g_config.behaviors.honcker.size;
@@ -62,12 +66,12 @@ static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
         float drawW = imgW * scale;
         float drawH = imgH * scale;
         float yOffset = 20.0f;
-        CGRect rect = CGRectMake(headPos.x - drawW/2, headPos.y - drawH - yOffset, drawW, drawH);
-        CGContextDrawImage(cg, rect, s_honkImage);
+        renderer.DrawImage(s_honkImage, RenderRect{headPos.x - drawW/2, headPos.y - drawH - yOffset, drawW, drawH});
     } else {
-        CGContextSetRGBFillColor(cg, 1.0f, 0.8f, 0.0f, 0.8f);
-        CGContextFillEllipseInRect(cg, CGRectMake(headPos.x - 15, headPos.y - 35, 30, 30));
+        renderer.DrawEllipse({headPos.x, headPos.y - 20.0f}, 15.0f, 15.0f,
+                            RenderColor{1.0f, 0.8f, 0.0f, 0.8f});
     }
+#endif
 }
 
 static Behavior g_honckerBehavior = BEHAVIOR_DEF_STARTER(

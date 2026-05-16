@@ -3,10 +3,11 @@
 #include "config.h"
 #include "world.h"
 #include "goose_math.h"
+#include "renderer_interface.h"
+#include "cg_renderer.h"
 #include <CoreGraphics/CoreGraphics.h>
 #include <ctime>
 #include <cmath>
-
 
 static void init(BehaviorContext& ctx) {
     auto* state = BehaviorStateManager::Instance().GetOrCreate<InteractiveDropsState>(ctx.goose->id, "interactive_drops");
@@ -58,7 +59,8 @@ static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
     CGContextRef cg = (CGContextRef)renderCtx;
     if (!cg) return;
 
-    CGContextSaveGState(cg);
+    CGRenderer renderer(cg);
+    renderer.SaveState();
 
     float scale = ctx.globalScale;
 
@@ -66,27 +68,25 @@ static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
         if (f.growth <= 0.01f) continue;
         Vector2 drawPos{goose->pos.x + (f.pos.x - goose->pos.x) / scale,
                         goose->pos.y + (f.pos.y - goose->pos.y) / scale};
-        CGContextSetRGBStrokeColor(cg, 0.2f, 0.6f, 0.2f, 0.8f);
-        CGContextSetLineWidth(cg, 2.0f);
-        CGContextMoveToPoint(cg, drawPos.x, drawPos.y);
-        CGContextAddLineToPoint(cg, drawPos.x, drawPos.y - f.stemHeight);
-        CGContextStrokePath(cg);
+
+        renderer.DrawLine({drawPos.x, drawPos.y}, {drawPos.x, drawPos.y - f.stemHeight},
+                         RenderColor{0.2f, 0.6f, 0.2f, 0.8f}, 2.0f);
 
         float h = f.hue;
         float r, g, b;
         HSV_to_RGB(h, 1.0f, 0.8f, &r, &g, &b);
-        CGContextSetRGBFillColor(cg, r, g, b, 0.8f);
+        RenderColor petalColor{r, g, b, 0.8f};
         for (int i = 0; i < 5; i++) {
             float angle = i * 72.0f * (M_PI / 180.0f);
             float px = drawPos.x + std::cos(angle) * f.petalSize;
             float py = drawPos.y - f.stemHeight + std::sin(angle) * f.petalSize * 0.5f;
-            CGContextFillEllipseInRect(cg, CGRectMake(px - f.petalSize * 0.5f, py - f.petalSize * 0.3f, f.petalSize, f.petalSize * 0.6f));
+            renderer.DrawEllipse({px, py}, f.petalSize * 0.5f, f.petalSize * 0.3f, petalColor);
         }
-        CGContextSetRGBFillColor(cg, 1.0f, 0.9f, 0.3f, 0.9f);
-        CGContextFillEllipseInRect(cg, CGRectMake(drawPos.x - 2.0f, drawPos.y - f.stemHeight - 2.0f, 4.0f, 4.0f));
+        renderer.DrawEllipse({drawPos.x, drawPos.y - f.stemHeight}, 2.0f, 2.0f,
+                            RenderColor{1.0f, 0.9f, 0.3f, 0.9f});
     }
 
-    CGContextRestoreGState(cg);
+    renderer.RestoreState();
 #endif
 }
 

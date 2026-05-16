@@ -1,24 +1,23 @@
 #include "item_drag_controller.h"
 #include "config.h"
+#include "coordinate_system.h"
 
 bool ItemDragController::OnMouseDown(DevicePoint mousePt) {
     for (auto it = g_droppedItems.rbegin(); it != g_droppedItems.rend(); ++it) {
         DroppedItem& item = *it;
-        DevicePoint itemPos = {item.pos.x, item.pos.y};
+        DevicePoint itemCenter = ItemCoords::Center({item.pos.x, item.pos.y}, item.data->w, item.data->h, g_config.general.globalScale);
 
-        if (HitTest::PointInItem(mousePt, itemPos, item.data->w, item.data->h, item.rotation, g_config.general.globalScale)) {
-            // Check close button (top-left corner, only for non-toys)
+        if (HitTest::PointInItem(mousePt, itemCenter, item.data->w, item.data->h, item.rotation, g_config.general.globalScale)) {
             if (item.data->type != ItemData::TOY) {
-                if (HitTest::PointInCloseButton(mousePt, itemPos, item.data->w, item.data->h,
+                if (HitTest::PointInCloseButton(mousePt, itemCenter, item.data->w, item.data->h,
                                                 item.rotation, g_config.render.closeButtonSize, g_config.general.globalScale)) {
                     delete item.data;
                     auto forward_it = std::prev(it.base());
                     g_droppedItems.erase(forward_it);
-                    return true; // Item deleted, no drag
+                    return true;
                 }
             }
 
-            // Start drag — compute offset in DEVICE coords
             m_draggedItem = &item;
             m_draggedItem->pinned = true;
             m_dragOffset = {item.pos.x - mousePt.x, item.pos.y - mousePt.y};

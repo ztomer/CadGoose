@@ -148,12 +148,15 @@ static void SendGenerateRequest(const std::string& prompt, float temperature) {
     }
 
     NSURL* url = [NSURL URLWithString:endpoint];
-    if (!url) return;
+    if (!url) {
+        fprintf(stderr, "[AITEXT] Invalid URL: %s\n", endpoint.UTF8String);
+        return;
+    }
 
     NSMutableURLRequest* request = [NSMutableURLRequest requestWithURL:url];
     [request setHTTPMethod:@"POST"];
     [request setValue:@"application/json" forHTTPHeaderField:@"Content-Type"];
-    request.timeoutInterval = 60;
+    request.timeoutInterval = 600;
 
     NSDictionary* body = @{
         @"model": model,
@@ -167,7 +170,10 @@ static void SendGenerateRequest(const std::string& prompt, float temperature) {
 
     NSError* jsonErr;
     NSData* jsonData = [NSJSONSerialization dataWithJSONObject:body options:0 error:&jsonErr];
-    if (jsonErr) return;
+    if (jsonErr) {
+        fprintf(stderr, "[AITEXT] JSON serialization failed: %s\n", jsonErr.localizedDescription.UTF8String);
+        return;
+    }
     [request setHTTPBody:jsonData];
 
     NSDate* startTime = [NSDate date];
@@ -183,14 +189,17 @@ static void SendGenerateRequest(const std::string& prompt, float temperature) {
             s_responseTime = elapsed;
 
             if (error) {
-                fprintf(stderr, "[AITEXT] Request failed: %s\n", error.localizedDescription.UTF8String);
+                fprintf(stderr, "[AITEXT] Request failed: %s (endpoint: %s)\n",
+                        error.localizedDescription.UTF8String, endpoint.UTF8String);
                 s_nextGenTime = [[NSDate date] timeIntervalSince1970] + cooldown;
                 return;
             }
 
             NSHTTPURLResponse* httpResp = (NSHTTPURLResponse*)response;
             if (httpResp.statusCode != 200) {
-                fprintf(stderr, "[AITEXT] HTTP %ld\n", (long)httpResp.statusCode);
+                NSString* errorBody = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+                fprintf(stderr, "[AITEXT] HTTP %ld, body: %s\n",
+                        (long)httpResp.statusCode, errorBody.UTF8String ?: "nil");
                 s_nextGenTime = [[NSDate date] timeIntervalSince1970] + cooldown;
                 return;
             }
@@ -198,14 +207,18 @@ static void SendGenerateRequest(const std::string& prompt, float temperature) {
             NSError* parseErr;
             NSDictionary* json = [NSJSONSerialization JSONObjectWithData:data options:0 error:&parseErr];
             if (parseErr || !json) {
-                fprintf(stderr, "[AITEXT] Parse error\n");
+                NSString* rawBody = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+                fprintf(stderr, "[AITEXT] Parse error: %s, raw body: %s\n",
+                        parseErr.localizedDescription.UTF8String, rawBody.UTF8String ?: "nil");
                 s_nextGenTime = [[NSDate date] timeIntervalSince1970] + cooldown;
                 return;
             }
 
             NSString* content = json[@"choices"][0][@"message"][@"content"];
             if (!content || content.length == 0) {
-                fprintf(stderr, "[AITEXT] Empty response\n");
+                NSString* jsonStr = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+                fprintf(stderr, "[AITEXT] Empty content field. Full JSON: %s\n",
+                        jsonStr.UTF8String ?: "nil");
                 s_nextGenTime = [[NSDate date] timeIntervalSince1970] + cooldown;
                 return;
             }
@@ -340,7 +353,7 @@ void AI_TextMeme_Tick(double time) {
         }
     }
 
-    fprintf(stderr, "[AITEXT] Generating via HTTP... (ai_queue=%d, temp=%.1f)\n", (int)s_aiQueue.size(), temp);
+    fprintf(stderr, "[AITEXT] Generating via HTTP... (ai_queue=%d, temp=%.1f, provider=%d)\n", (int)s_aiQueue.size(), temp, g_config.ai.providerType);
     SendGenerateRequest(prompt, temp);
 }
 

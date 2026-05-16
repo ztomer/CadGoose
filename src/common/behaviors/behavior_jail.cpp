@@ -9,6 +9,8 @@
 #include "world.h"
 #include "hotkey.h"
 #include "ring_buffer.h"
+#include "renderer_interface.h"
+#include "cg_renderer.h"
 #ifdef __APPLE__
 #include <CoreText/CoreText.h>
 #endif
@@ -105,6 +107,9 @@ static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
     CGContextRef cg = (CGContextRef)renderCtx;
     if (!cg) return;
 
+    CGRenderer renderer(cg);
+    renderer.SaveState();
+
     float jailSize = g_config.behaviors.jail.size;
     float scale = ctx.globalScale;
     float pulse = 0.6f + 0.4f * sin(ctx.time * 3.0f);
@@ -113,45 +118,27 @@ static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
     for (const auto& jailPos : s_jails) {
         Vector2 drawPos{goose->pos.x + (jailPos.x - goose->pos.x) / scale,
                         goose->pos.y + (jailPos.y - goose->pos.y) / scale};
-        CGRect rect = CGRectMake(drawPos.x - jailSize/2, drawPos.y - jailSize/2, jailSize, jailSize);
+        RenderRect rect{drawPos.x - jailSize/2, drawPos.y - jailSize/2, jailSize, jailSize};
 
-        CGContextSetRGBStrokeColor(cg, 1.0f, 0.6f, 0.0f, jailed ? 1.0f : pulse * 0.6f);
-        CGContextSetLineWidth(cg, jailed ? 4.0f : 2.0f);
-        CGContextStrokeRect(cg, rect);
+        float strokeAlpha = jailed ? 1.0f : pulse * 0.6f;
+        float fillAlpha = jailed ? 0.2f : 0.05f;
+        RenderColor jailColor{1.0f, 0.6f, 0.0f, strokeAlpha};
 
-        CGContextSetRGBFillColor(cg, 1.0f, 0.6f, 0.0f, jailed ? 0.2f : 0.05f);
-        CGContextFillRect(cg, rect);
+        renderer.DrawRectOutline(rect, jailColor, jailed ? 4.0f : 2.0f);
+        renderer.DrawRect(rect, RenderColor{1.0f, 0.6f, 0.0f, fillAlpha});
 
         const char* label = jailed ? "JAIL" : "SET";
         if (!s_jailFont) s_jailFont = CTFontCreateWithName(CFSTR("Helvetica-Bold"), 14.0f, NULL);
         if (s_jailFont) {
-            CGColorRef textColor = CGColorCreateGenericRGB(1.0f, 0.6f, 0.0f, jailed ? 1.0f : pulse * 0.6f);
-            CFTypeRef keys[] = { kCTFontAttributeName, kCTForegroundColorAttributeName };
-            CFTypeRef values[] = { s_jailFont, textColor };
-            CFDictionaryRef attributes = CFDictionaryCreate(NULL, (const void**)keys, (const void**)values, 2, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
-
-            CFStringRef string = CFStringCreateWithBytes(NULL, (const UInt8*)label, strlen(label), kCFStringEncodingUTF8, false);
-            CFAttributedStringRef attrStr = CFAttributedStringCreate(NULL, string, attributes);
-            CTLineRef line = CTLineCreateWithAttributedString(attrStr);
-
-            if (line) {
-                float textX = drawPos.x - jailSize/2;
-                float textY = drawPos.y - jailSize/2 - 20.0f;
-                CGContextSaveGState(cg);
-                CGContextTranslateCTM(cg, textX, textY);
-                CGContextScaleCTM(cg, 1.0, -1.0);
-                CGContextSetTextPosition(cg, 0, 0);
-                CTLineDraw(line, cg);
-                CGContextRestoreGState(cg);
-                CFRelease(line);
-            }
-
-            CFRelease(attrStr);
-            CFRelease(string);
-            CFRelease(attributes);
-            CGColorRelease(textColor);
+            float textX = drawPos.x - jailSize/2;
+            float textY = drawPos.y - jailSize/2 - 20.0f;
+            renderer.Translate(textX, textY);
+            renderer.Scale(1.0f, -1.0f);
+            renderer.DrawText(label, {0, 0}, RenderColor{1.0f, 0.6f, 0.0f, strokeAlpha}, 14.0f);
         }
     }
+
+    renderer.RestoreState();
 #endif
 }
 

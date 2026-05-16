@@ -5,6 +5,8 @@
 #include "assets.h"
 #include "goose_math.h"
 #include "cursor_backend.h"
+#include "renderer_interface.h"
+#include "cg_renderer.h"
 #include <CoreGraphics/CoreGraphics.h>
 #include <cmath>
 
@@ -175,6 +177,8 @@ static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
     CGContextRef cg = (CGContextRef)renderCtx;
     if (!cg) return;
 
+    CGRenderer renderer(cg);
+
     float ballSize = ball->radius;
     CGImageRef img = s_ballImages[ball->currentFrame % ANIM_FRAME_COUNT];
     float drawSize = ballSize;
@@ -187,11 +191,10 @@ static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
         float imgScale = drawSize / std::max(imgW, imgH);
         float drawW = imgW * imgScale;
         float drawH = imgH * imgScale;
-        CGRect rect = CGRectMake(drawPos.x, drawPos.y, drawW, drawH);
-        CGContextDrawImage(cg, rect, img);
+        renderer.DrawImage(img, RenderRect{drawPos.x, drawPos.y, drawW, drawH});
     } else {
-        CGContextSetRGBFillColor(cg, 0.3f, 0.3f, 0.3f, 1.0f);
-        CGContextFillEllipseInRect(cg, CGRectMake(drawPos.x, drawPos.y, drawSize, drawSize));
+        renderer.DrawEllipse({drawPos.x + drawSize/2, drawPos.y + drawSize/2},
+                            drawSize/2, drawSize/2, RenderColor{0.3f, 0.3f, 0.3f, 1.0f});
     }
 #endif
 }

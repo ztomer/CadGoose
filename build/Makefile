@@ -1316,6 +1316,30 @@ src/common/config_registry_general.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/src/common/config_registry_general.cpp.s
 .PHONY : src/common/config_registry_general.cpp.s
 
+src/common/config_registry_generated.o: src/common/config_registry_generated.cpp.o
+.PHONY : src/common/config_registry_generated.o
+
+# target to build an object file
+src/common/config_registry_generated.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/common/config_registry_generated.cpp.o
+.PHONY : src/common/config_registry_generated.cpp.o
+
+src/common/config_registry_generated.i: src/common/config_registry_generated.cpp.i
+.PHONY : src/common/config_registry_generated.i
+
+# target to preprocess a source file
+src/common/config_registry_generated.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/common/config_registry_generated.cpp.i
+.PHONY : src/common/config_registry_generated.cpp.i
+
+src/common/config_registry_generated.s: src/common/config_registry_generated.cpp.s
+.PHONY : src/common/config_registry_generated.s
+
+# target to generate assembly for a file
+src/common/config_registry_generated.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/common/config_registry_generated.cpp.s
+.PHONY : src/common/config_registry_generated.cpp.s
+
 src/common/config_registry_render.o: src/common/config_registry_render.cpp.o
 .PHONY : src/common/config_registry_render.o
 
@@ -3098,6 +3122,9 @@ help:
 	@echo "... src/common/config_registry_general.o"
 	@echo "... src/common/config_registry_general.i"
 	@echo "... src/common/config_registry_general.s"
+	@echo "... src/common/config_registry_generated.o"
+	@echo "... src/common/config_registry_generated.i"
+	@echo "... src/common/config_registry_generated.s"
 	@echo "... src/common/config_registry_render.o"
 	@echo "... src/common/config_registry_render.i"
 	@echo "... src/common/config_registry_render.s"

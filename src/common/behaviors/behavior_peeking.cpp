@@ -3,9 +3,9 @@
 #include "config.h"
 #include "world.h"
 #include "goose_math.h"
-#include <CoreGraphics/CoreGraphics.h>
+#include "renderer_interface.h"
+#include "cg_renderer.h"
 #include <cmath>
-
 
 static void init(BehaviorContext& ctx) {
     auto* state = BehaviorStateManager::Instance().GetOrCreate<PeekingState>(ctx.goose->id, "peeking");
@@ -53,19 +53,16 @@ static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
     CGContextRef cg = (CGContextRef)renderCtx;
     if (!cg) return;
 
-    CGContextSaveGState(cg);
+    CGRenderer renderer(cg);
+
     Vector2 headPos = goose->rig.neckHead;
     float peekDir = (float)state->peekSide;
 
-    CGContextSetRGBFillColor(cg, 0.8f, 0.7f, 0.6f, 0.8f);
     float ex = headPos.x + peekDir * 12.0f;
     float ey = headPos.y - 5.0f;
-    CGContextFillEllipseInRect(cg, CGRectMake(ex - 5.0f, ey - 4.0f, 10.0f, 8.0f));
-
-    CGContextSetRGBFillColor(cg, 0.1f, 0.1f, 0.1f, 0.9f);
-    CGContextFillEllipseInRect(cg, CGRectMake(ex + peekDir * 2.0f - 1.5f, ey - 1.0f, 3.0f, 3.0f));
-
-    CGContextRestoreGState(cg);
+    renderer.DrawEllipse({ex, ey}, 5.0f, 4.0f, RenderColor{0.8f, 0.7f, 0.6f, 0.8f});
+    renderer.DrawEllipse({ex + peekDir * 2.0f - 1.5f, ey - 1.0f}, 1.5f, 1.5f,
+                        RenderColor{0.1f, 0.1f, 0.1f, 0.9f});
 #endif
 }
 

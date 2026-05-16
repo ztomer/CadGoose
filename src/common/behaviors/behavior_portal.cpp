@@ -12,6 +12,8 @@
 #include "world.h"
 #include "assets.h"
 #include "hotkey.h"
+#include "renderer_interface.h"
+#include "cg_renderer.h"
 #include <CoreGraphics/CoreGraphics.h>
 #include <ApplicationServices/ApplicationServices.h>
 
@@ -126,9 +128,11 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
 static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
     auto* state = BehaviorStateManager::Instance().GetOrCreate<PortalState>(goose->id, "portal");
 
+#ifdef __APPLE__
     CGContextRef cg = (CGContextRef)renderCtx;
     if (!cg) return;
 
+    CGRenderer renderer(cg);
     float scale = ctx.globalScale;
 
     if (state->portalA.active && s_portalImages[0]) {
@@ -136,8 +140,7 @@ static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
         float h = (float)CGImageGetHeight(s_portalImages[0]);
         Vector2 drawPos{goose->pos.x + (state->portalA.x - goose->pos.x) / scale,
                         goose->pos.y + (state->portalA.y - goose->pos.y) / scale};
-        CGRect rect = CGRectMake(drawPos.x - w/2, drawPos.y - h/2, w, h);
-        CGContextDrawImage(cg, rect, s_portalImages[0]);
+        renderer.DrawImage(s_portalImages[0], RenderRect{drawPos.x - w/2, drawPos.y - h/2, w, h});
     } else if (state->portalA.active && !s_portalImages[0]) {
         fprintf(stderr, "[Portal] g%d: portalA active but image[0] not loaded\n", goose->id);
     }
@@ -147,11 +150,11 @@ static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
         float h = (float)CGImageGetHeight(s_portalImages[1]);
         Vector2 drawPos{goose->pos.x + (state->portalB.x - goose->pos.x) / scale,
                         goose->pos.y + (state->portalB.y - goose->pos.y) / scale};
-        CGRect rect = CGRectMake(drawPos.x - w/2, drawPos.y - h/2, w, h);
-        CGContextDrawImage(cg, rect, s_portalImages[1]);
+        renderer.DrawImage(s_portalImages[1], RenderRect{drawPos.x - w/2, drawPos.y - h/2, w, h});
     } else if (state->portalB.active && !s_portalImages[1]) {
         fprintf(stderr, "[Portal] g%d: portalB active but image[1] not loaded\n", goose->id);
     }
+#endif
 }
 
 static Behavior g_portalBehavior = BEHAVIOR_DEF_STARTER(
