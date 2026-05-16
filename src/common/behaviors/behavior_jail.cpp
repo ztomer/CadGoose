@@ -106,11 +106,14 @@ static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
     if (!cg) return;
 
     float jailSize = g_config.behaviors.jail.size;
+    float scale = ctx.globalScale;
     float pulse = 0.6f + 0.4f * sin(ctx.time * 3.0f);
     bool jailed = s_jailsActive;
 
     for (const auto& jailPos : s_jails) {
-        CGRect rect = CGRectMake(jailPos.x - jailSize/2, jailPos.y - jailSize/2, jailSize, jailSize);
+        Vector2 drawPos{goose->pos.x + (jailPos.x - goose->pos.x) / scale,
+                        goose->pos.y + (jailPos.y - goose->pos.y) / scale};
+        CGRect rect = CGRectMake(drawPos.x - jailSize/2, drawPos.y - jailSize/2, jailSize, jailSize);
 
         CGContextSetRGBStrokeColor(cg, 1.0f, 0.6f, 0.0f, jailed ? 1.0f : pulse * 0.6f);
         CGContextSetLineWidth(cg, jailed ? 4.0f : 2.0f);
@@ -132,8 +135,8 @@ static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
             CTLineRef line = CTLineCreateWithAttributedString(attrStr);
 
             if (line) {
-                float textX = jailPos.x - jailSize/2;
-                float textY = jailPos.y - jailSize/2 - 20.0f;
+                float textX = drawPos.x - jailSize/2;
+                float textY = drawPos.y - jailSize/2 - 20.0f;
                 CGContextSaveGState(cg);
                 CGContextTranslateCTM(cg, textX, textY);
                 CGContextScaleCTM(cg, 1.0, -1.0);

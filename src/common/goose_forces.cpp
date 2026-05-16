@@ -114,7 +114,7 @@ void Goose::ClampToScreen(int w, int h) {
         pos.y = minY + g_config.physics.snapDistance;
         if (isSpecialState && vel.y < 0) vel.y = std::abs(vel.y) + g_config.physics.screenClampBounce;
     } else if (pos.y > maxY) {
-        pos.y = maxY - g_config.physics.screenClampBounce;
+        pos.y = maxY - g_config.physics.snapDistance;
         if (isSpecialState && vel.y > 0) vel.y = -std::abs(vel.y) - g_config.physics.screenClampBounce;
     }
 }

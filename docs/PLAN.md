@@ -1,74 +1,284 @@
-# Bug & Feature Investigation Plan
+# CadGoose Bug & Feature Plan
 
-## Issues
+## Completed (May 15, 2026)
 
-### 1. Toys should NOT have a close button
-**Status**: Not started  
-**Description**: Dropped toy items (sticks/balls) currently show the close button (X) in the bottom-left corner like memes/texts. Toys should not have this — they're meant to be picked up by the goose, not dismissed by the user.  
-**Files**: `src/common/goose_drawing.mm:DrawDroppedItem()`, `src/platform/macos/renderer.mm:hitTest:`, `mouseDown:`  
-**Approach**: `DrawDroppedItem()` unconditionally draws the close button for all `DroppedItem`s. Need to skip it for `ItemData::TOY` type. Also need to skip close-button hit-test in `hitTest:` and `mouseDown:` for toy items.
+### 1. Toys NO close button ✅
+- Skip close button rendering/hit-test for `ItemData::TOY`
+- Files: `goose_drawing.mm`, `renderer.mm:mouseDown:`
 
-### 2. Only sticks render for toys
-**Status**: Not started  
-**Description**: Ball toys (`Toy::Type::Ball`) are not visible on screen — only sticks appear.  
-**Files**: `src/common/behaviors/behavior_toys.cpp:tick()` (spawn), `src/common/behaviors/behavior_toys.cpp:render()`  
-**Approach**: 
-- Check spawn logic: `rand() % 2` determines type — both Stick and Ball should spawn equally
-- Check render logic: Ball rendering uses `STICK_WIDTH * ctx.globalScale` as radius — that's `4.0 * scale` which is very small (~4-8px). Compare with stick rendering which uses `STICK_LENGTH=24` × `STICK_WIDTH=4`
-- Ball radius should be larger (e.g., 12-15px) to be visible
+### 2. Ball toy rendering ✅
+- Radius `STICK_WIDTH=4px` → `BALL_RADIUS=15px`
+- File: `behavior_toys.cpp`
 
-### 3. Dragging meme images and text doesn't work
-**Status**: Fixed  
-**Description**: Click-and-drag on dropped memes/texts doesn't move them.  
-**Files**: `src/platform/macos/renderer.mm:hitTest:`, `mouseDown:`, `mouseDragged:`, `tick:`  
-**Root cause**: `item.pos` is in **device coordinates** (top-left origin, Y-down, matching the `isFlipped=YES` view). But the hit-test code did `dy = (height - p.y) - item.pos.y` which **double-flips** Y, putting mouse and item in different coordinate spaces. The mouse was over the item but the hit-test computed a large `dy` offset and always missed.  
-**Fix**: Removed Y-flip in all four hit-test locations (`tick:`, `hitTest:`, `mouseDown:`, `mouseDragged:`). Now `dx = p.x - item.pos.x`, `dy = p.y - item.pos.y` — same coordinate space.  
-**Also fixed**: `world_utils.mm:ItemHitTest()` had the same bug. Updated `test_dropped_item_hit.cpp` to match the corrected model.
+### 3. Sonic blue screen ✅
+- `goose->pos` is device coords, `ToDevice()` double-scaled → removed call
+- File: `behavior_sonic.cpp`
 
-**Config additions needed** (memes/images only, separate from toys):
-- `max_dropped_memes` (int, default 20) — auto-delete oldest when exceeded
-- `max_dropped_texts` (int, default 20) — auto-delete oldest when exceeded
-- `meme_lifetime` (float, default 30s) — already exists as `g_config.item.itemLifetime`
-- `text_lifetime` (float, default 30s)
+### 4. Dragging regression ✅
+- Root cause: transparent borderless window with `canBecomeKeyWindow=NO` → responder chain broken
+- Fix: `NSEvent addLocalMonitorForEvents` intercepts mouse events at app level, dispatches directly to `mouseDownAtPoint:viewY:` and `mouseDraggedAtPoint:viewY:`
+- Also restored accidentally removed `isFlipped` (goose was upside down)
+- Files: `renderer.mm` (monitors + direct handlers), `window.mm` (reverted to NO)
 
-### 4. Sonic mode - entire screen turns blue
-**Status**: Fixed  
-**Description**: Instead of a trail behind the goose, the entire screen fills with blue circles.  
-**Files**: `src/common/behaviors/behavior_sonic.cpp:render()`  
-**Root cause**: `goose->pos` is in **device coordinates** (screen pixels), initialized from `screenW/screenH`. Sonic stores `trail.pos = goose->pos` (already device coords), then `ToDevice(trail.pos)` double-scales it by `globalScale` → positions become huge, filling the screen.  
-**Fix**: Use `trail.pos` directly without `ToDevice()` since it's already in device coordinates.
+### 5. Config for memes/texts lifecycle ✅
+- Added: `meme_lifetime`, `text_lifetime`, `max_dropped_memes`, `max_dropped_texts`
+- `World_CleanupExpired()` enforces per-type limits with oldest-first eviction
+- Files: `config.h`, `config_registry_general.cpp`, `world_utils.mm`
 
-### 5. Architectural reflection: what would we do differently?
-**Status**: Documented  
-**File**: `docs/ARCHITECTURE_REFLECTION.md`  
-**Key findings**:
-1. **Coordinate system** — three spaces (world/device/screen) with ambiguous boundaries caused sonic blue screen, toy position bugs, and dragging Y-flip regression
-2. **Item system** — type creep (`MEME` → `MEME/TEXT/TOY`) without unified rendering strategy
-3. **Config system** — four layers of indirection (TOML → registry → struct → GUI)
-4. **Test coverage** — 29 AX tests skipped, UI regressions not caught by CI
-5. **Platform split** — macOS vs Linux code paths diverge significantly
+### 6. Architecture reflection ✅
+- File: `docs/ARCHITECTURE_REFLECTION.md`
+- 7 key findings, prioritized refactoring order
+
+### 7. Linux CI build fix ✅
+- `gtk4-layer-shell-0` required but not installed on CI runner, source code doesn't use it
+- Made optional: `pkg_check_modules(LS gtk4-layer-shell-0)` (no REQUIRED), empty fallbacks
+- Fixed `sysctl -n hw.logicalcpu` → `nproc` in Linux CI workflow (macOS-only command)
+- Tests disabled on Linux — behaviors have `CoreGraphics` dependencies (macOS-only)
+- Test sources split into `TEST_SOURCES_COMMON` + `TEST_SOURCES_PLATFORM` for clean cross-platform builds
+- Files: `CMakeLists.txt`, `.github/workflows/pr_check.yml`
+
+### 8. Remove Sonic Mode ✅
+- Deleted `behavior_sonic.cpp`, removed from CMakeLists.txt
+- Removed `SonicState`/`SonicTrail` structs from `behavior.h`
+- Removed `sonicMode` field from `config.h` and registry
+- Removed GUI row, emoji, and all test references (6 files)
+- Removed from README.md, config.toml, AGENTS.md
+- Fixed `BEHAVIOR_DEF_CUSTOM` macro field order (reorder warning)
+- Suppressed toml11 vendor warning via `-Wno-deprecated-literal-operator`
+- Fixed test state leak: `ToysEnabledLoadFromToml` didn't restore `toysEnabled`
+
+## In Progress
+
+### 9. Coordinate system audit ✅
+**Problem**: Three coordinate spaces (world/device/screen) with ambiguous boundaries. `goose->pos` is device coords but `ToDevice()` implied world coords. Caused bugs in sonic, pomodoro, toys, snatch, and footprints.
+
+**Fixes applied**:
+- Added coordinate space documentation to `world.h` and `goose_math.h` (DEVICE vs GOOSE-LOCAL WORLD)
+- Renamed `ToDevice(worldPos, goose)` → `WorldToDevice(worldPos, goose)` (explicit: goose-local world → device)
+- Renamed `ToDevice(worldPos)` → `OriginToDevice(worldPos)` (explicit: origin-relative world → device)
+- Removed `GoosePos()` — was a no-op (`goose.pos + (goose.pos - goose.pos) * scale = goose.pos`)
+- **Pomodoro bed render**: removed `ToDevice(bedPosition)` — bedPosition is already device coords
+- **Snatch anchor**: removed `ToDevice(snatchAnchor, *this)` — snatchAnchor is device coords (from `goose->pos`)
+- **Footprints**: removed `ToDevice(home, *this)` — `GetFootHome()` returns device coords
+- **Toys**: converted from world coords to device coords — spawn uses `g_screenWidth` directly, no `/ globalScale`, no `ToDevice` in render
+- **Linux callback**: removed non-existent `DeviceToWorld` call — cursor position is already device coords
+- Removed `GoosePosIsIdentityAtUnitScale` test (was testing a no-op)
+
+**Files touched**: `include/world.h`, `include/goose.h`, `include/goose_math.h`, `src/common/behaviors/behavior_toys.cpp`, `src/common/behaviors/behavior_pomodoro.cpp`, `src/common/goose.cpp`, `src/common/goose_behaviors_interact.cpp`, `src/common/goose_behaviors_wander.cpp`, `src/common/behaviors/behavior_peeking.cpp`, `src/platform/linux/ui_callbacks.cpp`, `tests/test_goose_behaviors.cpp`
+
+**672 tests pass** (702 total, 30 AX skipped).
+
+### 10. Dragging integration test ✅
+- Expanded from 3 tests (2 pass, 1 skip) to 8 tests (7 pass, 1 skip)
+- New tests: `DragOffsetCalculation`, `DragPositionUpdate`, `SimulatedFullDragCycle`, `DragFromCorner`, `DragWithRotation`
+- Tests replicate `mouseDownAtPoint:viewY:` and `mouseDraggedAtPoint:viewY:` logic directly
+- `CGEventSynthesis` skipped (requires active GUI session + Accessibility permissions)
+- File: `tests/platform/macos/test_dragging_integration.mm`
+
+### 11. Coordinate system deep dive ✅
+**Deep dive findings** (traced 100+ coordinate usages across 30+ files):
+
+**Bugs fixed:**
+1. **ItemCenter/ItemHalfSize Y-axis bug** — `DeviceSize(item->w)` used width for both X and Y. Added `ItemSize(item)` that uses `item->w` and `item->h` correctly. Affected heist approach, pickup detection, drop positioning for non-square items.
+2. **ClampToScreen Y-axis inconsistency** — Y-max used `screenClampBounce` instead of `snapDistance` for position snap. Fixed to match X-axis behavior.
+3. **Linux debug overlay syntax errors** — `g.state = GooseState::= GooseState:: FETCHING` (assignment + malformed). Fixed to `g.state == GooseState::FETCHING` (5 occurrences).
+
+**Verified correct:**
+- All goose position/target/velocity/acceleration usage in DEVICE coords
+- All cursor backend readings return DEVICE coords (macOS CGEvent, Linux X11/Wayland)
+- All mouse event coordinate transforms (NSEvent → window → view → device)
+- All rendering coordinate usage (macOS CGContext, Linux Cairo with Y-flip)
+- All distance/comparison checks use consistent coordinate spaces
+- Ball behavior correctly converts between DEVICE and WORLD coords
+- Portal, breadcrumbs, drag, jail all use DEVICE coords consistently
+- Multi-monitor edge avoidance and clamping respect `multiMonitorEnabled`
+
+**Minor issues noted (not bugs):**
+- Ball/breadcrumbs/portal bypass `g_cursorProvider` and use backend directly — works but inconsistent
+- macOS `g_screenWidth/Height` only captures main screen — known limitation
+- `rig.*` fields are in hybrid space (device pos + unscaled offsets) — rendering correct via `WorldCoord::RigNeckHead`
+
+**677 tests pass** (707 total, 30 AX skipped).
+
+### 12. Coordinate system consolidation ✅
+**Created typed coordinate system to prevent coordinate space bugs:**
+
+**New file: `include/coordinate_system.h`**
+- `DevicePoint` — screen pixels, top-left origin, Y-down (goose pos, items, cursor)
+- `WorldPoint` — goose-local unscaled coords (rig parts, config offsets)
+- `ScreenPoint` — raw OS screen coordinates (platform boundary)
+- `ViewPoint` — NSView-local coordinates (macOS event handling)
+- `CoordTransform` — explicit transforms between spaces (no implicit conversions)
+- `ItemCoords` — item center/half-size/size helpers (correctly uses w AND h)
+- `HitTest` — point-in-item and close-button hit testing
+- `ScreenBounds` — screen boundary clamping with consistent snap distance
+
+**Refactored files:**
+- `world.h` — `WorldCoord` methods now return `DevicePoint`, uses `ItemCoords` and `CoordTransform`
+- `goose.h` — includes `coordinate_system.h`, documents coordinate spaces
+- `goose_math.h` — simplified docs, references coordinate_system.h
+- `renderer.mm` — hit test and drag handlers use `DevicePoint`, `HitTest`, `CoordTransform`
+- `world_utils.mm` — `ItemHitTest` uses `HitTest::PointInItem`
+- `goose_behaviors_wander.cpp` — uses `ItemSize` instead of `DeviceSize`
+
+**Key design principles:**
+- No implicit conversions between coordinate spaces
+- All transforms must be explicit and named
+- Type system prevents accidental mixing of DEVICE and WORLD
+- Clear documentation at every platform boundary
+- Single source of truth for hit testing logic
+
+**677 tests pass** (707 total, 30 AX skipped).
+
+### 13. Coordinate exception fixes ✅
+**Fixed all 11 coordinate space exceptions found in deep dive:**
+
+| # | File | Severity | Fix |
+|---|------|----------|-----|
+| 1 | `goose_drawing.mm:DrawHeldItem()` | HIGH | Scale `heldItem->w/h` by `globalScale` in all CGContext calls |
+| 2 | `goose_drawing.mm:DrawDroppedItem()` | HIGH | Scale `item.data->w/h` by `globalScale` in all CGContext calls |
+| 3 | `goose_behaviors_interact.cpp:isTargetReached()` | HIGH | Remove double-scale on `g.vel` (already device coords) |
+| 4 | `ui_drawing.cpp:draw_dropped_item()` | HIGH | Scale `item.data->w/h` by `globalScale` in Cairo surface position |
+| 5 | `goose.cpp:GetFootHome()` | MEDIUM | Scale `footSpacing` by `globalScale` |
+| 6 | `behavior_interactive_drops.cpp:render()` | MEDIUM | Scale `stemHeight`, `petalSize`, line width by `globalScale` |
+| 7 | `behavior_breadcrumbs.cpp:render()` | LOW | Scale crumb image dimensions by `globalScale` |
+| 8 | `behavior_pomodoro.cpp:render()` | LOW | Scale bed image, ZZZ offsets, padding by `globalScale` |
+| 9 | `behavior_portal.cpp:render()` | LOW | Scale portal image dimensions by `globalScale` |
+| 10 | `goose_behaviors_interact.cpp:dodge` | LOW | Scale hardcoded `400.0f` dodge distance by `globalScale` |
+
+**677 tests pass** (707 total, 30 AX skipped).
+
+### 14. Unified rendering API ✅
+**Eliminated manual scaling by applying `CGContextScaleCTM` at behavior dispatch level:**
+
+**Before:** Two different rendering approaches
+- Main goose drawing: `CGContextScaleCTM` transform → raw pixel values auto-scale
+- Behavior rendering: manual `* globalScale` on every pixel value
+
+**After:** Single unified approach
+- `renderer.mm:drawRect:` applies scale transform around `goose->pos` before calling `RenderPass`
+- All behaviors use raw pixel values (no manual scaling)
+- Goose-relative positions use raw rig coords (`goose->rig.neckHead`)
+- Global device coords (toys, ball, breadcrumbs, portals, jails, flowers, bed) converted to transform space: `drawPos = goose->pos + (devicePos - goose->pos) / scale`
+
+**Files changed:**
+- `renderer.mm` — scale transform applied before `RenderPass` (ground and non-ground)
+- `behavior_pomodoro.cpp` — raw rig coords, raw pixel values
+- `behavior_honcker.cpp` — raw rig coords, raw pixel values
+- `behavior_peeking.cpp` — raw rig coords, raw pixel values
+- `behavior_nametag.cpp` — raw rig coords, raw pixel values
+- `behavior_boredom.cpp` — raw rig coords, raw pixel values
+- `behavior_hats.cpp` — raw rig coords, raw pixel values
+- `behavior_toys.cpp` — global device coords converted to transform space
+- `behavior_ball.cpp` — global device coords converted to transform space
+- `behavior_breadcrumbs.cpp` — global device coords converted to transform space
+- `behavior_portal.cpp` — global device coords converted to transform space
+- `behavior_jail.cpp` — global device coords converted to transform space
+- `behavior_interactive_drops.cpp` — global device coords converted to transform space
+- `behavior_anger.cpp` — raw pixel values (uses `goose->pos` which is transform center)
+- `behavior_health.cpp` — raw pixel values (uses `goose->pos` which is transform center)
+
+**Key design:**
+- Transform center is `goose->pos` (device coords)
+- Rig parts are in world coords (unscaled offsets from goose)
+- Global objects convert device → transform space at render time
+- All hardcoded pixel values are raw and auto-scale via context transform
+
+**677 tests pass** (707 total, 30 AX skipped).
+
+## Next Up
+
+### 15. Architectural Retrospective & Refactoring Plan
+
+**Retrospective findings (May 15, 2026):**
+
+#### What Works Well
+- **Typed coordinate system** — `DevicePoint`, `WorldPoint` etc. are zero-cost, compile-time safe
+- **Behavior macros** — `BEHAVIOR_DEF*` family enforces `enabledPtr == configPtr`, preventing toggle desync
+- **Unified rendering pipeline** — `CGContextScaleCTM` at dispatch level, all behaviors use raw pixels
+- **500 LOC discipline** — forces modularization
+- **Per-goose state management** — `BehaviorStateManager` with composite key
+- **717 tests** — 687 pass, 30 AX skipped
+
+#### Anti-Patterns Found
+| Pattern | Where | Impact |
+|---------|-------|--------|
+| Static globals in behaviors | `behavior_ball.cpp` (8 statics), 38 total across files | Breaks multi-goose, state leaks on respawn |
+| `void*` render context casting | Every behavior `render()` | No type safety |
+| Duplicate mouse handlers | `renderer.mm` (2 paths, ~90% duplicated) | Maintenance burden, double bug fixes |
+| `g_config` global struct | Everywhere | No dependency tracking, any file can read/write anything |
+| Mixed responsibility in `goose.cpp` | 496 lines | State machine + physics + rig + stuck + drag + debug |
+| `conflicts` field never populated | `behavior.h` | Pomodoro + Drag can fight over `goose->vel` |
+
+#### Missing Abstractions
+1. **Event bus** — Behaviors directly mutate `Goose` state, no decoupled signaling
+2. **Timer class** — Every behavior computes deltas manually from `ctx.time`
+3. **Resource manager** — `CGImageRef`/`CGFontRef` in static globals, no cleanup
+4. **Input abstraction** — Inconsistent cursor access patterns
+
+#### Testing Gaps
+- Linux platform code: zero tests
+- Headless rendering: no offscreen pixel tests
+- 30 AX tests skipped (require running app)
+- No integration tests (end-to-end flows)
+- Config GUI panels untested (712 lines total)
 
 ---
 
-## Execution Order
+### Implementation Plan
 
-| # | Issue | Dependencies | Est. Complexity | Status |
-|---|-------|-------------|-----------------|--------|
-| 1 | #2 Toys ball rendering | None | Low (1-line fix) | ✅ Done |
-| 2 | #1 Toys NO close button | None | Low (skip for TOY type) | ✅ Done |
-| 3 | #4 Sonic screen-blue | None | Low (use trail.pos directly) | ✅ Done |
-| 4 | #3 Dragging Y-flip bug | None | Low (remove double-flip) | ✅ Done |
-| 5 | #3 Config additions | None | Low | ✅ Done |
-| 6 | #5 Architecture reflection | None | Medium (analysis) | ✅ Done |
+#### P0: Migrate ball state from statics to BallState ✅
+**Problem**: `behavior_ball.cpp` had 8 static globals that bypassed `BallState`. Multi-goose broken, state didn't reset on respawn.
 
-**Rationale**: Fix the trivial visual bugs first (#2 ball size, #1 close button verify). Then tackle sonic mode (#4) since it's a single behavior file. Then the dragging investigation (#3) which requires systematic logging. Config additions are quick. Architecture reflection is independent and can be done anytime.
+**Done**:
+- Added physics fields to `BallState::Ball` struct (`speed`, `lastKickTime`, `lastAnimateTime`, `animationGap`)
+- Replaced all static globals with `GetOrCreate<BallState>()`
+- Kept shared resources (`s_ballImages`) as static (acceptable — CGImageRef assets, not state)
+- Converted all coordinate math to use device coords consistently
+- Extracted magic numbers to named constants
+
+**Files**: `include/behavior.h`, `src/common/behaviors/behavior_ball.cpp`
+
+#### P1: Extract shared mouse handler logic ✅
+**Problem**: `renderer.mm` had two nearly identical hit-test + drag paths (~90% duplicated).
+
+**Done**:
+- Created `ItemDragController` class with `OnMouseDown`, `OnMouseDragged`, `OnMouseUp`
+- Both handler paths (AppKit responder + NSEvent monitor) delegate to controller
+- Controller takes `DevicePoint` as input (coordinate-agnostic)
+- Added `dealloc` to clean up controller
+- Reduced `renderer.mm` by ~60 lines of duplicated code
+
+**Files**: `include/item_drag_controller.h`, `src/platform/macos/item_drag_controller.mm`, `src/platform/macos/renderer.mm`
+
+#### P2: Add Timer utility class ✅
+**Problem**: Every behavior computes deltas manually: `time - state->lastDropTime`, `ctx.time - state->phaseStartTime`, etc.
+
+**Done**:
+- Created `Timer` struct with `Start(time)`, `Elapsed(time)`, `IsExpired(time, duration)`, `Reset()`, `Remaining(time, duration)`, `Progress(time, duration)`
+- 10 unit tests covering all methods
+- Header-only, zero overhead, no dependencies
+
+**Files**: `include/timer.h`, `tests/common/test_timer.cpp`
+
+#### P3: Add headless rendering tests ✅
+**Problem**: UI regressions (dragging Y-flip bug, coordinate scaling issues) not caught by CI. 30 AX tests skipped.
+
+**Done**:
+- Created `test_headless_rendering.mm` with 22 tests covering:
+  - HitTest at different scales (0.5x, 1.0x, 2.0x) + rotation
+  - Close button hit-test for non-toy items (at scale, rotated)
+  - CoordTransform::WorldToDevice/DeviceToWorld at different scales + round-trip
+  - ViewToDevice transform
+  - ItemCoords::Center/HalfSize/Size at different scales
+  - ScreenBounds::Clamp/Contains with margins
+  - ItemDragController: hit/drag/release, miss, close button deletes, toy no close button, drag offset preserved, multiple items (topmost wins)
+- All 22 tests pass, no AppKit dependencies, runs in CI
+
+**Files**: `tests/platform/macos/test_headless_rendering.mm`
 
 ---
 
-## Clarifying Questions (Answered)
-
-1. **Toys close button**: Toys should NOT have a close button. ✅ Fixed — skipped for `ItemData::TOY`.
-2. **Sonic mode**: Blue covers entire screen immediately on enabling. ✅ Fixed — `goose->pos` is device coords, removed `ToDevice()` double-scaling.
-3. **Dragging**: Nothing happens when clicking. ✅ Fixed — Y-flip was applied twice in hit-test.
-4. **Config for items**: Separate lifecycle for memes/texts (not toys). ✅ Done — `meme_lifetime`, `text_lifetime`, `max_dropped_memes`, `max_dropped_texts`.
-5. **Architecture reflection**: Documentation first, implementation later. ✅ Done — `docs/ARCHITECTURE_REFLECTION.md`.
+## Test Status
+- **739 tests, 99 suites** — 709 pass, 30 AX skipped (require running app)
+- New suites: `DraggingIntegration` (8 tests, 1 skipped), `Timer` (10 tests, all pass), `HeadlessRendering` (22 tests, all pass)

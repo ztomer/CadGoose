@@ -20,11 +20,11 @@ static FILE* GetDebugLog() {
 }
 
 bool isTargetReached(Goose& g, float threshold) {
-    Vector2 posDev = WorldCoord::GoosePos(g);
+    Vector2 posDev = g.pos;
     float dist = Vector2::Distance(posDev, g.target);
 
     Vector2 toTarget = g.target - posDev;
-    Vector2 velDev = g.vel * g_config.general.globalScale;
+    Vector2 velDev = g.vel; // already in device coords (pixels/frame)
     float dot = Vector2::Length(toTarget) > 0.001f ? Dot(Vector2::Normalize(toTarget), Vector2::Normalize(velDev)) : 0.0f;
 
     return dist < threshold || (dist < threshold * 3.0f && dot < 0.0f);
@@ -48,7 +48,7 @@ CursorAction Goose::UpdateBehaviors(double dt, double time, int w, int h, const 
                 if (Dot(Vector2::Normalize(cursorVel), Vector2::Normalize(toGoose)) > 0.8f) {
                     isSurprised = true;
                     surprisedTime = time;
-                    target = pos + Vector2::Normalize(pos - cursor.position) * 400.0f;
+                    target = pos + Vector2::Normalize(pos - cursor.position) * WorldCoord::Scale(400.0f);
                     state = GooseState::WANDER;
                 }
             }
@@ -73,7 +73,7 @@ CursorAction Goose::UpdateBehaviors(double dt, double time, int w, int h, const 
         extern Vector2 GetSnatchForward(float dir, const Vector2& isoScale);
         snatchAngle += snatchAngularSpeed * (float)dt;
 
-        Vector2 goosePosDev = WorldCoord::GoosePos(*this);
+        Vector2 goosePosDev = pos;
         Vector2 btDevice = GetBeakTipDevice();
         btDevice.x = std::clamp(btDevice.x, 0.0f, (float)std::max(0, w - 1));
         btDevice.y = std::clamp(btDevice.y, 0.0f, (float)std::max(0, h - 1));
@@ -114,7 +114,7 @@ CursorAction Goose::UpdateBehaviors(double dt, double time, int w, int h, const 
         Vector2 right{-snatchFwdLocal.y, snatchFwdLocal.x};
         float lateralBias = Clamp(snatchOffset.y, -snatchPullDistance * g_config.snatch.lateralBiasLimit, snatchPullDistance * g_config.snatch.lateralBiasLimit);
         float forwardBias = Clamp(snatchOffset.x * g_config.snatch.forwardBiasScale, snatchPullDistance * g_config.snatch.forwardBiasMin, snatchPullDistance * g_config.snatch.forwardBiasMax);
-        Vector2 anchorDev = WorldCoord::ToDevice(snatchAnchor, *this);
+        Vector2 anchorDev = snatchAnchor; // already device coords (set from goose->pos in StartSnatch)
         Vector2 endpointDev = anchorDev - snatchFwdLocal * WorldCoord::Scale(snatchPullDistance) + right * WorldCoord::Scale(lateralBias) + snatchFwdLocal * WorldCoord::Scale(forwardBias);
         endpointDev += right * WorldCoord::Scale(std::cos(snatchAngle) * snatchRadius) + snatchFwdLocal * WorldCoord::Scale(std::sin(snatchAngle) * snatchRadius);
         endpointDev.x = std::clamp(endpointDev.x, 0.0f, (float)std::max(0, w - 1));

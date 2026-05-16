@@ -48,11 +48,11 @@ static void init(BehaviorContext& ctx) {
 static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
     auto* state = BehaviorStateManager::Instance().GetOrCreate<ToysState>(goose->id, "toys");
 
-    // Spawn new toys periodically
+    // Spawn new toys periodically (device coords)
     if (time - state->lastSpawnTime >= TOY_SPAWN_INTERVAL && state->activeCount < MAX_TOYS) {
-        float screenW = (float)g_screenWidth / ctx.globalScale;
-        float screenH = (float)g_screenHeight / ctx.globalScale;
         float margin = 100.0f;
+        float screenW = (float)g_screenWidth;
+        float screenH = (float)g_screenHeight;
 
         Vector2 spawnPos{
             margin + (float)(rand() % (int)(screenW - margin * 2)),
@@ -76,7 +76,7 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
         }
     }
 
-    // Find nearest active toy
+    // Find nearest active toy (all positions in device coords)
     int nearestIdx = -1;
     float nearestDist = 1e9f;
     for (int i = 0; i < MAX_TOYS; ++i) {
@@ -99,12 +99,10 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
         if (!goose->heldItem) {
             goose->heldItem = g_assets.CreateToyItem(toyType == Toy::Type::Stick);
             goose->state = GooseState::RETURNING;
-            float screenW = (float)g_screenWidth / ctx.globalScale;
-            float screenH = (float)g_screenHeight / ctx.globalScale;
             float margin = 100.0f;
             goose->target = {
-                margin + (float)(rand() % (int)(screenW - margin * 2)),
-                margin + (float)(rand() % (int)(screenH - margin * 2))
+                margin + (float)(rand() % (int)(g_screenWidth - margin * 2)),
+                margin + (float)(rand() % (int)(g_screenHeight - margin * 2))
             };
             g_assets.Bite();
             g_assets.Honk();
@@ -127,26 +125,30 @@ static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
 
     CGContextSaveGState(cg);
 
+    float scale = ctx.globalScale;
+
     for (int i = 0; i < MAX_TOYS; ++i) {
         if (!state->toys[i].active) continue;
 
-        Vector2 devPos = WorldCoord::ToDevice(state->toys[i].pos);
+        Vector2 devicePos = state->toys[i].pos;
+        Vector2 drawPos{goose->pos.x + (devicePos.x - goose->pos.x) / scale,
+                        goose->pos.y + (devicePos.y - goose->pos.y) / scale};
         float age = (float)(ctx.time - state->toys[i].time);
         float alpha = std::min(1.0f, age / 0.5f);
 
         if (state->toys[i].type == Toy::Type::Stick) {
             float rad = state->toys[i].angle * (float)PI / 180.0f;
-            float halfLen = STICK_LENGTH * ctx.globalScale / 2.0f;
-            float halfWidth = STICK_WIDTH * ctx.globalScale / 2.0f;
+            float halfLen = STICK_LENGTH / 2.0f;
+            float halfWidth = STICK_WIDTH / 2.0f;
 
             float cosA = std::cos(rad);
             float sinA = std::sin(rad);
 
             CGPoint corners[4] = {
-                {devPos.x + (-halfLen * cosA + halfWidth * sinA), devPos.y + (-halfLen * sinA - halfWidth * cosA)},
-                {devPos.x + (halfLen * cosA + halfWidth * sinA), devPos.y + (halfLen * sinA - halfWidth * cosA)},
-                {devPos.x + (halfLen * cosA - halfWidth * sinA), devPos.y + (halfLen * sinA + halfWidth * cosA)},
-                {devPos.x + (-halfLen * cosA - halfWidth * sinA), devPos.y + (-halfLen * sinA + halfWidth * cosA)},
+                {drawPos.x + (-halfLen * cosA + halfWidth * sinA), drawPos.y + (-halfLen * sinA - halfWidth * cosA)},
+                {drawPos.x + (halfLen * cosA + halfWidth * sinA), drawPos.y + (halfLen * sinA - halfWidth * cosA)},
+                {drawPos.x + (halfLen * cosA - halfWidth * sinA), drawPos.y + (halfLen * sinA + halfWidth * cosA)},
+                {drawPos.x + (-halfLen * cosA - halfWidth * sinA), drawPos.y + (-halfLen * sinA + halfWidth * cosA)},
             };
 
             CGContextSetRGBFillColor(cg, 0.55f, 0.35f, 0.15f, alpha);
@@ -155,8 +157,8 @@ static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
             CGContextClosePath(cg);
             CGContextFillPath(cg);
         } else {
-            float radius = BALL_RADIUS * ctx.globalScale;
-            CGRect rect = CGRectMake(devPos.x - radius, devPos.y - radius, radius * 2.0f, radius * 2.0f);
+            float radius = BALL_RADIUS;
+            CGRect rect = CGRectMake(drawPos.x - radius, drawPos.y - radius, radius * 2.0f, radius * 2.0f);
             CGContextSetRGBFillColor(cg, 0.8f, 0.2f, 0.2f, alpha);
             CGContextFillEllipseInRect(cg, rect);
         }

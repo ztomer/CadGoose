@@ -229,5 +229,5 @@ void cb_attack_cursor(GtkButton*, gpointer) {
     Goose* g = GetGooseById(g_selectedGooseId);
     if (!g) { if (g_geese.empty()) g_geese.emplace_back(g_nextId++, "", g_screenWidth, g_screenHeight); g = &g_geese.front(); }
     g->state = CHASE_CURSOR;
-    if (g_cursorProvider) { CursorState cs = g_cursorProvider->Read(); if (cs.caps & CAP_GET_POS && cs.position.x >= 0) g->target = g->DeviceToWorld(cs.position); }
+    if (g_cursorProvider) { CursorState cs = g_cursorProvider->Read(); if (cs.caps & CAP_GET_POS && cs.position.x >= 0) g->target = cs.position; }
 }

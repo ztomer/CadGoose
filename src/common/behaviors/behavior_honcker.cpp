@@ -61,7 +61,8 @@ static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
         float scale = size / imgW;
         float drawW = imgW * scale;
         float drawH = imgH * scale;
-        CGRect rect = CGRectMake(headPos.x - drawW/2, headPos.y - drawH - 20, drawW, drawH);
+        float yOffset = 20.0f;
+        CGRect rect = CGRectMake(headPos.x - drawW/2, headPos.y - drawH - yOffset, drawW, drawH);
         CGContextDrawImage(cg, rect, s_honkImage);
     } else {
         CGContextSetRGBFillColor(cg, 1.0f, 0.8f, 0.0f, 0.8f);

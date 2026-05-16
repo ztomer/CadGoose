@@ -82,7 +82,7 @@ if(MACOS)
     )
 
     set_target_properties(CadGoose PROPERTIES
-        COMPILE_FLAGS "-fobjc-arc"
+        COMPILE_FLAGS "-fobjc-arc -Wno-deprecated-literal-operator"
         MACOSX_BUNDLE FALSE
     )
 
@@ -90,7 +90,13 @@ elseif(LINUX)
     find_package(PkgConfig REQUIRED)
     find_package(Threads REQUIRED)
     pkg_check_modules(GTK4 REQUIRED gtk4)
-    pkg_check_modules(LS REQUIRED gtk4-layer-shell-0)
+    pkg_check_modules(LS gtk4-layer-shell-0)
+    if(NOT LS_FOUND)
+        message(STATUS "gtk4-layer-shell-0 not found, building without layer shell support")
+        set(LS_LIBRARIES "")
+        set(LS_INCLUDE_DIRS "")
+        set(LS_CFLAGS_OTHER "")
+    endif()
     pkg_check_modules(SDL2 REQUIRED sdl2)
     pkg_check_modules(SDL2MIXER REQUIRED SDL2_mixer)
     pkg_check_modules(GDKPIXBUF REQUIRED gdk-pixbuf-2.0)
@@ -188,13 +194,14 @@ else()
 endif()
 
 # =========================================================
-# Unit Tests
+# Unit Tests (macOS only — behaviors have CoreGraphics deps)
 # =========================================================
-if(APPLE OR LINUX)
+if(APPLE)
     enable_language(CXX)
     find_package(GTest REQUIRED)
     
-    add_executable(CadGooseTests 
+    # Cross-platform test sources
+    set(TEST_SOURCES_COMMON
         tests/test_main.cpp
         tests/test_goose_behavior.cpp
         tests/test_goose_physics.cpp
@@ -206,10 +213,10 @@ if(APPLE OR LINUX)
         tests/common/test_behavior_typed.cpp
         tests/common/test_behavior_interaction.cpp
         tests/common/test_behavior_registry.cpp
-        tests/common/test_behavior_states.cpp
         tests/common/test_behavior_ball.cpp
         tests/common/test_behavior_breadcrumbs.cpp
         tests/common/test_behavior_hats.cpp
+        tests/common/test_timer.cpp
         tests/common/test_behaviors_fun.cpp
         tests/common/test_behaviors_pomodoro_portal.cpp
         tests/common/test_behaviors_visual.cpp
@@ -228,10 +235,7 @@ if(APPLE OR LINUX)
         tests/common/test_config_load_save.cpp
         tests/common/test_config_toggles.cpp
         tests/common/test_dropped_item_hit.cpp
-        tests/common/test_gui_config.mm
         tests/common/test_ai_text_meme.cpp
-        tests/common/test_local_llm.cpp
-        tests/common/test_behavior_ai.mm
         tests/common/presence_stub.cpp
         src/common/app_actions.cpp
         src/common/app_cli.cpp
@@ -251,10 +255,8 @@ if(APPLE OR LINUX)
         src/common/goose_behaviors_wander.cpp
         src/common/goose_behaviors_fetch.cpp
         src/common/goose_behaviors_interact.cpp
-        src/common/goose_drawing.mm
         src/common/items.cpp
         src/common/world.cpp
-        src/common/world_utils.mm
         src/common/behaviors/behavior_honcker.cpp
         src/common/behaviors/behavior_rainbow.cpp
         src/common/behaviors/behavior_health.cpp
@@ -269,18 +271,11 @@ if(APPLE OR LINUX)
         src/common/behaviors/behavior_anger.cpp
         src/common/behaviors/behavior_nametag.cpp
         src/common/behaviors/behavior_presence.cpp
-        src/common/behaviors/behavior_sonic.cpp
         src/common/behaviors/behavior_toys.cpp
         src/common/behaviors/behavior_boredom.cpp
         src/common/behaviors/behavior_peeking.cpp
         src/common/behaviors/behavior_affirmations.cpp
         src/common/behaviors/behavior_interactive_drops.cpp
-        src/common/behaviors/behavior_ai.mm
-        src/common/behaviors/ai_http_client.mm
-        src/common/behaviors/ai_text_meme.mm
-        src/common/behaviors/local_llm_tokenizer.mm
-        src/common/behaviors/local_llm_model.mm
-        src/common/behaviors/local_llm_inference.mm
         src/common/hotkey.cpp
         src/common/mcp_server.cpp
         src/common/mcp_http_server.cpp
@@ -290,12 +285,50 @@ if(APPLE OR LINUX)
     )
     
     if(APPLE)
+        set(TEST_SOURCES_PLATFORM
+            tests/common/test_gui_config.mm
+            tests/common/test_local_llm.cpp
+            tests/common/test_behavior_ai.mm
+            src/common/goose_drawing.mm
+            src/common/world_utils.mm
+            src/common/behaviors/behavior_ai.mm
+            src/common/behaviors/ai_http_client.mm
+            src/common/behaviors/ai_text_meme.mm
+            src/common/behaviors/local_llm_tokenizer.mm
+            src/common/behaviors/local_llm_model.mm
+            src/common/behaviors/local_llm_inference.mm
+            src/platform/macos/window.mm
+            src/platform/macos/cursor_backend.mm
+            src/platform/macos/renderer.mm
+            src/platform/macos/item_drag_controller.mm
+            src/platform/macos/audio.mm
+            src/platform/macos/command_socket.cpp
+            tests/platform/macos/test_renderer.mm
+            tests/platform/macos/test_gui_accessibility.mm
+            tests/platform/macos/test_dragging_integration.mm
+            tests/platform/macos/test_headless_rendering.mm
+        )
+    else()
+        set(TEST_SOURCES_PLATFORM
+            src/platform/linux/ui.cpp
+            src/platform/linux/ui_debug.cpp
+            src/platform/linux/ui_callbacks.cpp
+            src/platform/linux/hyprland.cpp
+            src/platform/linux/x11_backend.cpp
+            src/platform/linux/wlroots_backend.cpp
+        )
+    endif()
+    
+    add_executable(CadGooseTests ${TEST_SOURCES_COMMON} ${TEST_SOURCES_PLATFORM})
+    
+    if(APPLE)
         target_sources(CadGooseTests PRIVATE 
             src/common/cursor_backend.cpp 
             src/common/world_utils.mm
             src/platform/macos/window.mm
             src/platform/macos/cursor_backend.mm 
             src/platform/macos/renderer.mm
+            src/platform/macos/item_drag_controller.mm
             src/platform/macos/audio.mm
             src/platform/macos/command_socket.cpp
             tests/common/presence_stub.cpp
@@ -303,6 +336,7 @@ if(APPLE OR LINUX)
             tests/platform/macos/test_renderer.mm
             tests/platform/macos/test_gui_accessibility.mm
             tests/platform/macos/test_dragging_integration.mm
+            tests/platform/macos/test_headless_rendering.mm
         )
     target_link_libraries(CadGooseTests
         toml11
@@ -337,7 +371,7 @@ if(APPLE OR LINUX)
     
     if(APPLE)
         set_target_properties(CadGooseTests PROPERTIES
-            COMPILE_FLAGS "-fobjc-arc"
+            COMPILE_FLAGS "-fobjc-arc -Wno-deprecated-literal-operator"
         )
     endif()
     

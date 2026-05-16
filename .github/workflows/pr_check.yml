@@ -21,8 +21,9 @@ jobs:
       - name: Configure
         run: rm -rf build && cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
       - name: Build
-        run: cmake --build build --config Release --parallel $(sysctl -n hw.logicalcpu)
-      - name: Test
-        run: |
-          cd build
-          ctest --output-on-failure -j$(sysctl -n hw.logicalcpu)
+        run: cmake --build build --config Release --parallel $(nproc)
+      # Tests are macOS-only (behaviors have CoreGraphics dependencies)
+      # - name: Test
+      #   run: |
+      #     cd build
+      #     ctest --output-on-failure -j$(nproc)

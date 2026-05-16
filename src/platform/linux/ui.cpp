@@ -248,7 +248,7 @@ void draw_overlay(GtkDrawingArea* area, cairo_t* cr, int width, int height, gpoi
             // 3. Target point and line to target
             // Note: Use btPoint if we're in a beak-targeting state, otherwise pos
             Vector2 origin = g.pos;
-            if (g.state = GooseState::= GooseState:: FETCHING || g.state = GooseState::= GooseState:: RETURNING || g.state = GooseState::= GooseState:: CHASE_CURSOR) {
+            if (g.state == GooseState::FETCHING || g.state == GooseState::RETURNING || g.state == GooseState::CHASE_CURSOR) {
                 origin = g.GetBeakTipDevice();
             }
 
@@ -264,16 +264,16 @@ void draw_overlay(GtkDrawingArea* area, cairo_t* cr, int width, int height, gpoi
 
             // Draw target dot
             cairo_set_source_rgba(cr, 0, 1, 0, 0.8);
-            if (g.state = GooseState::= GooseState:: RETURNING) cairo_set_source_rgba(cr, 1, 0, 1, 0.8); // Purple for drop point
-            if (g.state = GooseState::= GooseState:: FETCHING) cairo_set_source_rgba(cr, 0, 1, 1, 0.8);  // Cyan for fetch point
+            if (g.state == GooseState::RETURNING) cairo_set_source_rgba(cr, 1, 0, 1, 0.8); // Purple for drop point
+            if (g.state == GooseState::FETCHING) cairo_set_source_rgba(cr, 0, 1, 1, 0.8);  // Cyan for fetch point
             
             cairo_arc(cr, g.target.x, g.target.y, 6, 0, G_PI * 2);
             cairo_fill(cr);
 
             // 4. Threshold circle (Drop Zone / Catch Zone)
             float threshold = std::max(30.0f * g_config.globalScale, 25.0f);
-            if (g.state = GooseState::= GooseState:: RETURNING) threshold = std::max(50.0f * g_config.globalScale, 40.0f);
-            if (g.state = GooseState::= GooseState:: CHASE_CURSOR) threshold = std::max(22.0f * g_config.globalScale, 15.0f);
+            if (g.state == GooseState::RETURNING) threshold = std::max(50.0f * g_config.globalScale, 40.0f);
+            if (g.state == GooseState::CHASE_CURSOR) threshold = std::max(22.0f * g_config.globalScale, 15.0f);
 
             cairo_set_source_rgba(cr, 1, 1, 1, 0.2); // Faint white circle
             cairo_set_line_width(cr, 1.0);

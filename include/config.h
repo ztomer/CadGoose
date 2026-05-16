@@ -358,7 +358,6 @@ struct BehaviorConfig {
     bool peeking = true;
     bool affirmations = false;
     bool interactiveDrops = false;
-    bool sonicMode = false;
     bool toysEnabled = true;
   } fun;
 

@@ -115,13 +115,17 @@ static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
 
     CGContextSaveGState(cg);
 
+    float scale = ctx.globalScale;
+
     if (!s_crumbImage) {
         float size = g_config.behaviors.breadCrumbs.size;
         for (const auto& crumb : s_crumbs) {
             if (crumb.eaten) continue;
             float alpha = std::max(0.0f, 1.0f - (float)(ctx.time - crumb.time) / crumb.lifetime);
+            Vector2 drawPos{goose->pos.x + (crumb.pos.x - goose->pos.x) / scale,
+                            goose->pos.y + (crumb.pos.y - goose->pos.y) / scale};
             CGContextSetRGBFillColor(cg, 0.9f, 0.7f, 0.4f, alpha * 0.8f);
-            CGContextFillEllipseInRect(cg, CGRectMake(crumb.pos.x - size/2, crumb.pos.y - size/2, size, size));
+            CGContextFillEllipseInRect(cg, CGRectMake(drawPos.x - size/2, drawPos.y - size/2, size, size));
         }
     } else {
         float imgWidth = (float)CGImageGetWidth(s_crumbImage);
@@ -129,8 +133,10 @@ static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
         for (const auto& crumb : s_crumbs) {
             if (crumb.eaten) continue;
             float alpha = std::max(0.0f, 1.0f - (float)(ctx.time - crumb.time) / crumb.lifetime);
+            Vector2 drawPos{goose->pos.x + (crumb.pos.x - goose->pos.x) / scale,
+                            goose->pos.y + (crumb.pos.y - goose->pos.y) / scale};
             CGContextSetAlpha(cg, alpha);
-            CGRect rect = CGRectMake(crumb.pos.x - imgWidth / 2.0f, crumb.pos.y - imgHeight / 2.0f, imgWidth, imgHeight);
+            CGRect rect = CGRectMake(drawPos.x - imgWidth / 2.0f, drawPos.y - imgHeight / 2.0f, imgWidth, imgHeight);
             CGContextDrawImage(cg, rect, s_crumbImage);
         }
     }

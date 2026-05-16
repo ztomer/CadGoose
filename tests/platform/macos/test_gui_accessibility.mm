@@ -188,7 +188,7 @@ static bool OpenPreferencesViaMenu(AXUIElementRef appElem) {
 static NSArray* BehaviorDisplayNames() {
     return @[
         @"Ball", @"Breadcrumbs", @"Hats", @"Rainbow", @"Acid", @"Anger", @"Autumn Leaves",
-        @"Avoidance", @"Boredom Sigh", @"Window Peeking", @"Custom Affirmations", @"Interactive Drops", @"Sonic Mode", @"Toys",
+        @"Avoidance", @"Boredom Sigh", @"Window Peeking", @"Custom Affirmations", @"Interactive Drops", @"Toys",
         @"Honcker", @"Jail", @"Portals", @"Drag",
         @"Nametag",
         @"Health", @"Pomodoro"

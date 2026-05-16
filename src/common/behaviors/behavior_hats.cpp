@@ -57,9 +57,9 @@ static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
         }
     }
 
-    Vector2 headDevice = WorldCoord::RigNeckHead(*goose);
-    float screenX = headDevice.x + offsetX * gs;
-    float screenY = headDevice.y + offsetY * gs;
+    Vector2 headDevice = goose->rig.neckHead;
+    float screenX = headDevice.x + offsetX;
+    float screenY = headDevice.y + offsetY;
 
     CGContextSaveGState(cg);
     CGContextTranslateCTM(cg, screenX, screenY);

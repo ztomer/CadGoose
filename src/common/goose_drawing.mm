@@ -238,31 +238,35 @@ void DrawHeldItem(Goose* g, CGContextRef ctx) {
     float dragRad = g->dragRot;
     CGContextRotateCTM(ctx, -dragRad);
     
+    // Scale item dimensions to device coords
+    float itemW = g->heldItem->w * g_config.general.globalScale;
+    float itemH = g->heldItem->h * g_config.general.globalScale;
+    
     // Offset so the right edge of the item is at the beak, centered vertically
-    CGContextTranslateCTM(ctx, -g->heldItem->w - kHeldItemBeakOffset, -g->heldItem->h / 2.0f);
+    CGContextTranslateCTM(ctx, -itemW - kHeldItemBeakOffset, -itemH / 2.0f);
 
     if (g->heldItem->type == ItemData::MEME && g->heldItem->image) {
         CGContextSaveGState(ctx);
-        CGContextTranslateCTM(ctx, 0, g->heldItem->h);
+        CGContextTranslateCTM(ctx, 0, itemH);
         CGContextScaleCTM(ctx, 1.0, -1.0);
-        CGContextDrawImage(ctx, CGRectMake(0, 0, g->heldItem->w, g->heldItem->h), g->heldItem->image);
+        CGContextDrawImage(ctx, CGRectMake(0, 0, itemW, itemH), g->heldItem->image);
         CGContextRestoreGState(ctx);
     } else if (g->heldItem->type == ItemData::MEME) {
         CGContextSetRGBFillColor(ctx, 0.8f, 0.8f, 0.8f, 1.0f);
-        CGContextFillRect(ctx, CGRectMake(0, 0, g->heldItem->w, g->heldItem->h));
+        CGContextFillRect(ctx, CGRectMake(0, 0, itemW, itemH));
     } else if (g->heldItem->type == ItemData::TEXT) {
         if (g->heldItem->isAIGenerated) {
             CGContextSetRGBFillColor(ctx, 0.96f, 0.94f, 0.88f, 1.0f);
-            CGContextFillRect(ctx, CGRectMake(0, 0, g->heldItem->w, g->heldItem->h));
+            CGContextFillRect(ctx, CGRectMake(0, 0, itemW, itemH));
             CGContextSetRGBStrokeColor(ctx, 0.6f, 0.5f, 0.4f, 1.0f);
             CGContextSetLineWidth(ctx, 1);
-            CGContextStrokeRect(ctx, CGRectMake(0, 0, g->heldItem->w, g->heldItem->h));
+            CGContextStrokeRect(ctx, CGRectMake(0, 0, itemW, itemH));
         } else {
             CGContextSetRGBFillColor(ctx, 1, 1, 0.9f, 1.0f);
-            CGContextFillRect(ctx, CGRectMake(0, 0, g->heldItem->w, g->heldItem->h));
+            CGContextFillRect(ctx, CGRectMake(0, 0, itemW, itemH));
             CGContextSetRGBStrokeColor(ctx, 0, 0, 0, 1.0f);
             CGContextSetLineWidth(ctx, 2);
-            CGContextStrokeRect(ctx, CGRectMake(0, 0, g->heldItem->w, g->heldItem->h));
+            CGContextStrokeRect(ctx, CGRectMake(0, 0, itemW, itemH));
         }
 
         if (g->heldItem->textContent) {
@@ -272,21 +276,21 @@ void DrawHeldItem(Goose* g, CGContextRef ctx) {
                                     NSForegroundColorAttributeName: [NSColor blackColor]};
             float textX = kTextItemPadding;
             float textY = kTextItemPadding;
-            float textW = g->heldItem->w - kTextItemPadding * 2;
-            float textH = g->heldItem->h - kTextItemPadding * 2;
+            float textW = itemW - kTextItemPadding * 2;
+            float textH = itemH - kTextItemPadding * 2;
             [text drawInRect:NSMakeRect(textX, textY, textW, textH) withAttributes:attrs];
 #endif
         }
     } else if (g->heldItem->type == ItemData::TOY) {
         if (g->heldItem->image) {
             CGContextSaveGState(ctx);
-            CGContextTranslateCTM(ctx, 0, g->heldItem->h);
+            CGContextTranslateCTM(ctx, 0, itemH);
             CGContextScaleCTM(ctx, 1.0, -1.0);
-            CGContextDrawImage(ctx, CGRectMake(0, 0, g->heldItem->w, g->heldItem->h), g->heldItem->image);
+            CGContextDrawImage(ctx, CGRectMake(0, 0, itemW, itemH), g->heldItem->image);
             CGContextRestoreGState(ctx);
         } else {
             CGContextSetRGBFillColor(ctx, 0.55f, 0.35f, 0.15f, 1.0f);
-            CGContextFillRect(ctx, CGRectMake(0, 0, g->heldItem->w, g->heldItem->h));
+            CGContextFillRect(ctx, CGRectMake(0, 0, itemW, itemH));
         }
     }
 
@@ -350,19 +354,23 @@ void DrawDroppedItem(CGContextRef ctx, const DroppedItem& item, float viewHeight
     CGContextTranslateCTM(ctx, item.pos.x, item.pos.y);
     CGContextRotateCTM(ctx, -item.rotation);
 
-    float x = -item.data->w / 2.0f;
-    float y = -item.data->h / 2.0f;
+    // Scale item dimensions to device coords
+    float scale = g_config.general.globalScale;
+    float itemW = item.data->w * scale;
+    float itemH = item.data->h * scale;
+    float x = -itemW / 2.0f;
+    float y = -itemH / 2.0f;
 
     if (item.data->type == ItemData::TEXT) {
         if (item.data->isAIGenerated) {
             CGContextSetRGBFillColor(ctx, 0.96f, 0.94f, 0.88f, 1.0f);
-            CGContextFillRect(ctx, CGRectMake(x, y, item.data->w, item.data->h));
+            CGContextFillRect(ctx, CGRectMake(x, y, itemW, itemH));
             CGContextSetRGBStrokeColor(ctx, 0.6f, 0.5f, 0.4f, 1.0f);
             CGContextSetLineWidth(ctx, 1);
-            CGContextStrokeRect(ctx, CGRectMake(x, y, item.data->w, item.data->h));
+            CGContextStrokeRect(ctx, CGRectMake(x, y, itemW, itemH));
         } else {
             CGContextSetRGBFillColor(ctx, 1.0, 1.0, 0.8, 1.0);
-            CGContextFillRect(ctx, CGRectMake(x, y, item.data->w, item.data->h));
+            CGContextFillRect(ctx, CGRectMake(x, y, itemW, itemH));
         }
 
 #ifdef __APPLE__
@@ -377,8 +385,8 @@ void DrawDroppedItem(CGContextRef ctx, const DroppedItem& item, float viewHeight
         NSString* text = [NSString stringWithUTF8String:item.data->Text().c_str()];
         float textX = x + g_config.render.textNotePadding;
         float textY = y + g_config.render.textNotePadding;
-        float textW = item.data->w - g_config.render.textNotePadding * 2;
-        float textH = item.data->h - g_config.render.textNotePadding * 2;
+        float textW = itemW - g_config.render.textNotePadding * 2;
+        float textH = itemH - g_config.render.textNotePadding * 2;
         [text drawInRect:NSMakeRect(textX, textY, textW, textH) withAttributes:textAttrs];
 
         if (item.data->isAIGenerated) {
@@ -388,7 +396,7 @@ void DrawDroppedItem(CGContextRef ctx, const DroppedItem& item, float viewHeight
                 NSForegroundColorAttributeName: [NSColor colorWithRed:0.5 green:0.4 blue:0.3 alpha:0.6]
             };
             CGSize labelSize = [aiLabel sizeWithAttributes:labelAttrs];
-            float labelX = x + item.data->w - labelSize.width - kAILabelPadding;
+            float labelX = x + itemW - labelSize.width - kAILabelPadding;
             float labelY = y + 2;
             [aiLabel drawAtPoint:NSMakePoint(labelX, labelY) withAttributes:labelAttrs];
         }
@@ -396,32 +404,32 @@ void DrawDroppedItem(CGContextRef ctx, const DroppedItem& item, float viewHeight
     } else if (item.data->type == ItemData::MEME) {
         if (item.data->image) {
             CGContextSaveGState(ctx);
-            CGContextTranslateCTM(ctx, x, y + item.data->h);
+            CGContextTranslateCTM(ctx, x, y + itemH);
             CGContextScaleCTM(ctx, 1.0, -1.0);
-            CGContextDrawImage(ctx, CGRectMake(0, 0, item.data->w, item.data->h), item.data->image);
+            CGContextDrawImage(ctx, CGRectMake(0, 0, itemW, itemH), item.data->image);
             CGContextRestoreGState(ctx);
         } else {
             CGContextSetRGBFillColor(ctx, g_config.render.memePlaceholderColor.r,
                                      g_config.render.memePlaceholderColor.g,
                                      g_config.render.memePlaceholderColor.b, 1.0);
-            CGContextFillRect(ctx, CGRectMake(x, y, item.data->w, item.data->h));
+            CGContextFillRect(ctx, CGRectMake(x, y, itemW, itemH));
         }
     } else if (item.data->type == ItemData::TOY) {
         if (item.data->image) {
             CGContextSaveGState(ctx);
-            CGContextTranslateCTM(ctx, x, y + item.data->h);
+            CGContextTranslateCTM(ctx, x, y + itemH);
             CGContextScaleCTM(ctx, 1.0, -1.0);
-            CGContextDrawImage(ctx, CGRectMake(0, 0, item.data->w, item.data->h), item.data->image);
+            CGContextDrawImage(ctx, CGRectMake(0, 0, itemW, itemH), item.data->image);
             CGContextRestoreGState(ctx);
         } else {
             CGContextSetRGBFillColor(ctx, 0.55f, 0.35f, 0.15f, 1.0f);
-            CGContextFillRect(ctx, CGRectMake(x, y, item.data->w, item.data->h));
+            CGContextFillRect(ctx, CGRectMake(x, y, itemW, itemH));
         }
     }
 
     if (item.data->type != ItemData::TOY) {
-        float closeX = -item.data->w / 2.0f;
-        float closeY = -item.data->h / 2.0f;
+        float closeX = -itemW / 2.0f;
+        float closeY = -itemH / 2.0f;
         CGContextSetRGBFillColor(ctx, g_config.render.closeButtonColor.r,
                                  g_config.render.closeButtonColor.g,
                                  g_config.render.closeButtonColor.b, 0.8);

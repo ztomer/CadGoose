@@ -15,6 +15,7 @@
 #include "behavior.h"
 #include "ai_text_meme.h"
 #include "world_utils.h"
+#include "item_drag_controller.h"
 
 void Honcker_Honk(Goose* goose, double time);
 float Rainbow_GetHue(int gooseId);
@@ -69,6 +70,7 @@ static void DrawLine(CGContextRef ctx, Vector2 a, Vector2 b, float width, float 
 @property (nonatomic, assign) NSPoint dragOffset;
 @property (nonatomic, assign) NSPoint lastMouseLoc;
 @property (nonatomic, assign) int lastItemCount;
+@property (nonatomic, assign) ItemDragController* dragController;
 - (void)handleKeyDown:(NSEvent*)event;
 - (void)mouseDownAtPoint:(NSPoint)pt viewY:(float)viewY;
 - (void)mouseDraggedAtPoint:(NSPoint)pt viewY:(float)viewY;
@@ -107,10 +109,14 @@ static BOOL s_hasPrimary = NO;
             [NSEvent addLocalMonitorForEventsMatchingMask:NSEventMaskLeftMouseDown handler:^NSEvent*(NSEvent* event) {
                 GooseView* view = weakView;
                 if (!view || !view.window) return event;
+                // SCREEN coords (top-left origin, Y-down)
                 NSPoint screenPt = [NSEvent mouseLocation];
                 NSRect frame = view.window.frame;
+                // WINDOW coords (relative to window origin)
                 NSPoint windowPt = NSMakePoint(screenPt.x - frame.origin.x, screenPt.y - frame.origin.y);
+                // VIEW coords (isFlipped=YES, so top-left origin, Y-down)
                 NSPoint viewPt = [view convertPoint:windowPt fromView:nil];
+                // DEVICE coords (viewY is Y after flip, same as device Y)
                 float viewY = view.bounds.size.height - viewPt.y;
                 [view mouseDownAtPoint:viewPt viewY:viewY];
                 return event;
@@ -118,6 +124,7 @@ static BOOL s_hasPrimary = NO;
             [NSEvent addLocalMonitorForEventsMatchingMask:NSEventMaskLeftMouseDragged handler:^NSEvent*(NSEvent* event) {
                 GooseView* view = weakView;
                 if (!view || !view.window) return event;
+                // SCREEN → WINDOW → VIEW → DEVICE (same transform as mouseDown)
                 NSPoint screenPt = [NSEvent mouseLocation];
                 NSRect frame = view.window.frame;
                 NSPoint windowPt = NSMakePoint(screenPt.x - frame.origin.x, screenPt.y - frame.origin.y);
@@ -140,6 +147,7 @@ static BOOL s_hasPrimary = NO;
 
         _currentTime = 0.0;
         _tickCount = 0;
+        _dragController = new ItemDragController();
         DEBUG_LOG("  time/count initialized");
     } else {
         LOG("ERROR: GooseView init returned nil!");
@@ -203,6 +211,10 @@ static BOOL s_hasPrimary = NO;
     }
 }
 
+- (void)dealloc {
+    delete self.dragController;
+}
+
 - (void)handleClickAtPoint:(NSPoint)point {
 }
 
@@ -252,8 +264,7 @@ static BOOL s_hasPrimary = NO;
                             g_geese.empty() ? nullptr : &g_geese.front());
     }
 
-    bool shouldAcceptMouse = (self.draggedItem != nullptr) || !g_droppedItems.empty();
-    int itemCount = (int)g_droppedItems.size();
+    bool shouldAcceptMouse = (self.dragController->GetDraggedItem() != nullptr);
 
     if (self.window.ignoresMouseEvents != !shouldAcceptMouse) {
         self.window.ignoresMouseEvents = !shouldAcceptMouse;
@@ -263,131 +274,53 @@ static BOOL s_hasPrimary = NO;
     }
 }
 
-- (NSView *)hitTest:(NSPoint)point {
-    float worldX = point.x;
-    float worldY = self.bounds.size.height - point.y;
+// ============================================================
+// Hit Testing & Mouse Events
+// ============================================================
+// Coordinate spaces:
+//   - NSPoint from isFlipped=YES view: VIEW coords (top-left origin, Y-down)
+//   - item.pos: DEVICE coords (top-left origin, Y-down, same as VIEW for isFlipped)
+//   - No Y-flip needed: view coords == device coords for isFlipped=YES views
 
-    for (auto it = g_droppedItems.rbegin(); it != g_droppedItems.rend(); ++it) {
-        DroppedItem& item = *it;
-        float dx = worldX - item.pos.x;
-        float dy = worldY - item.pos.y;
-        float cosA = cos(item.rotation);
-        float sinA = sin(item.rotation);
-        float lx = dx * cosA - dy * sinA;
-        float ly = dx * sinA + dy * cosA;
-        if (lx >= -item.data->w/2.0f && lx <= item.data->w/2.0f &&
-            ly >= -item.data->h/2.0f && ly <= item.data->h/2.0f) {
-            fprintf(stderr, "[DRAG] hitTest HIT pt(%.0f,%.0f) item(%.0f,%.0f)\n",
-                    point.x, point.y, item.pos.x, item.pos.y);
-            return self;
-        }
-    }
-    return nil;
+- (NSView *)hitTest:(NSPoint)point {
+    DevicePoint mousePt = {(float)point.x, (float)point.y};
+    return self.dragController->OnMouseDown(mousePt) ? self : nil;
 }
 
 - (void)mouseDown:(NSEvent *)event {
     NSPoint p = [self convertPoint:[event locationInWindow] fromView:nil];
-    float worldX = p.x;
-    float worldY = p.y;
-
-    for (auto it = g_droppedItems.rbegin(); it != g_droppedItems.rend(); ++it) {
-        DroppedItem& item = *it;
-        float dx = worldX - item.pos.x;
-        float dy = worldY - item.pos.y;
-        float cosA = cos(item.rotation);
-        float sinA = sin(item.rotation);
-        float lx = dx * cosA - dy * sinA;
-        float ly = dx * sinA + dy * cosA;
-
-        if (lx >= -item.data->w/2.0f && lx <= item.data->w/2.0f &&
-            ly >= -item.data->h/2.0f && ly <= item.data->h/2.0f) {
-
-            if (item.data->type != ItemData::TOY) {
-                float closeX = -item.data->w/2.0f;
-                float closeY = -item.data->h/2.0f;
-                if (lx >= closeX && lx <= closeX + g_config.render.closeButtonSize &&
-                    ly >= closeY && ly <= closeY + g_config.render.closeButtonSize) {
-                    delete item.data;
-                    auto forward_it = std::prev(it.base());
-                    g_droppedItems.erase(forward_it);
-                    [self setNeedsDisplay:YES];
-                    return;
-                }
-            }
-
-            self.draggedItem = &item;
-            self.draggedItem->pinned = true;
-            self.dragOffset = NSMakePoint(item.pos.x - worldX, item.pos.y - worldY);
-            auto forward_it = std::prev(it.base());
-            g_droppedItems.splice(g_droppedItems.end(), g_droppedItems, forward_it);
-            return;
-        }
-    }
+    DevicePoint mousePt = {(float)p.x, (float)p.y};
+    self.dragController->OnMouseDown(mousePt);
 }
 
 - (void)mouseDragged:(NSEvent *)event {
-    if (self.draggedItem) {
+    if (self.dragController->GetDraggedItem()) {
         NSPoint p = [self convertPoint:[event locationInWindow] fromView:nil];
-        self.draggedItem->pos.x = p.x + self.dragOffset.x;
-        self.draggedItem->pos.y = p.y + self.dragOffset.y;
+        DevicePoint mousePt = {(float)p.x, (float)p.y};
+        self.dragController->OnMouseDragged(mousePt);
         [self setNeedsDisplay:YES];
     }
 }
 
 - (void)mouseUp:(NSEvent *)event {
-    if (self.draggedItem) {
-        self.draggedItem = nullptr;
-    }
+    self.dragController->OnMouseUp();
 }
 
 - (void)mouseDownAtPoint:(NSPoint)pt viewY:(float)viewY {
-    for (auto it = g_droppedItems.rbegin(); it != g_droppedItems.rend(); ++it) {
-        DroppedItem& item = *it;
-        float dx = pt.x - item.pos.x;
-        float dy = viewY - item.pos.y;
-        float cosA = cos(item.rotation);
-        float sinA = sin(item.rotation);
-        float lx = dx * cosA - dy * sinA;
-        float ly = dx * sinA + dy * cosA;
-
-        if (lx >= -item.data->w/2.0f && lx <= item.data->w/2.0f &&
-            ly >= -item.data->h/2.0f && ly <= item.data->h/2.0f) {
-
-            if (item.data->type != ItemData::TOY) {
-                float closeX = -item.data->w/2.0f;
-                float closeY = -item.data->h/2.0f;
-                if (lx >= closeX && lx <= closeX + g_config.render.closeButtonSize &&
-                    ly >= closeY && ly <= closeY + g_config.render.closeButtonSize) {
-                    delete item.data;
-                    auto forward_it = std::prev(it.base());
-                    g_droppedItems.erase(forward_it);
-                    [self setNeedsDisplay:YES];
-                    return;
-                }
-            }
-
-            self.draggedItem = &item;
-            self.draggedItem->pinned = true;
-            self.dragOffset = NSMakePoint(item.pos.x - pt.x, item.pos.y - viewY);
-            auto forward_it = std::prev(it.base());
-            g_droppedItems.splice(g_droppedItems.end(), g_droppedItems, forward_it);
-            return;
-        }
-    }
+    DevicePoint mousePt = CoordTransform::ViewToDevice({(float)pt.x, (float)pt.y}, viewY);
+    self.dragController->OnMouseDown(mousePt);
 }
 
 - (void)mouseDraggedAtPoint:(NSPoint)pt viewY:(float)viewY {
-    if (self.draggedItem) {
-        self.draggedItem->pos.x = pt.x + self.dragOffset.x;
-        self.draggedItem->pos.y = viewY + self.dragOffset.y;
+    if (self.dragController->GetDraggedItem()) {
+        DevicePoint mousePt = CoordTransform::ViewToDevice({(float)pt.x, (float)pt.y}, viewY);
+        self.dragController->OnMouseDragged(mousePt);
         [self setNeedsDisplay:YES];
     }
 }
 
 - (void)mouseUpAtPoint:(NSPoint)pt {
-    if (self.draggedItem) {
-        self.draggedItem = nullptr;
-    }
+    self.dragController->OnMouseUp();
 }
 
 - (void)setNeedsDisplay:(BOOL)flag {
@@ -412,7 +345,12 @@ static BOOL s_hasPrimary = NO;
     }
 
     for (auto& g : g_geese) {
+        CGContextSaveGState(ctx);
+        CGContextTranslateCTM(ctx, g.pos.x, g.pos.y);
+        CGContextScaleCTM(ctx, g_config.general.globalScale, g_config.general.globalScale);
+        CGContextTranslateCTM(ctx, -g.pos.x, -g.pos.y);
         BehaviorRegistry::Instance().RenderPass(&g, ctx, true);
+        CGContextRestoreGState(ctx);
     }
 
     for (auto& g : g_geese) {
@@ -423,7 +361,12 @@ static BOOL s_hasPrimary = NO;
     }
 
     for (auto& g : g_geese) {
+        CGContextSaveGState(ctx);
+        CGContextTranslateCTM(ctx, g.pos.x, g.pos.y);
+        CGContextScaleCTM(ctx, g_config.general.globalScale, g_config.general.globalScale);
+        CGContextTranslateCTM(ctx, -g.pos.x, -g.pos.y);
         BehaviorRegistry::Instance().RenderPass(&g, ctx, false);
+        CGContextRestoreGState(ctx);
     }
 
     DrawDebugOverlay(ctx, g_geese);

@@ -1,6 +1,6 @@
 // ===========================
 // test_behaviors_fun.cpp
-// Tests for fun behaviors: sonic, toys, boredom, peeking, affirmations, interactive_drops
+// Tests for fun behaviors: toys, boredom, peeking, affirmations, interactive_drops
 // ===========================
 #include "gtest/gtest.h"
 #include <cmath>
@@ -14,67 +14,6 @@
 
 static void ResetBehaviorState() {
     BehaviorStateManager::Instance().ClearAll();
-}
-
-// ===========================
-// Sonic Behavior Tests
-// ===========================
-TEST(SonicBehavior, StateCreation) {
-    ResetBehaviorState();
-    auto& mgr = BehaviorStateManager::Instance();
-    auto* state = mgr.GetOrCreate<SonicState>(0, "sonic");
-    ASSERT_NE(state, nullptr);
-    state->Reset();
-    EXPECT_TRUE(state->trails.empty());
-    EXPECT_EQ(state->lastTrailTime, 0);
-    EXPECT_EQ(state->lastHonkTime, 0);
-}
-
-TEST(SonicBehavior, SpeedMultiplierConstant) {
-    float baseSpeed = 180.0f;
-    float sonicMultiplier = 2.5f;
-    float result = baseSpeed * sonicMultiplier;
-    EXPECT_FLOAT_EQ(result, 450.0f);
-}
-
-TEST(SonicBehavior, TrailSpawnInterval) {
-    double time = 0.0;
-    double lastTrailTime = 0.0;
-    float interval = 0.03f;
-    EXPECT_FALSE(time - lastTrailTime >= interval);
-
-    time = 0.05;
-    EXPECT_TRUE(time - lastTrailTime >= interval);
-}
-
-TEST(SonicBehavior, TrailExpiry) {
-    double currentTime = 10.0;
-    float trailLifetime = 0.5f;
-
-    SonicTrail oldTrail;
-    oldTrail.time = 9.0;
-    EXPECT_TRUE((currentTime - oldTrail.time) > trailLifetime);
-
-    SonicTrail newTrail;
-    newTrail.time = 9.8;
-    EXPECT_FALSE((currentTime - newTrail.time) > trailLifetime);
-}
-
-TEST(SonicBehavior, HonkInterval) {
-    double time = 0.0;
-    double lastHonkTime = 0.0;
-    float interval = 0.8f;
-    EXPECT_FALSE(time - lastHonkTime >= interval);
-
-    time = 1.0;
-    EXPECT_TRUE(time - lastHonkTime >= interval);
-}
-
-TEST(SonicBehavior, ConfigPointer) {
-    EXPECT_EQ(g_config.behaviors.fun.sonicMode, false);
-    g_config.behaviors.fun.sonicMode = true;
-    EXPECT_EQ(g_config.behaviors.fun.sonicMode, true);
-    g_config.behaviors.fun.sonicMode = false;
 }
 
 // ===========================

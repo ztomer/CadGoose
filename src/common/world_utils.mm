@@ -86,21 +86,13 @@ void World_SpawnRandomLeafPile(float screenWidth, float screenHeight, double cur
 }
 
 bool ItemHitTest(NSPoint p, float viewHeight, DroppedItem** hitItem, float closeButtonSize) {
-    float worldX = p.x;
-    float worldY = p.y;
+    // p is in VIEW coords (isFlipped=YES → same as DEVICE coords)
+    DevicePoint mousePt = {(float)p.x, (float)p.y};
 
     for (auto it = g_droppedItems.rbegin(); it != g_droppedItems.rend(); ++it) {
         DroppedItem& item = *it;
-        float cx = item.pos.x;
-        float cy = item.pos.y;
-        float dx = worldX - cx;
-        float dy = worldY - cy;
-        float cosA = cos(item.rotation);
-        float sinA = sin(item.rotation);
-        float lx = dx * cosA - dy * sinA;
-        float ly = dx * sinA + dy * cosA;
-        if (lx >= -item.data->w/2.0f && lx <= item.data->w/2.0f &&
-            ly >= -item.data->h/2.0f && ly <= item.data->h/2.0f) {
+        DevicePoint itemPos = {item.pos.x, item.pos.y};
+        if (HitTest::PointInItem(mousePt, itemPos, item.data->w, item.data->h, item.rotation, g_config.general.globalScale)) {
             *hitItem = &item;
             return true;
         }

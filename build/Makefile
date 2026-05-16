@@ -1127,33 +1127,6 @@ src/common/behaviors/behavior_rainbow.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/src/common/behaviors/behavior_rainbow.cpp.s
 .PHONY : src/common/behaviors/behavior_rainbow.cpp.s
 
-src/common/behaviors/behavior_sonic.o: src/common/behaviors/behavior_sonic.cpp.o
-.PHONY : src/common/behaviors/behavior_sonic.o
-
-# target to build an object file
-src/common/behaviors/behavior_sonic.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/common/behaviors/behavior_sonic.cpp.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/src/common/behaviors/behavior_sonic.cpp.o
-.PHONY : src/common/behaviors/behavior_sonic.cpp.o
-
-src/common/behaviors/behavior_sonic.i: src/common/behaviors/behavior_sonic.cpp.i
-.PHONY : src/common/behaviors/behavior_sonic.i
-
-# target to preprocess a source file
-src/common/behaviors/behavior_sonic.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/common/behaviors/behavior_sonic.cpp.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/src/common/behaviors/behavior_sonic.cpp.i
-.PHONY : src/common/behaviors/behavior_sonic.cpp.i
-
-src/common/behaviors/behavior_sonic.s: src/common/behaviors/behavior_sonic.cpp.s
-.PHONY : src/common/behaviors/behavior_sonic.s
-
-# target to generate assembly for a file
-src/common/behaviors/behavior_sonic.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/common/behaviors/behavior_sonic.cpp.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/src/common/behaviors/behavior_sonic.cpp.s
-.PHONY : src/common/behaviors/behavior_sonic.cpp.s
-
 src/common/behaviors/behavior_toys.o: src/common/behaviors/behavior_toys.cpp.o
 .PHONY : src/common/behaviors/behavior_toys.o
 
@@ -1958,6 +1931,15 @@ src/platform/macos/cursor_backend.mm.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/src/platform/macos/cursor_backend.mm.o
 .PHONY : src/platform/macos/cursor_backend.mm.o
 
+src/platform/macos/item_drag_controller.o: src/platform/macos/item_drag_controller.mm.o
+.PHONY : src/platform/macos/item_drag_controller.o
+
+# target to build an object file
+src/platform/macos/item_drag_controller.mm.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/platform/macos/item_drag_controller.mm.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/src/platform/macos/item_drag_controller.mm.o
+.PHONY : src/platform/macos/item_drag_controller.mm.o
+
 src/platform/macos/main.o: src/platform/macos/main.mm.o
 .PHONY : src/platform/macos/main.o
 
@@ -2752,6 +2734,30 @@ tests/common/test_presence.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/tests/common/test_presence.cpp.s
 .PHONY : tests/common/test_presence.cpp.s
 
+tests/common/test_timer.o: tests/common/test_timer.cpp.o
+.PHONY : tests/common/test_timer.o
+
+# target to build an object file
+tests/common/test_timer.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/tests/common/test_timer.cpp.o
+.PHONY : tests/common/test_timer.cpp.o
+
+tests/common/test_timer.i: tests/common/test_timer.cpp.i
+.PHONY : tests/common/test_timer.i
+
+# target to preprocess a source file
+tests/common/test_timer.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/tests/common/test_timer.cpp.i
+.PHONY : tests/common/test_timer.cpp.i
+
+tests/common/test_timer.s: tests/common/test_timer.cpp.s
+.PHONY : tests/common/test_timer.s
+
+# target to generate assembly for a file
+tests/common/test_timer.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/tests/common/test_timer.cpp.s
+.PHONY : tests/common/test_timer.cpp.s
+
 tests/platform/macos/test_dragging_integration.o: tests/platform/macos/test_dragging_integration.mm.o
 .PHONY : tests/platform/macos/test_dragging_integration.o
 
@@ -3003,9 +3009,6 @@ help:
 	@echo "... src/common/behaviors/behavior_rainbow.o"
 	@echo "... src/common/behaviors/behavior_rainbow.i"
 	@echo "... src/common/behaviors/behavior_rainbow.s"
-	@echo "... src/common/behaviors/behavior_sonic.o"
-	@echo "... src/common/behaviors/behavior_sonic.i"
-	@echo "... src/common/behaviors/behavior_sonic.s"
 	@echo "... src/common/behaviors/behavior_toys.o"
 	@echo "... src/common/behaviors/behavior_toys.i"
 	@echo "... src/common/behaviors/behavior_toys.s"
@@ -3097,6 +3100,7 @@ help:
 	@echo "... src/platform/macos/config_gui_theme_io.o"
 	@echo "... src/platform/macos/config_gui_views.o"
 	@echo "... src/platform/macos/cursor_backend.o"
+	@echo "... src/platform/macos/item_drag_controller.o"
 	@echo "... src/platform/macos/main.o"
 	@echo "... src/platform/macos/renderer.o"
 	@echo "... src/platform/macos/renderer/renderer_goose_drawer.o"
@@ -3196,6 +3200,9 @@ help:
 	@echo "... tests/common/test_presence.o"
 	@echo "... tests/common/test_presence.i"
 	@echo "... tests/common/test_presence.s"
+	@echo "... tests/common/test_timer.o"
+	@echo "... tests/common/test_timer.i"
+	@echo "... tests/common/test_timer.s"
 	@echo "... tests/platform/macos/test_dragging_integration.o"
 	@echo "... tests/platform/macos/test_gui_accessibility.o"
 	@echo "... tests/platform/macos/test_renderer.o"

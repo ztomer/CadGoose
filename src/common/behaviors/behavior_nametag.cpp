@@ -44,7 +44,7 @@ static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
 
     if (goose->name.empty()) return;
 
-    Vector2 headPos = WorldCoord::RigNeckHead(*goose);
+    Vector2 headPos = goose->rig.neckHead;
 
     const char* name = goose->name.c_str();
     size_t nameLen = strlen(name);

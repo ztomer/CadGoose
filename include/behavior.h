@@ -63,6 +63,12 @@ struct BallState : public BehaviorState {
         float strokeR = 0.2f, strokeG = 0.4f, strokeB = 0.7f;
         float strokeWidth = 2.0f;
         bool hasPattern = false;
+
+        // Physics and animation state
+        float speed = 0.0f;
+        float lastKickTime = 0.0f;
+        float lastAnimateTime = 0.0f;
+        float animationGap = 0.0f;
     };
     std::vector<Ball> balls;
 
@@ -338,25 +344,6 @@ struct InteractiveDropsState : public BehaviorState {
     }
 };
 
-struct SonicTrail {
-    Vector2 pos{0, 0};
-    double time{0};
-};
-
-struct SonicState : public BehaviorState {
-    std::vector<SonicTrail> trails;
-    double lastTrailTime = 0;
-    double lastHonkTime = 0;
-    float baseSpeed = 0;
-
-    void Reset() override {
-        trails.clear();
-        lastTrailTime = 0;
-        lastHonkTime = 0;
-        baseSpeed = 0;
-    }
-};
-
 struct Toy {
     Vector2 pos{0, 0};
     float angle = 0;
@@ -582,9 +569,9 @@ private:
         .tick = tickFn, \
         .render = renderFn, \
         .cleanup = cleanupFn, \
+        .renderOnGround = groundFlag, \
         .conflicts = nullptr, \
         .priority = 0, \
-        .renderOnGround = groundFlag, \
         .config = { .requiresAccessibility = false, .isStarter = starterFlag } \
     }
 

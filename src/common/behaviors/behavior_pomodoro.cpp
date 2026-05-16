@@ -264,7 +264,7 @@ static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
     char timerText[32];
     snprintf(timerText, sizeof(timerText), "%s %02d:%02d", phaseLabel, minutes, seconds);
 
-    Vector2 headPos = WorldCoord::RigNeckHead(*goose);
+    Vector2 headPos = goose->rig.neckHead;
     float textWidth = kTimerTextWidth;
     float textHeight = kTimerTextHeight;
 
@@ -299,7 +299,9 @@ static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
     }
 
     if (state->isSleeping) {
-        Vector2 bedPos = WorldCoord::ToDevice(state->bedPosition);
+        Vector2 deviceBedPos = state->bedPosition; // already device coords
+        Vector2 bedPos{goose->pos.x + (deviceBedPos.x - goose->pos.x) / ctx.globalScale,
+                       goose->pos.y + (deviceBedPos.y - goose->pos.y) / ctx.globalScale};
         float bedWidth = kBedWidth;
         float bedHeight = kBedHeight;
 

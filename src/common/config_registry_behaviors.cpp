@@ -28,8 +28,6 @@ void RegisterBehaviors(std::vector<ConfigOption>& r) {
         &g_config.behaviors.fun.affirmations, OnConfigChange));
     r.push_back(CONFIG_BOOL("Behavior", "interactive_drops_enabled", "Interactive Drops Enabled",
         &g_config.behaviors.fun.interactiveDrops, OnConfigChange));
-    r.push_back(CONFIG_BOOL("Behavior", "sonic_mode_enabled", "Sonic Mode Enabled",
-        &g_config.behaviors.fun.sonicMode, OnConfigChange));
     r.push_back(CONFIG_BOOL("Behavior", "toys_enabled", "Toys Enabled",
         &g_config.behaviors.fun.toysEnabled, OnConfigChange));
     r.push_back(CONFIG_BOOL("Behavior", "honcker_enabled", "Honcker Enabled",
