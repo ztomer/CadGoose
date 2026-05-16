@@ -277,6 +277,31 @@
 
 **Files**: `tests/platform/macos/test_headless_rendering.mm`
 
+#### P4: IRenderer interface ✅
+**Problem**: 15+ behavior files directly include `<CoreGraphics/CoreGraphics.h>` despite being in `src/common/`. No platform abstraction — behaviors are macOS-only.
+
+**Done**:
+- Created `IRenderer` abstract interface with `DrawEllipse`, `DrawLine`, `DrawRect`, `DrawImage`, `DrawText`, transforms, state management
+- Created `CGRenderer` macOS implementation wrapping CoreGraphics
+- Migrated `behavior_anger.cpp` as proof of concept — uses `CGRenderer` instead of direct CGContext calls
+- Added `IRenderer*` field to `BehaviorContext` for future use
+- Behaviors can create renderer from `void* renderCtx` without changing behavior system
+
+**Files**: `include/renderer_interface.h`, `include/cg_renderer.h`, `src/common/behaviors/behavior_anger.cpp`, `include/behavior.h`
+
+#### P5: Config code generation (partial) ✅
+**Problem**: Adding a config field requires touching 4 files: `config.h` → `config_registry_*.cpp` → `config_gui.mm` → `config.toml`.
+
+**Done**:
+- Created YAML schema format (`tools/config_schema.yaml`) with section/field definitions
+- Created Python generator (`tools/generate_config.py`) that produces registry entries and GUI rows
+- Generated `config_registry_generated.cpp` and `config_gui_generated.mm` for 6 sections (Debug, General, Screen, Asset, Cursor, Movement, Physics)
+- Schema covers ~80 fields; remaining sections (Spawn, Rig, Snatch, Step, Item, Render, Behaviors, AI) need to be added
+
+**Files**: `tools/config_schema.yaml`, `tools/generate_config.py`, `src/common/config_registry_generated.cpp`, `src/platform/macos/config_gui_generated.mm`
+
+**Remaining**: Expand schema to cover all 200+ config fields, integrate generated files into build, replace manual registry files.
+
 ---
 
 ## Test Status
