@@ -217,11 +217,7 @@ bool Config_IsSystemDarkTheme();
 }
 
 - (void)quitApp:(id)sender {
-    g_config.gooseNames.clear();
-    for (const auto& g : g_geese) {
-        g_config.gooseNames.push(g.name);
-    }
-    Config_SaveAll();
+    Config_SaveGooseNames();
     [[NSApplication sharedApplication] terminate:nil];
 }
 
@@ -379,11 +375,7 @@ bool Config_IsSystemDarkTheme();
 }
 
 - (void)applicationWillTerminate:(NSNotification*)aNotification {
-    g_config.gooseNames.clear();
-    for (const auto& g : g_geese) {
-        g_config.gooseNames.push(g.name);
-    }
-    Config_SaveAll();
+    Config_SaveGooseNames();
     MCP_StopHTTPServer();
     MCP_StopInternalServer();
     CommandSocket_StopServer();

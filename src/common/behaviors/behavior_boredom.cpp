@@ -3,9 +3,9 @@
 #include "config.h"
 #include "world.h"
 #include "goose_math.h"
-#include <CoreGraphics/CoreGraphics.h>
+#include "renderer_interface.h"
+#include "cg_renderer.h"
 #include <cmath>
-
 
 static void init(BehaviorContext& ctx) {
     auto* state = BehaviorStateManager::Instance().GetOrCreate<BoredomState>(ctx.goose->id, "boredom");
@@ -62,43 +62,40 @@ static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
     CGContextRef cg = (CGContextRef)renderCtx;
     if (!cg) return;
 
+    CGRenderer renderer(cg);
+
     if (state->isLyingDown) {
-        CGContextSaveGState(cg);
+        renderer.SaveState();
         Vector2 bodyPos = goose->rig.body;
 
-        CGContextSetRGBFillColor(cg, 0.8f, 0.7f, 0.7f, 0.6f);
-        CGContextFillEllipseInRect(cg, CGRectMake(bodyPos.x - 20.0f, bodyPos.y - 6.0f, 40.0f, 12.0f));
+        renderer.DrawEllipse({bodyPos.x, bodyPos.y - 6.0f}, 20.0f, 6.0f,
+                            RenderColor{0.8f, 0.7f, 0.7f, 0.6f});
 
         Vector2 neckPos = goose->rig.neckHead;
-        CGContextSetRGBFillColor(cg, 0.8f, 0.7f, 0.7f, 0.6f);
-        CGContextFillEllipseInRect(cg, CGRectMake(neckPos.x - 8.0f, neckPos.y - 4.0f, 16.0f, 8.0f));
+        renderer.DrawEllipse({neckPos.x, neckPos.y - 4.0f}, 8.0f, 4.0f,
+                            RenderColor{0.8f, 0.7f, 0.7f, 0.6f});
 
-        CGContextSetRGBFillColor(cg, 0.3f, 0.3f, 0.3f, 0.5f);
-        CGContextSetLineWidth(cg, 1.5f);
-        CGContextMoveToPoint(cg, neckPos.x - 4.0f, neckPos.y - 2.0f);
-        CGContextAddLineToPoint(cg, neckPos.x + 4.0f, neckPos.y - 2.0f);
-        CGContextStrokePath(cg);
+        renderer.DrawLine({neckPos.x - 4.0f, neckPos.y - 2.0f},
+                         {neckPos.x + 4.0f, neckPos.y - 2.0f},
+                         RenderColor{0.3f, 0.3f, 0.3f, 0.5f}, 1.5f);
 
-        CGContextRestoreGState(cg);
+        renderer.RestoreState();
         return;
     }
 
     if (state->isSighing) {
-        CGContextSaveGState(cg);
+        renderer.SaveState();
         Vector2 headPos = goose->rig.neckHead;
         double elapsed = goose->lastUpdateTime - state->sighStartTime;
 
         if (elapsed < 2.0) {
             float sighPuff = (float)elapsed * 10.0f;
-            CGContextSetRGBFillColor(cg, 0.7f, 0.7f, 0.7f, 0.4f);
-            CGContextFillEllipseInRect(cg, CGRectMake(
-                headPos.x + 5.0f + sighPuff,
-                headPos.y - 5.0f - sighPuff * 0.3f,
-                8.0f + sighPuff * 0.5f,
-                4.0f + sighPuff * 0.3f));
+            renderer.DrawEllipse({headPos.x + 5.0f + sighPuff, headPos.y - 5.0f - sighPuff * 0.3f},
+                                4.0f + sighPuff * 0.25f, 2.0f + sighPuff * 0.15f,
+                                RenderColor{0.7f, 0.7f, 0.7f, 0.4f});
         }
 
-        CGContextRestoreGState(cg);
+        renderer.RestoreState();
     }
 #endif
 }

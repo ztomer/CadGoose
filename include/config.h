@@ -497,6 +497,7 @@ std::filesystem::path ConfigDirPath();
 void Config_InitRegistry();
 void Config_Init();
 void Config_SaveAll();
+void Config_SaveGooseNames();
 void Config_LoadAll();
 void Config_Load(const toml::basic_value<toml::type_config>& config);
 std::string Config_GetPath();

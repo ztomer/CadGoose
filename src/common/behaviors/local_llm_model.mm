@@ -97,6 +97,29 @@ static NSString* FindModelAsset() {
         }
     }
 
+    // Check custom search paths from config
+    for (const auto& searchPath : g_config.ai.localLlmSearchPaths) {
+        NSString* path = [NSString stringWithUTF8String:searchPath.c_str()];
+        BOOL isDir = NO;
+        if ([fm fileExistsAtPath:path isDirectory:&isDir] && isDir) {
+            NSArray* contents = [fm contentsOfDirectoryAtPath:path error:nil];
+            for (NSString* item in contents) {
+                NSString* fullPath = [path stringByAppendingPathComponent:item];
+                BOOL itemIsDir = NO;
+                if ([fm fileExistsAtPath:fullPath isDirectory:&itemIsDir] && itemIsDir &&
+                    ([item hasSuffix:@".mlmodelc"] || [item hasSuffix:@".mlpackage"])) {
+                    fprintf(stderr, "[LOCAL_LLM] Found model in custom path: %s\n", fullPath.UTF8String);
+                    return fullPath;
+                }
+            }
+        } else if ([fm fileExistsAtPath:path]) {
+            if ([path hasSuffix:@".mlmodelc"] || [path hasSuffix:@".mlpackage"]) {
+                fprintf(stderr, "[LOCAL_LLM] Found model via custom path: %s\n", path.UTF8String);
+                return path;
+            }
+        }
+    }
+
     // Check ~/Library/Caches/com.apple.CoreML/ for cached models
     NSString* homeDir = NSHomeDirectory();
     NSString* coremlCache = [homeDir stringByAppendingPathComponent:@"Library/Caches/com.apple.CoreML"];
@@ -146,7 +169,7 @@ void LocalLLM_Init() {
             NSString* modelPath = FindModelAsset();
             if (!modelPath) {
                 fprintf(stderr, "[LOCAL_LLM] No CoreML model found\n");
-                s_state = LocalLLMState::Unavailable;
+                { std::lock_guard<std::mutex> lock(s_stateMutex); s_state = LocalLLMState::Unavailable; }
                 return;
             }
 
@@ -159,7 +182,7 @@ void LocalLLM_Init() {
                                                        error:&err];
             if (!model) {
                 fprintf(stderr, "[LOCAL_LLM] Failed: %s\n", err.localizedDescription.UTF8String);
-                s_state = LocalLLMState::Error;
+                { std::lock_guard<std::mutex> lock(s_stateMutex); s_state = LocalLLMState::Error; }
                 return;
             }
 
@@ -180,13 +203,14 @@ void LocalLLM_Init() {
             NSString* modelDir = [modelPath stringByDeletingLastPathComponent];
             LocalLLM_LoadTokenizer(modelDir);
 
-            s_state = LocalLLMState::Ready;
+            { std::lock_guard<std::mutex> lock(s_stateMutex); s_state = LocalLLMState::Ready; }
             fprintf(stderr, "[LOCAL_LLM] Ready\n");
         }
     });
 }
 
 LocalLLMState LocalLLM_GetState() {
+    std::lock_guard<std::mutex> lock(s_stateMutex);
     return s_state;
 }
 

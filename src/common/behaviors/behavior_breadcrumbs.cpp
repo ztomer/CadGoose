@@ -5,12 +5,13 @@
 #include "assets.h"
 #include "cursor_backend.h"
 #include "hotkey.h"
+#include "renderer_interface.h"
+#include "cg_renderer.h"
+#include "ring_buffer.h"
 #include <CoreGraphics/CoreGraphics.h>
 #include <ApplicationServices/ApplicationServices.h>
 #include <TargetConditionals.h>
 #include <cmath>
-
-#include "ring_buffer.h"
 
 static CGImageRef s_crumbImage = nullptr;
 static bool s_wasKeyDown = false;
@@ -110,10 +111,12 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
 static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
     if (s_crumbs.empty()) return;
 
+#ifdef __APPLE__
     CGContextRef cg = (CGContextRef)renderCtx;
     if (!cg) return;
 
-    CGContextSaveGState(cg);
+    CGRenderer renderer(cg);
+    renderer.SaveState();
 
     float scale = ctx.globalScale;
 
@@ -124,8 +127,8 @@ static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
             float alpha = std::max(0.0f, 1.0f - (float)(ctx.time - crumb.time) / crumb.lifetime);
             Vector2 drawPos{goose->pos.x + (crumb.pos.x - goose->pos.x) / scale,
                             goose->pos.y + (crumb.pos.y - goose->pos.y) / scale};
-            CGContextSetRGBFillColor(cg, 0.9f, 0.7f, 0.4f, alpha * 0.8f);
-            CGContextFillEllipseInRect(cg, CGRectMake(drawPos.x - size/2, drawPos.y - size/2, size, size));
+            renderer.DrawEllipse({drawPos.x, drawPos.y}, size/2, size/2,
+                                RenderColor{0.9f, 0.7f, 0.4f, alpha * 0.8f});
         }
     } else {
         float imgWidth = (float)CGImageGetWidth(s_crumbImage);
@@ -135,13 +138,13 @@ static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
             float alpha = std::max(0.0f, 1.0f - (float)(ctx.time - crumb.time) / crumb.lifetime);
             Vector2 drawPos{goose->pos.x + (crumb.pos.x - goose->pos.x) / scale,
                             goose->pos.y + (crumb.pos.y - goose->pos.y) / scale};
-            CGContextSetAlpha(cg, alpha);
-            CGRect rect = CGRectMake(drawPos.x - imgWidth / 2.0f, drawPos.y - imgHeight / 2.0f, imgWidth, imgHeight);
-            CGContextDrawImage(cg, rect, s_crumbImage);
+            renderer.SetAlpha(alpha);
+            renderer.DrawImage(s_crumbImage, RenderRect{drawPos.x - imgWidth/2, drawPos.y - imgHeight/2, imgWidth, imgHeight});
         }
     }
 
-    CGContextRestoreGState(cg);
+    renderer.RestoreState();
+#endif
 }
 
 static Behavior g_breadcrumbBehavior = BEHAVIOR_DEF_GROUND(

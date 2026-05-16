@@ -64,6 +64,36 @@ public:
         CGContextStrokeRect(m_ctx, CGRectMake(rect.x, rect.y, rect.w, rect.h));
     }
 
+    void DrawRoundedRect(RenderRect rect, float cornerRadius, RenderColor fill) override {
+        CGContextSetRGBFillColor(m_ctx, fill.r, fill.g, fill.b, fill.a);
+        CGMutablePathRef path = CGPathCreateMutable();
+        CGRect r = CGRectMake(rect.x, rect.y, rect.w, rect.h);
+        CGFloat radius = cornerRadius;
+        // Clamp radius to half the smallest dimension
+        CGFloat minDim = (rect.w < rect.h ? rect.w : rect.h) * 0.5f;
+        if (radius > minDim) radius = minDim;
+        CGPathAddArcToPoint(path, NULL, r.origin.x, r.origin.y, r.origin.x + r.size.width, r.origin.y, radius);
+        CGPathAddArcToPoint(path, NULL, r.origin.x + r.size.width, r.origin.y, r.origin.x + r.size.width, r.origin.y + r.size.height, radius);
+        CGPathAddArcToPoint(path, NULL, r.origin.x + r.size.width, r.origin.y + r.size.height, r.origin.x, r.origin.y + r.size.height, radius);
+        CGPathAddArcToPoint(path, NULL, r.origin.x, r.origin.y + r.size.height, r.origin.x, r.origin.y, radius);
+        CGPathCloseSubpath(path);
+        CGContextAddPath(m_ctx, path);
+        CGContextFillPath(m_ctx);
+        CGPathRelease(path);
+    }
+
+    void DrawPolygon(const RenderPoint* points, int count, RenderColor fill) override {
+        if (count < 3) return;
+        CGContextSetRGBFillColor(m_ctx, fill.r, fill.g, fill.b, fill.a);
+        CGContextBeginPath(m_ctx);
+        CGContextMoveToPoint(m_ctx, points[0].x, points[0].y);
+        for (int i = 1; i < count; ++i) {
+            CGContextAddLineToPoint(m_ctx, points[i].x, points[i].y);
+        }
+        CGContextClosePath(m_ctx);
+        CGContextFillPath(m_ctx);
+    }
+
     void DrawImage(void* image, RenderRect destRect) override {
         CGImageRef img = static_cast<CGImageRef>(image);
         if (!img) return;

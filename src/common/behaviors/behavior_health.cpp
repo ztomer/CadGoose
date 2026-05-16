@@ -5,7 +5,8 @@
 #include "behavior.h"
 #include "goose.h"
 #include "config.h"
-
+#include "renderer_interface.h"
+#include "cg_renderer.h"
 
 static void init(BehaviorContext& ctx) {
     auto* state = BehaviorStateManager::Instance().GetOrCreate<HealthState>(ctx.goose->id, "health");
@@ -38,22 +39,21 @@ static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
     auto* state = BehaviorStateManager::Instance().GetOrCreate<HealthState>(goose->id, "health");
 
 #ifdef __APPLE__
-    CGContextRef ctx_ = (CGContextRef)renderCtx;
-    if (!ctx_) return;
+    CGContextRef cg = (CGContextRef)renderCtx;
+    if (!cg) return;
+
+    CGRenderer renderer(cg);
 
     float barWidth = 40.0f;
     float barHeight = 4.0f;
     float x = goose->pos.x - barWidth / 2;
     float y = goose->pos.y - 50.0f;
 
-    CGContextSetRGBFillColor(ctx_, 0.2f, 0.2f, 0.2f, 0.8f);
-    CGContextFillRect(ctx_, CGRectMake(x, y, barWidth, barHeight));
+    renderer.DrawRect({x, y, barWidth, barHeight}, RenderColor{0.2f, 0.2f, 0.2f, 0.8f});
 
     float healthPct = state->currentHealth / state->maxHealth;
-    float r = 1.0f - healthPct;
-    float g = healthPct;
-    CGContextSetRGBFillColor(ctx_, r, g, 0.0f, 1.0f);
-    CGContextFillRect(ctx_, CGRectMake(x, y, barWidth * healthPct, barHeight));
+    renderer.DrawRect({x, y, barWidth * healthPct, barHeight},
+                     RenderColor{1.0f - healthPct, healthPct, 0.0f, 1.0f});
 #endif
 }
 

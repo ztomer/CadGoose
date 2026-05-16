@@ -6,10 +6,9 @@
 #include "goose.h"
 #include "config.h"
 #include "world.h"
-#include <CoreGraphics/CoreGraphics.h>
-#include <CoreText/CoreText.h>
+#include "renderer_interface.h"
+#include "cg_renderer.h"
 #include <cstring>
-
 
 static CTFontRef s_nameFont = nullptr;
 static CGColorRef s_nameWhite = nullptr;
@@ -44,22 +43,27 @@ static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
 
     if (goose->name.empty()) return;
 
+    CGRenderer renderer(cg);
+    renderer.SaveState();
+
     Vector2 headPos = goose->rig.neckHead;
 
     const char* name = goose->name.c_str();
     size_t nameLen = strlen(name);
 
-    CGContextSaveGState(cg);
-
     float nameWidth = (float)nameLen * 8.0f;
     float boxHeight = 18.0f;
     float boxX = headPos.x - nameWidth / 2.0f - 4.0f;
     float boxY = headPos.y - 40.0f;
-    
-    CGContextSetRGBFillColor(cg, 0.2f, 0.2f, 0.2f, 0.9f);
-    CGContextFillRect(cg, CGRectMake(boxX - 2.0f, boxY - 2.0f, nameWidth + 12.0f, boxHeight + 4.0f));
-    
-    CGContextSetRGBFillColor(cg, 1.0f, 1.0f, 1.0f, 1.0f);
+
+    // Liquid glass background
+    renderer.DrawRoundedRect({boxX - 2.0f, boxY - 2.0f, nameWidth + 12.0f, boxHeight + 4.0f},
+                             6.0f,
+                             RenderColor{0.15f, 0.15f, 0.15f, 0.85f});
+    // Subtle highlight for liquid glass effect
+    renderer.DrawRoundedRect({boxX - 1.0f, boxY - 1.0f, nameWidth + 10.0f, (boxHeight + 4.0f) * 0.5f},
+                             4.0f,
+                             RenderColor{1.0f, 1.0f, 1.0f, 0.08f});
 
     float fontSize = g_config.behaviors.nametag.size;
     ensureNameFont(fontSize);
@@ -85,7 +89,7 @@ static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
         CFRelease(attributes);
     }
 
-    CGContextRestoreGState(cg);
+    renderer.RestoreState();
 #endif
 }
 

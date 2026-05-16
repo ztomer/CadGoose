@@ -8,8 +8,8 @@
 #include "config.h"
 #include "world.h"
 #include "assets.h"
-#include <CoreGraphics/CoreGraphics.h>
-#include <CoreText/CoreText.h>
+#include "renderer_interface.h"
+#include "cg_renderer.h"
 #include <cmath>
 
 // --- Timing and layout constants ---
@@ -128,7 +128,6 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
     }
 
     if (state->phase == PomodoroPhase::Work) {
-        goose->isResting = true;
         if (goose->state == GooseState::FETCHING || goose->state == GooseState::RETURNING) {
             if (goose->heldItem) {
                 delete goose->heldItem;
@@ -144,11 +143,13 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
             float arrivalThreshold = kArrivalThreshold;
 
             if (distToBed > arrivalThreshold) {
+                goose->isResting = false;
                 Vector2 toBed = state->bedPosition - goose->pos;
                 Vector2 dir = Vector2::Normalize(toBed);
                 float walkSpeed = g_config.movement.baseWalkSpeed;
                 goose->vel = dir * walkSpeed;
                 goose->target = state->bedPosition;
+                goose->currentSpeed = walkSpeed;
 
                 float targetAngle = std::atan2f(dir.y, dir.x) * RAD_TO_DEG;
                 float angleDiff = targetAngle - goose->dir;
@@ -157,10 +158,12 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
                 goose->dir += angleDiff * kDirTurnSpeed * (float)dt;
             } else {
                 state->isSleeping = true;
+                goose->isResting = true;
                 goose->vel = {0, 0};
                 goose->target = goose->pos;
             }
         } else {
+            goose->isResting = true;
             goose->vel = {0, 0};
             goose->target = goose->pos;
 
@@ -189,7 +192,6 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
             state->speedMultiplierApplied = false;
         }
     } else if (state->isAggressive && (state->phase == PomodoroPhase::Break || state->phase == PomodoroPhase::LongBreak)) {
-        // Break/LongBreak: goose goes manic - spins, honks, runs
         float rotationAmount = kManicRotationSpeed * (float)dt;
         goose->dir += rotationAmount;
         state->accumulatedRotation += rotationAmount;
@@ -204,7 +206,6 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
             state->speedMultiplierApplied = true;
         }
     } else {
-        // Non-aggressive break: normal walking
         goose->isResting = false;
         if (state->accumulatedRotation > 0) {
             goose->dir -= state->accumulatedRotation;
@@ -238,6 +239,8 @@ static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
     auto* state = BehaviorStateManager::Instance().Get<PomodoroState>(goose->id, "pomodoro");
     if (!state) return;
 
+    CGRenderer renderer(cg);
+
     double elapsed = ctx.time - state->phaseStartTime;
     double remaining = GetPhaseDuration(state->phase) - elapsed;
     int minutes = (int)(remaining / kSecondsPerMinute);
@@ -268,9 +271,15 @@ static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
     float textWidth = kTimerTextWidth;
     float textHeight = kTimerTextHeight;
 
-    CGContextSaveGState(cg);
-    CGContextSetRGBFillColor(cg, bgR, bgG, bgB, kBgAlpha);
-    CGContextFillRect(cg, CGRectMake(headPos.x - textWidth/2, headPos.y - kTimerTextYOffset, textWidth, textHeight));
+    renderer.SaveState();
+    renderer.DrawRoundedRect({headPos.x - textWidth/2, headPos.y - kTimerTextYOffset, textWidth, textHeight},
+                             8.0f,
+                             RenderColor{bgR, bgG, bgB, kBgAlpha});
+    // Subtle highlight for liquid glass effect
+    renderer.DrawRoundedRect({headPos.x - textWidth/2 + 1.0f, headPos.y - kTimerTextYOffset + 1.0f,
+                              textWidth - 2.0f, textHeight * 0.5f},
+                             6.0f,
+                             RenderColor{1.0f, 1.0f, 1.0f, 0.06f});
 
     ensurePomoFont();
     if (s_pomoFont && s_pomoWhite) {
@@ -285,11 +294,9 @@ static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
         if (line) {
             float textX = headPos.x - textWidth/2 + kTimerTextXPad;
             float textY = headPos.y - kTimerTextDrawYOffset;
-            CGContextSaveGState(cg);
             CGContextSetTextMatrix(cg, CGAffineTransformMakeScale(1.0, -1.0));
             CGContextSetTextPosition(cg, textX, textY);
             CTLineDraw(line, cg);
-            CGContextRestoreGState(cg);
             CFRelease(line);
         }
 
@@ -299,7 +306,7 @@ static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
     }
 
     if (state->isSleeping) {
-        Vector2 deviceBedPos = state->bedPosition; // already device coords
+        Vector2 deviceBedPos = state->bedPosition;
         Vector2 bedPos{goose->pos.x + (deviceBedPos.x - goose->pos.x) / ctx.globalScale,
                        goose->pos.y + (deviceBedPos.y - goose->pos.y) / ctx.globalScale};
         float bedWidth = kBedWidth;
@@ -308,14 +315,15 @@ static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
         if (s_bedImage) {
             float imgWidth = (float)CGImageGetWidth(s_bedImage);
             float imgHeight = (float)CGImageGetHeight(s_bedImage);
-            CGRect bedRect = CGRectMake(bedPos.x - imgWidth / 2.0f, bedPos.y - imgHeight / 2.0f, imgWidth, imgHeight);
-            CGContextDrawImage(cg, bedRect, s_bedImage);
+            renderer.DrawImage(s_bedImage, RenderRect{bedPos.x - imgWidth/2, bedPos.y - imgHeight/2, imgWidth, imgHeight});
         } else {
-            CGContextSetRGBFillColor(cg, kBedFallbackR, kBedFallbackG, kBedFallbackB, kBedFallbackAlpha);
-            CGContextFillRect(cg, CGRectMake(bedPos.x - bedWidth/2, bedPos.y - bedHeight/2, bedWidth, bedHeight));
-
-            CGContextSetRGBFillColor(cg, kBedInnerR, kBedInnerG, kBedInnerB, kBedInnerAlpha);
-            CGContextFillRect(cg, CGRectMake(bedPos.x - bedWidth/2 + kBedInnerPad, bedPos.y - bedHeight/2 + kBedInnerPad, bedWidth - kBedInnerPad*2, bedHeight - kBedInnerPad*2));
+            renderer.DrawRoundedRect({bedPos.x - bedWidth/2, bedPos.y - bedHeight/2, bedWidth, bedHeight},
+                                     6.0f,
+                                     RenderColor{kBedFallbackR, kBedFallbackG, kBedFallbackB, kBedFallbackAlpha});
+            renderer.DrawRoundedRect({bedPos.x - bedWidth/2 + kBedInnerPad, bedPos.y - bedHeight/2 + kBedInnerPad,
+                                      bedWidth - kBedInnerPad*2, bedHeight - kBedInnerPad*2},
+                                     4.0f,
+                                     RenderColor{kBedInnerR, kBedInnerG, kBedInnerB, kBedInnerAlpha});
         }
 
         const char* zzzStr;
@@ -333,18 +341,16 @@ static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
         if (zzzImg) {
             float imgW = (float)CGImageGetWidth(zzzImg);
             float imgH = (float)CGImageGetHeight(zzzImg);
-            CGContextSetAlpha(cg, zzzAlpha);
-            CGContextSaveGState(cg);
-            CGContextTranslateCTM(cg, zzzX, zzzY);
-            CGContextScaleCTM(cg, 1.0f, -1.0f);
-            CGRect zzzRect = CGRectMake(-imgW / 2.0f, -imgH / 2.0f, imgW, imgH);
-            CGContextDrawImage(cg, zzzRect, zzzImg);
-            CGContextRestoreGState(cg);
+            renderer.SetAlpha(zzzAlpha);
+            renderer.SaveState();
+            renderer.Translate(zzzX, zzzY);
+            renderer.Scale(1.0f, -1.0f);
+            renderer.DrawImage(zzzImg, RenderRect{-imgW/2, -imgH/2, imgW, imgH});
+            renderer.RestoreState();
         } else {
-            CGContextSetRGBFillColor(cg, kZzzFallbackR, kZzzFallbackG, kZzzFallbackB, zzzAlpha);
             CTFontRef zzzFont = CTFontCreateWithName(CFSTR("Helvetica-Bold"), kZzzFontsize, NULL);
-            CFTypeRef zzzKeys[] = { kCTFontAttributeName, kCTForegroundColorAttributeName };
             CGColorRef zzzColor = CGColorCreateGenericRGB(kZzzFallbackR, kZzzFallbackG, kZzzFallbackB, zzzAlpha);
+            CFTypeRef zzzKeys[] = { kCTFontAttributeName, kCTForegroundColorAttributeName };
             CFTypeRef zzzValues[] = { zzzFont, zzzColor };
             CFDictionaryRef zzzAttrs = CFDictionaryCreate(NULL, (const void**)zzzKeys, (const void**)zzzValues, 2, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
 
@@ -366,7 +372,7 @@ static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
         }
     }
 
-    CGContextRestoreGState(cg);
+    renderer.RestoreState();
 #endif
 }
 

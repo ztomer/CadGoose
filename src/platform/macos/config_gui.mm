@@ -9,7 +9,7 @@ static constexpr float kWindowHeight = 520.0f;
 static constexpr float kAppbarHeight = 44.0f;
 static constexpr float kTableHeight = kWindowHeight - kAppbarHeight;
 static constexpr float kRowHeight = 52.0f;
-static constexpr float kHeaderRowHeight = 28.0f;
+static constexpr float kHeaderRowHeight = 36.0f;
 static constexpr float kRowPaddingX = 16.0f;
 static constexpr float kRowIconX = kRowPaddingX;
 static constexpr float kRowIconWidth = 24.0f;
@@ -176,7 +176,7 @@ void s_setBoolValue(const std::string& key, bool value) {
         tableView.allowsEmptySelection = YES;
         tableView.selectionHighlightStyle = NSTableViewSelectionHighlightStyleNone;
         tableView.backgroundColor = [NSColor clearColor];
-        tableView.intercellSpacing = NSMakeSize(0, 0);
+        tableView.intercellSpacing = NSMakeSize(0, 4);
 
         NSTableColumn* column = [[NSTableColumn alloc] initWithIdentifier:@"main"];
         column.width = self.listWidth;
@@ -345,7 +345,7 @@ void s_setBoolValue(const std::string& key, bool value) {
             label.font = [NSFont fontWithName:@"Maple Mono" size:kNameFontSize] ?: [NSFont systemFontOfSize:kNameFontSize weight:NSFontWeightSemibold];
             label.textColor = [NSColor colorWithRed:0.9 green:0.1 blue:0.1 alpha:1.0];
         }
-        label.frame = NSMakeRect(kRowPaddingX, 2, self.listWidth - kRowPaddingX * 2, kHeaderRowHeight - 4);
+        label.frame = NSMakeRect(kRowPaddingX, 6, self.listWidth - kRowPaddingX * 2, kHeaderRowHeight - 12);
         label.stringValue = item[@"name"];
         return label;
     }

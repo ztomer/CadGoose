@@ -3,7 +3,8 @@
 #include "config.h"
 #include "world.h"
 #include "assets.h"
-#include <CoreGraphics/CoreGraphics.h>
+#include "renderer_interface.h"
+#include "cg_renderer.h"
 #include <cmath>
 
 static CGImageRef s_hatImage = nullptr;
@@ -24,15 +25,17 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
 }
 
 static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
+#ifdef __APPLE__
     CGContextRef cg = (CGContextRef)renderCtx;
     if (!cg) return;
     if (!s_hatImage) return;
+
+    CGRenderer renderer(cg);
 
     float hatSize = g_config.behaviors.hats.sizeX;
     float offsetX = g_config.behaviors.hats.offsetX;
     float offsetY = g_config.behaviors.hats.offsetY;
     float dir = goose->dir;
-    float gs = ctx.globalScale;
 
     float imgWidth = (float)CGImageGetWidth(s_hatImage);
     float imgHeight = (float)CGImageGetHeight(s_hatImage);
@@ -41,7 +44,6 @@ static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
     float drawW = imgWidth * scale;
     float drawH = imgHeight * scale;
 
-    // Cache scaled image at current size
     if (s_hatScaledSize != hatSize) {
         if (s_hatScaled) { CGImageRelease(s_hatScaled); s_hatScaled = nullptr; }
         if (drawW > 0 && drawH > 0) {
@@ -61,23 +63,24 @@ static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
     float screenX = headDevice.x + offsetX;
     float screenY = headDevice.y + offsetY;
 
-    CGContextSaveGState(cg);
-    CGContextTranslateCTM(cg, screenX, screenY);
+    renderer.SaveState();
+    renderer.Translate(screenX, screenY);
 
     bool facingLeft = (dir > 90.0f && dir < 270.0f);
     if (facingLeft) {
-        CGContextScaleCTM(cg, -1.0, 1.0);
+        renderer.Scale(-1.0f, 1.0f);
     }
 
     float halfW = drawW / 2.0f;
     float halfH = drawH / 2.0f;
 
     if (s_hatScaled) {
-        CGContextTranslateCTM(cg, -halfW, halfH);
-        CGContextScaleCTM(cg, 1.0, -1.0);
-        CGContextDrawImage(cg, CGRectMake(0, 0, drawW, drawH), s_hatScaled);
+        renderer.Translate(-halfW, halfH);
+        renderer.Scale(1.0f, -1.0f);
+        renderer.DrawImage(s_hatScaled, RenderRect{0, 0, drawW, drawH});
     }
-    CGContextRestoreGState(cg);
+    renderer.RestoreState();
+#endif
 }
 
 static Behavior g_hatsBehavior = BEHAVIOR_DEF_CUSTOM(

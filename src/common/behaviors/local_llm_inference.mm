@@ -170,10 +170,18 @@ void LocalLLM_Generate(const std::string& prompt, float temperature,
 
     if (LocalLLM_GetState() != LocalLLMState::Ready || !LocalLLM_GetModel()) {
         LocalLLM_Init();
-        std::lock_guard<std::mutex> lock(s_genMutex);
-        s_generating = false;
-        if (callback) callback("");
-        return;
+        // Wait for model to load (max 30 seconds)
+        int waitMs = 0;
+        while (LocalLLM_GetState() == LocalLLMState::Loading && waitMs < 30000) {
+            usleep(100000); // 100ms
+            waitMs += 100;
+        }
+        if (LocalLLM_GetState() != LocalLLMState::Ready || !LocalLLM_GetModel()) {
+            std::lock_guard<std::mutex> lock(s_genMutex);
+            s_generating = false;
+            if (callback) callback("");
+            return;
+        }
     }
 
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0), ^{

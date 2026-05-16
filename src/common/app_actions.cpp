@@ -49,10 +49,7 @@ void AppActions_ClearGeese() {
     g_droppedItems.clear();
     g_footprints.clear();
 
-    g_config.gooseNames.clear();
-    for (const auto& g : g_geese) {
-        g_config.gooseNames.push(g.name);
-    }
+    Config_SaveGooseNames();
 
     g_geese.clear();
     g_cursorGrabberId = -1;

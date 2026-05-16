@@ -8,9 +8,10 @@
 #include "world.h"
 #include "assets.h"
 #include "goose_math.h"
+#include "renderer_interface.h"
+#include "cg_renderer.h"
 #include <CoreGraphics/CoreGraphics.h>
 #include <cmath>
-
 
 static constexpr int MAX_TOYS = 5;
 static constexpr float TOY_SPAWN_INTERVAL = 5.0f;
@@ -48,7 +49,6 @@ static void init(BehaviorContext& ctx) {
 static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
     auto* state = BehaviorStateManager::Instance().GetOrCreate<ToysState>(goose->id, "toys");
 
-    // Spawn new toys periodically (device coords)
     if (time - state->lastSpawnTime >= TOY_SPAWN_INTERVAL && state->activeCount < MAX_TOYS) {
         float margin = 100.0f;
         float screenW = (float)g_screenWidth;
@@ -64,7 +64,6 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
         state->lastSpawnTime = time;
     }
 
-    // Clean up expired toys
     state->activeCount = 0;
     for (int i = 0; i < MAX_TOYS; ++i) {
         if (state->toys[i].active) {
@@ -76,7 +75,6 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
         }
     }
 
-    // Find nearest active toy (all positions in device coords)
     int nearestIdx = -1;
     float nearestDist = 1e9f;
     for (int i = 0; i < MAX_TOYS; ++i) {
@@ -90,7 +88,6 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
 
     if (nearestIdx < 0) return;
 
-    // Goose reached toy — pick it up and transition to RETURNING
     if (nearestDist < TOY_FETCH_DISTANCE) {
         Toy::Type toyType = state->toys[nearestIdx].type;
         state->toys[nearestIdx].active = false;
@@ -110,7 +107,6 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
         return;
     }
 
-    // Goose chases nearby toys when wandering
     if (goose->state == GooseState::WANDER && nearestDist < 200.0f) {
         goose->target = state->toys[nearestIdx].pos;
     }
@@ -120,10 +116,12 @@ static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
     auto* state = BehaviorStateManager::Instance().GetOrCreate<ToysState>(goose->id, "toys");
     if (state->activeCount == 0) return;
 
+#ifdef __APPLE__
     CGContextRef cg = (CGContextRef)renderCtx;
     if (!cg) return;
 
-    CGContextSaveGState(cg);
+    CGRenderer renderer(cg);
+    renderer.SaveState();
 
     float scale = ctx.globalScale;
 
@@ -144,27 +142,22 @@ static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
             float cosA = std::cos(rad);
             float sinA = std::sin(rad);
 
-            CGPoint corners[4] = {
+            RenderPoint corners[4] = {
                 {drawPos.x + (-halfLen * cosA + halfWidth * sinA), drawPos.y + (-halfLen * sinA - halfWidth * cosA)},
                 {drawPos.x + (halfLen * cosA + halfWidth * sinA), drawPos.y + (halfLen * sinA - halfWidth * cosA)},
                 {drawPos.x + (halfLen * cosA - halfWidth * sinA), drawPos.y + (halfLen * sinA + halfWidth * cosA)},
                 {drawPos.x + (-halfLen * cosA - halfWidth * sinA), drawPos.y + (-halfLen * sinA + halfWidth * cosA)},
             };
 
-            CGContextSetRGBFillColor(cg, 0.55f, 0.35f, 0.15f, alpha);
-            CGContextBeginPath(cg);
-            CGContextAddLines(cg, corners, 4);
-            CGContextClosePath(cg);
-            CGContextFillPath(cg);
+            renderer.DrawPolygon(corners, 4, RenderColor{0.55f, 0.35f, 0.15f, alpha});
         } else {
-            float radius = BALL_RADIUS;
-            CGRect rect = CGRectMake(drawPos.x - radius, drawPos.y - radius, radius * 2.0f, radius * 2.0f);
-            CGContextSetRGBFillColor(cg, 0.8f, 0.2f, 0.2f, alpha);
-            CGContextFillEllipseInRect(cg, rect);
+            renderer.DrawEllipse({drawPos.x, drawPos.y}, BALL_RADIUS, BALL_RADIUS,
+                                RenderColor{0.8f, 0.2f, 0.2f, alpha});
         }
     }
 
-    CGContextRestoreGState(cg);
+    renderer.RestoreState();
+#endif
 }
 
 static Behavior g_toysBehavior = BEHAVIOR_DEF(
