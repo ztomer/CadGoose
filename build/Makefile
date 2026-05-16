@@ -1397,6 +1397,33 @@ src/common/cursor_backend.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/src/common/cursor_backend.cpp.s
 .PHONY : src/common/cursor_backend.cpp.s
 
+src/common/event_bus.o: src/common/event_bus.cpp.o
+.PHONY : src/common/event_bus.o
+
+# target to build an object file
+src/common/event_bus.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/common/event_bus.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/src/common/event_bus.cpp.o
+.PHONY : src/common/event_bus.cpp.o
+
+src/common/event_bus.i: src/common/event_bus.cpp.i
+.PHONY : src/common/event_bus.i
+
+# target to preprocess a source file
+src/common/event_bus.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/common/event_bus.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/src/common/event_bus.cpp.i
+.PHONY : src/common/event_bus.cpp.i
+
+src/common/event_bus.s: src/common/event_bus.cpp.s
+.PHONY : src/common/event_bus.s
+
+# target to generate assembly for a file
+src/common/event_bus.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/common/event_bus.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/src/common/event_bus.cpp.s
+.PHONY : src/common/event_bus.cpp.s
+
 src/common/goose.o: src/common/goose.cpp.o
 .PHONY : src/common/goose.o
 
@@ -2567,6 +2594,30 @@ tests/common/test_dropped_item_hit.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/tests/common/test_dropped_item_hit.cpp.s
 .PHONY : tests/common/test_dropped_item_hit.cpp.s
 
+tests/common/test_event_bus.o: tests/common/test_event_bus.cpp.o
+.PHONY : tests/common/test_event_bus.o
+
+# target to build an object file
+tests/common/test_event_bus.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/tests/common/test_event_bus.cpp.o
+.PHONY : tests/common/test_event_bus.cpp.o
+
+tests/common/test_event_bus.i: tests/common/test_event_bus.cpp.i
+.PHONY : tests/common/test_event_bus.i
+
+# target to preprocess a source file
+tests/common/test_event_bus.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/tests/common/test_event_bus.cpp.i
+.PHONY : tests/common/test_event_bus.cpp.i
+
+tests/common/test_event_bus.s: tests/common/test_event_bus.cpp.s
+.PHONY : tests/common/test_event_bus.s
+
+# target to generate assembly for a file
+tests/common/test_event_bus.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/tests/common/test_event_bus.cpp.s
+.PHONY : tests/common/test_event_bus.cpp.s
+
 tests/common/test_gui_config.o: tests/common/test_gui_config.mm.o
 .PHONY : tests/common/test_gui_config.o
 
@@ -3056,6 +3107,9 @@ help:
 	@echo "... src/common/cursor_backend.o"
 	@echo "... src/common/cursor_backend.i"
 	@echo "... src/common/cursor_backend.s"
+	@echo "... src/common/event_bus.o"
+	@echo "... src/common/event_bus.i"
+	@echo "... src/common/event_bus.s"
 	@echo "... src/common/goose.o"
 	@echo "... src/common/goose.i"
 	@echo "... src/common/goose.s"
@@ -3196,6 +3250,9 @@ help:
 	@echo "... tests/common/test_dropped_item_hit.o"
 	@echo "... tests/common/test_dropped_item_hit.i"
 	@echo "... tests/common/test_dropped_item_hit.s"
+	@echo "... tests/common/test_event_bus.o"
+	@echo "... tests/common/test_event_bus.i"
+	@echo "... tests/common/test_event_bus.s"
 	@echo "... tests/common/test_gui_config.o"
 	@echo "... tests/common/test_hotkey.o"
 	@echo "... tests/common/test_hotkey.i"

@@ -396,3 +396,420 @@ sections:
         min: 0.0
         max: 1.0
         step: 0.01
+
+  Spawn:
+    fields:
+      - name: marginX
+        type: float
+        key: margin_x
+        label: "Margin X"
+        min: 0.0
+        max: 1000.0
+        step: 1.0
+      - name: marginY
+        type: float
+        key: margin_y
+        label: "Margin Y"
+        min: 0.0
+        max: 1000.0
+        step: 1.0
+      - name: targetReachedThresholdReturn
+        type: float
+        key: target_reached_threshold_return
+        label: "Target Reached Threshold Return"
+        min: 0.0
+        max: 200.0
+        step: 1.0
+      - name: targetReachedThresholdNormal
+        type: float
+        key: target_reached_threshold_normal
+        label: "Target Reached Threshold Normal"
+        min: 0.0
+        max: 200.0
+        step: 1.0
+      - name: itemPickupDistance
+        type: float
+        key: item_pickup_distance
+        label: "Item Pickup Distance"
+        min: 0.0
+        max: 100.0
+        step: 1.0
+      - name: fetchEdgeMargin
+        type: float
+        key: fetch_edge_margin
+        label: "Fetch Edge Margin"
+        min: 0.0
+        max: 200.0
+        step: 1.0
+      - name: separationMaxDistance
+        type: float
+        key: separation_max_distance
+        label: "Separation Max Distance"
+        min: 0.0
+        max: 200.0
+        step: 1.0
+      - name: separationForceMultiplier
+        type: float
+        key: separation_force_multiplier
+        label: "Separation Force Multiplier"
+        min: 0.0
+        max: 5.0
+        step: 0.1
+
+  Rig:
+    fields:
+      - name: bodyY
+        type: float
+        key: body_y
+        label: "Body Y"
+        min: 0.0
+        max: 50.0
+        step: 1.0
+      - name: neckHeightIdle
+        type: float
+        key: neck_height_idle
+        label: "Neck Height Idle"
+        min: 0.0
+        max: 50.0
+        step: 1.0
+      - name: neckHeightMoving
+        type: float
+        key: neck_height_moving
+        label: "Neck Height Moving"
+        min: 0.0
+        max: 50.0
+        step: 1.0
+      - name: beakLen
+        type: float
+        key: beak_len
+        label: "Beak Length"
+        min: 0.0
+        max: 30.0
+        step: 1.0
+      - name: beakWidth
+        type: float
+        key: beak_width
+        label: "Beak Width"
+        min: 0.0
+        max: 30.0
+        step: 1.0
+      - name: strideMax
+        type: float
+        key: stride_max
+        label: "Stride Max"
+        min: 0.0
+        max: 30.0
+        step: 1.0
+      - name: stepLiftHeight
+        type: float
+        key: step_lift_height
+        label: "Step Lift Height"
+        min: 0.0
+        max: 20.0
+        step: 1.0
+
+  Snatch:
+    fields:
+      - name: radiusBase
+        type: float
+        key: radius_base
+        label: "Radius Base"
+        min: 0.0
+        max: 200.0
+        step: 1.0
+      - name: radiusRange
+        type: float
+        key: radius_range
+        label: "Radius Range"
+        min: 0.0
+        max: 200.0
+        step: 1.0
+      - name: angularSpeedBase
+        type: float
+        key: angular_speed_base
+        label: "Angular Speed Base"
+        min: 0.0
+        max: 10.0
+        step: 0.1
+      - name: duration
+        type: float
+        key: duration
+        label: "Duration"
+        min: 0.0
+        max: 10.0
+        step: 0.1
+      - name: pullDistance
+        type: float
+        key: pull_distance
+        label: "Pull Distance"
+        min: 0.0
+        max: 300.0
+        step: 1.0
+
+  Mud:
+    fields:
+      - name: enabled
+        type: bool
+        key: mud_enabled
+        label: "Mud Enabled"
+      - name: chance
+        type: int
+        key: mud_chance
+        label: "Mud Chance"
+        min: 0
+        max: 100
+      - name: lifetime
+        type: float
+        key: mud_lifetime
+        label: "Mud Lifetime"
+        min: 0.0
+        max: 60.0
+        step: 1.0
+
+  Honk:
+    fields:
+      - name: minGap
+        type: float
+        key: honk_min_gap
+        label: "Honk Min Gap"
+        min: 0.0
+        max: 5.0
+        step: 0.1
+      - name: idleMin
+        type: float
+        key: honk_idle_min
+        label: "Honk Idle Min"
+        min: 0.0
+        max: 30.0
+        step: 1.0
+      - name: idleMax
+        type: float
+        key: honk_idle_max
+        label: "Honk Idle Max"
+        min: 0.0
+        max: 60.0
+        step: 1.0
+      - name: chaseCooldown
+        type: float
+        key: honk_chase_cooldown
+        label: "Honk Chase Cooldown"
+        min: 0.0
+        max: 5.0
+        step: 0.1
+
+  Step:
+    fields:
+      - name: timeFetch
+        type: float
+        key: step_time_fetch
+        label: "Step Time Fetch"
+        min: 0.0
+        max: 1.0
+        step: 0.01
+      - name: timeWander
+        type: float
+        key: step_time_wander
+        label: "Step Time Wander"
+        min: 0.0
+        max: 1.0
+        step: 0.01
+      - name: durationWalk
+        type: float
+        key: step_duration_walk
+        label: "Step Duration Walk"
+        min: 0.0
+        max: 1.0
+        step: 0.01
+      - name: durationRun
+        type: float
+        key: step_duration_run
+        label: "Step Duration Run"
+        min: 0.0
+        max: 1.0
+        step: 0.01
+      - name: liftWalk
+        type: float
+        key: step_lift_walk
+        label: "Step Lift Walk"
+        min: 0.0
+        max: 20.0
+        step: 1.0
+      - name: liftRun
+        type: float
+        key: step_lift_run
+        label: "Step Lift Run"
+        min: 0.0
+        max: 20.0
+        step: 1.0
+
+  Item:
+    fields:
+      - name: pickupCooldown
+        type: float
+        key: item_pickup_cooldown
+        label: "Item Pickup Cooldown"
+        min: 0.0
+        max: 10.0
+        step: 0.1
+      - name: itemLifetime
+        type: float
+        key: item_lifetime
+        label: "Item Lifetime"
+        min: 0.0
+        max: 120.0
+        step: 1.0
+      - name: memeLifetime
+        type: float
+        key: meme_lifetime
+        label: "Meme Lifetime"
+        min: 0.0
+        max: 120.0
+        step: 1.0
+      - name: textLifetime
+        type: float
+        key: text_lifetime
+        label: "Text Lifetime"
+        min: 0.0
+        max: 120.0
+        step: 1.0
+      - name: maxDroppedMemes
+        type: int
+        key: max_dropped_memes
+        label: "Max Dropped Memes"
+        min: 0
+        max: 100
+      - name: maxDroppedTexts
+        type: int
+        key: max_dropped_texts
+        label: "Max Dropped Texts"
+        min: 0
+        max: 100
+      - name: fetchCooldown
+        type: float
+        key: item_fetch_cooldown
+        label: "Item Fetch Cooldown"
+        min: 0.0
+        max: 30.0
+        step: 1.0
+
+  Render:
+    fields:
+      - name: shadowOffsetX
+        type: float
+        key: shadow_offset_x
+        label: "Shadow Offset X"
+        min: -20.0
+        max: 20.0
+        step: 1.0
+      - name: shadowOffsetY
+        type: float
+        key: shadow_offset_y
+        label: "Shadow Offset Y"
+        min: 0.0
+        max: 50.0
+        step: 1.0
+      - name: shadowWidth
+        type: float
+        key: shadow_width
+        label: "Shadow Width"
+        min: 0.0
+        max: 100.0
+        step: 1.0
+      - name: shadowHeight
+        type: float
+        key: shadow_height
+        label: "Shadow Height"
+        min: 0.0
+        max: 100.0
+        step: 1.0
+      - name: footSize
+        type: float
+        key: foot_size
+        label: "Foot Size"
+        min: 0.0
+        max: 30.0
+        step: 1.0
+      - name: bodyWidth
+        type: float
+        key: body_width
+        label: "Body Width"
+        min: 0.0
+        max: 50.0
+        step: 1.0
+      - name: bodyHeight
+        type: float
+        key: body_height
+        label: "Body Height"
+        min: 0.0
+        max: 50.0
+        step: 1.0
+      - name: neckSize
+        type: float
+        key: neck_size
+        label: "Neck Size"
+        min: 0.0
+        max: 30.0
+        step: 1.0
+      - name: head1Size
+        type: float
+        key: head1_size
+        label: "Head 1 Size"
+        min: 0.0
+        max: 30.0
+        step: 1.0
+      - name: head2Size
+        type: float
+        key: head2_size
+        label: "Head 2 Size"
+        min: 0.0
+        max: 30.0
+        step: 1.0
+      - name: eyeSize
+        type: float
+        key: eye_size
+        label: "Eye Size"
+        min: 0.0
+        max: 20.0
+        step: 1.0
+      - name: clickRadius
+        type: float
+        key: click_radius
+        label: "Click Radius"
+        min: 0.0
+        max: 100.0
+        step: 1.0
+      - name: footprintWidth
+        type: float
+        key: footprint_width
+        label: "Footprint Width"
+        min: 0.0
+        max: 30.0
+        step: 1.0
+      - name: footprintHeight
+        type: float
+        key: footprint_height
+        label: "Footprint Height"
+        min: 0.0
+        max: 30.0
+        step: 1.0
+      - name: closeButtonSize
+        type: float
+        key: close_button_size
+        label: "Close Button Size"
+        min: 0.0
+        max: 50.0
+        step: 1.0
+      - name: textNoteFontSize
+        type: float
+        key: text_note_font_size
+        label: "Text Note Font Size"
+        min: 0.0
+        max: 48.0
+        step: 1.0
+      - name: squashFactor
+        type: float
+        key: squash_factor
+        label: "Squash Factor"
+        min: 0.5
+        max: 1.0
+        step: 0.01

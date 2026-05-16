@@ -5,12 +5,38 @@
 #include "cursor_io.h"
 #include "renderer_interface.h"
 #include "cg_renderer.h"
+#include "event_bus.h"
 #include <cmath>
 
 
 static void init(BehaviorContext& ctx) {
     auto* state = BehaviorStateManager::Instance().GetOrCreate<AngerState>(ctx.goose->id, "anger");
     state->Reset();
+}
+
+static void ensureSubscriptions(Goose* goose, AngerState* state) {
+    if (state->honkSub == 0) {
+        state->honkSub = EventBus::Instance().Subscribe<GooseHonkedEvent>([goose](const GooseHonkedEvent& e) {
+            if (e.gooseId == goose->id) {
+                auto* s = BehaviorStateManager::Instance().Get<AngerState>(goose->id, "anger");
+                if (s) {
+                    s->angerLevel = std::min(100.0f, s->angerLevel + 15.0f);
+                    s->lastAngerIncrease = e.time;
+                }
+            }
+        });
+    }
+    if (state->cursorSub == 0) {
+        state->cursorSub = EventBus::Instance().Subscribe<CursorFastMoveEvent>([goose](const CursorFastMoveEvent& e) {
+            auto* s = BehaviorStateManager::Instance().Get<AngerState>(goose->id, "anger");
+            if (s) {
+                float dist = std::hypot(goose->pos.x - e.x, goose->pos.y - e.y);
+                if (dist < g_config.behaviors.anger.cursorRadius) {
+                    s->angerLevel = std::min(100.0f, s->angerLevel + 5.0f);
+                }
+            }
+        });
+    }
 }
 
 // Export anger state so goose drawing can tint body red
@@ -21,6 +47,7 @@ float Anger_GetLevel(int gooseId) {
 
 static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
     auto* state = BehaviorStateManager::Instance().GetOrCreate<AngerState>(goose->id, "anger");
+    ensureSubscriptions(goose, state);
 
     float distToCursor = 1000.0f;
     if (g_cursorProvider) {
@@ -80,9 +107,17 @@ static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
 #endif
 }
 
-static Behavior g_angerBehavior = BEHAVIOR_DEF_STARTER(
+static void cleanup(BehaviorContext& ctx) {
+    auto* state = BehaviorStateManager::Instance().Get<AngerState>(ctx.goose->id, "anger");
+    if (state) {
+        if (state->honkSub) EventBus::Instance().Unsubscribe(state->honkSub);
+        if (state->cursorSub) EventBus::Instance().Unsubscribe(state->cursorSub);
+    }
+}
+
+static Behavior g_angerBehavior = BEHAVIOR_DEF_CUSTOM(
     "anger", "Anger", "Goose gets angry near the cursor and punches. Based on OnePunchGoose by VisualError",
-    g_config.behaviors.fun.anger, init, tick, render
+    g_config.behaviors.fun.anger, init, tick, render, cleanup, true, false
 );
 
 REGISTER_BEHAVIOR(g_angerBehavior);
