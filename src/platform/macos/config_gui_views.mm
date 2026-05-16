@@ -21,7 +21,6 @@
     if ([key isEqualToString:@"health_enabled"]) return @"❤️";
     if ([key isEqualToString:@"ai_enabled"]) return @"🤖";
     if ([key isEqualToString:@"pomodoro_enabled"]) return @"⏰";
-    if ([key isEqualToString:@"sonic_mode_enabled"]) return @"💨";
     if ([key isEqualToString:@"toys_enabled"]) return @"🧸";
     if ([key isEqualToString:@"avoidance_enabled"]) return @"🏃";
     if ([key isEqualToString:@"boredom_enabled"]) return @"😮‍💨";

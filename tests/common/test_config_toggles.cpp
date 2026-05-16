@@ -38,7 +38,6 @@ TEST(BehaviorToggles, AllBehaviorTogglesDirectAccess) {
     EXPECT_TRUE(g_config.behaviors.fun.peeking);
     EXPECT_FALSE(g_config.behaviors.fun.affirmations);
     EXPECT_FALSE(g_config.behaviors.fun.interactiveDrops);
-    EXPECT_FALSE(g_config.behaviors.fun.sonicMode);
     EXPECT_TRUE(g_config.behaviors.fun.toysEnabled);
 
     g_config.behaviors.fun.ball = true;
@@ -48,10 +47,6 @@ TEST(BehaviorToggles, AllBehaviorTogglesDirectAccess) {
     g_config.behaviors.systems.ai = true;
     EXPECT_TRUE(g_config.behaviors.systems.ai);
     g_config.behaviors.systems.ai = false;
-
-    g_config.behaviors.fun.sonicMode = true;
-    EXPECT_TRUE(g_config.behaviors.fun.sonicMode);
-    g_config.behaviors.fun.sonicMode = false;
 
     g_config.behaviors.fun.toysEnabled = false;
     EXPECT_FALSE(g_config.behaviors.fun.toysEnabled);
@@ -65,7 +60,7 @@ TEST(BehaviorToggles, AllRegisteredInRegistry) {
         "rainbow_enabled", "acid_enabled", "anger_enabled",
         "autumn_leaves_enabled", "avoidance_enabled", "boredom_enabled",
         "peeking_enabled", "affirmations_enabled", "interactive_drops_enabled",
-        "sonic_mode_enabled", "toys_enabled",
+        "toys_enabled",
         "honcker_enabled", "jail_enabled", "portals_enabled",
         "drag_enabled",
         "nametag_enabled", "presence_enabled", "config_gui_enabled",
@@ -204,40 +199,12 @@ TEST(ConfigThemes, UpdateActiveTheme) {
     EXPECT_FLOAT_EQ(g_config.color.currentBody.g, 0.0f);
 }
 
-TEST(BehaviorToggles, SonicModeBehaviorRegistered) {
-    Config_Init();
-    Behavior* sonic = BehaviorRegistry::Instance().Get("sonic");
-    ASSERT_NE(sonic, nullptr);
-    EXPECT_STREQ(sonic->id, "sonic");
-    EXPECT_EQ(sonic->configPtr, &g_config.behaviors.fun.sonicMode);
-}
-
 TEST(BehaviorToggles, ToysBehaviorRegistered) {
     Config_Init();
     Behavior* toys = BehaviorRegistry::Instance().Get("toys");
     ASSERT_NE(toys, nullptr);
     EXPECT_STREQ(toys->id, "toys");
     EXPECT_EQ(toys->configPtr, &g_config.behaviors.fun.toysEnabled);
-}
-
-TEST(BehaviorToggles, SonicStateManagement) {
-    Config_Init();
-    BehaviorStateManager::Instance().ClearAll();
-
-    int testGooseId = 999;
-    auto* state = BehaviorStateManager::Instance().GetOrCreate<SonicState>(testGooseId, "sonic");
-    ASSERT_NE(state, nullptr);
-    EXPECT_TRUE(state->trails.empty());
-    EXPECT_DOUBLE_EQ(state->lastTrailTime, 0);
-    EXPECT_DOUBLE_EQ(state->lastHonkTime, 0);
-
-    state->trails.push_back(SonicTrail{{100, 200}, 1.0});
-    EXPECT_EQ(state->trails.size(), 1u);
-
-    state->Reset();
-    EXPECT_TRUE(state->trails.empty());
-
-    BehaviorStateManager::Instance().ClearAll();
 }
 
 TEST(BehaviorToggles, ToysStateManagement) {
@@ -265,17 +232,6 @@ TEST(BehaviorToggles, ToysStateManagement) {
     BehaviorStateManager::Instance().ClearAll();
 }
 
-TEST(BehaviorToggles, SonicModeConfigToggle) {
-    Config_Init();
-    EXPECT_FALSE(g_config.behaviors.fun.sonicMode);
-
-    g_config.behaviors.fun.sonicMode = true;
-    EXPECT_TRUE(g_config.behaviors.fun.sonicMode);
-
-    g_config.behaviors.fun.sonicMode = false;
-    EXPECT_FALSE(g_config.behaviors.fun.sonicMode);
-}
-
 TEST(BehaviorToggles, ToysEnabledConfigToggle) {
     Config_Init();
     EXPECT_TRUE(g_config.behaviors.fun.toysEnabled);
@@ -285,20 +241,6 @@ TEST(BehaviorToggles, ToysEnabledConfigToggle) {
 
     g_config.behaviors.fun.toysEnabled = true;
     EXPECT_TRUE(g_config.behaviors.fun.toysEnabled);
-}
-
-TEST(BehaviorToggles, SonicModeLoadFromToml) {
-    Config_Init();
-
-    auto tbl = toml::parse_str(
-        "[Behavior]\n"
-        "sonic_mode_enabled = true\n"
-    );
-    Config_Load(tbl);
-
-    EXPECT_TRUE(g_config.behaviors.fun.sonicMode);
-
-    g_config.behaviors.fun.sonicMode = false;
 }
 
 TEST(BehaviorToggles, ToysEnabledLoadFromToml) {
@@ -311,6 +253,4 @@ TEST(BehaviorToggles, ToysEnabledLoadFromToml) {
     Config_Load(tbl);
 
     EXPECT_TRUE(g_config.behaviors.fun.toysEnabled);
-
-    g_config.behaviors.fun.toysEnabled = false;
 }

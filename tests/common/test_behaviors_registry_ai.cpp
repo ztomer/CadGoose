@@ -31,7 +31,7 @@ TEST(BehaviorRegistry, BehaviorIds) {
     auto& registry = BehaviorRegistry::Instance();
 
     const char* expectedIds[] = {
-        "sonic", "toys", "boredom", "peeking", "affirmations",
+        "toys", "boredom", "peeking", "affirmations",
         "interactive_drops", "pomodoro", "portal", "rainbow", "acid",
         "anger", "health", "honcker", "jail", "nametag",
         "presence", "drag"
@@ -46,10 +46,6 @@ TEST(BehaviorRegistry, BehaviorIds) {
 
 TEST(BehaviorRegistry, ConfigPointers) {
     auto& registry = BehaviorRegistry::Instance();
-
-    Behavior* sonic = registry.Get("sonic");
-    ASSERT_NE(sonic, nullptr);
-    EXPECT_EQ(sonic->configPtr, &g_config.behaviors.fun.sonicMode);
 
     Behavior* pomodoro = registry.Get("pomodoro");
     ASSERT_NE(pomodoro, nullptr);
@@ -119,7 +115,7 @@ TEST(BehaviorRegistry, ConfigPointers) {
 TEST(BehaviorRegistry, EnabledPtrNotNull) {
     auto& registry = BehaviorRegistry::Instance();
     const char* ids[] = {
-        "sonic", "toys", "boredom", "peeking", "affirmations",
+        "toys", "boredom", "peeking", "affirmations",
         "interactive_drops", "pomodoro", "portal", "rainbow", "acid",
         "anger", "health", "honcker", "jail", "nametag",
         "presence", "drag"
@@ -163,10 +159,6 @@ TEST(BehaviorRegistry, StarterBehaviors) {
 TEST(BehaviorRegistry, NonStarterBehaviors) {
     auto& registry = BehaviorRegistry::Instance();
 
-    Behavior* sonic = registry.Get("sonic");
-    ASSERT_NE(sonic, nullptr);
-    EXPECT_FALSE(sonic->config.isStarter);
-
     Behavior* toys = registry.Get("toys");
     ASSERT_NE(toys, nullptr);
     EXPECT_FALSE(toys->config.isStarter);
@@ -191,11 +183,11 @@ TEST(BehaviorStateManager, CreateAndRetrieve) {
     ResetBehaviorState();
     auto& mgr = BehaviorStateManager::Instance();
 
-    auto* state = mgr.GetOrCreate<SonicState>(0, "sonic");
+    auto* state = mgr.GetOrCreate<RainbowState>(0, "rainbow");
     ASSERT_NE(state, nullptr);
     state->Reset();
 
-    auto* retrieved = mgr.Get<SonicState>(0, "sonic");
+    auto* retrieved = mgr.Get<RainbowState>(0, "rainbow");
     ASSERT_NE(retrieved, nullptr);
     EXPECT_EQ(state, retrieved);
 }
@@ -204,7 +196,7 @@ TEST(BehaviorStateManager, GetReturnsNullForMissing) {
     ResetBehaviorState();
     auto& mgr = BehaviorStateManager::Instance();
 
-    auto* state = mgr.Get<SonicState>(999, "sonic");
+    auto* state = mgr.Get<RainbowState>(999, "rainbow");
     EXPECT_EQ(state, nullptr);
 }
 
@@ -212,11 +204,10 @@ TEST(BehaviorStateManager, RemoveForGooseComprehensive) {
     ResetBehaviorState();
     auto& mgr = BehaviorStateManager::Instance();
 
-    mgr.GetOrCreate<SonicState>(0, "sonic");
     mgr.GetOrCreate<RainbowState>(0, "rainbow");
     mgr.GetOrCreate<AcidState>(0, "acid");
 
-    EXPECT_EQ(mgr.GetStateCount(), 3);
+    EXPECT_EQ(mgr.GetStateCount(), 2);
 
     mgr.RemoveForGoose(0);
     EXPECT_EQ(mgr.GetStateCount(), 0);

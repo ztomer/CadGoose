@@ -15,6 +15,7 @@ typedef struct cairo_t cairo_t;
 #include "goose_math.h"
 #include "assets.h"
 #include "cursor_io.h"
+#include "coordinate_system.h"
 
 enum class GooseState { WANDER, FETCHING, RETURNING, CHASE_CURSOR, SNATCH_CURSOR };
 
@@ -38,9 +39,9 @@ public:
     
     int id;
     std::string name;
-    Vector2 pos{};
-    Vector2 target{};
-    Vector2 vel{};
+    Vector2 pos{};       // DEVICE coords (screen pixels, top-left origin)
+    Vector2 target{};    // DEVICE coords
+    Vector2 vel{};       // DEVICE coords (pixels/frame)
     Vector2 acceleration{};
     float dir = 0.0f;
     float parabolicCurvature = 0.0f; // Multiplier for tangential curve force

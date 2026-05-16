@@ -26,7 +26,7 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
 
     if (time < state->nextPeekTime) return;
 
-    Vector2 posDev = WorldCoord::GoosePos(*goose);
+    Vector2 posDev = goose->pos;
     int screenW = g_screenWidth;
     float margin = 30.0f;
 
@@ -54,7 +54,7 @@ static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
     if (!cg) return;
 
     CGContextSaveGState(cg);
-    Vector2 headPos = WorldCoord::RigNeckHead(*goose);
+    Vector2 headPos = goose->rig.neckHead;
     float peekDir = (float)state->peekSide;
 
     CGContextSetRGBFillColor(cg, 0.8f, 0.7f, 0.6f, 0.8f);

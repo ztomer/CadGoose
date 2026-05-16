@@ -170,7 +170,7 @@ Vector2 Goose::GetFootHome(float angleOffset) {
   float ang = dir + angleOffset;
   Vector2 raw = Vector2::FromAngleDegrees(ang);
   Vector2 side{raw.x * ISO_SCALE.x, raw.y * ISO_SCALE.y};
-  return pos + side * g_config.step.footSpacing;
+  return pos + side * WorldCoord::Scale(g_config.step.footSpacing);
 }
 
 void Goose::SolveFeet(double time) {
@@ -240,7 +240,7 @@ void Goose::SolveFeet(double time) {
 
         if (mudEnabled && (rand() % 100) < mudChance) {
           Footprint fp;
-          fp.pos = WorldCoord::ToDevice(home, *this);
+          fp.pos = home; // already device coords (GetFootHome returns pos + offset)
           fp.dir = dir + ((&f == &rig.lFoot) ? g_config.step.leftFootAngle
                                              : g_config.step.rightFootAngle);
           fp.timeSpawned = time;

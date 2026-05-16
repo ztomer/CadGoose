@@ -145,7 +145,6 @@ CadGoose includes a comprehensive behavior system with 21 toggleable behaviors o
 - **Window Peeking**: Goose peeks head around monitor bezel at screen edges
 - **Custom Affirmations**: Goose drops configurable positive messages
 - **Interactive Drops**: Goose drops puddles that splash or flowers that grow
-- **Sonic Mode**: Goose moves at 2.5x speed with blue trail and frequent honks
 - **Toys**: Scatter interactive toys for the goose to chase
 
 **Control Behaviors:**

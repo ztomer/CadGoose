@@ -225,7 +225,6 @@ void s_setBoolValue(const std::string& key, bool value) {
     [self addRow:@"Window Peeking" key:@"peeking_enabled" desc:@"Goose peeks head around monitor bezel at screen edges"];
     [self addRow:@"Custom Affirmations" key:@"affirmations_enabled" desc:@"Goose drops configurable positive messages"];
     [self addRow:@"Interactive Drops" key:@"interactive_drops_enabled" desc:@"Goose drops puddles that splash or flowers that grow"];
-    [self addRow:@"Sonic Mode" key:@"sonic_mode_enabled" desc:@"Goose moves at supersonic speed"];
     [self addRow:@"Toys" key:@"toys_enabled" desc:@"Scatter interactive toys for the goose"];
 
     [self.configItems addObject:@{@"name": @"CONTROL", @"type": @"header"}];

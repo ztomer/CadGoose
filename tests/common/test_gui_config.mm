@@ -22,7 +22,6 @@ static const std::vector<std::pair<const char*, bool*>> kGUIVisibleToggleKeys = 
     {"peeking_enabled",                &g_config.behaviors.fun.peeking},
     {"affirmations_enabled",           &g_config.behaviors.fun.affirmations},
     {"interactive_drops_enabled",      &g_config.behaviors.fun.interactiveDrops},
-    {"sonic_mode_enabled",             &g_config.behaviors.fun.sonicMode},
     {"toys_enabled",                   &g_config.behaviors.fun.toysEnabled},
     {"honcker_enabled",                &g_config.behaviors.control.honcker},
     {"jail_enabled",                   &g_config.behaviors.control.jail},
@@ -47,7 +46,6 @@ static const std::vector<std::pair<const char*, bool*>> kAllToggleKeys = {
     {"peeking_enabled",                &g_config.behaviors.fun.peeking},
     {"affirmations_enabled",           &g_config.behaviors.fun.affirmations},
     {"interactive_drops_enabled",      &g_config.behaviors.fun.interactiveDrops},
-    {"sonic_mode_enabled",             &g_config.behaviors.fun.sonicMode},
     {"toys_enabled",                   &g_config.behaviors.fun.toysEnabled},
     {"honcker_enabled",                &g_config.behaviors.control.honcker},
     {"jail_enabled",                   &g_config.behaviors.control.jail},
@@ -136,10 +134,10 @@ TEST(GUIConfigTest, AllGUIVisibleKeysAreUnique) {
 }
 
 TEST(GUIConfigTest, ToggleCount) {
-    EXPECT_EQ(kGUIVisibleToggleKeys.size(), 21)
-        << "Should be exactly 21 GUI-visible toggle keys";
-    EXPECT_EQ(kAllToggleKeys.size(), 25)
-        << "Should be exactly 25 total toggle keys (21 visible + 4 hidden: presence, configGUI, visible, ai)";
+    EXPECT_EQ(kGUIVisibleToggleKeys.size(), 20)
+        << "Should be exactly 20 GUI-visible toggle keys";
+    EXPECT_EQ(kAllToggleKeys.size(), 24)
+        << "Should be exactly 24 total toggle keys (20 visible + 4 hidden: presence, configGUI, visible, ai)";
 }
 
 TEST(GUIConfigTest, ReadWriteRoundTrip) {
@@ -170,8 +168,7 @@ TEST(GUIConfigTest, DefaultValues) {
     EXPECT_TRUE(g_config.behaviors.fun.peeking);
     EXPECT_FALSE(g_config.behaviors.fun.affirmations);
     EXPECT_FALSE(g_config.behaviors.fun.interactiveDrops);
-    EXPECT_FALSE(g_config.behaviors.fun.sonicMode);
-    EXPECT_FALSE(g_config.behaviors.fun.toysEnabled);
+    EXPECT_TRUE(g_config.behaviors.fun.toysEnabled);
     EXPECT_FALSE(g_config.behaviors.control.honcker);
     EXPECT_FALSE(g_config.behaviors.control.jail);
     EXPECT_FALSE(g_config.behaviors.control.portals);

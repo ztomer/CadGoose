@@ -10,6 +10,7 @@
 #include <vector>
 
 #include "ring_buffer.h"
+#include "coordinate_system.h"
 
 #ifdef __linux__
 #include <gtk/gtk.h>
@@ -79,54 +80,62 @@ extern std::deque<std::string> g_uiLog;
 extern int g_cursorGrabberId; // id of goose currently dragging the cursor, -1 = none
 extern int g_frameId;          // incrementing frame counter for duplicate update guard
 
+// ============================================================
+// WorldCoord — Coordinate transformation helpers
+// ============================================================
+// All methods use typed coordinates to prevent space mixing bugs.
+// See coordinate_system.h for full documentation.
+
 class WorldCoord {
 public:
-    static Vector2 ToDevice(const Vector2& worldPos, const Vector2& goosePos, float globalScale) {
-        return goosePos + (worldPos - goosePos) * globalScale;
+    // goose-local world coords → device coords
+    static DevicePoint WorldToDevice(WorldPoint worldPos, DevicePoint goosePos, float globalScale) {
+        return CoordTransform::WorldToDevice(worldPos, goosePos, globalScale);
     }
 
-    static Vector2 ToDevice(const Vector2& worldPos, const Goose& goose) {
-        return ToDevice(worldPos, goose.pos, g_config.general.globalScale);
+    static DevicePoint WorldToDevice(WorldPoint worldPos, const Goose& goose) {
+        return CoordTransform::WorldToDevice(worldPos, DevicePoint{goose.pos.x, goose.pos.y}, g_config.general.globalScale);
     }
 
-    static Vector2 GoosePos(const Goose& goose) {
-        return ToDevice(goose.pos, goose.pos, g_config.general.globalScale);
+    // origin-relative world coords → device coords
+    static DevicePoint OriginToDevice(WorldPoint worldPos) {
+        return {worldPos.x * g_config.general.globalScale, worldPos.y * g_config.general.globalScale};
     }
 
-    static Vector2 RigNeckHead(const Goose& goose) {
-        return ToDevice(goose.rig.neckHead, goose.pos, g_config.general.globalScale);
+    // rig parts are in goose-local world space
+    static DevicePoint RigNeckHead(const Goose& goose) {
+        return WorldToDevice(WorldPoint{goose.rig.neckHead.x, goose.rig.neckHead.y}, goose);
     }
 
-    static Vector2 RigBody(const Goose& goose) {
-        return ToDevice(goose.rig.body, goose.pos, g_config.general.globalScale);
+    static DevicePoint RigBody(const Goose& goose) {
+        return WorldToDevice(WorldPoint{goose.rig.body.x, goose.rig.body.y}, goose);
     }
 
-    static Vector2 ToDevice(const Vector2& worldPos) {
-        return worldPos * g_config.general.globalScale;
+    // item coordinate helpers (all return DEVICE coords)
+    static DevicePoint ItemCenter(const DroppedItem& item) {
+        return ItemCoords::Center({item.pos.x, item.pos.y}, item.data->w, item.data->h, g_config.general.globalScale);
     }
 
-    static Vector2 DeviceSize(int pixelSize) {
-        return Vector2{pixelSize * g_config.general.globalScale, pixelSize * g_config.general.globalScale};
+    static DevicePoint ItemHalfSize(const ItemData* item) {
+        return ItemCoords::HalfSize(item->w, item->h, g_config.general.globalScale);
     }
 
+    static DevicePoint ItemSize(const ItemData* item) {
+        return ItemCoords::Size(item->w, item->h, g_config.general.globalScale);
+    }
+
+    // scalar scaling
     static float Scale(float worldValue) {
-        return worldValue * g_config.general.globalScale;
+        return CoordTransform::Scale(worldValue, g_config.general.globalScale);
     }
 
-    static Vector2 ItemCenter(const DroppedItem& item) {
-        return item.pos + DeviceSize(item.data->w) * 0.5f;
+    // Y-flip helpers for Linux Cairo
+    static DevicePoint FromCairo(float cairoX, float cairoY, float screenHeight) {
+        return CoordTransform::CairoToDevice(cairoX, cairoY, screenHeight);
     }
 
-    static Vector2 ItemHalfSize(const ItemData* item) {
-        return DeviceSize(item->w) * 0.5f;
-    }
-
-    static Vector2 FromScreen(const Vector2& screenPos, float viewHeight) {
-        return Vector2{screenPos.x, viewHeight - screenPos.y};
-    }
-
-    static Vector2 ToScreen(const Vector2& worldPos, float viewHeight) {
-        return Vector2{worldPos.x, viewHeight - worldPos.y};
+    static Vector2 ToCairo(DevicePoint devicePos, float screenHeight) {
+        return CoordTransform::DeviceToCairo(devicePos, screenHeight);
     }
 };
 

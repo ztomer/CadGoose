@@ -64,12 +64,12 @@ static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
 
     if (state->isLyingDown) {
         CGContextSaveGState(cg);
-        Vector2 bodyPos = WorldCoord::RigBody(*goose);
+        Vector2 bodyPos = goose->rig.body;
 
         CGContextSetRGBFillColor(cg, 0.8f, 0.7f, 0.7f, 0.6f);
         CGContextFillEllipseInRect(cg, CGRectMake(bodyPos.x - 20.0f, bodyPos.y - 6.0f, 40.0f, 12.0f));
 
-        Vector2 neckPos = WorldCoord::RigNeckHead(*goose);
+        Vector2 neckPos = goose->rig.neckHead;
         CGContextSetRGBFillColor(cg, 0.8f, 0.7f, 0.7f, 0.6f);
         CGContextFillEllipseInRect(cg, CGRectMake(neckPos.x - 8.0f, neckPos.y - 4.0f, 16.0f, 8.0f));
 
@@ -85,7 +85,7 @@ static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
 
     if (state->isSighing) {
         CGContextSaveGState(cg);
-        Vector2 headPos = WorldCoord::RigNeckHead(*goose);
+        Vector2 headPos = goose->rig.neckHead;
         double elapsed = goose->lastUpdateTime - state->sighStartTime;
 
         if (elapsed < 2.0) {

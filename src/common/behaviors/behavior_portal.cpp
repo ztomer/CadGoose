@@ -129,10 +129,14 @@ static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
     CGContextRef cg = (CGContextRef)renderCtx;
     if (!cg) return;
 
+    float scale = ctx.globalScale;
+
     if (state->portalA.active && s_portalImages[0]) {
         float w = (float)CGImageGetWidth(s_portalImages[0]);
         float h = (float)CGImageGetHeight(s_portalImages[0]);
-        CGRect rect = CGRectMake(state->portalA.x - w/2, state->portalA.y - h/2, w, h);
+        Vector2 drawPos{goose->pos.x + (state->portalA.x - goose->pos.x) / scale,
+                        goose->pos.y + (state->portalA.y - goose->pos.y) / scale};
+        CGRect rect = CGRectMake(drawPos.x - w/2, drawPos.y - h/2, w, h);
         CGContextDrawImage(cg, rect, s_portalImages[0]);
     } else if (state->portalA.active && !s_portalImages[0]) {
         fprintf(stderr, "[Portal] g%d: portalA active but image[0] not loaded\n", goose->id);
@@ -141,7 +145,9 @@ static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
     if (state->portalB.active && s_portalImages[1]) {
         float w = (float)CGImageGetWidth(s_portalImages[1]);
         float h = (float)CGImageGetHeight(s_portalImages[1]);
-        CGRect rect = CGRectMake(state->portalB.x - w/2, state->portalB.y - h/2, w, h);
+        Vector2 drawPos{goose->pos.x + (state->portalB.x - goose->pos.x) / scale,
+                        goose->pos.y + (state->portalB.y - goose->pos.y) / scale};
+        CGRect rect = CGRectMake(drawPos.x - w/2, drawPos.y - h/2, w, h);
         CGContextDrawImage(cg, rect, s_portalImages[1]);
     } else if (state->portalB.active && !s_portalImages[1]) {
         fprintf(stderr, "[Portal] g%d: portalB active but image[1] not loaded\n", goose->id);

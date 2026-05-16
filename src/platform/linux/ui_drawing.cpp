@@ -126,8 +126,11 @@ static void draw_mud(cairo_t* cr, const Mud& m, int screenH) {
 }
 
 static void draw_dropped_item(cairo_t* cr, const DroppedItem& item, int screenH) {
+    float scale = g_config.general.globalScale;
+    float itemW = item.data->w * scale;
+    float itemH = item.data->h * scale;
     cairo_save(cr);
-    cairo_set_source_surface(cr, item.data->surface, item.pos.x - item.data->w / 2.0, screenH - item.pos.y - item.data->h / 2.0);
+    cairo_set_source_surface(cr, item.data->surface, item.pos.x - itemW / 2.0, screenH - item.pos.y - itemH / 2.0);
     cairo_paint_with_alpha(cr, item.alpha);
     cairo_restore(cr);
 }

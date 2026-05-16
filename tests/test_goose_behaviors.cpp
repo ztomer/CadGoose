@@ -108,22 +108,6 @@ TEST(CoordinateConversion, WorldToDeviceAndBack) {
     }
 }
 
-TEST(CoordinateConversion, GoosePosIsIdentityAtUnitScale) {
-    Goose g(80, "GoosePos", 1920, 1080);
-    g.pos = {100, 200};
-
-    g_config.general.globalScale = 1.0f;
-    Vector2 posDev = WorldCoord::GoosePos(g);
-    EXPECT_FLOAT_EQ(posDev.x, g.pos.x) << "GoosePos.x should match g.pos.x at scale 1.0";
-    EXPECT_FLOAT_EQ(posDev.y, g.pos.y) << "GoosePos.y should match g.pos.y at scale 1.0";
-
-    g_config.general.globalScale = 2.5f;
-    posDev = WorldCoord::GoosePos(g);
-    EXPECT_FLOAT_EQ(posDev.x, g.pos.x) << "GoosePos is identity regardless of scale (pos-pos)*scale = 0";
-    EXPECT_FLOAT_EQ(posDev.y, g.pos.y) << "GoosePos is identity regardless of scale";
-    g_config.general.globalScale = 1.0f;
-}
-
 TEST(GooseStateMachine, WanderToChaseToSnatchCycle) {
     Goose g(85, "StateCycle", 1920, 1080);
     g.pos = {500, 500};

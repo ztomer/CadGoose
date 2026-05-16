@@ -131,11 +131,11 @@ void handleWander(Goose& g, double time, const CursorState& cursor, int w, int h
                 if (!validItems.empty()) {
                     auto it = validItems[rand() % validItems.size()];
                     Vector2 centerDevice = WorldCoord::ItemCenter(*it);
-                    Vector2 gooseScreen = WorldCoord::GoosePos(g);
+                    Vector2 gooseScreen = g.pos;
                     Vector2 toCenter = centerDevice - gooseScreen;
                     float len = Vector2::Length(toCenter);
                     Vector2 approachDir = (len < 1e-4f) ? Vector2{0.0f, -1.0f} : Vector2{toCenter.x / len, toCenter.y / len};
-                    float halfDim = std::max(WorldCoord::DeviceSize(it->data->w).x, WorldCoord::DeviceSize(it->data->h).y) * 0.5f;
+                    float halfDim = std::max(WorldCoord::ItemSize(it->data).x, WorldCoord::ItemSize(it->data).y) * 0.5f;
                     float margin = WorldCoord::Scale((float)g_config.item.heistApproachMargin);
                     Vector2 approachDevice = centerDevice - approachDir * (halfDim + margin);
                     g.target = approachDevice;
