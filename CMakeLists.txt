@@ -223,6 +223,7 @@ if(APPLE)
         tests/common/test_behaviors_control.cpp
         tests/common/test_behaviors_registry_ai.cpp
         tests/common/test_hotkey.cpp
+        tests/common/test_event_bus.cpp
         tests/common/test_mcp_protocol.cpp
         tests/common/test_mcp_config.cpp
         tests/common/test_mcp_resources.cpp
@@ -277,6 +278,7 @@ if(APPLE)
         src/common/behaviors/behavior_affirmations.cpp
         src/common/behaviors/behavior_interactive_drops.cpp
         src/common/hotkey.cpp
+        src/common/event_bus.cpp
         src/common/mcp_server.cpp
         src/common/mcp_http_server.cpp
         src/common/mcp_json_rpc.cpp
