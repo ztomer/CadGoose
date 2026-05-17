@@ -189,6 +189,12 @@ static const BuiltinProfile* MatchProfile(const char* modelName) {
             }
 
             NSString* response = [NSString stringWithUTF8String:result.c_str()];
+            if (!response || response.length == 0) {
+                fprintf(stderr, "[AI] Local LLM returned invalid UTF-8 or empty\n");
+                strongSelf.connected = NO;
+                if (completion) completion(@"HONK! Local brain returned garbled text.", nil);
+                return;
+            }
             // Strip think blocks if present
             response = [strongSelf stripThinkBlocks:response];
 

@@ -80,6 +80,7 @@ preinstall: vendor/toml11/preinstall
 
 # The main recursive "clean" target.
 clean: CMakeFiles/CadGoose.dir/clean
+clean: CMakeFiles/CompileSwiftFoundationLLM.dir/clean
 clean: CMakeFiles/CadGooseTests.dir/clean
 clean: vendor/toml11/clean
 .PHONY : clean
@@ -154,7 +155,7 @@ vendor/toml11/src/clean:
 # Target rules for target CMakeFiles/CadGoose.dir
 
 # All Build rule for target.
-CMakeFiles/CadGoose.dir/all:
+CMakeFiles/CadGoose.dir/all: CMakeFiles/CompileSwiftFoundationLLM.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/build
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/Users/ztomer/Projects/CadGoose/build/CMakeFiles --progress-num=1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42 "Built target CadGoose"
@@ -162,7 +163,7 @@ CMakeFiles/CadGoose.dir/all:
 
 # Build rule for subdir invocation for target.
 CMakeFiles/CadGoose.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /Users/ztomer/Projects/CadGoose/build/CMakeFiles 42
+	$(CMAKE_COMMAND) -E cmake_progress_start /Users/ztomer/Projects/CadGoose/build/CMakeFiles 43
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/CadGoose.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /Users/ztomer/Projects/CadGoose/build/CMakeFiles 0
 .PHONY : CMakeFiles/CadGoose.dir/rule
@@ -172,7 +173,7 @@ CadGoose: CMakeFiles/CadGoose.dir/rule
 .PHONY : CadGoose
 
 # codegen rule for target.
-CMakeFiles/CadGoose.dir/codegen:
+CMakeFiles/CadGoose.dir/codegen: CMakeFiles/CompileSwiftFoundationLLM.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/codegen
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/Users/ztomer/Projects/CadGoose/build/CMakeFiles --progress-num=1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42 "Finished codegen for target CadGoose"
 .PHONY : CMakeFiles/CadGoose.dir/codegen
@@ -183,13 +184,45 @@ CMakeFiles/CadGoose.dir/clean:
 .PHONY : CMakeFiles/CadGoose.dir/clean
 
 #=============================================================================
+# Target rules for target CMakeFiles/CompileSwiftFoundationLLM.dir
+
+# All Build rule for target.
+CMakeFiles/CompileSwiftFoundationLLM.dir/all:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CompileSwiftFoundationLLM.dir/build.make CMakeFiles/CompileSwiftFoundationLLM.dir/depend
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CompileSwiftFoundationLLM.dir/build.make CMakeFiles/CompileSwiftFoundationLLM.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/Users/ztomer/Projects/CadGoose/build/CMakeFiles --progress-num=100 "Built target CompileSwiftFoundationLLM"
+.PHONY : CMakeFiles/CompileSwiftFoundationLLM.dir/all
+
+# Build rule for subdir invocation for target.
+CMakeFiles/CompileSwiftFoundationLLM.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /Users/ztomer/Projects/CadGoose/build/CMakeFiles 1
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/CompileSwiftFoundationLLM.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /Users/ztomer/Projects/CadGoose/build/CMakeFiles 0
+.PHONY : CMakeFiles/CompileSwiftFoundationLLM.dir/rule
+
+# Convenience name for target.
+CompileSwiftFoundationLLM: CMakeFiles/CompileSwiftFoundationLLM.dir/rule
+.PHONY : CompileSwiftFoundationLLM
+
+# codegen rule for target.
+CMakeFiles/CompileSwiftFoundationLLM.dir/codegen:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CompileSwiftFoundationLLM.dir/build.make CMakeFiles/CompileSwiftFoundationLLM.dir/codegen
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/Users/ztomer/Projects/CadGoose/build/CMakeFiles --progress-num=100 "Finished codegen for target CompileSwiftFoundationLLM"
+.PHONY : CMakeFiles/CompileSwiftFoundationLLM.dir/codegen
+
+# clean rule for target.
+CMakeFiles/CompileSwiftFoundationLLM.dir/clean:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CompileSwiftFoundationLLM.dir/build.make CMakeFiles/CompileSwiftFoundationLLM.dir/clean
+.PHONY : CMakeFiles/CompileSwiftFoundationLLM.dir/clean
+
+#=============================================================================
 # Target rules for target CMakeFiles/CadGooseTests.dir
 
 # All Build rule for target.
-CMakeFiles/CadGooseTests.dir/all:
+CMakeFiles/CadGooseTests.dir/all: CMakeFiles/CompileSwiftFoundationLLM.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/Users/ztomer/Projects/CadGoose/build/CMakeFiles --progress-num=43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99,100 "Built target CadGooseTests"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/Users/ztomer/Projects/CadGoose/build/CMakeFiles --progress-num=43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99 "Built target CadGooseTests"
 .PHONY : CMakeFiles/CadGooseTests.dir/all
 
 # Build rule for subdir invocation for target.
@@ -204,9 +237,9 @@ CadGooseTests: CMakeFiles/CadGooseTests.dir/rule
 .PHONY : CadGooseTests
 
 # codegen rule for target.
-CMakeFiles/CadGooseTests.dir/codegen:
+CMakeFiles/CadGooseTests.dir/codegen: CMakeFiles/CompileSwiftFoundationLLM.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/Users/ztomer/Projects/CadGoose/build/CMakeFiles --progress-num=43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99,100 "Finished codegen for target CadGooseTests"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/Users/ztomer/Projects/CadGoose/build/CMakeFiles --progress-num=43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99 "Finished codegen for target CadGooseTests"
 .PHONY : CMakeFiles/CadGooseTests.dir/codegen
 
 # clean rule for target.

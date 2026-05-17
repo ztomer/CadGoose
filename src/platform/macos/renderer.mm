@@ -1,5 +1,6 @@
 #import "renderer.h"
 #import "window.h"
+#import "item_window.h"
 #import <vector>
 #import <cmath>
 #import <algorithm>
@@ -15,7 +16,6 @@
 #include "behavior.h"
 #include "ai_text_meme.h"
 #include "world_utils.h"
-#include "item_drag_controller.h"
 
 void Honcker_Honk(Goose* goose, double time);
 float Rainbow_GetHue(int gooseId);
@@ -66,15 +66,7 @@ static void DrawLine(CGContextRef ctx, Vector2 a, Vector2 b, float width, float 
 @property (nonatomic, assign) double currentTime;
 @property (nonatomic, assign) int tickCount;
 @property (nonatomic, strong) dispatch_source_t timer;
-@property (nonatomic, assign) DroppedItem* draggedItem;
-@property (nonatomic, assign) NSPoint dragOffset;
-@property (nonatomic, assign) NSPoint lastMouseLoc;
-@property (nonatomic, assign) int lastItemCount;
-@property (nonatomic, assign) ItemDragController* dragController;
 - (void)handleKeyDown:(NSEvent*)event;
-- (void)mouseDownAtPoint:(NSPoint)pt viewY:(float)viewY;
-- (void)mouseDraggedAtPoint:(NSPoint)pt viewY:(float)viewY;
-- (void)mouseUpAtPoint:(NSPoint)pt;
 @end
 
 static BOOL s_hasPrimary = NO;
@@ -104,54 +96,6 @@ static BOOL s_hasPrimary = NO;
             self.isPrimary = YES;
             s_hasPrimary = YES;
             DEBUG_LOG("  PRIMARY GOOSE VIEW (will update geese)");
-
-            __weak GooseView* weakView = self;
-            [NSEvent addLocalMonitorForEventsMatchingMask:NSEventMaskLeftMouseDown handler:^NSEvent*(NSEvent* event) {
-                GooseView* view = weakView;
-                if (!view || !view.window) return event;
-
-                NSPoint screenPt = [NSEvent mouseLocation];
-                for (NSWindow* window in [NSApp windows]) {
-                    if (![window isKindOfClass:[GooseWindow class]]) continue;
-                    if (!window.isVisible) continue;
-
-                    NSRect windowFrame = [window frame];
-                    NSPoint windowPt = NSMakePoint(screenPt.x - windowFrame.origin.x, screenPt.y - windowFrame.origin.y);
-                    if (!NSPointInRect(windowPt, NSMakeRect(0, 0, windowFrame.size.width, windowFrame.size.height))) continue;
-
-                    GooseView* gooseView = (GooseView*)window.contentView;
-                    if (!gooseView) continue;
-                    NSPoint viewPt = [gooseView convertPoint:windowPt fromView:nil];
-
-                    DevicePoint mousePt = {(float)viewPt.x, (float)viewPt.y};
-                    if (gooseView.dragController->OnMouseDown(mousePt)) {
-                        [gooseView mouseDownAtPoint:viewPt viewY:viewPt.y];
-                        return nil;
-                    }
-                }
-                return event;
-            }];
-            [NSEvent addLocalMonitorForEventsMatchingMask:NSEventMaskLeftMouseDragged handler:^NSEvent*(NSEvent* event) {
-                GooseView* view = weakView;
-                if (!view || !view.window) return event;
-                if (view.dragController->GetDraggedItem()) {
-                    NSPoint screenPt = [NSEvent mouseLocation];
-                    NSRect frame = view.window.frame;
-                    NSPoint windowPt = NSMakePoint(screenPt.x - frame.origin.x, screenPt.y - frame.origin.y);
-                    NSPoint viewPt = [view convertPoint:windowPt fromView:nil];
-                    [view mouseDraggedAtPoint:viewPt viewY:viewPt.y];
-                    [view setNeedsDisplay:YES];
-                    return nil;
-                }
-                return event;
-            }];
-            [NSEvent addLocalMonitorForEventsMatchingMask:NSEventMaskLeftMouseUp handler:^NSEvent*(NSEvent* event) {
-                GooseView* view = weakView;
-                if (!view) return event;
-                view.dragController->OnMouseUp();
-                return event;
-            }];
-            DEBUG_LOG("  event monitors installed");
         } else {
             self.isPrimary = NO;
             DEBUG_LOG("  SECONDARY GOOSE VIEW (display only)");
@@ -159,7 +103,6 @@ static BOOL s_hasPrimary = NO;
 
         _currentTime = 0.0;
         _tickCount = 0;
-        _dragController = new ItemDragController();
         DEBUG_LOG("  time/count initialized");
     } else {
         LOG("ERROR: GooseView init returned nil!");
@@ -223,10 +166,6 @@ static BOOL s_hasPrimary = NO;
     }
 }
 
-- (void)dealloc {
-    delete self.dragController;
-}
-
 - (void)handleClickAtPoint:(NSPoint)point {
 }
 
@@ -276,65 +215,11 @@ static BOOL s_hasPrimary = NO;
                             g_geese.empty() ? nullptr : &g_geese.front());
     }
 
-    // Window stays click-through (ignoresMouseEvents=YES) so it doesn't block
-    // other apps. Item dragging is handled by local event monitors installed
-    // in initWithFrame: which fire at the application level regardless of
-    // window mouse settings.
-    if (!self.window.ignoresMouseEvents) {
-        self.window.ignoresMouseEvents = YES;
-    }
+    // Sync item windows (dragging handled by ItemWindow instances)
+    [[ItemWindowManager shared] syncWindows];
 
     [self setNeedsDisplay:YES];
     }
-}
-
-// ============================================================
-// Hit Testing & Mouse Events
-// ============================================================
-// Coordinate spaces:
-//   - NSPoint from isFlipped=YES view: VIEW coords (top-left origin, Y-down)
-//   - item.pos: DEVICE coords (top-left origin, Y-down, same as VIEW for isFlipped)
-//   - No Y-flip needed: view coords == device coords for isFlipped=YES views
-
-- (NSView *)hitTest:(NSPoint)point {
-    DevicePoint mousePt = {(float)point.x, (float)point.y};
-    return self.dragController->OnMouseDown(mousePt) ? self : nil;
-}
-
-- (void)mouseDown:(NSEvent *)event {
-    NSPoint p = [self convertPoint:[event locationInWindow] fromView:nil];
-    DevicePoint mousePt = {(float)p.x, (float)p.y};
-    self.dragController->OnMouseDown(mousePt);
-}
-
-- (void)mouseDragged:(NSEvent *)event {
-    if (self.dragController->GetDraggedItem()) {
-        NSPoint p = [self convertPoint:[event locationInWindow] fromView:nil];
-        DevicePoint mousePt = {(float)p.x, (float)p.y};
-        self.dragController->OnMouseDragged(mousePt);
-        [self setNeedsDisplay:YES];
-    }
-}
-
-- (void)mouseUp:(NSEvent *)event {
-    self.dragController->OnMouseUp();
-}
-
-- (void)mouseDownAtPoint:(NSPoint)pt viewY:(float)viewY {
-    DevicePoint mousePt = CoordTransform::ViewToDevice({(float)pt.x, (float)pt.y}, viewY);
-    self.dragController->OnMouseDown(mousePt);
-}
-
-- (void)mouseDraggedAtPoint:(NSPoint)pt viewY:(float)viewY {
-    if (self.dragController->GetDraggedItem()) {
-        DevicePoint mousePt = CoordTransform::ViewToDevice({(float)pt.x, (float)pt.y}, viewY);
-        self.dragController->OnMouseDragged(mousePt);
-        [self setNeedsDisplay:YES];
-    }
-}
-
-- (void)mouseUpAtPoint:(NSPoint)pt {
-    self.dragController->OnMouseUp();
 }
 
 - (void)setNeedsDisplay:(BOOL)flag {
@@ -348,10 +233,6 @@ static BOOL s_hasPrimary = NO;
     CGContextClearRect(ctx, self.bounds);
 
     CGContextSaveGState(ctx);
-
-    for (const auto& item : g_droppedItems) {
-        DrawDroppedItem(ctx, item, self.bounds.size.height);
-    }
 
     DrawFootprints(ctx, g_footprints, self.currentTime);
     if (g_config.behaviors.fun.autumnLeaves) {

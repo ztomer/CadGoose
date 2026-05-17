@@ -2,6 +2,41 @@
 
 ## Pending Work
 
+### Item Dragging — History of Attempts
+The goal: drag fetched meme/text items while maintaining click-through everywhere else.
+
+**Attempt 1: `ignoresMouseEvents = NO` + responder chain**
+- Set window to receive mouse events natively
+- `hitTest:` returns self for item areas, nil for empty areas
+- **Result**: Window blocks all mouse events to apps underneath when `ignoresMouseEvents=NO`, even with `hitTest:` returning nil. Regression — can't click other apps.
+
+**Attempt 2: `ignoresMouseEvents = YES` + `addLocalMonitorForEventsMatchingMask`**
+- Window stays click-through, local monitors intercept events at app level
+- **Result**: Local monitors DON'T fire when `ignoresMouseEvents=YES` — events bypass the app entirely. Drag never triggers.
+
+**Attempt 3: `ignoresMouseEvents = YES` + `addGlobalMonitorForEventsMatchingMask`**
+- Global monitors fire regardless of window settings
+- **Result**: Global monitors can't consume events (can't return `nil` to swallow them). Events pass through to apps underneath AND to the goose window — causes double-processing and can't start a proper drag session.
+
+**Attempt 4: `ignoresMouseEvents = NO` + `hitTest:` selective + responder chain**
+- `hitTest:` returns self only when mouse is over an item, nil otherwise
+- **Result**: `hitTest:` returning nil still doesn't make the window click-through when `ignoresMouseEvents=NO`. The window still captures the event, just doesn't handle it.
+
+**Root cause analysis:**
+- `ignoresMouseEvents=YES` → events pass through entirely, app never sees them
+- `ignoresMouseEvents=NO` → window always captures events, even in empty areas
+- `hitTest:` only controls which view receives the event, not whether the window captures it
+- Local monitors only see events delivered to the app's windows
+- Global monitors see all events but can't consume/block them
+
+**Potential solutions to explore:**
+1. **`canBecomeKeyWindow` + `sendEvent:` override** — Override `GooseWindow sendEvent:` to selectively forward unhandled events to the next responder
+2. **`NSWindowDelegate` + `windowWillMove:`** — Not applicable
+3. **`CGEventTap`** — System-level event tap that can filter/consume events before they reach any app. Requires Accessibility permission. Heavy-handed but would work.
+4. **Dynamic `ignoresMouseEvents` toggle** — Set to `NO` only during active drag, `YES` otherwise. Problem: there's a race between mouse-down and the toggle.
+5. **`NSWindow level` manipulation** — Not relevant to event routing.
+6. **`acceptsMouseMovedEvents` + `mouseEntered:/mouseExited:`** — Only for tracking, not for click-through.
+
 ### Linux CI Testing
 - Enable unit tests on Linux CI runner
 - Requires abstracting remaining CoreGraphics dependencies in test code

@@ -27,6 +27,9 @@ TEST_F(LocalLLMTest, QueueEmptyInitially) {
 }
 
 TEST_F(LocalLLMTest, GenerateWithoutModelReturnsEmpty) {
+    if (FoundationLLM_IsAvailable()) {
+        GTEST_SKIP() << "FoundationModels available — generation succeeds without CoreML model";
+    }
     std::promise<std::string> result;
     auto fut = result.get_future();
     LocalLLM_Generate("hello goose", 1.0f, [&](const std::string& text) {
@@ -38,6 +41,9 @@ TEST_F(LocalLLMTest, GenerateWithoutModelReturnsEmpty) {
 }
 
 TEST_F(LocalLLMTest, GenerateWhileLoadingReturnsEmpty) {
+    if (FoundationLLM_IsAvailable()) {
+        GTEST_SKIP() << "FoundationModels available — generation succeeds immediately";
+    }
     LocalLLM_Init();
 
     std::promise<std::string> result;

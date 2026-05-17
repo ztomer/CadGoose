@@ -164,6 +164,14 @@ void LocalLLM_Init() {
     if (s_state == LocalLLMState::Loading || s_state == LocalLLMState::Ready) return;
     s_state = LocalLLMState::Loading;
 
+    // Check for FoundationModels first (macOS 26+)
+    if (FoundationLLM_IsAvailable()) {
+        fprintf(stderr, "[LOCAL_LLM] Using FoundationModels backend (macOS 26+)\n");
+        s_state = LocalLLMState::Ready;
+        fprintf(stderr, "[LOCAL_LLM] Ready (FoundationModels)\n");
+        return;
+    }
+
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0), ^{
         @autoreleasepool {
             NSString* modelPath = FindModelAsset();

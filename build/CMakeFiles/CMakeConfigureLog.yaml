@@ -1564,8 +1564,8 @@ events:
     checks:
       - "Detecting C compiler ABI info"
     directories:
-      source: "/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-dyU3Om"
-      binary: "/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-dyU3Om"
+      source: "/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-LUssPx"
+      binary: "/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-LUssPx"
     cmakeVariables:
       CMAKE_CXX_STDLIB_MODULES_JSON: ""
       CMAKE_C_FLAGS: ""
@@ -1578,18 +1578,18 @@ events:
       variable: "CMAKE_C_ABI_COMPILED"
       cached: true
       stdout: |
-        Change Dir: '/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-dyU3Om'
+        Change Dir: '/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-LUssPx'
         
-        Run Build Command(s): /opt/homebrew/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_a1103/fast
-        /Applications/Xcode.app/Contents/Developer/usr/bin/make  -f CMakeFiles/cmTC_a1103.dir/build.make CMakeFiles/cmTC_a1103.dir/build
-        Building C object CMakeFiles/cmTC_a1103.dir/CMakeCCompilerABI.c.o
-        /usr/bin/cc   -arch arm64   -v -Wl,-v -MD -MT CMakeFiles/cmTC_a1103.dir/CMakeCCompilerABI.c.o -MF CMakeFiles/cmTC_a1103.dir/CMakeCCompilerABI.c.o.d -o CMakeFiles/cmTC_a1103.dir/CMakeCCompilerABI.c.o -c /opt/homebrew/share/cmake/Modules/CMakeCCompilerABI.c
+        Run Build Command(s): /opt/homebrew/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_b9531/fast
+        /Applications/Xcode.app/Contents/Developer/usr/bin/make  -f CMakeFiles/cmTC_b9531.dir/build.make CMakeFiles/cmTC_b9531.dir/build
+        Building C object CMakeFiles/cmTC_b9531.dir/CMakeCCompilerABI.c.o
+        /usr/bin/cc   -arch arm64   -v -Wl,-v -MD -MT CMakeFiles/cmTC_b9531.dir/CMakeCCompilerABI.c.o -MF CMakeFiles/cmTC_b9531.dir/CMakeCCompilerABI.c.o.d -o CMakeFiles/cmTC_b9531.dir/CMakeCCompilerABI.c.o -c /opt/homebrew/share/cmake/Modules/CMakeCCompilerABI.c
         Apple clang version 21.0.0 (clang-2100.1.1.101)
         Target: arm64-apple-darwin25.5.0
         Thread model: posix
         InstalledDir: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin
         clang: warning: -Wl,-v: 'linker' input unused [-Wunused-command-line-argument]
-         "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang" -cc1 -triple arm64-apple-macosx26.0.0 -Wundef-prefix=TARGET_OS_ -Wdeprecated-objc-isa-usage -Werror=deprecated-objc-isa-usage -Werror=implicit-function-declaration -emit-obj -disable-free -clear-ast-before-backend -disable-llvm-verifier -discard-value-names -main-file-name CMakeCCompilerABI.c -mrelocation-model pic -pic-level 2 -mframe-pointer=non-leaf -fno-strict-return -ffp-contract=on -fno-rounding-math -funwind-tables=1 -fobjc-msgsend-selector-stubs -fno-sized-deallocation -target-sdk-version=26.5 -fvisibility-inlines-hidden-static-local-var -fno-modulemap-allow-subdirectory-search -fdefine-target-os-macros -fno-assume-unique-vtables -fno-modulemap-allow-subdirectory-search -enable-tlsdesc -target-cpu apple-m1 -target-feature +v8.5a -target-feature +aes -target-feature +altnzcv -target-feature +ccdp -target-feature +ccpp -target-feature +complxnum -target-feature +crc -target-feature +dotprod -target-feature +flagm -target-feature +fp-armv8 -target-feature +fp16fml -target-feature +fptoint -target-feature +fullfp16 -target-feature +jsconv -target-feature +lse -target-feature +neon -target-feature +pauth -target-feature +perfmon -target-feature +predres -target-feature +ras -target-feature +rcpc -target-feature +rdm -target-feature +sb -target-feature +sha2 -target-feature +sha3 -target-feature +specrestrict -target-feature +ssbs -target-abi darwinpcs -debugger-tuning=lldb -fdebug-compilation-dir=/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-dyU3Om -target-linker-version 1267 -v -fcoverage-compilation-dir=/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-dyU3Om -resource-dir /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/21 -dependency-file CMakeFiles/cmTC_a1103.dir/CMakeCCompilerABI.c.o.d -skip-unused-modulemap-deps -MT CMakeFiles/cmTC_a1103.dir/CMakeCCompilerABI.c.o -sys-header-deps -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/usr/local/include -internal-isystem /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/local/include -internal-isystem /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/21/include -internal-externc-isystem /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include -internal-externc-isystem /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include -internal-iframework /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks -internal-iframework /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/SubFrameworks -internal-iframework /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/Library/Frameworks -Wno-elaborated-enum-base -ferror-limit 19 -stack-protector 1 -fstack-check -mdarwin-stkchk-strong-link -fblocks -fencode-extended-block-signature -fregister-global-dtors-with-atexit -fgnuc-version=4.2.1 -fskip-odr-check-in-gmf -fmax-type-align=16 -fcommon -clang-vendor-feature=+disableNonDependentMemberExprInCurrentInstantiation -fno-odr-hash-protocols -clang-vendor-feature=+enableAggressiveVLAFolding -clang-vendor-feature=+revert09abecef7bbf -clang-vendor-feature=+thisNoAlignAttr -clang-vendor-feature=+thisNoNullAttr -clang-vendor-feature=+disableAtImportPrivateFrameworkInImplementationError -Wno-error=allocator-wrappers -fdwarf2-cfi-asm -o CMakeFiles/cmTC_a1103.dir/CMakeCCompilerABI.c.o -x c /opt/homebrew/share/cmake/Modules/CMakeCCompilerABI.c
+         "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang" -cc1 -triple arm64-apple-macosx26.0.0 -Wundef-prefix=TARGET_OS_ -Wdeprecated-objc-isa-usage -Werror=deprecated-objc-isa-usage -Werror=implicit-function-declaration -emit-obj -disable-free -clear-ast-before-backend -disable-llvm-verifier -discard-value-names -main-file-name CMakeCCompilerABI.c -mrelocation-model pic -pic-level 2 -mframe-pointer=non-leaf -fno-strict-return -ffp-contract=on -fno-rounding-math -funwind-tables=1 -fobjc-msgsend-selector-stubs -fno-sized-deallocation -target-sdk-version=26.5 -fvisibility-inlines-hidden-static-local-var -fno-modulemap-allow-subdirectory-search -fdefine-target-os-macros -fno-assume-unique-vtables -fno-modulemap-allow-subdirectory-search -enable-tlsdesc -target-cpu apple-m1 -target-feature +v8.5a -target-feature +aes -target-feature +altnzcv -target-feature +ccdp -target-feature +ccpp -target-feature +complxnum -target-feature +crc -target-feature +dotprod -target-feature +flagm -target-feature +fp-armv8 -target-feature +fp16fml -target-feature +fptoint -target-feature +fullfp16 -target-feature +jsconv -target-feature +lse -target-feature +neon -target-feature +pauth -target-feature +perfmon -target-feature +predres -target-feature +ras -target-feature +rcpc -target-feature +rdm -target-feature +sb -target-feature +sha2 -target-feature +sha3 -target-feature +specrestrict -target-feature +ssbs -target-abi darwinpcs -debugger-tuning=lldb -fdebug-compilation-dir=/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-LUssPx -target-linker-version 1267 -v -fcoverage-compilation-dir=/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-LUssPx -resource-dir /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/21 -dependency-file CMakeFiles/cmTC_b9531.dir/CMakeCCompilerABI.c.o.d -skip-unused-modulemap-deps -MT CMakeFiles/cmTC_b9531.dir/CMakeCCompilerABI.c.o -sys-header-deps -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/usr/local/include -internal-isystem /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/local/include -internal-isystem /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/21/include -internal-externc-isystem /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include -internal-externc-isystem /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include -internal-iframework /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks -internal-iframework /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/SubFrameworks -internal-iframework /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/Library/Frameworks -Wno-elaborated-enum-base -ferror-limit 19 -stack-protector 1 -fstack-check -mdarwin-stkchk-strong-link -fblocks -fencode-extended-block-signature -fregister-global-dtors-with-atexit -fgnuc-version=4.2.1 -fskip-odr-check-in-gmf -fmax-type-align=16 -fcommon -clang-vendor-feature=+disableNonDependentMemberExprInCurrentInstantiation -fno-odr-hash-protocols -clang-vendor-feature=+enableAggressiveVLAFolding -clang-vendor-feature=+revert09abecef7bbf -clang-vendor-feature=+thisNoAlignAttr -clang-vendor-feature=+thisNoNullAttr -clang-vendor-feature=+disableAtImportPrivateFrameworkInImplementationError -Wno-error=allocator-wrappers -fdwarf2-cfi-asm -o CMakeFiles/cmTC_b9531.dir/CMakeCCompilerABI.c.o -x c /opt/homebrew/share/cmake/Modules/CMakeCCompilerABI.c
         clang -cc1 version 21.0.0 (clang-2100.1.1.101) default target arm64-apple-darwin25.5.0
         ignoring nonexistent directory "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/local/include"
         ignoring nonexistent directory "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/Library/Frameworks"
@@ -1602,13 +1602,13 @@ events:
          /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks (framework directory)
          /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/SubFrameworks (framework directory)
         End of search list.
-        Linking C executable cmTC_a1103
-        /opt/homebrew/bin/cmake -E cmake_link_script CMakeFiles/cmTC_a1103.dir/link.txt --verbose=1
+        Linking C executable cmTC_b9531
+        /opt/homebrew/bin/cmake -E cmake_link_script CMakeFiles/cmTC_b9531.dir/link.txt --verbose=1
         Apple clang version 21.0.0 (clang-2100.1.1.101)
         Target: arm64-apple-darwin25.5.0
         Thread model: posix
         InstalledDir: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin
-         "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/ld" -demangle -lto_library /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/libLTO.dylib -dynamic -arch arm64 -platform_version macos 26.0.0 26.5 -syslibroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -mllvm -enable-linkonceodr-outlining -o cmTC_a1103 -L/usr/local/lib -v CMakeFiles/cmTC_a1103.dir/CMakeCCompilerABI.c.o -lSystem /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/21/lib/darwin/libclang_rt.osx.a
+         "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/ld" -demangle -lto_library /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/libLTO.dylib -dynamic -arch arm64 -platform_version macos 26.0.0 26.5 -syslibroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -mllvm -enable-linkonceodr-outlining -o cmTC_b9531 -L/usr/local/lib -v CMakeFiles/cmTC_b9531.dir/CMakeCCompilerABI.c.o -lSystem /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/21/lib/darwin/libclang_rt.osx.a
         @(#)PROGRAM:ld PROJECT:ld-1267
         BUILD 18:30:29 Apr 22 2026
         configured to support archs: armv6 armv7 armv7s arm64 arm64e arm64_32 i386 x86_64 x86_64h armv6m armv7k armv7m armv7em armv8m.main armv8.1m.main
@@ -1621,7 +1621,7 @@ events:
         	/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/lib/swift
         Framework search paths:
         	/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks
-        /usr/bin/cc  -arch arm64  -v -Wl,-v CMakeFiles/cmTC_a1103.dir/CMakeCCompilerABI.c.o -o cmTC_a1103
+        /usr/bin/cc  -arch arm64  -v -Wl,-v CMakeFiles/cmTC_b9531.dir/CMakeCCompilerABI.c.o -o cmTC_b9531
         
       exitCode: 0
   -
@@ -1665,18 +1665,18 @@ events:
       Parsed C implicit link information:
         link line regex: [^( *|.*[/\\])(ld[0-9]*(|\\.[a-rt-z][a-z]*|\\.s[a-np-z][a-z]*|\\.so[a-z]+)|CMAKE_LINK_STARTFILE-NOTFOUND|([^/\\]+-)?ld|collect2)[^/\\]*( |$)]
         linker tool regex: [^[ 	]*(->|"|[0-9]+>[ 	-]*Build:[ 	0-9]+ ms[ 	]*)?[ 	]*(([^"]*[/\\])?(ld[0-9]*(|\\.[a-rt-z][a-z]*|\\.s[a-np-z][a-z]*|\\.so[a-z]+)))("|,| |$)]
-        ignore line: [Change Dir: '/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-dyU3Om']
+        ignore line: [Change Dir: '/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-LUssPx']
         ignore line: []
-        ignore line: [Run Build Command(s): /opt/homebrew/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_a1103/fast]
-        ignore line: [/Applications/Xcode.app/Contents/Developer/usr/bin/make  -f CMakeFiles/cmTC_a1103.dir/build.make CMakeFiles/cmTC_a1103.dir/build]
-        ignore line: [Building C object CMakeFiles/cmTC_a1103.dir/CMakeCCompilerABI.c.o]
-        ignore line: [/usr/bin/cc   -arch arm64   -v -Wl -v -MD -MT CMakeFiles/cmTC_a1103.dir/CMakeCCompilerABI.c.o -MF CMakeFiles/cmTC_a1103.dir/CMakeCCompilerABI.c.o.d -o CMakeFiles/cmTC_a1103.dir/CMakeCCompilerABI.c.o -c /opt/homebrew/share/cmake/Modules/CMakeCCompilerABI.c]
+        ignore line: [Run Build Command(s): /opt/homebrew/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_b9531/fast]
+        ignore line: [/Applications/Xcode.app/Contents/Developer/usr/bin/make  -f CMakeFiles/cmTC_b9531.dir/build.make CMakeFiles/cmTC_b9531.dir/build]
+        ignore line: [Building C object CMakeFiles/cmTC_b9531.dir/CMakeCCompilerABI.c.o]
+        ignore line: [/usr/bin/cc   -arch arm64   -v -Wl -v -MD -MT CMakeFiles/cmTC_b9531.dir/CMakeCCompilerABI.c.o -MF CMakeFiles/cmTC_b9531.dir/CMakeCCompilerABI.c.o.d -o CMakeFiles/cmTC_b9531.dir/CMakeCCompilerABI.c.o -c /opt/homebrew/share/cmake/Modules/CMakeCCompilerABI.c]
         ignore line: [Apple clang version 21.0.0 (clang-2100.1.1.101)]
         ignore line: [Target: arm64-apple-darwin25.5.0]
         ignore line: [Thread model: posix]
         ignore line: [InstalledDir: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin]
         ignore line: [clang: warning: -Wl -v: 'linker' input unused [-Wunused-command-line-argument]]
-        ignore line: [ "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang" -cc1 -triple arm64-apple-macosx26.0.0 -Wundef-prefix=TARGET_OS_ -Wdeprecated-objc-isa-usage -Werror=deprecated-objc-isa-usage -Werror=implicit-function-declaration -emit-obj -disable-free -clear-ast-before-backend -disable-llvm-verifier -discard-value-names -main-file-name CMakeCCompilerABI.c -mrelocation-model pic -pic-level 2 -mframe-pointer=non-leaf -fno-strict-return -ffp-contract=on -fno-rounding-math -funwind-tables=1 -fobjc-msgsend-selector-stubs -fno-sized-deallocation -target-sdk-version=26.5 -fvisibility-inlines-hidden-static-local-var -fno-modulemap-allow-subdirectory-search -fdefine-target-os-macros -fno-assume-unique-vtables -fno-modulemap-allow-subdirectory-search -enable-tlsdesc -target-cpu apple-m1 -target-feature +v8.5a -target-feature +aes -target-feature +altnzcv -target-feature +ccdp -target-feature +ccpp -target-feature +complxnum -target-feature +crc -target-feature +dotprod -target-feature +flagm -target-feature +fp-armv8 -target-feature +fp16fml -target-feature +fptoint -target-feature +fullfp16 -target-feature +jsconv -target-feature +lse -target-feature +neon -target-feature +pauth -target-feature +perfmon -target-feature +predres -target-feature +ras -target-feature +rcpc -target-feature +rdm -target-feature +sb -target-feature +sha2 -target-feature +sha3 -target-feature +specrestrict -target-feature +ssbs -target-abi darwinpcs -debugger-tuning=lldb -fdebug-compilation-dir=/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-dyU3Om -target-linker-version 1267 -v -fcoverage-compilation-dir=/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-dyU3Om -resource-dir /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/21 -dependency-file CMakeFiles/cmTC_a1103.dir/CMakeCCompilerABI.c.o.d -skip-unused-modulemap-deps -MT CMakeFiles/cmTC_a1103.dir/CMakeCCompilerABI.c.o -sys-header-deps -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/usr/local/include -internal-isystem /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/local/include -internal-isystem /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/21/include -internal-externc-isystem /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include -internal-externc-isystem /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include -internal-iframework /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks -internal-iframework /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/SubFrameworks -internal-iframework /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/Library/Frameworks -Wno-elaborated-enum-base -ferror-limit 19 -stack-protector 1 -fstack-check -mdarwin-stkchk-strong-link -fblocks -fencode-extended-block-signature -fregister-global-dtors-with-atexit -fgnuc-version=4.2.1 -fskip-odr-check-in-gmf -fmax-type-align=16 -fcommon -clang-vendor-feature=+disableNonDependentMemberExprInCurrentInstantiation -fno-odr-hash-protocols -clang-vendor-feature=+enableAggressiveVLAFolding -clang-vendor-feature=+revert09abecef7bbf -clang-vendor-feature=+thisNoAlignAttr -clang-vendor-feature=+thisNoNullAttr -clang-vendor-feature=+disableAtImportPrivateFrameworkInImplementationError -Wno-error=allocator-wrappers -fdwarf2-cfi-asm -o CMakeFiles/cmTC_a1103.dir/CMakeCCompilerABI.c.o -x c /opt/homebrew/share/cmake/Modules/CMakeCCompilerABI.c]
+        ignore line: [ "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang" -cc1 -triple arm64-apple-macosx26.0.0 -Wundef-prefix=TARGET_OS_ -Wdeprecated-objc-isa-usage -Werror=deprecated-objc-isa-usage -Werror=implicit-function-declaration -emit-obj -disable-free -clear-ast-before-backend -disable-llvm-verifier -discard-value-names -main-file-name CMakeCCompilerABI.c -mrelocation-model pic -pic-level 2 -mframe-pointer=non-leaf -fno-strict-return -ffp-contract=on -fno-rounding-math -funwind-tables=1 -fobjc-msgsend-selector-stubs -fno-sized-deallocation -target-sdk-version=26.5 -fvisibility-inlines-hidden-static-local-var -fno-modulemap-allow-subdirectory-search -fdefine-target-os-macros -fno-assume-unique-vtables -fno-modulemap-allow-subdirectory-search -enable-tlsdesc -target-cpu apple-m1 -target-feature +v8.5a -target-feature +aes -target-feature +altnzcv -target-feature +ccdp -target-feature +ccpp -target-feature +complxnum -target-feature +crc -target-feature +dotprod -target-feature +flagm -target-feature +fp-armv8 -target-feature +fp16fml -target-feature +fptoint -target-feature +fullfp16 -target-feature +jsconv -target-feature +lse -target-feature +neon -target-feature +pauth -target-feature +perfmon -target-feature +predres -target-feature +ras -target-feature +rcpc -target-feature +rdm -target-feature +sb -target-feature +sha2 -target-feature +sha3 -target-feature +specrestrict -target-feature +ssbs -target-abi darwinpcs -debugger-tuning=lldb -fdebug-compilation-dir=/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-LUssPx -target-linker-version 1267 -v -fcoverage-compilation-dir=/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-LUssPx -resource-dir /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/21 -dependency-file CMakeFiles/cmTC_b9531.dir/CMakeCCompilerABI.c.o.d -skip-unused-modulemap-deps -MT CMakeFiles/cmTC_b9531.dir/CMakeCCompilerABI.c.o -sys-header-deps -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/usr/local/include -internal-isystem /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/local/include -internal-isystem /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/21/include -internal-externc-isystem /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include -internal-externc-isystem /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include -internal-iframework /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks -internal-iframework /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/SubFrameworks -internal-iframework /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/Library/Frameworks -Wno-elaborated-enum-base -ferror-limit 19 -stack-protector 1 -fstack-check -mdarwin-stkchk-strong-link -fblocks -fencode-extended-block-signature -fregister-global-dtors-with-atexit -fgnuc-version=4.2.1 -fskip-odr-check-in-gmf -fmax-type-align=16 -fcommon -clang-vendor-feature=+disableNonDependentMemberExprInCurrentInstantiation -fno-odr-hash-protocols -clang-vendor-feature=+enableAggressiveVLAFolding -clang-vendor-feature=+revert09abecef7bbf -clang-vendor-feature=+thisNoAlignAttr -clang-vendor-feature=+thisNoNullAttr -clang-vendor-feature=+disableAtImportPrivateFrameworkInImplementationError -Wno-error=allocator-wrappers -fdwarf2-cfi-asm -o CMakeFiles/cmTC_b9531.dir/CMakeCCompilerABI.c.o -x c /opt/homebrew/share/cmake/Modules/CMakeCCompilerABI.c]
         ignore line: [clang -cc1 version 21.0.0 (clang-2100.1.1.101) default target arm64-apple-darwin25.5.0]
         ignore line: [ignoring nonexistent directory "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/local/include"]
         ignore line: [ignoring nonexistent directory "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/Library/Frameworks"]
@@ -1689,13 +1689,13 @@ events:
         ignore line: [ /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks (framework directory)]
         ignore line: [ /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/SubFrameworks (framework directory)]
         ignore line: [End of search list.]
-        ignore line: [Linking C executable cmTC_a1103]
-        ignore line: [/opt/homebrew/bin/cmake -E cmake_link_script CMakeFiles/cmTC_a1103.dir/link.txt --verbose=1]
+        ignore line: [Linking C executable cmTC_b9531]
+        ignore line: [/opt/homebrew/bin/cmake -E cmake_link_script CMakeFiles/cmTC_b9531.dir/link.txt --verbose=1]
         ignore line: [Apple clang version 21.0.0 (clang-2100.1.1.101)]
         ignore line: [Target: arm64-apple-darwin25.5.0]
         ignore line: [Thread model: posix]
         ignore line: [InstalledDir: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin]
-        link line: [ "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/ld" -demangle -lto_library /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/libLTO.dylib -dynamic -arch arm64 -platform_version macos 26.0.0 26.5 -syslibroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -mllvm -enable-linkonceodr-outlining -o cmTC_a1103 -L/usr/local/lib -v CMakeFiles/cmTC_a1103.dir/CMakeCCompilerABI.c.o -lSystem /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/21/lib/darwin/libclang_rt.osx.a]
+        link line: [ "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/ld" -demangle -lto_library /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/libLTO.dylib -dynamic -arch arm64 -platform_version macos 26.0.0 26.5 -syslibroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -mllvm -enable-linkonceodr-outlining -o cmTC_b9531 -L/usr/local/lib -v CMakeFiles/cmTC_b9531.dir/CMakeCCompilerABI.c.o -lSystem /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/21/lib/darwin/libclang_rt.osx.a]
           arg [/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/ld] ==> ignore
           arg [-demangle] ==> ignore
           arg [-lto_library] ==> ignore, skip following value
@@ -1712,10 +1712,10 @@ events:
           arg [-mllvm] ==> ignore
           arg [-enable-linkonceodr-outlining] ==> ignore
           arg [-o] ==> ignore
-          arg [cmTC_a1103] ==> ignore
+          arg [cmTC_b9531] ==> ignore
           arg [-L/usr/local/lib] ==> dir [/usr/local/lib]
           arg [-v] ==> ignore
-          arg [CMakeFiles/cmTC_a1103.dir/CMakeCCompilerABI.c.o] ==> ignore
+          arg [CMakeFiles/cmTC_b9531.dir/CMakeCCompilerABI.c.o] ==> ignore
           arg [-lSystem] ==> lib [System]
           arg [/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/21/lib/darwin/libclang_rt.osx.a] ==> lib [/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/21/lib/darwin/libclang_rt.osx.a]
         linker tool for 'C': /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/ld
@@ -1758,8 +1758,8 @@ events:
     checks:
       - "Detecting CXX compiler ABI info"
     directories:
-      source: "/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-nfdD2F"
-      binary: "/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-nfdD2F"
+      source: "/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-aVXOEC"
+      binary: "/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-aVXOEC"
     cmakeVariables:
       CMAKE_CXX_FLAGS: ""
       CMAKE_CXX_FLAGS_DEBUG: "-g"
@@ -1773,19 +1773,19 @@ events:
       variable: "CMAKE_CXX_ABI_COMPILED"
       cached: true
       stdout: |
-        Change Dir: '/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-nfdD2F'
+        Change Dir: '/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-aVXOEC'
         
-        Run Build Command(s): /opt/homebrew/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_d9943/fast
-        /Applications/Xcode.app/Contents/Developer/usr/bin/make  -f CMakeFiles/cmTC_d9943.dir/build.make CMakeFiles/cmTC_d9943.dir/build
-        Building CXX object CMakeFiles/cmTC_d9943.dir/CMakeCXXCompilerABI.cpp.o
-        /usr/bin/c++   -arch arm64   -v -Wl,-v -MD -MT CMakeFiles/cmTC_d9943.dir/CMakeCXXCompilerABI.cpp.o -MF CMakeFiles/cmTC_d9943.dir/CMakeCXXCompilerABI.cpp.o.d -o CMakeFiles/cmTC_d9943.dir/CMakeCXXCompilerABI.cpp.o -c /opt/homebrew/share/cmake/Modules/CMakeCXXCompilerABI.cpp
+        Run Build Command(s): /opt/homebrew/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_efe3c/fast
+        /Applications/Xcode.app/Contents/Developer/usr/bin/make  -f CMakeFiles/cmTC_efe3c.dir/build.make CMakeFiles/cmTC_efe3c.dir/build
+        Building CXX object CMakeFiles/cmTC_efe3c.dir/CMakeCXXCompilerABI.cpp.o
+        /usr/bin/c++   -arch arm64   -v -Wl,-v -MD -MT CMakeFiles/cmTC_efe3c.dir/CMakeCXXCompilerABI.cpp.o -MF CMakeFiles/cmTC_efe3c.dir/CMakeCXXCompilerABI.cpp.o.d -o CMakeFiles/cmTC_efe3c.dir/CMakeCXXCompilerABI.cpp.o -c /opt/homebrew/share/cmake/Modules/CMakeCXXCompilerABI.cpp
         Apple clang version 21.0.0 (clang-2100.1.1.101)
         Target: arm64-apple-darwin25.5.0
         Thread model: posix
         InstalledDir: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin
         clang++: warning: -Wl,-v: 'linker' input unused [-Wunused-command-line-argument]
         ignoring nonexistent directory "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1"
-         "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang" -cc1 -triple arm64-apple-macosx26.0.0 -Wundef-prefix=TARGET_OS_ -Wdeprecated-objc-isa-usage -Werror=deprecated-objc-isa-usage -Werror=implicit-function-declaration -emit-obj -disable-free -clear-ast-before-backend -disable-llvm-verifier -discard-value-names -main-file-name CMakeCXXCompilerABI.cpp -mrelocation-model pic -pic-level 2 -mframe-pointer=non-leaf -fno-strict-return -ffp-contract=on -fno-rounding-math -funwind-tables=1 -fobjc-msgsend-selector-stubs -fno-sized-deallocation -target-sdk-version=26.5 -fvisibility-inlines-hidden-static-local-var -fno-modulemap-allow-subdirectory-search -fdefine-target-os-macros -fno-assume-unique-vtables -fno-modulemap-allow-subdirectory-search -enable-tlsdesc -target-cpu apple-m1 -target-feature +v8.5a -target-feature +aes -target-feature +altnzcv -target-feature +ccdp -target-feature +ccpp -target-feature +complxnum -target-feature +crc -target-feature +dotprod -target-feature +flagm -target-feature +fp-armv8 -target-feature +fp16fml -target-feature +fptoint -target-feature +fullfp16 -target-feature +jsconv -target-feature +lse -target-feature +neon -target-feature +pauth -target-feature +perfmon -target-feature +predres -target-feature +ras -target-feature +rcpc -target-feature +rdm -target-feature +sb -target-feature +sha2 -target-feature +sha3 -target-feature +specrestrict -target-feature +ssbs -target-abi darwinpcs -debugger-tuning=lldb -fdebug-compilation-dir=/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-nfdD2F -target-linker-version 1267 -v -fcoverage-compilation-dir=/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-nfdD2F -resource-dir /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/21 -dependency-file CMakeFiles/cmTC_d9943.dir/CMakeCXXCompilerABI.cpp.o.d -skip-unused-modulemap-deps -MT CMakeFiles/cmTC_d9943.dir/CMakeCXXCompilerABI.cpp.o -sys-header-deps -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/usr/local/include -internal-isystem /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/c++/v1 -internal-isystem /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/local/include -internal-isystem /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/21/include -internal-externc-isystem /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include -internal-externc-isystem /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include -internal-iframework /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks -internal-iframework /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/SubFrameworks -internal-iframework /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/Library/Frameworks -Wno-elaborated-enum-base -fdeprecated-macro -ferror-limit 19 -stack-protector 1 -fstack-check -mdarwin-stkchk-strong-link -fblocks -fencode-extended-block-signature -fregister-global-dtors-with-atexit -fgnuc-version=4.2.1 -fskip-odr-check-in-gmf -fcxx-exceptions -fexceptions -fmax-type-align=16 -fcommon -clang-vendor-feature=+disableNonDependentMemberExprInCurrentInstantiation -fno-odr-hash-protocols -clang-vendor-feature=+enableAggressiveVLAFolding -clang-vendor-feature=+revert09abecef7bbf -clang-vendor-feature=+thisNoAlignAttr -clang-vendor-feature=+thisNoNullAttr -clang-vendor-feature=+disableAtImportPrivateFrameworkInImplementationError -Wno-error=allocator-wrappers -fdwarf2-cfi-asm -o CMakeFiles/cmTC_d9943.dir/CMakeCXXCompilerABI.cpp.o -x c++ /opt/homebrew/share/cmake/Modules/CMakeCXXCompilerABI.cpp
+         "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang" -cc1 -triple arm64-apple-macosx26.0.0 -Wundef-prefix=TARGET_OS_ -Wdeprecated-objc-isa-usage -Werror=deprecated-objc-isa-usage -Werror=implicit-function-declaration -emit-obj -disable-free -clear-ast-before-backend -disable-llvm-verifier -discard-value-names -main-file-name CMakeCXXCompilerABI.cpp -mrelocation-model pic -pic-level 2 -mframe-pointer=non-leaf -fno-strict-return -ffp-contract=on -fno-rounding-math -funwind-tables=1 -fobjc-msgsend-selector-stubs -fno-sized-deallocation -target-sdk-version=26.5 -fvisibility-inlines-hidden-static-local-var -fno-modulemap-allow-subdirectory-search -fdefine-target-os-macros -fno-assume-unique-vtables -fno-modulemap-allow-subdirectory-search -enable-tlsdesc -target-cpu apple-m1 -target-feature +v8.5a -target-feature +aes -target-feature +altnzcv -target-feature +ccdp -target-feature +ccpp -target-feature +complxnum -target-feature +crc -target-feature +dotprod -target-feature +flagm -target-feature +fp-armv8 -target-feature +fp16fml -target-feature +fptoint -target-feature +fullfp16 -target-feature +jsconv -target-feature +lse -target-feature +neon -target-feature +pauth -target-feature +perfmon -target-feature +predres -target-feature +ras -target-feature +rcpc -target-feature +rdm -target-feature +sb -target-feature +sha2 -target-feature +sha3 -target-feature +specrestrict -target-feature +ssbs -target-abi darwinpcs -debugger-tuning=lldb -fdebug-compilation-dir=/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-aVXOEC -target-linker-version 1267 -v -fcoverage-compilation-dir=/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-aVXOEC -resource-dir /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/21 -dependency-file CMakeFiles/cmTC_efe3c.dir/CMakeCXXCompilerABI.cpp.o.d -skip-unused-modulemap-deps -MT CMakeFiles/cmTC_efe3c.dir/CMakeCXXCompilerABI.cpp.o -sys-header-deps -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/usr/local/include -internal-isystem /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/c++/v1 -internal-isystem /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/local/include -internal-isystem /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/21/include -internal-externc-isystem /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include -internal-externc-isystem /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include -internal-iframework /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks -internal-iframework /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/SubFrameworks -internal-iframework /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/Library/Frameworks -Wno-elaborated-enum-base -fdeprecated-macro -ferror-limit 19 -stack-protector 1 -fstack-check -mdarwin-stkchk-strong-link -fblocks -fencode-extended-block-signature -fregister-global-dtors-with-atexit -fgnuc-version=4.2.1 -fskip-odr-check-in-gmf -fcxx-exceptions -fexceptions -fmax-type-align=16 -fcommon -clang-vendor-feature=+disableNonDependentMemberExprInCurrentInstantiation -fno-odr-hash-protocols -clang-vendor-feature=+enableAggressiveVLAFolding -clang-vendor-feature=+revert09abecef7bbf -clang-vendor-feature=+thisNoAlignAttr -clang-vendor-feature=+thisNoNullAttr -clang-vendor-feature=+disableAtImportPrivateFrameworkInImplementationError -Wno-error=allocator-wrappers -fdwarf2-cfi-asm -o CMakeFiles/cmTC_efe3c.dir/CMakeCXXCompilerABI.cpp.o -x c++ /opt/homebrew/share/cmake/Modules/CMakeCXXCompilerABI.cpp
         clang -cc1 version 21.0.0 (clang-2100.1.1.101) default target arm64-apple-darwin25.5.0
         ignoring nonexistent directory "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/local/include"
         ignoring nonexistent directory "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/Library/Frameworks"
@@ -1799,13 +1799,13 @@ events:
          /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks (framework directory)
          /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/SubFrameworks (framework directory)
         End of search list.
-        Linking CXX executable cmTC_d9943
-        /opt/homebrew/bin/cmake -E cmake_link_script CMakeFiles/cmTC_d9943.dir/link.txt --verbose=1
+        Linking CXX executable cmTC_efe3c
+        /opt/homebrew/bin/cmake -E cmake_link_script CMakeFiles/cmTC_efe3c.dir/link.txt --verbose=1
         Apple clang version 21.0.0 (clang-2100.1.1.101)
         Target: arm64-apple-darwin25.5.0
         Thread model: posix
         InstalledDir: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin
-         "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/ld" -demangle -lto_library /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/libLTO.dylib -dynamic -arch arm64 -platform_version macos 26.0.0 26.5 -syslibroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -mllvm -enable-linkonceodr-outlining -o cmTC_d9943 -L/usr/local/lib -v CMakeFiles/cmTC_d9943.dir/CMakeCXXCompilerABI.cpp.o -lc++ -lSystem /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/21/lib/darwin/libclang_rt.osx.a
+         "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/ld" -demangle -lto_library /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/libLTO.dylib -dynamic -arch arm64 -platform_version macos 26.0.0 26.5 -syslibroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -mllvm -enable-linkonceodr-outlining -o cmTC_efe3c -L/usr/local/lib -v CMakeFiles/cmTC_efe3c.dir/CMakeCXXCompilerABI.cpp.o -lc++ -lSystem /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/21/lib/darwin/libclang_rt.osx.a
         @(#)PROGRAM:ld PROJECT:ld-1267
         BUILD 18:30:29 Apr 22 2026
         configured to support archs: armv6 armv7 armv7s arm64 arm64e arm64_32 i386 x86_64 x86_64h armv6m armv7k armv7m armv7em armv8m.main armv8.1m.main
@@ -1818,7 +1818,7 @@ events:
         	/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/lib/swift
         Framework search paths:
         	/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks
-        /usr/bin/c++  -arch arm64  -v -Wl,-v CMakeFiles/cmTC_d9943.dir/CMakeCXXCompilerABI.cpp.o -o cmTC_d9943
+        /usr/bin/c++  -arch arm64  -v -Wl,-v CMakeFiles/cmTC_efe3c.dir/CMakeCXXCompilerABI.cpp.o -o cmTC_efe3c
         
       exitCode: 0
   -
@@ -1864,19 +1864,19 @@ events:
       Parsed CXX implicit link information:
         link line regex: [^( *|.*[/\\])(ld[0-9]*(|\\.[a-rt-z][a-z]*|\\.s[a-np-z][a-z]*|\\.so[a-z]+)|CMAKE_LINK_STARTFILE-NOTFOUND|([^/\\]+-)?ld|collect2)[^/\\]*( |$)]
         linker tool regex: [^[ 	]*(->|"|[0-9]+>[ 	-]*Build:[ 	0-9]+ ms[ 	]*)?[ 	]*(([^"]*[/\\])?(ld[0-9]*(|\\.[a-rt-z][a-z]*|\\.s[a-np-z][a-z]*|\\.so[a-z]+)))("|,| |$)]
-        ignore line: [Change Dir: '/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-nfdD2F']
+        ignore line: [Change Dir: '/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-aVXOEC']
         ignore line: []
-        ignore line: [Run Build Command(s): /opt/homebrew/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_d9943/fast]
-        ignore line: [/Applications/Xcode.app/Contents/Developer/usr/bin/make  -f CMakeFiles/cmTC_d9943.dir/build.make CMakeFiles/cmTC_d9943.dir/build]
-        ignore line: [Building CXX object CMakeFiles/cmTC_d9943.dir/CMakeCXXCompilerABI.cpp.o]
-        ignore line: [/usr/bin/c++   -arch arm64   -v -Wl -v -MD -MT CMakeFiles/cmTC_d9943.dir/CMakeCXXCompilerABI.cpp.o -MF CMakeFiles/cmTC_d9943.dir/CMakeCXXCompilerABI.cpp.o.d -o CMakeFiles/cmTC_d9943.dir/CMakeCXXCompilerABI.cpp.o -c /opt/homebrew/share/cmake/Modules/CMakeCXXCompilerABI.cpp]
+        ignore line: [Run Build Command(s): /opt/homebrew/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_efe3c/fast]
+        ignore line: [/Applications/Xcode.app/Contents/Developer/usr/bin/make  -f CMakeFiles/cmTC_efe3c.dir/build.make CMakeFiles/cmTC_efe3c.dir/build]
+        ignore line: [Building CXX object CMakeFiles/cmTC_efe3c.dir/CMakeCXXCompilerABI.cpp.o]
+        ignore line: [/usr/bin/c++   -arch arm64   -v -Wl -v -MD -MT CMakeFiles/cmTC_efe3c.dir/CMakeCXXCompilerABI.cpp.o -MF CMakeFiles/cmTC_efe3c.dir/CMakeCXXCompilerABI.cpp.o.d -o CMakeFiles/cmTC_efe3c.dir/CMakeCXXCompilerABI.cpp.o -c /opt/homebrew/share/cmake/Modules/CMakeCXXCompilerABI.cpp]
         ignore line: [Apple clang version 21.0.0 (clang-2100.1.1.101)]
         ignore line: [Target: arm64-apple-darwin25.5.0]
         ignore line: [Thread model: posix]
         ignore line: [InstalledDir: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin]
         ignore line: [clang++: warning: -Wl -v: 'linker' input unused [-Wunused-command-line-argument]]
         ignore line: [ignoring nonexistent directory "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1"]
-        ignore line: [ "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang" -cc1 -triple arm64-apple-macosx26.0.0 -Wundef-prefix=TARGET_OS_ -Wdeprecated-objc-isa-usage -Werror=deprecated-objc-isa-usage -Werror=implicit-function-declaration -emit-obj -disable-free -clear-ast-before-backend -disable-llvm-verifier -discard-value-names -main-file-name CMakeCXXCompilerABI.cpp -mrelocation-model pic -pic-level 2 -mframe-pointer=non-leaf -fno-strict-return -ffp-contract=on -fno-rounding-math -funwind-tables=1 -fobjc-msgsend-selector-stubs -fno-sized-deallocation -target-sdk-version=26.5 -fvisibility-inlines-hidden-static-local-var -fno-modulemap-allow-subdirectory-search -fdefine-target-os-macros -fno-assume-unique-vtables -fno-modulemap-allow-subdirectory-search -enable-tlsdesc -target-cpu apple-m1 -target-feature +v8.5a -target-feature +aes -target-feature +altnzcv -target-feature +ccdp -target-feature +ccpp -target-feature +complxnum -target-feature +crc -target-feature +dotprod -target-feature +flagm -target-feature +fp-armv8 -target-feature +fp16fml -target-feature +fptoint -target-feature +fullfp16 -target-feature +jsconv -target-feature +lse -target-feature +neon -target-feature +pauth -target-feature +perfmon -target-feature +predres -target-feature +ras -target-feature +rcpc -target-feature +rdm -target-feature +sb -target-feature +sha2 -target-feature +sha3 -target-feature +specrestrict -target-feature +ssbs -target-abi darwinpcs -debugger-tuning=lldb -fdebug-compilation-dir=/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-nfdD2F -target-linker-version 1267 -v -fcoverage-compilation-dir=/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-nfdD2F -resource-dir /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/21 -dependency-file CMakeFiles/cmTC_d9943.dir/CMakeCXXCompilerABI.cpp.o.d -skip-unused-modulemap-deps -MT CMakeFiles/cmTC_d9943.dir/CMakeCXXCompilerABI.cpp.o -sys-header-deps -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/usr/local/include -internal-isystem /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/c++/v1 -internal-isystem /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/local/include -internal-isystem /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/21/include -internal-externc-isystem /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include -internal-externc-isystem /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include -internal-iframework /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks -internal-iframework /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/SubFrameworks -internal-iframework /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/Library/Frameworks -Wno-elaborated-enum-base -fdeprecated-macro -ferror-limit 19 -stack-protector 1 -fstack-check -mdarwin-stkchk-strong-link -fblocks -fencode-extended-block-signature -fregister-global-dtors-with-atexit -fgnuc-version=4.2.1 -fskip-odr-check-in-gmf -fcxx-exceptions -fexceptions -fmax-type-align=16 -fcommon -clang-vendor-feature=+disableNonDependentMemberExprInCurrentInstantiation -fno-odr-hash-protocols -clang-vendor-feature=+enableAggressiveVLAFolding -clang-vendor-feature=+revert09abecef7bbf -clang-vendor-feature=+thisNoAlignAttr -clang-vendor-feature=+thisNoNullAttr -clang-vendor-feature=+disableAtImportPrivateFrameworkInImplementationError -Wno-error=allocator-wrappers -fdwarf2-cfi-asm -o CMakeFiles/cmTC_d9943.dir/CMakeCXXCompilerABI.cpp.o -x c++ /opt/homebrew/share/cmake/Modules/CMakeCXXCompilerABI.cpp]
+        ignore line: [ "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang" -cc1 -triple arm64-apple-macosx26.0.0 -Wundef-prefix=TARGET_OS_ -Wdeprecated-objc-isa-usage -Werror=deprecated-objc-isa-usage -Werror=implicit-function-declaration -emit-obj -disable-free -clear-ast-before-backend -disable-llvm-verifier -discard-value-names -main-file-name CMakeCXXCompilerABI.cpp -mrelocation-model pic -pic-level 2 -mframe-pointer=non-leaf -fno-strict-return -ffp-contract=on -fno-rounding-math -funwind-tables=1 -fobjc-msgsend-selector-stubs -fno-sized-deallocation -target-sdk-version=26.5 -fvisibility-inlines-hidden-static-local-var -fno-modulemap-allow-subdirectory-search -fdefine-target-os-macros -fno-assume-unique-vtables -fno-modulemap-allow-subdirectory-search -enable-tlsdesc -target-cpu apple-m1 -target-feature +v8.5a -target-feature +aes -target-feature +altnzcv -target-feature +ccdp -target-feature +ccpp -target-feature +complxnum -target-feature +crc -target-feature +dotprod -target-feature +flagm -target-feature +fp-armv8 -target-feature +fp16fml -target-feature +fptoint -target-feature +fullfp16 -target-feature +jsconv -target-feature +lse -target-feature +neon -target-feature +pauth -target-feature +perfmon -target-feature +predres -target-feature +ras -target-feature +rcpc -target-feature +rdm -target-feature +sb -target-feature +sha2 -target-feature +sha3 -target-feature +specrestrict -target-feature +ssbs -target-abi darwinpcs -debugger-tuning=lldb -fdebug-compilation-dir=/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-aVXOEC -target-linker-version 1267 -v -fcoverage-compilation-dir=/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-aVXOEC -resource-dir /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/21 -dependency-file CMakeFiles/cmTC_efe3c.dir/CMakeCXXCompilerABI.cpp.o.d -skip-unused-modulemap-deps -MT CMakeFiles/cmTC_efe3c.dir/CMakeCXXCompilerABI.cpp.o -sys-header-deps -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/usr/local/include -internal-isystem /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/c++/v1 -internal-isystem /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/local/include -internal-isystem /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/21/include -internal-externc-isystem /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include -internal-externc-isystem /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include -internal-iframework /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks -internal-iframework /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/SubFrameworks -internal-iframework /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/Library/Frameworks -Wno-elaborated-enum-base -fdeprecated-macro -ferror-limit 19 -stack-protector 1 -fstack-check -mdarwin-stkchk-strong-link -fblocks -fencode-extended-block-signature -fregister-global-dtors-with-atexit -fgnuc-version=4.2.1 -fskip-odr-check-in-gmf -fcxx-exceptions -fexceptions -fmax-type-align=16 -fcommon -clang-vendor-feature=+disableNonDependentMemberExprInCurrentInstantiation -fno-odr-hash-protocols -clang-vendor-feature=+enableAggressiveVLAFolding -clang-vendor-feature=+revert09abecef7bbf -clang-vendor-feature=+thisNoAlignAttr -clang-vendor-feature=+thisNoNullAttr -clang-vendor-feature=+disableAtImportPrivateFrameworkInImplementationError -Wno-error=allocator-wrappers -fdwarf2-cfi-asm -o CMakeFiles/cmTC_efe3c.dir/CMakeCXXCompilerABI.cpp.o -x c++ /opt/homebrew/share/cmake/Modules/CMakeCXXCompilerABI.cpp]
         ignore line: [clang -cc1 version 21.0.0 (clang-2100.1.1.101) default target arm64-apple-darwin25.5.0]
         ignore line: [ignoring nonexistent directory "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/local/include"]
         ignore line: [ignoring nonexistent directory "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/Library/Frameworks"]
@@ -1890,13 +1890,13 @@ events:
         ignore line: [ /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks (framework directory)]
         ignore line: [ /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/SubFrameworks (framework directory)]
         ignore line: [End of search list.]
-        ignore line: [Linking CXX executable cmTC_d9943]
-        ignore line: [/opt/homebrew/bin/cmake -E cmake_link_script CMakeFiles/cmTC_d9943.dir/link.txt --verbose=1]
+        ignore line: [Linking CXX executable cmTC_efe3c]
+        ignore line: [/opt/homebrew/bin/cmake -E cmake_link_script CMakeFiles/cmTC_efe3c.dir/link.txt --verbose=1]
         ignore line: [Apple clang version 21.0.0 (clang-2100.1.1.101)]
         ignore line: [Target: arm64-apple-darwin25.5.0]
         ignore line: [Thread model: posix]
         ignore line: [InstalledDir: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin]
-        link line: [ "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/ld" -demangle -lto_library /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/libLTO.dylib -dynamic -arch arm64 -platform_version macos 26.0.0 26.5 -syslibroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -mllvm -enable-linkonceodr-outlining -o cmTC_d9943 -L/usr/local/lib -v CMakeFiles/cmTC_d9943.dir/CMakeCXXCompilerABI.cpp.o -lc++ -lSystem /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/21/lib/darwin/libclang_rt.osx.a]
+        link line: [ "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/ld" -demangle -lto_library /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/libLTO.dylib -dynamic -arch arm64 -platform_version macos 26.0.0 26.5 -syslibroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -mllvm -enable-linkonceodr-outlining -o cmTC_efe3c -L/usr/local/lib -v CMakeFiles/cmTC_efe3c.dir/CMakeCXXCompilerABI.cpp.o -lc++ -lSystem /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/21/lib/darwin/libclang_rt.osx.a]
           arg [/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/ld] ==> ignore
           arg [-demangle] ==> ignore
           arg [-lto_library] ==> ignore, skip following value
@@ -1913,10 +1913,10 @@ events:
           arg [-mllvm] ==> ignore
           arg [-enable-linkonceodr-outlining] ==> ignore
           arg [-o] ==> ignore
-          arg [cmTC_d9943] ==> ignore
+          arg [cmTC_efe3c] ==> ignore
           arg [-L/usr/local/lib] ==> dir [/usr/local/lib]
           arg [-v] ==> ignore
-          arg [CMakeFiles/cmTC_d9943.dir/CMakeCXXCompilerABI.cpp.o] ==> ignore
+          arg [CMakeFiles/cmTC_efe3c.dir/CMakeCXXCompilerABI.cpp.o] ==> ignore
           arg [-lc++] ==> lib [c++]
           arg [-lSystem] ==> lib [System]
           arg [/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/21/lib/darwin/libclang_rt.osx.a] ==> lib [/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/21/lib/darwin/libclang_rt.osx.a]
@@ -2821,8 +2821,8 @@ events:
     checks:
       - "Performing Test TOML11_COMPILER_SUPPORTS_WALL"
     directories:
-      source: "/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-NcPdR7"
-      binary: "/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-NcPdR7"
+      source: "/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-a67uHA"
+      binary: "/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-a67uHA"
     cmakeVariables:
       CMAKE_CXX_FLAGS: ""
       CMAKE_CXX_FLAGS_DEBUG: "-g"
@@ -2835,15 +2835,15 @@ events:
       variable: "TOML11_COMPILER_SUPPORTS_WALL"
       cached: true
       stdout: |
-        Change Dir: '/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-NcPdR7'
+        Change Dir: '/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-a67uHA'
         
-        Run Build Command(s): /opt/homebrew/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_a4d99/fast
-        /Applications/Xcode.app/Contents/Developer/usr/bin/make  -f CMakeFiles/cmTC_a4d99.dir/build.make CMakeFiles/cmTC_a4d99.dir/build
-        Building CXX object CMakeFiles/cmTC_a4d99.dir/src.cxx.o
-        /usr/bin/c++ -DTOML11_COMPILER_SUPPORTS_WALL  -std=c++23 -arch arm64   -Wall -MD -MT CMakeFiles/cmTC_a4d99.dir/src.cxx.o -MF CMakeFiles/cmTC_a4d99.dir/src.cxx.o.d -o CMakeFiles/cmTC_a4d99.dir/src.cxx.o -c /Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-NcPdR7/src.cxx
-        Linking CXX executable cmTC_a4d99
-        /opt/homebrew/bin/cmake -E cmake_link_script CMakeFiles/cmTC_a4d99.dir/link.txt --verbose=1
-        /usr/bin/c++  -arch arm64 CMakeFiles/cmTC_a4d99.dir/src.cxx.o -o cmTC_a4d99
+        Run Build Command(s): /opt/homebrew/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_20b88/fast
+        /Applications/Xcode.app/Contents/Developer/usr/bin/make  -f CMakeFiles/cmTC_20b88.dir/build.make CMakeFiles/cmTC_20b88.dir/build
+        Building CXX object CMakeFiles/cmTC_20b88.dir/src.cxx.o
+        /usr/bin/c++ -DTOML11_COMPILER_SUPPORTS_WALL  -std=c++23 -arch arm64   -Wall -MD -MT CMakeFiles/cmTC_20b88.dir/src.cxx.o -MF CMakeFiles/cmTC_20b88.dir/src.cxx.o.d -o CMakeFiles/cmTC_20b88.dir/src.cxx.o -c /Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-a67uHA/src.cxx
+        Linking CXX executable cmTC_20b88
+        /opt/homebrew/bin/cmake -E cmake_link_script CMakeFiles/cmTC_20b88.dir/link.txt --verbose=1
+        /usr/bin/c++  -arch arm64 CMakeFiles/cmTC_20b88.dir/src.cxx.o -o cmTC_20b88
         
       exitCode: 0
   -
@@ -2856,8 +2856,8 @@ events:
     checks:
       - "Performing Test TOML11_COMPILER_SUPPORTS_WEXTRA"
     directories:
-      source: "/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-mFlVeE"
-      binary: "/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-mFlVeE"
+      source: "/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-BwxWxj"
+      binary: "/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-BwxWxj"
     cmakeVariables:
       CMAKE_CXX_FLAGS: ""
       CMAKE_CXX_FLAGS_DEBUG: "-g"
@@ -2870,15 +2870,15 @@ events:
       variable: "TOML11_COMPILER_SUPPORTS_WEXTRA"
       cached: true
       stdout: |
-        Change Dir: '/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-mFlVeE'
+        Change Dir: '/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-BwxWxj'
         
-        Run Build Command(s): /opt/homebrew/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_ef0e7/fast
-        /Applications/Xcode.app/Contents/Developer/usr/bin/make  -f CMakeFiles/cmTC_ef0e7.dir/build.make CMakeFiles/cmTC_ef0e7.dir/build
-        Building CXX object CMakeFiles/cmTC_ef0e7.dir/src.cxx.o
-        /usr/bin/c++ -DTOML11_COMPILER_SUPPORTS_WEXTRA  -std=c++23 -arch arm64   -Wextra -MD -MT CMakeFiles/cmTC_ef0e7.dir/src.cxx.o -MF CMakeFiles/cmTC_ef0e7.dir/src.cxx.o.d -o CMakeFiles/cmTC_ef0e7.dir/src.cxx.o -c /Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-mFlVeE/src.cxx
-        Linking CXX executable cmTC_ef0e7
-        /opt/homebrew/bin/cmake -E cmake_link_script CMakeFiles/cmTC_ef0e7.dir/link.txt --verbose=1
-        /usr/bin/c++  -arch arm64 CMakeFiles/cmTC_ef0e7.dir/src.cxx.o -o cmTC_ef0e7
+        Run Build Command(s): /opt/homebrew/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_ead77/fast
+        /Applications/Xcode.app/Contents/Developer/usr/bin/make  -f CMakeFiles/cmTC_ead77.dir/build.make CMakeFiles/cmTC_ead77.dir/build
+        Building CXX object CMakeFiles/cmTC_ead77.dir/src.cxx.o
+        /usr/bin/c++ -DTOML11_COMPILER_SUPPORTS_WEXTRA  -std=c++23 -arch arm64   -Wextra -MD -MT CMakeFiles/cmTC_ead77.dir/src.cxx.o -MF CMakeFiles/cmTC_ead77.dir/src.cxx.o.d -o CMakeFiles/cmTC_ead77.dir/src.cxx.o -c /Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-BwxWxj/src.cxx
+        Linking CXX executable cmTC_ead77
+        /opt/homebrew/bin/cmake -E cmake_link_script CMakeFiles/cmTC_ead77.dir/link.txt --verbose=1
+        /usr/bin/c++  -arch arm64 CMakeFiles/cmTC_ead77.dir/src.cxx.o -o cmTC_ead77
         
       exitCode: 0
   -
@@ -2891,8 +2891,8 @@ events:
     checks:
       - "Performing Test TOML11_COMPILER_SUPPORTS_WPEDANTIC"
     directories:
-      source: "/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-Znb2p6"
-      binary: "/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-Znb2p6"
+      source: "/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-uxTruZ"
+      binary: "/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-uxTruZ"
     cmakeVariables:
       CMAKE_CXX_FLAGS: ""
       CMAKE_CXX_FLAGS_DEBUG: "-g"
@@ -2905,15 +2905,15 @@ events:
       variable: "TOML11_COMPILER_SUPPORTS_WPEDANTIC"
       cached: true
       stdout: |
-        Change Dir: '/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-Znb2p6'
+        Change Dir: '/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-uxTruZ'
         
-        Run Build Command(s): /opt/homebrew/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_4aa4c/fast
-        /Applications/Xcode.app/Contents/Developer/usr/bin/make  -f CMakeFiles/cmTC_4aa4c.dir/build.make CMakeFiles/cmTC_4aa4c.dir/build
-        Building CXX object CMakeFiles/cmTC_4aa4c.dir/src.cxx.o
-        /usr/bin/c++ -DTOML11_COMPILER_SUPPORTS_WPEDANTIC  -std=c++23 -arch arm64   -Wpedantic -MD -MT CMakeFiles/cmTC_4aa4c.dir/src.cxx.o -MF CMakeFiles/cmTC_4aa4c.dir/src.cxx.o.d -o CMakeFiles/cmTC_4aa4c.dir/src.cxx.o -c /Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-Znb2p6/src.cxx
-        Linking CXX executable cmTC_4aa4c
-        /opt/homebrew/bin/cmake -E cmake_link_script CMakeFiles/cmTC_4aa4c.dir/link.txt --verbose=1
-        /usr/bin/c++  -arch arm64 CMakeFiles/cmTC_4aa4c.dir/src.cxx.o -o cmTC_4aa4c
+        Run Build Command(s): /opt/homebrew/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_6fedf/fast
+        /Applications/Xcode.app/Contents/Developer/usr/bin/make  -f CMakeFiles/cmTC_6fedf.dir/build.make CMakeFiles/cmTC_6fedf.dir/build
+        Building CXX object CMakeFiles/cmTC_6fedf.dir/src.cxx.o
+        /usr/bin/c++ -DTOML11_COMPILER_SUPPORTS_WPEDANTIC  -std=c++23 -arch arm64   -Wpedantic -MD -MT CMakeFiles/cmTC_6fedf.dir/src.cxx.o -MF CMakeFiles/cmTC_6fedf.dir/src.cxx.o.d -o CMakeFiles/cmTC_6fedf.dir/src.cxx.o -c /Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-uxTruZ/src.cxx
+        Linking CXX executable cmTC_6fedf
+        /opt/homebrew/bin/cmake -E cmake_link_script CMakeFiles/cmTC_6fedf.dir/link.txt --verbose=1
+        /usr/bin/c++  -arch arm64 CMakeFiles/cmTC_6fedf.dir/src.cxx.o -o cmTC_6fedf
         
       exitCode: 0
   -
@@ -2926,8 +2926,8 @@ events:
     checks:
       - "Performing Test TOML11_COMPILER_SUPPORTS_WERROR"
     directories:
-      source: "/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-XRi2SC"
-      binary: "/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-XRi2SC"
+      source: "/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-IjlH5R"
+      binary: "/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-IjlH5R"
     cmakeVariables:
       CMAKE_CXX_FLAGS: ""
       CMAKE_CXX_FLAGS_DEBUG: "-g"
@@ -2940,15 +2940,15 @@ events:
       variable: "TOML11_COMPILER_SUPPORTS_WERROR"
       cached: true
       stdout: |
-        Change Dir: '/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-XRi2SC'
+        Change Dir: '/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-IjlH5R'
         
-        Run Build Command(s): /opt/homebrew/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_00348/fast
-        /Applications/Xcode.app/Contents/Developer/usr/bin/make  -f CMakeFiles/cmTC_00348.dir/build.make CMakeFiles/cmTC_00348.dir/build
-        Building CXX object CMakeFiles/cmTC_00348.dir/src.cxx.o
-        /usr/bin/c++ -DTOML11_COMPILER_SUPPORTS_WERROR  -std=c++23 -arch arm64   -Werror -MD -MT CMakeFiles/cmTC_00348.dir/src.cxx.o -MF CMakeFiles/cmTC_00348.dir/src.cxx.o.d -o CMakeFiles/cmTC_00348.dir/src.cxx.o -c /Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-XRi2SC/src.cxx
-        Linking CXX executable cmTC_00348
-        /opt/homebrew/bin/cmake -E cmake_link_script CMakeFiles/cmTC_00348.dir/link.txt --verbose=1
-        /usr/bin/c++  -arch arm64 CMakeFiles/cmTC_00348.dir/src.cxx.o -o cmTC_00348
+        Run Build Command(s): /opt/homebrew/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_e47e0/fast
+        /Applications/Xcode.app/Contents/Developer/usr/bin/make  -f CMakeFiles/cmTC_e47e0.dir/build.make CMakeFiles/cmTC_e47e0.dir/build
+        Building CXX object CMakeFiles/cmTC_e47e0.dir/src.cxx.o
+        /usr/bin/c++ -DTOML11_COMPILER_SUPPORTS_WERROR  -std=c++23 -arch arm64   -Werror -MD -MT CMakeFiles/cmTC_e47e0.dir/src.cxx.o -MF CMakeFiles/cmTC_e47e0.dir/src.cxx.o.d -o CMakeFiles/cmTC_e47e0.dir/src.cxx.o -c /Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-IjlH5R/src.cxx
+        Linking CXX executable cmTC_e47e0
+        /opt/homebrew/bin/cmake -E cmake_link_script CMakeFiles/cmTC_e47e0.dir/link.txt --verbose=1
+        /usr/bin/c++  -arch arm64 CMakeFiles/cmTC_e47e0.dir/src.cxx.o -o cmTC_e47e0
         
       exitCode: 0
   -
@@ -2961,8 +2961,8 @@ events:
     checks:
       - "Performing Test TOML11_COMPILER_SUPPORTS_WSIGN_CONVERSION"
     directories:
-      source: "/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-u4UcQp"
-      binary: "/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-u4UcQp"
+      source: "/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-TIiifM"
+      binary: "/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-TIiifM"
     cmakeVariables:
       CMAKE_CXX_FLAGS: ""
       CMAKE_CXX_FLAGS_DEBUG: "-g"
@@ -2975,15 +2975,15 @@ events:
       variable: "TOML11_COMPILER_SUPPORTS_WSIGN_CONVERSION"
       cached: true
       stdout: |
-        Change Dir: '/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-u4UcQp'
+        Change Dir: '/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-TIiifM'
         
-        Run Build Command(s): /opt/homebrew/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_8b345/fast
-        /Applications/Xcode.app/Contents/Developer/usr/bin/make  -f CMakeFiles/cmTC_8b345.dir/build.make CMakeFiles/cmTC_8b345.dir/build
-        Building CXX object CMakeFiles/cmTC_8b345.dir/src.cxx.o
-        /usr/bin/c++ -DTOML11_COMPILER_SUPPORTS_WSIGN_CONVERSION  -std=c++23 -arch arm64   -Wsign-conversion -MD -MT CMakeFiles/cmTC_8b345.dir/src.cxx.o -MF CMakeFiles/cmTC_8b345.dir/src.cxx.o.d -o CMakeFiles/cmTC_8b345.dir/src.cxx.o -c /Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-u4UcQp/src.cxx
-        Linking CXX executable cmTC_8b345
-        /opt/homebrew/bin/cmake -E cmake_link_script CMakeFiles/cmTC_8b345.dir/link.txt --verbose=1
-        /usr/bin/c++  -arch arm64 CMakeFiles/cmTC_8b345.dir/src.cxx.o -o cmTC_8b345
+        Run Build Command(s): /opt/homebrew/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_74e6c/fast
+        /Applications/Xcode.app/Contents/Developer/usr/bin/make  -f CMakeFiles/cmTC_74e6c.dir/build.make CMakeFiles/cmTC_74e6c.dir/build
+        Building CXX object CMakeFiles/cmTC_74e6c.dir/src.cxx.o
+        /usr/bin/c++ -DTOML11_COMPILER_SUPPORTS_WSIGN_CONVERSION  -std=c++23 -arch arm64   -Wsign-conversion -MD -MT CMakeFiles/cmTC_74e6c.dir/src.cxx.o -MF CMakeFiles/cmTC_74e6c.dir/src.cxx.o.d -o CMakeFiles/cmTC_74e6c.dir/src.cxx.o -c /Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-TIiifM/src.cxx
+        Linking CXX executable cmTC_74e6c
+        /opt/homebrew/bin/cmake -E cmake_link_script CMakeFiles/cmTC_74e6c.dir/link.txt --verbose=1
+        /usr/bin/c++  -arch arm64 CMakeFiles/cmTC_74e6c.dir/src.cxx.o -o cmTC_74e6c
         
       exitCode: 0
   -
@@ -2996,8 +2996,8 @@ events:
     checks:
       - "Performing Test TOML11_COMPILER_SUPPORTS_WCONVERSION"
     directories:
-      source: "/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-43ZoCv"
-      binary: "/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-43ZoCv"
+      source: "/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-uJZ9LM"
+      binary: "/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-uJZ9LM"
     cmakeVariables:
       CMAKE_CXX_FLAGS: ""
       CMAKE_CXX_FLAGS_DEBUG: "-g"
@@ -3010,15 +3010,15 @@ events:
       variable: "TOML11_COMPILER_SUPPORTS_WCONVERSION"
       cached: true
       stdout: |
-        Change Dir: '/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-43ZoCv'
+        Change Dir: '/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-uJZ9LM'
         
-        Run Build Command(s): /opt/homebrew/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_eadad/fast
-        /Applications/Xcode.app/Contents/Developer/usr/bin/make  -f CMakeFiles/cmTC_eadad.dir/build.make CMakeFiles/cmTC_eadad.dir/build
-        Building CXX object CMakeFiles/cmTC_eadad.dir/src.cxx.o
-        /usr/bin/c++ -DTOML11_COMPILER_SUPPORTS_WCONVERSION  -std=c++23 -arch arm64   -Wconversion -MD -MT CMakeFiles/cmTC_eadad.dir/src.cxx.o -MF CMakeFiles/cmTC_eadad.dir/src.cxx.o.d -o CMakeFiles/cmTC_eadad.dir/src.cxx.o -c /Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-43ZoCv/src.cxx
-        Linking CXX executable cmTC_eadad
-        /opt/homebrew/bin/cmake -E cmake_link_script CMakeFiles/cmTC_eadad.dir/link.txt --verbose=1
-        /usr/bin/c++  -arch arm64 CMakeFiles/cmTC_eadad.dir/src.cxx.o -o cmTC_eadad
+        Run Build Command(s): /opt/homebrew/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_8f55f/fast
+        /Applications/Xcode.app/Contents/Developer/usr/bin/make  -f CMakeFiles/cmTC_8f55f.dir/build.make CMakeFiles/cmTC_8f55f.dir/build
+        Building CXX object CMakeFiles/cmTC_8f55f.dir/src.cxx.o
+        /usr/bin/c++ -DTOML11_COMPILER_SUPPORTS_WCONVERSION  -std=c++23 -arch arm64   -Wconversion -MD -MT CMakeFiles/cmTC_8f55f.dir/src.cxx.o -MF CMakeFiles/cmTC_8f55f.dir/src.cxx.o.d -o CMakeFiles/cmTC_8f55f.dir/src.cxx.o -c /Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-uJZ9LM/src.cxx
+        Linking CXX executable cmTC_8f55f
+        /opt/homebrew/bin/cmake -E cmake_link_script CMakeFiles/cmTC_8f55f.dir/link.txt --verbose=1
+        /usr/bin/c++  -arch arm64 CMakeFiles/cmTC_8f55f.dir/src.cxx.o -o cmTC_8f55f
         
       exitCode: 0
   -
@@ -3031,8 +3031,8 @@ events:
     checks:
       - "Performing Test TOML11_COMPILER_SUPPORTS_WDUPLICATED_COND"
     directories:
-      source: "/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-Gj4C49"
-      binary: "/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-Gj4C49"
+      source: "/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-n1XOJY"
+      binary: "/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-n1XOJY"
     cmakeVariables:
       CMAKE_CXX_FLAGS: ""
       CMAKE_CXX_FLAGS_DEBUG: "-g"
@@ -3045,17 +3045,17 @@ events:
       variable: "TOML11_COMPILER_SUPPORTS_WDUPLICATED_COND"
       cached: true
       stdout: |
-        Change Dir: '/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-Gj4C49'
+        Change Dir: '/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-n1XOJY'
         
-        Run Build Command(s): /opt/homebrew/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_88570/fast
-        /Applications/Xcode.app/Contents/Developer/usr/bin/make  -f CMakeFiles/cmTC_88570.dir/build.make CMakeFiles/cmTC_88570.dir/build
-        Building CXX object CMakeFiles/cmTC_88570.dir/src.cxx.o
-        /usr/bin/c++ -DTOML11_COMPILER_SUPPORTS_WDUPLICATED_COND  -std=c++23 -arch arm64   -Wduplicated-cond -MD -MT CMakeFiles/cmTC_88570.dir/src.cxx.o -MF CMakeFiles/cmTC_88570.dir/src.cxx.o.d -o CMakeFiles/cmTC_88570.dir/src.cxx.o -c /Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-Gj4C49/src.cxx
+        Run Build Command(s): /opt/homebrew/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_c7ebf/fast
+        /Applications/Xcode.app/Contents/Developer/usr/bin/make  -f CMakeFiles/cmTC_c7ebf.dir/build.make CMakeFiles/cmTC_c7ebf.dir/build
+        Building CXX object CMakeFiles/cmTC_c7ebf.dir/src.cxx.o
+        /usr/bin/c++ -DTOML11_COMPILER_SUPPORTS_WDUPLICATED_COND  -std=c++23 -arch arm64   -Wduplicated-cond -MD -MT CMakeFiles/cmTC_c7ebf.dir/src.cxx.o -MF CMakeFiles/cmTC_c7ebf.dir/src.cxx.o.d -o CMakeFiles/cmTC_c7ebf.dir/src.cxx.o -c /Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-n1XOJY/src.cxx
         warning: unknown warning option '-Wduplicated-cond' [-Wunknown-warning-option]
         1 warning generated.
-        Linking CXX executable cmTC_88570
-        /opt/homebrew/bin/cmake -E cmake_link_script CMakeFiles/cmTC_88570.dir/link.txt --verbose=1
-        /usr/bin/c++  -arch arm64 CMakeFiles/cmTC_88570.dir/src.cxx.o -o cmTC_88570
+        Linking CXX executable cmTC_c7ebf
+        /opt/homebrew/bin/cmake -E cmake_link_script CMakeFiles/cmTC_c7ebf.dir/link.txt --verbose=1
+        /usr/bin/c++  -arch arm64 CMakeFiles/cmTC_c7ebf.dir/src.cxx.o -o cmTC_c7ebf
         
       exitCode: 0
   -
@@ -3068,8 +3068,8 @@ events:
     checks:
       - "Performing Test TOML11_COMPILER_SUPPORTS_WDUPLICATED_BRANCHES"
     directories:
-      source: "/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-MrpNN0"
-      binary: "/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-MrpNN0"
+      source: "/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-BRXDVQ"
+      binary: "/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-BRXDVQ"
     cmakeVariables:
       CMAKE_CXX_FLAGS: ""
       CMAKE_CXX_FLAGS_DEBUG: "-g"
@@ -3082,17 +3082,17 @@ events:
       variable: "TOML11_COMPILER_SUPPORTS_WDUPLICATED_BRANCHES"
       cached: true
       stdout: |
-        Change Dir: '/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-MrpNN0'
+        Change Dir: '/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-BRXDVQ'
         
-        Run Build Command(s): /opt/homebrew/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_62978/fast
-        /Applications/Xcode.app/Contents/Developer/usr/bin/make  -f CMakeFiles/cmTC_62978.dir/build.make CMakeFiles/cmTC_62978.dir/build
-        Building CXX object CMakeFiles/cmTC_62978.dir/src.cxx.o
-        /usr/bin/c++ -DTOML11_COMPILER_SUPPORTS_WDUPLICATED_BRANCHES  -std=c++23 -arch arm64   -Wduplicated-branches -MD -MT CMakeFiles/cmTC_62978.dir/src.cxx.o -MF CMakeFiles/cmTC_62978.dir/src.cxx.o.d -o CMakeFiles/cmTC_62978.dir/src.cxx.o -c /Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-MrpNN0/src.cxx
+        Run Build Command(s): /opt/homebrew/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_71555/fast
+        /Applications/Xcode.app/Contents/Developer/usr/bin/make  -f CMakeFiles/cmTC_71555.dir/build.make CMakeFiles/cmTC_71555.dir/build
+        Building CXX object CMakeFiles/cmTC_71555.dir/src.cxx.o
+        /usr/bin/c++ -DTOML11_COMPILER_SUPPORTS_WDUPLICATED_BRANCHES  -std=c++23 -arch arm64   -Wduplicated-branches -MD -MT CMakeFiles/cmTC_71555.dir/src.cxx.o -MF CMakeFiles/cmTC_71555.dir/src.cxx.o.d -o CMakeFiles/cmTC_71555.dir/src.cxx.o -c /Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-BRXDVQ/src.cxx
         warning: unknown warning option '-Wduplicated-branches' [-Wunknown-warning-option]
         1 warning generated.
-        Linking CXX executable cmTC_62978
-        /opt/homebrew/bin/cmake -E cmake_link_script CMakeFiles/cmTC_62978.dir/link.txt --verbose=1
-        /usr/bin/c++  -arch arm64 CMakeFiles/cmTC_62978.dir/src.cxx.o -o cmTC_62978
+        Linking CXX executable cmTC_71555
+        /opt/homebrew/bin/cmake -E cmake_link_script CMakeFiles/cmTC_71555.dir/link.txt --verbose=1
+        /usr/bin/c++  -arch arm64 CMakeFiles/cmTC_71555.dir/src.cxx.o -o cmTC_71555
         
       exitCode: 0
   -
@@ -3105,8 +3105,8 @@ events:
     checks:
       - "Performing Test TOML11_COMPILER_SUPPORTS_WLOGICAL_OP"
     directories:
-      source: "/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-RTesdR"
-      binary: "/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-RTesdR"
+      source: "/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-yjwcYu"
+      binary: "/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-yjwcYu"
     cmakeVariables:
       CMAKE_CXX_FLAGS: ""
       CMAKE_CXX_FLAGS_DEBUG: "-g"
@@ -3119,17 +3119,17 @@ events:
       variable: "TOML11_COMPILER_SUPPORTS_WLOGICAL_OP"
       cached: true
       stdout: |
-        Change Dir: '/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-RTesdR'
+        Change Dir: '/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-yjwcYu'
         
-        Run Build Command(s): /opt/homebrew/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_d58fe/fast
-        /Applications/Xcode.app/Contents/Developer/usr/bin/make  -f CMakeFiles/cmTC_d58fe.dir/build.make CMakeFiles/cmTC_d58fe.dir/build
-        Building CXX object CMakeFiles/cmTC_d58fe.dir/src.cxx.o
-        /usr/bin/c++ -DTOML11_COMPILER_SUPPORTS_WLOGICAL_OP  -std=c++23 -arch arm64   -Wlogical-op -MD -MT CMakeFiles/cmTC_d58fe.dir/src.cxx.o -MF CMakeFiles/cmTC_d58fe.dir/src.cxx.o.d -o CMakeFiles/cmTC_d58fe.dir/src.cxx.o -c /Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-RTesdR/src.cxx
+        Run Build Command(s): /opt/homebrew/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_c3f66/fast
+        /Applications/Xcode.app/Contents/Developer/usr/bin/make  -f CMakeFiles/cmTC_c3f66.dir/build.make CMakeFiles/cmTC_c3f66.dir/build
+        Building CXX object CMakeFiles/cmTC_c3f66.dir/src.cxx.o
+        /usr/bin/c++ -DTOML11_COMPILER_SUPPORTS_WLOGICAL_OP  -std=c++23 -arch arm64   -Wlogical-op -MD -MT CMakeFiles/cmTC_c3f66.dir/src.cxx.o -MF CMakeFiles/cmTC_c3f66.dir/src.cxx.o.d -o CMakeFiles/cmTC_c3f66.dir/src.cxx.o -c /Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-yjwcYu/src.cxx
         warning: unknown warning option '-Wlogical-op'; did you mean '-Wlong-long'? [-Wunknown-warning-option]
         1 warning generated.
-        Linking CXX executable cmTC_d58fe
-        /opt/homebrew/bin/cmake -E cmake_link_script CMakeFiles/cmTC_d58fe.dir/link.txt --verbose=1
-        /usr/bin/c++  -arch arm64 CMakeFiles/cmTC_d58fe.dir/src.cxx.o -o cmTC_d58fe
+        Linking CXX executable cmTC_c3f66
+        /opt/homebrew/bin/cmake -E cmake_link_script CMakeFiles/cmTC_c3f66.dir/link.txt --verbose=1
+        /usr/bin/c++  -arch arm64 CMakeFiles/cmTC_c3f66.dir/src.cxx.o -o cmTC_c3f66
         
       exitCode: 0
   -
@@ -3142,8 +3142,8 @@ events:
     checks:
       - "Performing Test TOML11_COMPILER_SUPPORTS_WDOUBLE_PROMOTION"
     directories:
-      source: "/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-BJAXEx"
-      binary: "/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-BJAXEx"
+      source: "/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-gUGV5l"
+      binary: "/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-gUGV5l"
     cmakeVariables:
       CMAKE_CXX_FLAGS: ""
       CMAKE_CXX_FLAGS_DEBUG: "-g"
@@ -3156,15 +3156,15 @@ events:
       variable: "TOML11_COMPILER_SUPPORTS_WDOUBLE_PROMOTION"
       cached: true
       stdout: |
-        Change Dir: '/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-BJAXEx'
+        Change Dir: '/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-gUGV5l'
         
-        Run Build Command(s): /opt/homebrew/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_fa956/fast
-        /Applications/Xcode.app/Contents/Developer/usr/bin/make  -f CMakeFiles/cmTC_fa956.dir/build.make CMakeFiles/cmTC_fa956.dir/build
-        Building CXX object CMakeFiles/cmTC_fa956.dir/src.cxx.o
-        /usr/bin/c++ -DTOML11_COMPILER_SUPPORTS_WDOUBLE_PROMOTION  -std=c++23 -arch arm64   -Wdouble-promotion -MD -MT CMakeFiles/cmTC_fa956.dir/src.cxx.o -MF CMakeFiles/cmTC_fa956.dir/src.cxx.o.d -o CMakeFiles/cmTC_fa956.dir/src.cxx.o -c /Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-BJAXEx/src.cxx
-        Linking CXX executable cmTC_fa956
-        /opt/homebrew/bin/cmake -E cmake_link_script CMakeFiles/cmTC_fa956.dir/link.txt --verbose=1
-        /usr/bin/c++  -arch arm64 CMakeFiles/cmTC_fa956.dir/src.cxx.o -o cmTC_fa956
+        Run Build Command(s): /opt/homebrew/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_b663f/fast
+        /Applications/Xcode.app/Contents/Developer/usr/bin/make  -f CMakeFiles/cmTC_b663f.dir/build.make CMakeFiles/cmTC_b663f.dir/build
+        Building CXX object CMakeFiles/cmTC_b663f.dir/src.cxx.o
+        /usr/bin/c++ -DTOML11_COMPILER_SUPPORTS_WDOUBLE_PROMOTION  -std=c++23 -arch arm64   -Wdouble-promotion -MD -MT CMakeFiles/cmTC_b663f.dir/src.cxx.o -MF CMakeFiles/cmTC_b663f.dir/src.cxx.o.d -o CMakeFiles/cmTC_b663f.dir/src.cxx.o -c /Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-gUGV5l/src.cxx
+        Linking CXX executable cmTC_b663f
+        /opt/homebrew/bin/cmake -E cmake_link_script CMakeFiles/cmTC_b663f.dir/link.txt --verbose=1
+        /usr/bin/c++  -arch arm64 CMakeFiles/cmTC_b663f.dir/src.cxx.o -o cmTC_b663f
         
       exitCode: 0
   -
@@ -3177,8 +3177,8 @@ events:
     checks:
       - "Performing Test TOML11_COMPILER_SUPPORTS_WRANGE_LOOP_ANALYSIS"
     directories:
-      source: "/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-7jXL7e"
-      binary: "/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-7jXL7e"
+      source: "/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-Emvmvy"
+      binary: "/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-Emvmvy"
     cmakeVariables:
       CMAKE_CXX_FLAGS: ""
       CMAKE_CXX_FLAGS_DEBUG: "-g"
@@ -3191,15 +3191,15 @@ events:
       variable: "TOML11_COMPILER_SUPPORTS_WRANGE_LOOP_ANALYSIS"
       cached: true
       stdout: |
-        Change Dir: '/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-7jXL7e'
+        Change Dir: '/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-Emvmvy'
         
-        Run Build Command(s): /opt/homebrew/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_492df/fast
-        /Applications/Xcode.app/Contents/Developer/usr/bin/make  -f CMakeFiles/cmTC_492df.dir/build.make CMakeFiles/cmTC_492df.dir/build
-        Building CXX object CMakeFiles/cmTC_492df.dir/src.cxx.o
-        /usr/bin/c++ -DTOML11_COMPILER_SUPPORTS_WRANGE_LOOP_ANALYSIS  -std=c++23 -arch arm64   -Wrange-loop-analysis -MD -MT CMakeFiles/cmTC_492df.dir/src.cxx.o -MF CMakeFiles/cmTC_492df.dir/src.cxx.o.d -o CMakeFiles/cmTC_492df.dir/src.cxx.o -c /Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-7jXL7e/src.cxx
-        Linking CXX executable cmTC_492df
-        /opt/homebrew/bin/cmake -E cmake_link_script CMakeFiles/cmTC_492df.dir/link.txt --verbose=1
-        /usr/bin/c++  -arch arm64 CMakeFiles/cmTC_492df.dir/src.cxx.o -o cmTC_492df
+        Run Build Command(s): /opt/homebrew/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_e87b6/fast
+        /Applications/Xcode.app/Contents/Developer/usr/bin/make  -f CMakeFiles/cmTC_e87b6.dir/build.make CMakeFiles/cmTC_e87b6.dir/build
+        Building CXX object CMakeFiles/cmTC_e87b6.dir/src.cxx.o
+        /usr/bin/c++ -DTOML11_COMPILER_SUPPORTS_WRANGE_LOOP_ANALYSIS  -std=c++23 -arch arm64   -Wrange-loop-analysis -MD -MT CMakeFiles/cmTC_e87b6.dir/src.cxx.o -MF CMakeFiles/cmTC_e87b6.dir/src.cxx.o.d -o CMakeFiles/cmTC_e87b6.dir/src.cxx.o -c /Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-Emvmvy/src.cxx
+        Linking CXX executable cmTC_e87b6
+        /opt/homebrew/bin/cmake -E cmake_link_script CMakeFiles/cmTC_e87b6.dir/link.txt --verbose=1
+        /usr/bin/c++  -arch arm64 CMakeFiles/cmTC_e87b6.dir/src.cxx.o -o cmTC_e87b6
         
       exitCode: 0
   -
@@ -3212,8 +3212,8 @@ events:
     checks:
       - "Performing Test TOML11_COMPILER_SUPPORTS_WUNDEF"
     directories:
-      source: "/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-OT1FvO"
-      binary: "/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-OT1FvO"
+      source: "/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-0CFQue"
+      binary: "/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-0CFQue"
     cmakeVariables:
       CMAKE_CXX_FLAGS: ""
       CMAKE_CXX_FLAGS_DEBUG: "-g"
@@ -3226,15 +3226,15 @@ events:
       variable: "TOML11_COMPILER_SUPPORTS_WUNDEF"
       cached: true
       stdout: |
-        Change Dir: '/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-OT1FvO'
+        Change Dir: '/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-0CFQue'
         
-        Run Build Command(s): /opt/homebrew/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_6b7e0/fast
-        /Applications/Xcode.app/Contents/Developer/usr/bin/make  -f CMakeFiles/cmTC_6b7e0.dir/build.make CMakeFiles/cmTC_6b7e0.dir/build
-        Building CXX object CMakeFiles/cmTC_6b7e0.dir/src.cxx.o
-        /usr/bin/c++ -DTOML11_COMPILER_SUPPORTS_WUNDEF  -std=c++23 -arch arm64   -Wundef -MD -MT CMakeFiles/cmTC_6b7e0.dir/src.cxx.o -MF CMakeFiles/cmTC_6b7e0.dir/src.cxx.o.d -o CMakeFiles/cmTC_6b7e0.dir/src.cxx.o -c /Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-OT1FvO/src.cxx
-        Linking CXX executable cmTC_6b7e0
-        /opt/homebrew/bin/cmake -E cmake_link_script CMakeFiles/cmTC_6b7e0.dir/link.txt --verbose=1
-        /usr/bin/c++  -arch arm64 CMakeFiles/cmTC_6b7e0.dir/src.cxx.o -o cmTC_6b7e0
+        Run Build Command(s): /opt/homebrew/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_946a3/fast
+        /Applications/Xcode.app/Contents/Developer/usr/bin/make  -f CMakeFiles/cmTC_946a3.dir/build.make CMakeFiles/cmTC_946a3.dir/build
+        Building CXX object CMakeFiles/cmTC_946a3.dir/src.cxx.o
+        /usr/bin/c++ -DTOML11_COMPILER_SUPPORTS_WUNDEF  -std=c++23 -arch arm64   -Wundef -MD -MT CMakeFiles/cmTC_946a3.dir/src.cxx.o -MF CMakeFiles/cmTC_946a3.dir/src.cxx.o.d -o CMakeFiles/cmTC_946a3.dir/src.cxx.o -c /Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-0CFQue/src.cxx
+        Linking CXX executable cmTC_946a3
+        /opt/homebrew/bin/cmake -E cmake_link_script CMakeFiles/cmTC_946a3.dir/link.txt --verbose=1
+        /usr/bin/c++  -arch arm64 CMakeFiles/cmTC_946a3.dir/src.cxx.o -o cmTC_946a3
         
       exitCode: 0
   -
@@ -3247,8 +3247,8 @@ events:
     checks:
       - "Performing Test TOML11_COMPILER_SUPPORTS_WSHADOW"
     directories:
-      source: "/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-JkAt74"
-      binary: "/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-JkAt74"
+      source: "/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-IH2eLx"
+      binary: "/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-IH2eLx"
     cmakeVariables:
       CMAKE_CXX_FLAGS: ""
       CMAKE_CXX_FLAGS_DEBUG: "-g"
@@ -3261,15 +3261,15 @@ events:
       variable: "TOML11_COMPILER_SUPPORTS_WSHADOW"
       cached: true
       stdout: |
-        Change Dir: '/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-JkAt74'
+        Change Dir: '/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-IH2eLx'
         
-        Run Build Command(s): /opt/homebrew/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_dd6b3/fast
-        /Applications/Xcode.app/Contents/Developer/usr/bin/make  -f CMakeFiles/cmTC_dd6b3.dir/build.make CMakeFiles/cmTC_dd6b3.dir/build
-        Building CXX object CMakeFiles/cmTC_dd6b3.dir/src.cxx.o
-        /usr/bin/c++ -DTOML11_COMPILER_SUPPORTS_WSHADOW  -std=c++23 -arch arm64   -Wshadow -MD -MT CMakeFiles/cmTC_dd6b3.dir/src.cxx.o -MF CMakeFiles/cmTC_dd6b3.dir/src.cxx.o.d -o CMakeFiles/cmTC_dd6b3.dir/src.cxx.o -c /Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-JkAt74/src.cxx
-        Linking CXX executable cmTC_dd6b3
-        /opt/homebrew/bin/cmake -E cmake_link_script CMakeFiles/cmTC_dd6b3.dir/link.txt --verbose=1
-        /usr/bin/c++  -arch arm64 CMakeFiles/cmTC_dd6b3.dir/src.cxx.o -o cmTC_dd6b3
+        Run Build Command(s): /opt/homebrew/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_dbb8e/fast
+        /Applications/Xcode.app/Contents/Developer/usr/bin/make  -f CMakeFiles/cmTC_dbb8e.dir/build.make CMakeFiles/cmTC_dbb8e.dir/build
+        Building CXX object CMakeFiles/cmTC_dbb8e.dir/src.cxx.o
+        /usr/bin/c++ -DTOML11_COMPILER_SUPPORTS_WSHADOW  -std=c++23 -arch arm64   -Wshadow -MD -MT CMakeFiles/cmTC_dbb8e.dir/src.cxx.o -MF CMakeFiles/cmTC_dbb8e.dir/src.cxx.o.d -o CMakeFiles/cmTC_dbb8e.dir/src.cxx.o -c /Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-IH2eLx/src.cxx
+        Linking CXX executable cmTC_dbb8e
+        /opt/homebrew/bin/cmake -E cmake_link_script CMakeFiles/cmTC_dbb8e.dir/link.txt --verbose=1
+        /usr/bin/c++  -arch arm64 CMakeFiles/cmTC_dbb8e.dir/src.cxx.o -o cmTC_dbb8e
         
       exitCode: 0
   -
@@ -3488,8 +3488,8 @@ events:
     checks:
       - "Detecting OBJCXX compiler ABI info"
     directories:
-      source: "/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-q9zp4x"
-      binary: "/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-q9zp4x"
+      source: "/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-rZ8rxO"
+      binary: "/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-rZ8rxO"
     cmakeVariables:
       CMAKE_CXX_STDLIB_MODULES_JSON: ""
       CMAKE_EXE_LINKER_FLAGS: ""
@@ -3502,19 +3502,19 @@ events:
       variable: "CMAKE_OBJCXX_ABI_COMPILED"
       cached: true
       stdout: |
-        Change Dir: '/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-q9zp4x'
+        Change Dir: '/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-rZ8rxO'
         
-        Run Build Command(s): /opt/homebrew/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_5e006/fast
-        /Applications/Xcode.app/Contents/Developer/usr/bin/make  -f CMakeFiles/cmTC_5e006.dir/build.make CMakeFiles/cmTC_5e006.dir/build
-        Building OBJCXX object CMakeFiles/cmTC_5e006.dir/CMakeOBJCXXCompilerABI.mm.o
-        /usr/bin/c++   -x objective-c++ -arch arm64   -v -Wl,-v -MD -MT CMakeFiles/cmTC_5e006.dir/CMakeOBJCXXCompilerABI.mm.o -MF CMakeFiles/cmTC_5e006.dir/CMakeOBJCXXCompilerABI.mm.o.d -o CMakeFiles/cmTC_5e006.dir/CMakeOBJCXXCompilerABI.mm.o -c /opt/homebrew/share/cmake/Modules/CMakeOBJCXXCompilerABI.mm
+        Run Build Command(s): /opt/homebrew/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_dae51/fast
+        /Applications/Xcode.app/Contents/Developer/usr/bin/make  -f CMakeFiles/cmTC_dae51.dir/build.make CMakeFiles/cmTC_dae51.dir/build
+        Building OBJCXX object CMakeFiles/cmTC_dae51.dir/CMakeOBJCXXCompilerABI.mm.o
+        /usr/bin/c++   -x objective-c++ -arch arm64   -v -Wl,-v -MD -MT CMakeFiles/cmTC_dae51.dir/CMakeOBJCXXCompilerABI.mm.o -MF CMakeFiles/cmTC_dae51.dir/CMakeOBJCXXCompilerABI.mm.o.d -o CMakeFiles/cmTC_dae51.dir/CMakeOBJCXXCompilerABI.mm.o -c /opt/homebrew/share/cmake/Modules/CMakeOBJCXXCompilerABI.mm
         Apple clang version 21.0.0 (clang-2100.1.1.101)
         Target: arm64-apple-darwin25.5.0
         Thread model: posix
         InstalledDir: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin
         clang++: warning: -Wl,-v: 'linker' input unused [-Wunused-command-line-argument]
         ignoring nonexistent directory "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1"
-         "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang" -cc1 -triple arm64-apple-macosx26.0.0 -Wundef-prefix=TARGET_OS_ -Wdeprecated-objc-isa-usage -Werror=deprecated-objc-isa-usage -Werror=implicit-function-declaration -emit-obj -disable-free -clear-ast-before-backend -disable-llvm-verifier -discard-value-names -main-file-name CMakeOBJCXXCompilerABI.mm -mrelocation-model pic -pic-level 2 -mframe-pointer=non-leaf -fno-strict-return -ffp-contract=on -fno-rounding-math -funwind-tables=1 -fobjc-msgsend-selector-stubs -fno-sized-deallocation -target-sdk-version=26.5 -fvisibility-inlines-hidden-static-local-var -fno-modulemap-allow-subdirectory-search -fdefine-target-os-macros -fno-assume-unique-vtables -fno-modulemap-allow-subdirectory-search -enable-tlsdesc -target-cpu apple-m1 -target-feature +v8.5a -target-feature +aes -target-feature +altnzcv -target-feature +ccdp -target-feature +ccpp -target-feature +complxnum -target-feature +crc -target-feature +dotprod -target-feature +flagm -target-feature +fp-armv8 -target-feature +fp16fml -target-feature +fptoint -target-feature +fullfp16 -target-feature +jsconv -target-feature +lse -target-feature +neon -target-feature +pauth -target-feature +perfmon -target-feature +predres -target-feature +ras -target-feature +rcpc -target-feature +rdm -target-feature +sb -target-feature +sha2 -target-feature +sha3 -target-feature +specrestrict -target-feature +ssbs -target-abi darwinpcs -debugger-tuning=lldb -fdebug-compilation-dir=/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-q9zp4x -target-linker-version 1267 -v -fcoverage-compilation-dir=/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-q9zp4x -resource-dir /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/21 -dependency-file CMakeFiles/cmTC_5e006.dir/CMakeOBJCXXCompilerABI.mm.o.d -skip-unused-modulemap-deps -MT CMakeFiles/cmTC_5e006.dir/CMakeOBJCXXCompilerABI.mm.o -sys-header-deps -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/usr/local/include -internal-isystem /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/c++/v1 -internal-isystem /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/local/include -internal-isystem /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/21/include -internal-externc-isystem /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include -internal-externc-isystem /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include -internal-iframework /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks -internal-iframework /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/SubFrameworks -internal-iframework /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/Library/Frameworks -Wno-elaborated-enum-base -fdeprecated-macro -ferror-limit 19 -stack-protector 1 -fstack-check -mdarwin-stkchk-strong-link -fblocks -fencode-extended-block-signature -fregister-global-dtors-with-atexit -fgnuc-version=4.2.1 -fskip-odr-check-in-gmf -fobjc-runtime=macosx-26.0.0 -fobjc-exceptions -fcxx-exceptions -fexceptions -fmax-type-align=16 -fcommon -clang-vendor-feature=+disableNonDependentMemberExprInCurrentInstantiation -fno-odr-hash-protocols -clang-vendor-feature=+enableAggressiveVLAFolding -clang-vendor-feature=+revert09abecef7bbf -clang-vendor-feature=+thisNoAlignAttr -clang-vendor-feature=+thisNoNullAttr -clang-vendor-feature=+disableAtImportPrivateFrameworkInImplementationError -Wno-error=allocator-wrappers -fdwarf2-cfi-asm -o CMakeFiles/cmTC_5e006.dir/CMakeOBJCXXCompilerABI.mm.o -x objective-c++ /opt/homebrew/share/cmake/Modules/CMakeOBJCXXCompilerABI.mm
+         "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang" -cc1 -triple arm64-apple-macosx26.0.0 -Wundef-prefix=TARGET_OS_ -Wdeprecated-objc-isa-usage -Werror=deprecated-objc-isa-usage -Werror=implicit-function-declaration -emit-obj -disable-free -clear-ast-before-backend -disable-llvm-verifier -discard-value-names -main-file-name CMakeOBJCXXCompilerABI.mm -mrelocation-model pic -pic-level 2 -mframe-pointer=non-leaf -fno-strict-return -ffp-contract=on -fno-rounding-math -funwind-tables=1 -fobjc-msgsend-selector-stubs -fno-sized-deallocation -target-sdk-version=26.5 -fvisibility-inlines-hidden-static-local-var -fno-modulemap-allow-subdirectory-search -fdefine-target-os-macros -fno-assume-unique-vtables -fno-modulemap-allow-subdirectory-search -enable-tlsdesc -target-cpu apple-m1 -target-feature +v8.5a -target-feature +aes -target-feature +altnzcv -target-feature +ccdp -target-feature +ccpp -target-feature +complxnum -target-feature +crc -target-feature +dotprod -target-feature +flagm -target-feature +fp-armv8 -target-feature +fp16fml -target-feature +fptoint -target-feature +fullfp16 -target-feature +jsconv -target-feature +lse -target-feature +neon -target-feature +pauth -target-feature +perfmon -target-feature +predres -target-feature +ras -target-feature +rcpc -target-feature +rdm -target-feature +sb -target-feature +sha2 -target-feature +sha3 -target-feature +specrestrict -target-feature +ssbs -target-abi darwinpcs -debugger-tuning=lldb -fdebug-compilation-dir=/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-rZ8rxO -target-linker-version 1267 -v -fcoverage-compilation-dir=/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-rZ8rxO -resource-dir /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/21 -dependency-file CMakeFiles/cmTC_dae51.dir/CMakeOBJCXXCompilerABI.mm.o.d -skip-unused-modulemap-deps -MT CMakeFiles/cmTC_dae51.dir/CMakeOBJCXXCompilerABI.mm.o -sys-header-deps -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/usr/local/include -internal-isystem /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/c++/v1 -internal-isystem /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/local/include -internal-isystem /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/21/include -internal-externc-isystem /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include -internal-externc-isystem /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include -internal-iframework /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks -internal-iframework /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/SubFrameworks -internal-iframework /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/Library/Frameworks -Wno-elaborated-enum-base -fdeprecated-macro -ferror-limit 19 -stack-protector 1 -fstack-check -mdarwin-stkchk-strong-link -fblocks -fencode-extended-block-signature -fregister-global-dtors-with-atexit -fgnuc-version=4.2.1 -fskip-odr-check-in-gmf -fobjc-runtime=macosx-26.0.0 -fobjc-exceptions -fcxx-exceptions -fexceptions -fmax-type-align=16 -fcommon -clang-vendor-feature=+disableNonDependentMemberExprInCurrentInstantiation -fno-odr-hash-protocols -clang-vendor-feature=+enableAggressiveVLAFolding -clang-vendor-feature=+revert09abecef7bbf -clang-vendor-feature=+thisNoAlignAttr -clang-vendor-feature=+thisNoNullAttr -clang-vendor-feature=+disableAtImportPrivateFrameworkInImplementationError -Wno-error=allocator-wrappers -fdwarf2-cfi-asm -o CMakeFiles/cmTC_dae51.dir/CMakeOBJCXXCompilerABI.mm.o -x objective-c++ /opt/homebrew/share/cmake/Modules/CMakeOBJCXXCompilerABI.mm
         clang -cc1 version 21.0.0 (clang-2100.1.1.101) default target arm64-apple-darwin25.5.0
         ignoring nonexistent directory "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/local/include"
         ignoring nonexistent directory "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/Library/Frameworks"
@@ -3528,13 +3528,13 @@ events:
          /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks (framework directory)
          /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/SubFrameworks (framework directory)
         End of search list.
-        Linking OBJCXX executable cmTC_5e006
-        /opt/homebrew/bin/cmake -E cmake_link_script CMakeFiles/cmTC_5e006.dir/link.txt --verbose=1
+        Linking OBJCXX executable cmTC_dae51
+        /opt/homebrew/bin/cmake -E cmake_link_script CMakeFiles/cmTC_dae51.dir/link.txt --verbose=1
         Apple clang version 21.0.0 (clang-2100.1.1.101)
         Target: arm64-apple-darwin25.5.0
         Thread model: posix
         InstalledDir: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin
-         "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/ld" -demangle -lto_library /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/libLTO.dylib -dynamic -arch arm64 -platform_version macos 26.0.0 26.5 -syslibroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -mllvm -enable-linkonceodr-outlining -o cmTC_5e006 -L/usr/local/lib -v CMakeFiles/cmTC_5e006.dir/CMakeOBJCXXCompilerABI.mm.o -lc++ -lSystem /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/21/lib/darwin/libclang_rt.osx.a
+         "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/ld" -demangle -lto_library /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/libLTO.dylib -dynamic -arch arm64 -platform_version macos 26.0.0 26.5 -syslibroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -mllvm -enable-linkonceodr-outlining -o cmTC_dae51 -L/usr/local/lib -v CMakeFiles/cmTC_dae51.dir/CMakeOBJCXXCompilerABI.mm.o -lc++ -lSystem /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/21/lib/darwin/libclang_rt.osx.a
         @(#)PROGRAM:ld PROJECT:ld-1267
         BUILD 18:30:29 Apr 22 2026
         configured to support archs: armv6 armv7 armv7s arm64 arm64e arm64_32 i386 x86_64 x86_64h armv6m armv7k armv7m armv7em armv8m.main armv8.1m.main
@@ -3547,7 +3547,7 @@ events:
         	/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/lib/swift
         Framework search paths:
         	/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks
-        /usr/bin/c++  -arch arm64  -v -Wl,-v CMakeFiles/cmTC_5e006.dir/CMakeOBJCXXCompilerABI.mm.o -o cmTC_5e006
+        /usr/bin/c++  -arch arm64  -v -Wl,-v CMakeFiles/cmTC_dae51.dir/CMakeOBJCXXCompilerABI.mm.o -o cmTC_dae51
         
       exitCode: 0
   -
@@ -3593,19 +3593,19 @@ events:
       Parsed OBJCXX implicit link information:
         link line regex: [^( *|.*[/\\])(ld[0-9]*(|\\.[a-rt-z][a-z]*|\\.s[a-np-z][a-z]*|\\.so[a-z]+)|CMAKE_LINK_STARTFILE-NOTFOUND|([^/\\]+-)?ld|collect2)[^/\\]*( |$)]
         linker tool regex: [^[ 	]*(->|"|[0-9]+>[ 	-]*Build:[ 	0-9]+ ms[ 	]*)?[ 	]*(([^"]*[/\\])?(ld[0-9]*(|\\.[a-rt-z][a-z]*|\\.s[a-np-z][a-z]*|\\.so[a-z]+)))("|,| |$)]
-        ignore line: [Change Dir: '/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-q9zp4x']
+        ignore line: [Change Dir: '/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-rZ8rxO']
         ignore line: []
-        ignore line: [Run Build Command(s): /opt/homebrew/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_5e006/fast]
-        ignore line: [/Applications/Xcode.app/Contents/Developer/usr/bin/make  -f CMakeFiles/cmTC_5e006.dir/build.make CMakeFiles/cmTC_5e006.dir/build]
-        ignore line: [Building OBJCXX object CMakeFiles/cmTC_5e006.dir/CMakeOBJCXXCompilerABI.mm.o]
-        ignore line: [/usr/bin/c++   -x objective-c++ -arch arm64   -v -Wl -v -MD -MT CMakeFiles/cmTC_5e006.dir/CMakeOBJCXXCompilerABI.mm.o -MF CMakeFiles/cmTC_5e006.dir/CMakeOBJCXXCompilerABI.mm.o.d -o CMakeFiles/cmTC_5e006.dir/CMakeOBJCXXCompilerABI.mm.o -c /opt/homebrew/share/cmake/Modules/CMakeOBJCXXCompilerABI.mm]
+        ignore line: [Run Build Command(s): /opt/homebrew/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_dae51/fast]
+        ignore line: [/Applications/Xcode.app/Contents/Developer/usr/bin/make  -f CMakeFiles/cmTC_dae51.dir/build.make CMakeFiles/cmTC_dae51.dir/build]
+        ignore line: [Building OBJCXX object CMakeFiles/cmTC_dae51.dir/CMakeOBJCXXCompilerABI.mm.o]
+        ignore line: [/usr/bin/c++   -x objective-c++ -arch arm64   -v -Wl -v -MD -MT CMakeFiles/cmTC_dae51.dir/CMakeOBJCXXCompilerABI.mm.o -MF CMakeFiles/cmTC_dae51.dir/CMakeOBJCXXCompilerABI.mm.o.d -o CMakeFiles/cmTC_dae51.dir/CMakeOBJCXXCompilerABI.mm.o -c /opt/homebrew/share/cmake/Modules/CMakeOBJCXXCompilerABI.mm]
         ignore line: [Apple clang version 21.0.0 (clang-2100.1.1.101)]
         ignore line: [Target: arm64-apple-darwin25.5.0]
         ignore line: [Thread model: posix]
         ignore line: [InstalledDir: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin]
         ignore line: [clang++: warning: -Wl -v: 'linker' input unused [-Wunused-command-line-argument]]
         ignore line: [ignoring nonexistent directory "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1"]
-        ignore line: [ "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang" -cc1 -triple arm64-apple-macosx26.0.0 -Wundef-prefix=TARGET_OS_ -Wdeprecated-objc-isa-usage -Werror=deprecated-objc-isa-usage -Werror=implicit-function-declaration -emit-obj -disable-free -clear-ast-before-backend -disable-llvm-verifier -discard-value-names -main-file-name CMakeOBJCXXCompilerABI.mm -mrelocation-model pic -pic-level 2 -mframe-pointer=non-leaf -fno-strict-return -ffp-contract=on -fno-rounding-math -funwind-tables=1 -fobjc-msgsend-selector-stubs -fno-sized-deallocation -target-sdk-version=26.5 -fvisibility-inlines-hidden-static-local-var -fno-modulemap-allow-subdirectory-search -fdefine-target-os-macros -fno-assume-unique-vtables -fno-modulemap-allow-subdirectory-search -enable-tlsdesc -target-cpu apple-m1 -target-feature +v8.5a -target-feature +aes -target-feature +altnzcv -target-feature +ccdp -target-feature +ccpp -target-feature +complxnum -target-feature +crc -target-feature +dotprod -target-feature +flagm -target-feature +fp-armv8 -target-feature +fp16fml -target-feature +fptoint -target-feature +fullfp16 -target-feature +jsconv -target-feature +lse -target-feature +neon -target-feature +pauth -target-feature +perfmon -target-feature +predres -target-feature +ras -target-feature +rcpc -target-feature +rdm -target-feature +sb -target-feature +sha2 -target-feature +sha3 -target-feature +specrestrict -target-feature +ssbs -target-abi darwinpcs -debugger-tuning=lldb -fdebug-compilation-dir=/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-q9zp4x -target-linker-version 1267 -v -fcoverage-compilation-dir=/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-q9zp4x -resource-dir /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/21 -dependency-file CMakeFiles/cmTC_5e006.dir/CMakeOBJCXXCompilerABI.mm.o.d -skip-unused-modulemap-deps -MT CMakeFiles/cmTC_5e006.dir/CMakeOBJCXXCompilerABI.mm.o -sys-header-deps -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/usr/local/include -internal-isystem /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/c++/v1 -internal-isystem /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/local/include -internal-isystem /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/21/include -internal-externc-isystem /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include -internal-externc-isystem /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include -internal-iframework /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks -internal-iframework /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/SubFrameworks -internal-iframework /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/Library/Frameworks -Wno-elaborated-enum-base -fdeprecated-macro -ferror-limit 19 -stack-protector 1 -fstack-check -mdarwin-stkchk-strong-link -fblocks -fencode-extended-block-signature -fregister-global-dtors-with-atexit -fgnuc-version=4.2.1 -fskip-odr-check-in-gmf -fobjc-runtime=macosx-26.0.0 -fobjc-exceptions -fcxx-exceptions -fexceptions -fmax-type-align=16 -fcommon -clang-vendor-feature=+disableNonDependentMemberExprInCurrentInstantiation -fno-odr-hash-protocols -clang-vendor-feature=+enableAggressiveVLAFolding -clang-vendor-feature=+revert09abecef7bbf -clang-vendor-feature=+thisNoAlignAttr -clang-vendor-feature=+thisNoNullAttr -clang-vendor-feature=+disableAtImportPrivateFrameworkInImplementationError -Wno-error=allocator-wrappers -fdwarf2-cfi-asm -o CMakeFiles/cmTC_5e006.dir/CMakeOBJCXXCompilerABI.mm.o -x objective-c++ /opt/homebrew/share/cmake/Modules/CMakeOBJCXXCompilerABI.mm]
+        ignore line: [ "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang" -cc1 -triple arm64-apple-macosx26.0.0 -Wundef-prefix=TARGET_OS_ -Wdeprecated-objc-isa-usage -Werror=deprecated-objc-isa-usage -Werror=implicit-function-declaration -emit-obj -disable-free -clear-ast-before-backend -disable-llvm-verifier -discard-value-names -main-file-name CMakeOBJCXXCompilerABI.mm -mrelocation-model pic -pic-level 2 -mframe-pointer=non-leaf -fno-strict-return -ffp-contract=on -fno-rounding-math -funwind-tables=1 -fobjc-msgsend-selector-stubs -fno-sized-deallocation -target-sdk-version=26.5 -fvisibility-inlines-hidden-static-local-var -fno-modulemap-allow-subdirectory-search -fdefine-target-os-macros -fno-assume-unique-vtables -fno-modulemap-allow-subdirectory-search -enable-tlsdesc -target-cpu apple-m1 -target-feature +v8.5a -target-feature +aes -target-feature +altnzcv -target-feature +ccdp -target-feature +ccpp -target-feature +complxnum -target-feature +crc -target-feature +dotprod -target-feature +flagm -target-feature +fp-armv8 -target-feature +fp16fml -target-feature +fptoint -target-feature +fullfp16 -target-feature +jsconv -target-feature +lse -target-feature +neon -target-feature +pauth -target-feature +perfmon -target-feature +predres -target-feature +ras -target-feature +rcpc -target-feature +rdm -target-feature +sb -target-feature +sha2 -target-feature +sha3 -target-feature +specrestrict -target-feature +ssbs -target-abi darwinpcs -debugger-tuning=lldb -fdebug-compilation-dir=/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-rZ8rxO -target-linker-version 1267 -v -fcoverage-compilation-dir=/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-rZ8rxO -resource-dir /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/21 -dependency-file CMakeFiles/cmTC_dae51.dir/CMakeOBJCXXCompilerABI.mm.o.d -skip-unused-modulemap-deps -MT CMakeFiles/cmTC_dae51.dir/CMakeOBJCXXCompilerABI.mm.o -sys-header-deps -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -I/usr/local/include -internal-isystem /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/c++/v1 -internal-isystem /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/local/include -internal-isystem /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/21/include -internal-externc-isystem /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include -internal-externc-isystem /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include -internal-iframework /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks -internal-iframework /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/SubFrameworks -internal-iframework /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/Library/Frameworks -Wno-elaborated-enum-base -fdeprecated-macro -ferror-limit 19 -stack-protector 1 -fstack-check -mdarwin-stkchk-strong-link -fblocks -fencode-extended-block-signature -fregister-global-dtors-with-atexit -fgnuc-version=4.2.1 -fskip-odr-check-in-gmf -fobjc-runtime=macosx-26.0.0 -fobjc-exceptions -fcxx-exceptions -fexceptions -fmax-type-align=16 -fcommon -clang-vendor-feature=+disableNonDependentMemberExprInCurrentInstantiation -fno-odr-hash-protocols -clang-vendor-feature=+enableAggressiveVLAFolding -clang-vendor-feature=+revert09abecef7bbf -clang-vendor-feature=+thisNoAlignAttr -clang-vendor-feature=+thisNoNullAttr -clang-vendor-feature=+disableAtImportPrivateFrameworkInImplementationError -Wno-error=allocator-wrappers -fdwarf2-cfi-asm -o CMakeFiles/cmTC_dae51.dir/CMakeOBJCXXCompilerABI.mm.o -x objective-c++ /opt/homebrew/share/cmake/Modules/CMakeOBJCXXCompilerABI.mm]
         ignore line: [clang -cc1 version 21.0.0 (clang-2100.1.1.101) default target arm64-apple-darwin25.5.0]
         ignore line: [ignoring nonexistent directory "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/local/include"]
         ignore line: [ignoring nonexistent directory "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/Library/Frameworks"]
@@ -3619,13 +3619,13 @@ events:
         ignore line: [ /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks (framework directory)]
         ignore line: [ /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/SubFrameworks (framework directory)]
         ignore line: [End of search list.]
-        ignore line: [Linking OBJCXX executable cmTC_5e006]
-        ignore line: [/opt/homebrew/bin/cmake -E cmake_link_script CMakeFiles/cmTC_5e006.dir/link.txt --verbose=1]
+        ignore line: [Linking OBJCXX executable cmTC_dae51]
+        ignore line: [/opt/homebrew/bin/cmake -E cmake_link_script CMakeFiles/cmTC_dae51.dir/link.txt --verbose=1]
         ignore line: [Apple clang version 21.0.0 (clang-2100.1.1.101)]
         ignore line: [Target: arm64-apple-darwin25.5.0]
         ignore line: [Thread model: posix]
         ignore line: [InstalledDir: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin]
-        link line: [ "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/ld" -demangle -lto_library /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/libLTO.dylib -dynamic -arch arm64 -platform_version macos 26.0.0 26.5 -syslibroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -mllvm -enable-linkonceodr-outlining -o cmTC_5e006 -L/usr/local/lib -v CMakeFiles/cmTC_5e006.dir/CMakeOBJCXXCompilerABI.mm.o -lc++ -lSystem /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/21/lib/darwin/libclang_rt.osx.a]
+        link line: [ "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/ld" -demangle -lto_library /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/libLTO.dylib -dynamic -arch arm64 -platform_version macos 26.0.0 26.5 -syslibroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -mllvm -enable-linkonceodr-outlining -o cmTC_dae51 -L/usr/local/lib -v CMakeFiles/cmTC_dae51.dir/CMakeOBJCXXCompilerABI.mm.o -lc++ -lSystem /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/21/lib/darwin/libclang_rt.osx.a]
           arg [/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/ld] ==> ignore
           arg [-demangle] ==> ignore
           arg [-lto_library] ==> ignore, skip following value
@@ -3642,10 +3642,10 @@ events:
           arg [-mllvm] ==> ignore
           arg [-enable-linkonceodr-outlining] ==> ignore
           arg [-o] ==> ignore
-          arg [cmTC_5e006] ==> ignore
+          arg [cmTC_dae51] ==> ignore
           arg [-L/usr/local/lib] ==> dir [/usr/local/lib]
           arg [-v] ==> ignore
-          arg [CMakeFiles/cmTC_5e006.dir/CMakeOBJCXXCompilerABI.mm.o] ==> ignore
+          arg [CMakeFiles/cmTC_dae51.dir/CMakeOBJCXXCompilerABI.mm.o] ==> ignore
           arg [-lc++] ==> lib [c++]
           arg [-lSystem] ==> lib [System]
           arg [/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/21/lib/darwin/libclang_rt.osx.a] ==> lib [/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/21/lib/darwin/libclang_rt.osx.a]
@@ -3691,8 +3691,8 @@ events:
     checks:
       - "Performing Test CMAKE_HAVE_LIBC_PTHREAD"
     directories:
-      source: "/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-3CvAM2"
-      binary: "/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-3CvAM2"
+      source: "/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-v9QZOT"
+      binary: "/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-v9QZOT"
     cmakeVariables:
       CMAKE_CXX_STDLIB_MODULES_JSON: ""
       CMAKE_C_FLAGS: ""
@@ -3705,15 +3705,15 @@ events:
       variable: "CMAKE_HAVE_LIBC_PTHREAD"
       cached: true
       stdout: |
-        Change Dir: '/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-3CvAM2'
+        Change Dir: '/Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-v9QZOT'
         
-        Run Build Command(s): /opt/homebrew/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_855f9/fast
-        /Applications/Xcode.app/Contents/Developer/usr/bin/make  -f CMakeFiles/cmTC_855f9.dir/build.make CMakeFiles/cmTC_855f9.dir/build
-        Building C object CMakeFiles/cmTC_855f9.dir/src.c.o
-        /usr/bin/cc -DCMAKE_HAVE_LIBC_PTHREAD  -arch arm64 -MD -MT CMakeFiles/cmTC_855f9.dir/src.c.o -MF CMakeFiles/cmTC_855f9.dir/src.c.o.d -o CMakeFiles/cmTC_855f9.dir/src.c.o -c /Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-3CvAM2/src.c
-        Linking C executable cmTC_855f9
-        /opt/homebrew/bin/cmake -E cmake_link_script CMakeFiles/cmTC_855f9.dir/link.txt --verbose=1
-        /usr/bin/cc  -arch arm64 CMakeFiles/cmTC_855f9.dir/src.c.o -o cmTC_855f9
+        Run Build Command(s): /opt/homebrew/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_ac5f3/fast
+        /Applications/Xcode.app/Contents/Developer/usr/bin/make  -f CMakeFiles/cmTC_ac5f3.dir/build.make CMakeFiles/cmTC_ac5f3.dir/build
+        Building C object CMakeFiles/cmTC_ac5f3.dir/src.c.o
+        /usr/bin/cc -DCMAKE_HAVE_LIBC_PTHREAD  -arch arm64 -MD -MT CMakeFiles/cmTC_ac5f3.dir/src.c.o -MF CMakeFiles/cmTC_ac5f3.dir/src.c.o.d -o CMakeFiles/cmTC_ac5f3.dir/src.c.o -c /Users/ztomer/Projects/CadGoose/build/CMakeFiles/CMakeScratch/TryCompile-v9QZOT/src.c
+        Linking C executable cmTC_ac5f3
+        /opt/homebrew/bin/cmake -E cmake_link_script CMakeFiles/cmTC_ac5f3.dir/link.txt --verbose=1
+        /usr/bin/cc  -arch arm64 CMakeFiles/cmTC_ac5f3.dir/src.c.o -o cmTC_ac5f3
         
       exitCode: 0
   -
@@ -4755,7 +4755,7 @@ events:
     kind: "find_package-v1"
     backtrace:
       - "/opt/homebrew/share/cmake/Modules/FindGTest.cmake:345 (find_package)"
-      - "CMakeLists.txt:201 (find_package)"
+      - "CMakeLists.txt:217 (find_package)"
     name: "GTest"
     configs:
       -

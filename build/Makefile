@@ -130,6 +130,19 @@ CadGoose/fast:
 .PHONY : CadGoose/fast
 
 #=============================================================================
+# Target rules for targets named CompileSwiftFoundationLLM
+
+# Build rule for target.
+CompileSwiftFoundationLLM: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CompileSwiftFoundationLLM
+.PHONY : CompileSwiftFoundationLLM
+
+# fast build rule for target.
+CompileSwiftFoundationLLM/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CompileSwiftFoundationLLM.dir/build.make CMakeFiles/CompileSwiftFoundationLLM.dir/build
+.PHONY : CompileSwiftFoundationLLM/fast
+
+#=============================================================================
 # Target rules for targets named CadGooseTests
 
 # Build rule for target.
@@ -2000,6 +2013,15 @@ src/platform/macos/item_drag_controller.mm.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/src/platform/macos/item_drag_controller.mm.o
 .PHONY : src/platform/macos/item_drag_controller.mm.o
 
+src/platform/macos/item_window.o: src/platform/macos/item_window.mm.o
+.PHONY : src/platform/macos/item_window.o
+
+# target to build an object file
+src/platform/macos/item_window.mm.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/platform/macos/item_window.mm.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/src/platform/macos/item_window.mm.o
+.PHONY : src/platform/macos/item_window.mm.o
+
 src/platform/macos/main.o: src/platform/macos/main.mm.o
 .PHONY : src/platform/macos/main.o
 
@@ -3002,6 +3024,7 @@ help:
 	@echo "... depend"
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
+	@echo "... CompileSwiftFoundationLLM"
 	@echo "... Continuous"
 	@echo "... ContinuousBuild"
 	@echo "... ContinuousConfigure"
@@ -3200,6 +3223,7 @@ help:
 	@echo "... src/platform/macos/config_gui_views.o"
 	@echo "... src/platform/macos/cursor_backend.o"
 	@echo "... src/platform/macos/item_drag_controller.o"
+	@echo "... src/platform/macos/item_window.o"
 	@echo "... src/platform/macos/main.o"
 	@echo "... src/platform/macos/renderer.o"
 	@echo "... src/platform/macos/renderer/renderer_goose_drawer.o"

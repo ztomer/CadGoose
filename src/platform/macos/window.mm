@@ -39,8 +39,8 @@ extern bool g_debugMode;
         self.backgroundColor = [NSColor clearColor];
         self.opaque = NO;
         self.hasShadow = NO;
-        self.ignoresMouseEvents = NO;
-        self.acceptsMouseMovedEvents = YES;
+        self.ignoresMouseEvents = YES; // Click-through — items have their own windows
+        self.acceptsMouseMovedEvents = NO;
         self.collectionBehavior |= NSWindowCollectionBehaviorIgnoresCycle;
         
         DEBUG_LOG("  window props set: opaque=%d, ignoresMouse=%d", self.opaque, self.ignoresMouseEvents);

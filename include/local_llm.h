@@ -36,3 +36,6 @@ bool LocalLLM_IsTokenizerReady();
 int LocalLLM_VocabSize();
 int LocalLLM_GetTokenId(const std::string& token);
 void LocalLLM_ClearTokenizer();
+
+// FoundationModels backend (macOS 26+)
+#include "foundation_llm.h"
