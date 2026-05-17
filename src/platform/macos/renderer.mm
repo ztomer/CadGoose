@@ -45,7 +45,6 @@ extern bool g_debugMode;
 // --- Timer and rendering constants ---
 static constexpr int kWorldCleanupTickInterval = 60;
 static constexpr int kLeafSpawnProbabilityDenominator = 600;
-static constexpr double kIdleTimeout = 3.0; // seconds before entering low-power mode
 
 static void DrawEllipse(CGContextRef ctx, Vector2 p, float rx, float ry, float r, float g, float b, float a) {
     CGContextSetRGBFillColor(ctx, r, g, b, a);
@@ -66,7 +65,6 @@ static void DrawLine(CGContextRef ctx, Vector2 a, Vector2 b, float width, float 
 @property (nonatomic, assign) double currentTime;
 @property (nonatomic, assign) int tickCount;
 @property (nonatomic, assign) BOOL needsRedraw;
-@property (nonatomic, assign) double lastActiveTime;
 @property (nonatomic, strong) CADisplayLink* displayLink;
 - (void)handleKeyDown:(NSEvent*)event;
 - (void)onFrameRefresh:(CADisplayLink*)displayLink;
@@ -107,7 +105,6 @@ static BOOL s_hasPrimary = NO;
         _currentTime = 0.0;
         _tickCount = 0;
         _needsRedraw = NO;
-        _lastActiveTime = 0.0;
         _displayLink = nil;
         DEBUG_LOG("  time/count initialized");
     } else {
@@ -174,22 +171,23 @@ static BOOL s_hasPrimary = NO;
 }
 
 - (void)tick {
-    double dt = self.displayLink.duration;
+    double dt = g_config.render.frameDt;
     self.currentTime += dt;
     self.tickCount++;
 
-    bool gooseActive = NO;
     CursorAction action = {};
 
-    // Skip cursor polling when idle (saves CGEvent overhead)
+    // Read cursor BEFORE Update so goose sees current position
     CursorState cursor = {};
+    if (self.isPrimary && g_cursorProvider) {
+        cursor = g_cursorProvider->Read();
+    }
+
     if (self.isPrimary) {
         for (auto& g : g_geese) {
-            if (g.currentSpeed > 0.01f) gooseActive = YES;
-
             CursorAction a = g.Update(dt, self.currentTime, (int)self.bounds.size.width, (int)self.bounds.size.height, cursor);
             if (!a.isNone()) action = a;
-            if (g.currentSpeed > 0.01f) gooseActive = YES;
+            if (g.currentSpeed > 0.01f) self.needsRedraw = YES;
             if (g_debugMode && self.tickCount % g_config.render.debugTickMod == 0) {
                 DEBUG_LOG("Goose %d pos: %.1f,%.1f speed: %.1f", g.id, g.pos.x, g.pos.y, g.currentSpeed);
             }
@@ -202,19 +200,7 @@ static BOOL s_hasPrimary = NO;
         }
     }
 
-    // Track idle time for skipping expensive operations
-    if (gooseActive || !action.isNone()) {
-        self.lastActiveTime = self.currentTime;
-    }
-    double idleTime = self.currentTime - self.lastActiveTime;
-    bool isIdle = (idleTime > kIdleTimeout);
-
-    // Skip cursor polling when idle (expensive CGEvent call)
-    if (!isIdle && g_cursorProvider) {
-        cursor = g_cursorProvider->Read();
-    }
-
-    if (!isIdle && g_cursorProvider && !action.isNone()) {
+    if (g_cursorProvider && !action.isNone()) {
         g_cursorProvider->Execute(action);
         self.needsRedraw = YES;
     }
@@ -224,8 +210,7 @@ static BOOL s_hasPrimary = NO;
         self.needsRedraw = YES;
     }
 
-    // Skip leaf pile updates when idle
-    if (!isIdle && g_config.behaviors.fun.autumnLeaves) {
+    if (g_config.behaviors.fun.autumnLeaves) {
         if (rand() % kLeafSpawnProbabilityDenominator == 0) {
             World_SpawnRandomLeafPile(self.bounds.size.width, self.bounds.size.height, self.currentTime);
         }
