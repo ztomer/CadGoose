@@ -5,6 +5,7 @@
 #import <cmath>
 #import <algorithm>
 #import <time.h>
+#import <QuartzCore/CADisplayLink.h>
 
 #include "goose.h"
 #include "goose_drawing.h"
@@ -42,10 +43,9 @@ extern bool g_debugMode;
 #endif
 
 // --- Timer and rendering constants ---
-static constexpr int kTargetFPS = 60;
-static constexpr int kTimerJitterToleranceHz = 600;
 static constexpr int kWorldCleanupTickInterval = 60;
 static constexpr int kLeafSpawnProbabilityDenominator = 600;
+static constexpr double kIdleTimeout = 3.0; // seconds before entering low-power mode
 
 static void DrawEllipse(CGContextRef ctx, Vector2 p, float rx, float ry, float r, float g, float b, float a) {
     CGContextSetRGBFillColor(ctx, r, g, b, a);
@@ -65,8 +65,11 @@ static void DrawLine(CGContextRef ctx, Vector2 a, Vector2 b, float width, float 
 @property (nonatomic, assign) BOOL isPrimary;
 @property (nonatomic, assign) double currentTime;
 @property (nonatomic, assign) int tickCount;
-@property (nonatomic, strong) dispatch_source_t timer;
+@property (nonatomic, assign) BOOL needsRedraw;
+@property (nonatomic, assign) double lastActiveTime;
+@property (nonatomic, strong) CADisplayLink* displayLink;
 - (void)handleKeyDown:(NSEvent*)event;
+- (void)onFrameRefresh:(CADisplayLink*)displayLink;
 @end
 
 static BOOL s_hasPrimary = NO;
@@ -103,6 +106,9 @@ static BOOL s_hasPrimary = NO;
 
         _currentTime = 0.0;
         _tickCount = 0;
+        _needsRedraw = NO;
+        _lastActiveTime = 0.0;
+        _displayLink = nil;
         DEBUG_LOG("  time/count initialized");
     } else {
         LOG("ERROR: GooseView init returned nil!");
@@ -118,21 +124,26 @@ static BOOL s_hasPrimary = NO;
     [self stopAnimation];
     DEBUG_LOG("  stopped old timer");
 
-    self.timer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, dispatch_get_main_queue());
-    DEBUG_LOG("  timer created: %p", self.timer);
-
-    dispatch_source_set_timer(self.timer, dispatch_time(DISPATCH_TIME_NOW, 0), NSEC_PER_SEC/kTargetFPS, NSEC_PER_SEC/kTimerJitterToleranceHz);
-    DEBUG_LOG("  timer scheduled");
-
-    __weak GooseView* weakSelf = self;
-    dispatch_source_set_event_handler(self.timer, ^{ [weakSelf tick]; });
-    DEBUG_LOG("  event handler set");
-
-    dispatch_resume(self.timer);
-    DEBUG_LOG("  timer resumed");
+    self.displayLink = [self displayLinkWithTarget:self selector:@selector(onFrameRefresh:)];
+    if (@available(macOS 14.0, *)) {
+        self.displayLink.preferredFrameRateRange = CAFrameRateRangeMake(30, 60, 60);
+    }
+    [self.displayLink addToRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
+    DEBUG_LOG("  CADisplayLink created and added to run loop");
 
     [self becomeFirstResponder];
     DEBUG_LOG("GooseView startAnimation END");
+}
+
+- (void)stopAnimation {
+    [self.displayLink invalidate];
+    self.displayLink = nil;
+}
+
+- (void)onFrameRefresh:(CADisplayLink*)displayLink {
+    @autoreleasepool {
+        [self tick];
+    }
 }
 
 - (void)handleKeyDown:(NSEvent*)event {
@@ -159,66 +170,80 @@ static BOOL s_hasPrimary = NO;
     [self handleKeyDown:event];
 }
 
-- (void)stopAnimation {
-    if (self.timer) {
-        dispatch_source_cancel(self.timer);
-        self.timer = nil;
-    }
-}
-
 - (void)handleClickAtPoint:(NSPoint)point {
 }
 
 - (void)tick {
-    @autoreleasepool {
-    self.currentTime += g_config.render.frameDt;
+    double dt = self.displayLink.duration;
+    self.currentTime += dt;
     self.tickCount++;
 
-    CursorState cursor = {};
+    bool gooseActive = NO;
     CursorAction action = {};
-    if (g_cursorProvider) {
+
+    // Skip cursor polling when idle (saves CGEvent overhead)
+    CursorState cursor = {};
+    if (self.isPrimary) {
+        for (auto& g : g_geese) {
+            if (g.currentSpeed > 0.01f) gooseActive = YES;
+
+            CursorAction a = g.Update(dt, self.currentTime, (int)self.bounds.size.width, (int)self.bounds.size.height, cursor);
+            if (!a.isNone()) action = a;
+            if (g.currentSpeed > 0.01f) gooseActive = YES;
+            if (g_debugMode && self.tickCount % g_config.render.debugTickMod == 0) {
+                DEBUG_LOG("Goose %d pos: %.1f,%.1f speed: %.1f", g.id, g.pos.x, g.pos.y, g.currentSpeed);
+            }
+
+            BehaviorContext ctx;
+            ctx.goose = &g;
+            ctx.time = self.currentTime;
+            ctx.isJailed = false;
+            BehaviorRegistry::Instance().TickAll(&g, dt, self.currentTime);
+        }
+    }
+
+    // Track idle time for skipping expensive operations
+    if (gooseActive || !action.isNone()) {
+        self.lastActiveTime = self.currentTime;
+    }
+    double idleTime = self.currentTime - self.lastActiveTime;
+    bool isIdle = (idleTime > kIdleTimeout);
+
+    // Skip cursor polling when idle (expensive CGEvent call)
+    if (!isIdle && g_cursorProvider) {
         cursor = g_cursorProvider->Read();
     }
 
-    if (self.isPrimary) {
-        for (auto& g : g_geese) {
-                CursorAction a = g.Update(g_config.render.frameDt, self.currentTime, (int)self.bounds.size.width, (int)self.bounds.size.height, cursor);
-                if (!a.isNone()) action = a;
-                if (g_debugMode && self.tickCount % g_config.render.debugTickMod == 0) {
-                    DEBUG_LOG("Goose %d pos: %.1f,%.1f speed: %.1f", g.id, g.pos.x, g.pos.y, g.currentSpeed);
-                }
-
-                BehaviorContext ctx;
-                ctx.goose = &g;
-                ctx.time = self.currentTime;
-                ctx.isJailed = false;
-                BehaviorRegistry::Instance().TickAll(&g, g_config.render.frameDt, self.currentTime);
-            }
-        }
-
-    AI_TextMeme_Tick(self.currentTime);
-
-    if (g_cursorProvider && !action.isNone()) {
+    if (!isIdle && g_cursorProvider && !action.isNone()) {
         g_cursorProvider->Execute(action);
+        self.needsRedraw = YES;
     }
 
     if (self.tickCount % kWorldCleanupTickInterval == 0) {
         World_CleanupExpired(self.currentTime);
+        self.needsRedraw = YES;
     }
 
-    if (rand() % kLeafSpawnProbabilityDenominator == 0 && g_config.behaviors.fun.autumnLeaves) {
-        World_SpawnRandomLeafPile(self.bounds.size.width, self.bounds.size.height, self.currentTime);
-    }
-
-    if (g_config.behaviors.fun.autumnLeaves) {
-        World_TickLeafPiles(self.currentTime, g_config.render.frameDt,
+    // Skip leaf pile updates when idle
+    if (!isIdle && g_config.behaviors.fun.autumnLeaves) {
+        if (rand() % kLeafSpawnProbabilityDenominator == 0) {
+            World_SpawnRandomLeafPile(self.bounds.size.width, self.bounds.size.height, self.currentTime);
+        }
+        World_TickLeafPiles(self.currentTime, dt,
                             g_geese.empty() ? nullptr : &g_geese.front());
+        self.needsRedraw = YES;
     }
 
-    // Sync item windows (dragging handled by ItemWindow instances)
-    [[ItemWindowManager shared] syncWindows];
+    // Sync item windows only when items exist
+    if (!g_droppedItems.empty()) {
+        [[ItemWindowManager shared] syncWindows];
+        self.needsRedraw = YES;
+    }
 
-    [self setNeedsDisplay:YES];
+    // Only redraw when something actually changed
+    if (self.needsRedraw) {
+        [self setNeedsDisplay:YES];
+        self.needsRedraw = NO;
     }
 }
 

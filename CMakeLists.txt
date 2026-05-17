@@ -38,6 +38,8 @@ if(MACOS)
     find_library(APPLICATIONSERVICES_LIBRARY ApplicationServices)
     find_library(CURL_LIBRARY curl)
     find_library(COREML_LIBRARY CoreML)
+    find_library(COREVIDEO_LIBRARY CoreVideo)
+    find_library(QUARTZCORE_LIBRARY QuartzCore)
 
     if(NOT COCOA_LIBRARY)
         message(FATAL_ERROR "Cocoa framework not found")
@@ -69,6 +71,8 @@ if(MACOS)
         ${APPLICATIONSERVICES_LIBRARY}
         ${CURL_LIBRARY}
         ${COREML_LIBRARY}
+        ${COREVIDEO_LIBRARY}
+        ${QUARTZCORE_LIBRARY}
         Threads::Threads
         ${MIMALLOC_LIBRARY}
     )
@@ -369,6 +373,8 @@ if(APPLE)
         ${APPLICATIONSERVICES_LIBRARY}
         ${CURL_LIBRARY}
         ${COREML_LIBRARY}
+        ${COREVIDEO_LIBRARY}
+        ${QUARTZCORE_LIBRARY}
         ${SWIFT_OBJ}
         GTest::GTest
         GTest::Main
