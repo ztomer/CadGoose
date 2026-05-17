@@ -72,10 +72,20 @@ public:
         // Clamp radius to half the smallest dimension
         CGFloat minDim = (rect.w < rect.h ? rect.w : rect.h) * 0.5f;
         if (radius > minDim) radius = minDim;
-        CGPathAddArcToPoint(path, NULL, r.origin.x, r.origin.y, r.origin.x + r.size.width, r.origin.y, radius);
-        CGPathAddArcToPoint(path, NULL, r.origin.x + r.size.width, r.origin.y, r.origin.x + r.size.width, r.origin.y + r.size.height, radius);
-        CGPathAddArcToPoint(path, NULL, r.origin.x + r.size.width, r.origin.y + r.size.height, r.origin.x, r.origin.y + r.size.height, radius);
-        CGPathAddArcToPoint(path, NULL, r.origin.x, r.origin.y + r.size.height, r.origin.x, r.origin.y, radius);
+        // Build rounded rect path using explicit arc segments
+        CGFloat x = r.origin.x;
+        CGFloat y = r.origin.y;
+        CGFloat w = r.size.width;
+        CGFloat h = r.size.height;
+        CGPathMoveToPoint(path, NULL, x + radius, y);
+        CGPathAddLineToPoint(path, NULL, x + w - radius, y);
+        CGPathAddArc(path, NULL, x + w - radius, y + radius, radius, -M_PI_2, 0, false);
+        CGPathAddLineToPoint(path, NULL, x + w, y + h - radius);
+        CGPathAddArc(path, NULL, x + w - radius, y + h - radius, radius, 0, M_PI_2, false);
+        CGPathAddLineToPoint(path, NULL, x + radius, y + h);
+        CGPathAddArc(path, NULL, x + radius, y + h - radius, radius, M_PI_2, M_PI, false);
+        CGPathAddLineToPoint(path, NULL, x, y + radius);
+        CGPathAddArc(path, NULL, x + radius, y + radius, radius, M_PI, 3 * M_PI_2, false);
         CGPathCloseSubpath(path);
         CGContextAddPath(m_ctx, path);
         CGContextFillPath(m_ctx);

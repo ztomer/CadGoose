@@ -79,7 +79,13 @@ static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
         CTLineRef line = CTLineCreateWithAttributedString(attrStr);
 
         if (line) {
-            CGContextSetTextPosition(cg, headPos.x - nameWidth / 2.0f, headPos.y - 25.0f);
+            // Get actual text width for precise centering
+            CFIndex stringLength = CTLineGetStringRange(line).length;
+            double textWidth = CTLineGetOffsetForStringIndex(line, stringLength, NULL);
+
+            float boxCenterX = headPos.x;
+            float textX = boxCenterX - (float)textWidth / 2.0f;
+            CGContextSetTextPosition(cg, textX, headPos.y - 25.0f);
             CTLineDraw(line, cg);
             CFRelease(line);
         }

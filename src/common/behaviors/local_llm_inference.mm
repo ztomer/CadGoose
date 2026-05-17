@@ -168,6 +168,24 @@ void LocalLLM_Generate(const std::string& prompt, float temperature,
         s_generating = true;
     }
 
+    // Use FoundationModels backend if available (macOS 26+)
+    if (FoundationLLM_IsAvailable()) {
+        fprintf(stderr, "[LOCAL_LLM] Using FoundationModels for generation\n");
+
+        auto* wrapper = new std::function<void(const std::string&)>(callback);
+        FoundationLLM_Generate(prompt.c_str(), temperature,
+            [](const char* result, void* ctx) {
+                auto* cb = static_cast<std::function<void(const std::string&)>*>(ctx);
+                if (*cb) (*cb)(result ? result : "");
+                delete cb;
+            },
+            wrapper);
+
+        std::lock_guard<std::mutex> lock(s_genMutex);
+        s_generating = false;
+        return;
+    }
+
     if (LocalLLM_GetState() != LocalLLMState::Ready || !LocalLLM_GetModel()) {
         LocalLLM_Init();
         // Wait for model to load (max 30 seconds)

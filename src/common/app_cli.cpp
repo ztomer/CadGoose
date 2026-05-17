@@ -18,7 +18,8 @@ static bool IsControlCommand(const std::string& command) {
            command == "ram" ||
            command == "status" ||
            command == "quit" ||
-           command == "fetch";
+           command == "fetch" ||
+           command == "drag_test";
 }
 
 static bool IsRunning() {
@@ -101,6 +102,7 @@ int AppCli_HandleCommand(int argc, char** argv, int* appArgc) {
             << "  CadGoose ram\n"
             << "  CadGoose status\n"
             << "  CadGoose fetch [meme|text]\n"
+            << "  CadGoose drag_test <x> <y>\n"
             << "  CadGoose quit\n";
         return 0;
     }

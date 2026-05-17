@@ -133,6 +133,16 @@ struct CoordTransform {
         return {devicePos.x, devicePos.y};
     }
 
+    // SCREEN → DEVICE for macOS (Y-flip: macOS screen has bottom-left origin)
+    static DevicePoint ScreenToDeviceMacOS(ScreenPoint screenPos, float screenHeight) {
+        return {screenPos.x, screenHeight - screenPos.y};
+    }
+
+    // DEVICE → SCREEN for macOS (Y-flip: macOS screen has bottom-left origin)
+    static ScreenPoint DeviceToScreenMacOS(DevicePoint devicePos, float screenHeight) {
+        return {devicePos.x, screenHeight - devicePos.y};
+    }
+
     // VIEW → DEVICE (for isFlipped=YES NSView)
     // viewY is the Y coordinate after Y-flip: viewHeight - viewPoint.y
     static DevicePoint ViewToDevice(ViewPoint viewPoint, float viewY) {

@@ -113,10 +113,39 @@ static std::string GetRamUsageReport() {
 
 std::string AppActions_GetStatus() {
     std::ostringstream out;
+    out << std::fixed << std::setprecision(1);
     out << "running=1\n";
     out << "goose_count=" << g_geese.size() << "\n";
     out << "config_path=" << Config_GetPath() << "\n";
     out << GetRamUsageReport();
+
+    if (!g_geese.empty()) {
+        const auto& g = g_geese.front();
+        out << "goose_pos=" << g.pos.x << "," << g.pos.y << "\n";
+        out << "goose_state=";
+        switch (g.state) {
+            case GooseState::WANDER: out << "wander"; break;
+            case GooseState::FETCHING: out << "fetching"; break;
+            case GooseState::RETURNING: out << "returning"; break;
+            case GooseState::CHASE_CURSOR: out << "chase_cursor"; break;
+            case GooseState::SNATCH_CURSOR: out << "snatch_cursor"; break;
+        }
+        out << "\n";
+        out << "goose_heldItem=" << (g.heldItem ? "yes" : "no") << "\n";
+    }
+
+    out << "dropped_items=" << g_droppedItems.size() << "\n";
+    for (const auto& item : g_droppedItems) {
+        if (!item.data) {
+            out << "item_null\n";
+            continue;
+        }
+        out << "item_pos=" << item.pos.x << "," << item.pos.y
+            << " size=" << item.data->w << "x" << item.data->h
+            << " type=" << (int)item.data->type
+            << " rotation=" << item.rotation
+            << " pinned=" << (item.pinned ? "1" : "0") << "\n";
+    }
 
     for (const auto& opt : g_configRegistry) {
         std::string value;
@@ -190,6 +219,19 @@ std::string AppActions_HandleCommand(const std::vector<std::string>& args) {
             return "ok disabled " + args[1] + "\n";
         }
         return "error behavior has no enabledPtr\n";
+    }
+
+    if (command == "drag_test") {
+        if (args.size() < 3) return "error usage: drag_test <x> <y>\n";
+        float targetX = std::stof(args[1]);
+        float targetY = std::stof(args[2]);
+#if defined(__APPLE__)
+        extern void ItemWindow_DragTest(float, float);
+        ItemWindow_DragTest(targetX, targetY);
+        return "ok drag_test dispatched\n";
+#else
+        return "error drag_test only available on macOS\n";
+#endif
     }
 
     return "error unknown command: " + command + "\n";

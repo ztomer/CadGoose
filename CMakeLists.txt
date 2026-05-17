@@ -86,6 +86,22 @@ if(MACOS)
         MACOSX_BUNDLE FALSE
     )
 
+    # Compile Swift FoundationLLM wrapper (CMake doesn't support Swift with Unix Makefiles)
+    execute_process(COMMAND xcrun --show-sdk-path OUTPUT_VARIABLE MACOS_SDK_PATH OUTPUT_STRIP_TRAILING_WHITESPACE)
+    set(SWIFT_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/common/behaviors/FoundationLLM.swift")
+    set(SWIFT_OBJ "${CMAKE_CURRENT_BINARY_DIR}/FoundationLLM.o")
+    add_custom_command(
+        OUTPUT ${SWIFT_OBJ}
+        COMMAND swiftc -c -parse-as-library ${SWIFT_SRC} -o ${SWIFT_OBJ} -emit-module-path "${CMAKE_CURRENT_BINARY_DIR}/FoundationLLM.swiftmodule" -target arm64-apple-macos15 -sdk "${MACOS_SDK_PATH}"
+        DEPENDS ${SWIFT_SRC}
+        COMMENT "Compiling FoundationLLM.swift"
+        VERBATIM
+    )
+    add_custom_target(CompileSwiftFoundationLLM DEPENDS ${SWIFT_OBJ})
+    add_dependencies(CadGoose CompileSwiftFoundationLLM)
+    target_link_libraries(CadGoose ${SWIFT_OBJ})
+    target_link_options(CadGoose PRIVATE "-L/usr/lib/swift")
+
 elseif(LINUX)
     find_package(PkgConfig REQUIRED)
     find_package(Threads REQUIRED)
@@ -323,6 +339,7 @@ if(APPLE)
     endif()
     
     add_executable(CadGooseTests ${TEST_SOURCES_COMMON} ${TEST_SOURCES_PLATFORM})
+    add_dependencies(CadGooseTests CompileSwiftFoundationLLM)
     
     if(APPLE)
         target_sources(CadGooseTests PRIVATE 
@@ -332,6 +349,7 @@ if(APPLE)
             src/platform/macos/cursor_backend.mm 
             src/platform/macos/renderer.mm
             src/platform/macos/item_drag_controller.mm
+            src/platform/macos/item_window.mm
             src/platform/macos/audio.mm
             src/platform/macos/command_socket.cpp
             tests/common/presence_stub.cpp
@@ -351,11 +369,13 @@ if(APPLE)
         ${APPLICATIONSERVICES_LIBRARY}
         ${CURL_LIBRARY}
         ${COREML_LIBRARY}
+        ${SWIFT_OBJ}
         GTest::GTest
         GTest::Main
         Threads::Threads
         ${MIMALLOC_LIBRARY}
     )
+    target_link_options(CadGooseTests PRIVATE "-L/usr/lib/swift")
     else()
         target_link_libraries(CadGooseTests
             GTest::GTest
