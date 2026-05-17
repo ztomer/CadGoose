@@ -19,6 +19,7 @@
 
 @interface ItemWindow : NSWindow
 @property (nonatomic, assign) DroppedItem* item;
+@property (nonatomic, assign) BOOL isBeingDragged;
 - (instancetype)initWithItem:(DroppedItem*)item;
 - (void)updatePosition;
 - (void)closeAndRemove;

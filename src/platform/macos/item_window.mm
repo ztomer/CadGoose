@@ -123,6 +123,7 @@ static DevicePoint RotatedBoundsSize(float width, float height, float rotation, 
                              g_config.general.globalScale)) {
         // Start drag — all in DEVICE coords
         _isDragging = YES;
+        ((ItemWindow*)self.parentWindow).isBeingDragged = YES;
         _dragStartMouseDevice = mouseDevice;
         _dragStartItemPos = {_item->pos.x, _item->pos.y};
         _item->pinned = true;
@@ -156,19 +157,21 @@ static DevicePoint RotatedBoundsSize(float width, float height, float rotation, 
 
     _item->pos = newPos;
 
-    // Update window frame — convert DEVICE pos to SCREEN frame origin
+    // Update window frame — same calculation as updatePosition
     float scale = g_config.general.globalScale;
-    float w = _item->data->w * scale;
-    float h = _item->data->h * scale;
-    ScreenPoint screenOrigin = CoordTransform::DeviceToScreenMacOS({_item->pos.x, _item->pos.y + h}, screenH);
+    DevicePoint winSize = RotatedBoundsSize(_item->data->w, _item->data->h, _item->rotation, scale);
+    DevicePoint itemCenter = ItemCoords::Center({_item->pos.x, _item->pos.y},
+                                                 _item->data->w, _item->data->h, scale);
+    DevicePoint windowTopLeft = {itemCenter.x - winSize.x * 0.5f, itemCenter.y - winSize.y * 0.5f};
+    ScreenPoint screenOrigin = CoordTransform::DeviceToScreenMacOS({windowTopLeft.x, windowTopLeft.y + winSize.y}, screenH);
 
-    ItemLog("  setFrameOrigin(%.1f,%.1f) [screen coords]", screenOrigin.x, screenOrigin.y);
     [self.window setFrameOrigin:NSMakePoint(screenOrigin.x, screenOrigin.y)];
 }
 
 - (void)mouseUp:(NSEvent *)event {
     ItemLog("MOUSE_UP: isDragging=%d", _isDragging);
     _isDragging = NO;
+    ((ItemWindow*)self.parentWindow).isBeingDragged = NO;
 }
 
 - (void)drawRect:(NSRect)dirtyRect {
@@ -222,7 +225,10 @@ static DevicePoint RotatedBoundsSize(float width, float height, float rotation, 
     DroppedItem* _item;
     DevicePoint _lastPosition;
     bool _hasLastPosition;
+    BOOL _isDragging;
 }
+
+@synthesize isBeingDragged = _isBeingDragged;
 
 - (BOOL)canBecomeKeyWindow {
     return YES;
@@ -378,80 +384,83 @@ static DevicePoint RotatedBoundsSize(float width, float height, float rotation, 
 }
 
 - (void)syncWindows {
-    @autoreleasepool {
-        // Remove windows for items that no longer exist or have null data
-        NSMutableArray* toRemove = [NSMutableArray array];
-        for (NSNumber* key in _windows) {
-            ItemWindow* win = _windows[key];
-            BOOL itemStillValid = NO;
-            for (auto& item : g_droppedItems) {
-                if (win.item == &item && item.data) {
-                    itemStillValid = YES;
-                    break;
-                }
-            }
-            if (!itemStillValid) {
-                [win close];
-                [toRemove addObject:key];
-            }
-        }
-        for (NSNumber* key in toRemove) {
-            [_windows removeObjectForKey:key];
-        }
-
-        // Create windows for new items
+    // Remove windows for items that no longer exist or have null data
+    NSMutableArray* toRemove = [NSMutableArray array];
+    for (NSNumber* key in _windows) {
+        ItemWindow* win = _windows[key];
+        BOOL itemStillValid = NO;
         for (auto& item : g_droppedItems) {
-            BOOL exists = NO;
-            for (NSNumber* key in _windows) {
-                ItemWindow* win = _windows[key];
-                if (win.item == &item) {
-                    exists = YES;
-                    break;
-                }
-            }
-            if (!exists && item.data) {
-                NSNumber* key = @(_nextId++);
-                ItemWindow* win = [[ItemWindow alloc] initWithItem:&item];
-                _windows[key] = win;
+            if (win.item == &item && item.data) {
+                itemStillValid = YES;
+                break;
             }
         }
+        if (!itemStillValid) {
+            [win close];
+            [toRemove addObject:key];
+        }
+    }
+    for (NSNumber* key in toRemove) {
+        [_windows removeObjectForKey:key];
+    }
 
-        // Update positions and hit states for existing items
-        NSPoint rawMouseLoc = [NSEvent mouseLocation];
-        ScreenPoint mouseScreen = {(float)rawMouseLoc.x, (float)rawMouseLoc.y};
-        NSScreen* mainScreen = [NSScreen mainScreen];
-        float screenH = (float)mainScreen.frame.size.height;
-        DevicePoint mouseDevice = CoordTransform::ScreenToDeviceMacOS(mouseScreen, screenH);
-
+    // Create windows for new items
+    for (auto& item : g_droppedItems) {
+        BOOL exists = NO;
         for (NSNumber* key in _windows) {
             ItemWindow* win = _windows[key];
-            if (!win || !win.item || !win.item->data) continue;
-
-            // Validate item is still in global list
-            BOOL itemValid = NO;
-            for (auto& item : g_droppedItems) {
-                if (win.item == &item && item.data) {
-                    itemValid = YES;
-                    break;
-                }
+            if (win.item == &item) {
+                exists = YES;
+                break;
             }
-            if (!itemValid) continue;
+        }
+        if (!exists && item.data) {
+            NSNumber* key = @(_nextId++);
+            ItemWindow* win = [[ItemWindow alloc] initWithItem:&item];
+            _windows[key] = win;
+        }
+    }
 
+    // Update positions and hit states for existing items
+    if (_windows.count == 0) return;
+
+    NSPoint rawMouseLoc = [NSEvent mouseLocation];
+    ScreenPoint mouseScreen = {(float)rawMouseLoc.x, (float)rawMouseLoc.y};
+    NSScreen* mainScreen = [NSScreen mainScreen];
+    float screenH = (float)mainScreen.frame.size.height;
+    DevicePoint mouseDevice = CoordTransform::ScreenToDeviceMacOS(mouseScreen, screenH);
+
+    for (NSNumber* key in _windows) {
+        ItemWindow* win = _windows[key];
+        if (!win || !win.item || !win.item->data) continue;
+
+        // Validate item is still in global list
+        BOOL itemValid = NO;
+        for (auto& item : g_droppedItems) {
+            if (win.item == &item && item.data) {
+                itemValid = YES;
+                break;
+            }
+        }
+        if (!itemValid) continue;
+
+        // Skip position update during drag (window moves via mouseDragged)
+        if (!win.isBeingDragged) {
             [win updatePosition];
+        }
 
-            // Toggle ignoresMouseEvents based on cursor position
-            DevicePoint itemCenter = ItemCoords::Center({win.item->pos.x, win.item->pos.y},
-                                                         win.item->data->w, win.item->data->h,
-                                                         g_config.general.globalScale);
-            bool inside = HitTest::PointInItem(mouseDevice, itemCenter,
-                                     win.item->data->w, win.item->data->h,
-                                     win.item->rotation,
-                                     g_config.general.globalScale);
-            if (inside) {
-                if (win.ignoresMouseEvents) win.ignoresMouseEvents = NO;
-            } else {
-                if (!win.ignoresMouseEvents) win.ignoresMouseEvents = YES;
-            }
+        // Toggle ignoresMouseEvents based on cursor position
+        DevicePoint itemCenter = ItemCoords::Center({win.item->pos.x, win.item->pos.y},
+                                                     win.item->data->w, win.item->data->h,
+                                                     g_config.general.globalScale);
+        bool inside = HitTest::PointInItem(mouseDevice, itemCenter,
+                                 win.item->data->w, win.item->data->h,
+                                 win.item->rotation,
+                                 g_config.general.globalScale);
+        if (inside) {
+            if (win.ignoresMouseEvents) win.ignoresMouseEvents = NO;
+        } else {
+            if (!win.ignoresMouseEvents) win.ignoresMouseEvents = YES;
         }
     }
 }
