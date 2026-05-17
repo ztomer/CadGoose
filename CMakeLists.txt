@@ -354,6 +354,7 @@ if(APPLE)
             src/platform/macos/renderer.mm
             src/platform/macos/item_drag_controller.mm
             src/platform/macos/item_window.mm
+            src/platform/macos/effect_window.mm
             src/platform/macos/audio.mm
             src/platform/macos/command_socket.cpp
             tests/common/presence_stub.cpp

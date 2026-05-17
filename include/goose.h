@@ -130,6 +130,15 @@ public:
     static constexpr double STUCK_THRESHOLD_TIME = 3.0;
     static constexpr float STUCK_THRESHOLD_DIST = 5.0f;
 
+    // Shudder detection — rapid direction changes without movement
+    Vector2 shudderLastPos{};
+    float shudderLastDir = 0.0f;
+    double shudderCheckTime = 0.0;
+    int shudderDirChanges = 0;
+    static constexpr double SHUDDER_WINDOW = 1.0; // seconds to track direction changes
+    static constexpr int SHUDDER_DIR_THRESHOLD = 5; // direction flips per window
+    static constexpr float SHUDDER_MOVE_THRESHOLD = 10.0f; // minimum px movement to not count as shudder
+
     // Behavior system enabled flag
     bool behaviorsEnabled = true;
     bool isResting = false;

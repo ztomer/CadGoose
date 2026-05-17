@@ -352,6 +352,26 @@ CursorAction Goose::Update(double dt, double time, int w, int h,
   pos = pos + vel * (float)dt;
   ClampToScreen(w, h);
 
+  // Shudder detection: track rapid direction changes without significant movement
+  float distSinceLastShudderCheck = Vector2::Length(pos - shudderLastPos);
+  float dirChange = std::abs(dir - shudderLastDir);
+  if (dirChange > 90.0f) {
+    shudderDirChanges++;
+  }
+  shudderLastPos = pos;
+  shudderLastDir = dir;
+  if (time - shudderCheckTime > SHUDDER_WINDOW) {
+    if (shudderDirChanges >= SHUDDER_DIR_THRESHOLD && distSinceLastShudderCheck < SHUDDER_MOVE_THRESHOLD) {
+      FILE *f = GetDebugLog();
+      fprintf(f, "[SHUDDER] t=%.1f g%d pos(%.0f,%.0f) dir=%.0f dirChanges=%d distMoved=%.0f state=%d\n",
+              time, id, pos.x, pos.y, dir, shudderDirChanges, distSinceLastShudderCheck, (int)state);
+      fflush(f);
+    }
+    shudderDirChanges = 0;
+    shudderCheckTime = time;
+    shudderLastPos = pos;
+  }
+
   // Stuck detection: only check during movement states, skip stationary modes
   auto* jailState = BehaviorStateManager::Instance().Get<JailState>(id, "jail");
   bool isJailed = (jailState && jailState->isJailed);

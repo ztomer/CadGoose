@@ -1,6 +1,7 @@
 #import "renderer.h"
 #import "window.h"
 #import "item_window.h"
+#import "effect_window.h"
 #import <vector>
 #import <cmath>
 #import <algorithm>
@@ -17,6 +18,7 @@
 #include "behavior.h"
 #include "ai_text_meme.h"
 #include "world_utils.h"
+#include "coordinate_system.h"
 
 void Honcker_Honk(Goose* goose, double time);
 float Rainbow_GetHue(int gooseId);
@@ -138,9 +140,7 @@ static BOOL s_hasPrimary = NO;
 }
 
 - (void)onFrameRefresh:(CADisplayLink*)displayLink {
-    @autoreleasepool {
-        [self tick];
-    }
+    [self tick];
 }
 
 - (void)handleKeyDown:(NSEvent*)event {
@@ -177,7 +177,6 @@ static BOOL s_hasPrimary = NO;
 
     CursorAction action = {};
 
-    // Read cursor BEFORE Update so goose sees current position
     CursorState cursor = {};
     if (self.isPrimary && g_cursorProvider) {
         cursor = g_cursorProvider->Read();
@@ -185,7 +184,7 @@ static BOOL s_hasPrimary = NO;
 
     if (self.isPrimary) {
         for (auto& g : g_geese) {
-            CursorAction a = g.Update(dt, self.currentTime, (int)self.bounds.size.width, (int)self.bounds.size.height, cursor);
+            CursorAction a = g.Update(dt, self.currentTime, g_screenWidth, g_screenHeight, cursor);
             if (!a.isNone()) action = a;
             if (g.currentSpeed > 0.01f) self.needsRedraw = YES;
             if (g_debugMode && self.tickCount % g_config.render.debugTickMod == 0) {
@@ -198,6 +197,8 @@ static BOOL s_hasPrimary = NO;
             ctx.isJailed = false;
             BehaviorRegistry::Instance().TickAll(&g, dt, self.currentTime);
         }
+
+        [[WindowManager shared] updateWindowPositionsForGeese:&g_geese];
     }
 
     if (g_cursorProvider && !action.isNone()) {
@@ -212,20 +213,21 @@ static BOOL s_hasPrimary = NO;
 
     if (g_config.behaviors.fun.autumnLeaves) {
         if (rand() % kLeafSpawnProbabilityDenominator == 0) {
-            World_SpawnRandomLeafPile(self.bounds.size.width, self.bounds.size.height, self.currentTime);
+            World_SpawnRandomLeafPile(g_screenWidth, g_screenHeight, self.currentTime);
         }
         World_TickLeafPiles(self.currentTime, dt,
                             g_geese.empty() ? nullptr : &g_geese.front());
-        self.needsRedraw = YES;
     }
 
-    // Sync item windows only when items exist
+    // Sync effect windows (leaves, mud, etc.)
+    [[EffectWindowManager shared] syncWindows];
+    if (!g_leafPiles.empty()) self.needsRedraw = YES;
+
     if (!g_droppedItems.empty()) {
         [[ItemWindowManager shared] syncWindows];
         self.needsRedraw = YES;
     }
 
-    // Only redraw when something actually changed
     if (self.needsRedraw) {
         [self setNeedsDisplay:YES];
         self.needsRedraw = NO;
@@ -241,13 +243,18 @@ static BOOL s_hasPrimary = NO;
     if (!ctx) return;
 
     CGContextClearRect(ctx, self.bounds);
-
     CGContextSaveGState(ctx);
 
-    DrawFootprints(ctx, g_footprints, self.currentTime);
-    if (g_config.behaviors.fun.autumnLeaves) {
-        DrawLeaves(ctx, g_leafPiles, self.currentTime);
-    }
+    // Convert window frame origin to device coords using the coordinate library
+    NSScreen* windowScreen = self.window.screen ?: [NSScreen mainScreen];
+    float screenH = (float)windowScreen.frame.size.height;
+    NSRect winFrame = self.window.frame;
+    // Window frame origin is bottom-left in screen coords; top-left is origin.y + height
+    ScreenPoint screenTopLeft = {(float)winFrame.origin.x, (float)winFrame.origin.y + (float)winFrame.size.height};
+    DevicePoint viewOriginDevice = CoordTransform::ScreenToDeviceMacOS(screenTopLeft, screenH);
+
+    // Translate from device coords to view coords (view origin = window top-left)
+    CGContextTranslateCTM(ctx, -viewOriginDevice.x, -viewOriginDevice.y);
 
     for (auto& g : g_geese) {
         CGContextSaveGState(ctx);
@@ -256,16 +263,12 @@ static BOOL s_hasPrimary = NO;
         CGContextTranslateCTM(ctx, -g.pos.x, -g.pos.y);
         BehaviorRegistry::Instance().RenderPass(&g, ctx, true);
         CGContextRestoreGState(ctx);
-    }
 
-    for (auto& g : g_geese) {
         DrawGoose(&g, ctx);
         if (g.heldItem) {
             DrawHeldItem(&g, ctx);
         }
-    }
 
-    for (auto& g : g_geese) {
         CGContextSaveGState(ctx);
         CGContextTranslateCTM(ctx, g.pos.x, g.pos.y);
         CGContextScaleCTM(ctx, g_config.general.globalScale, g_config.general.globalScale);

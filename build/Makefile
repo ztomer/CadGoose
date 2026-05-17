@@ -2004,6 +2004,15 @@ src/platform/macos/cursor_backend.mm.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/src/platform/macos/cursor_backend.mm.o
 .PHONY : src/platform/macos/cursor_backend.mm.o
 
+src/platform/macos/effect_window.o: src/platform/macos/effect_window.mm.o
+.PHONY : src/platform/macos/effect_window.o
+
+# target to build an object file
+src/platform/macos/effect_window.mm.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/platform/macos/effect_window.mm.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/src/platform/macos/effect_window.mm.o
+.PHONY : src/platform/macos/effect_window.mm.o
+
 src/platform/macos/item_drag_controller.o: src/platform/macos/item_drag_controller.mm.o
 .PHONY : src/platform/macos/item_drag_controller.o
 
@@ -3222,6 +3231,7 @@ help:
 	@echo "... src/platform/macos/config_gui_theme_io.o"
 	@echo "... src/platform/macos/config_gui_views.o"
 	@echo "... src/platform/macos/cursor_backend.o"
+	@echo "... src/platform/macos/effect_window.o"
 	@echo "... src/platform/macos/item_drag_controller.o"
 	@echo "... src/platform/macos/item_window.o"
 	@echo "... src/platform/macos/main.o"

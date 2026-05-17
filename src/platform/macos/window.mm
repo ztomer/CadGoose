@@ -1,6 +1,9 @@
 #import "window.h"
 #import "renderer.h"
+#import "coordinate_system.h"
 #import <CoreGraphics/CoreGraphics.h>
+#include <list>
+#include "goose.h"
 
 #if defined(__APPLE__)
 extern bool g_debugMode;
@@ -15,40 +18,42 @@ extern bool g_debugMode;
 #define LOG(fmt, ...) fprintf(stderr, "[INFO] " fmt "\n", ##__VA_ARGS__)
 #endif
 
+static constexpr float kGooseWindowSize = 600.0f;
+
 @implementation GooseWindow
 
-- (instancetype)initWithScreen:(NSScreen*)screen contentRect:(NSRect)rect {
-    DEBUG_LOG("GooseWindow initWithScreen START, rect=%s", NSStringFromRect(rect).UTF8String);
-    
+- (instancetype)initWithScreen:(NSScreen*)screen {
+    DEBUG_LOG("GooseWindow initWithScreen START");
+
+    NSRect rect = NSMakeRect(0, 0, kGooseWindowSize, kGooseWindowSize);
     self = [super initWithContentRect:rect
                             styleMask:NSWindowStyleMaskBorderless
                               backing:NSBackingStoreBuffered
                                 defer:NO
                                screen:screen];
-    DEBUG_LOG("GooseWindow super init done, self=%p", self);
-    
+    DEBUG_LOG("GooseWindow super init done, self=%p");
+
     if (self) {
         self.level = NSFloatingWindowLevel;
         DEBUG_LOG("  level=%ld", (long)self.level);
-        
+
         self.collectionBehavior = NSWindowCollectionBehaviorCanJoinAllSpaces |
                                    NSWindowCollectionBehaviorFullScreenAuxiliary |
                                    NSWindowCollectionBehaviorStationary;
         DEBUG_LOG("  collectionBehavior set");
-        
+
         self.backgroundColor = [NSColor clearColor];
         self.opaque = NO;
         self.hasShadow = NO;
-        self.ignoresMouseEvents = YES; // Click-through — items have their own windows
+        self.ignoresMouseEvents = YES;
         self.acceptsMouseMovedEvents = NO;
         self.collectionBehavior |= NSWindowCollectionBehaviorIgnoresCycle;
-        
+
         DEBUG_LOG("  window props set: opaque=%d, ignoresMouse=%d", self.opaque, self.ignoresMouseEvents);
 
-        DEBUG_LOG("  creating GooseView with frame %s", NSStringFromRect(rect).UTF8String);
         self.gooseView = [[GooseView alloc] initWithFrame:rect];
         DEBUG_LOG("  gooseView created: %p", self.gooseView);
-        
+
         self.contentView = self.gooseView;
         DEBUG_LOG("  contentView set");
     } else {
@@ -56,6 +61,28 @@ extern bool g_debugMode;
     }
     DEBUG_LOG("GooseWindow initWithScreen END");
     return self;
+}
+
+- (void)centerOnDevicePoint:(DevicePoint)devicePt {
+    NSScreen* windowScreen = self.screen ?: [NSScreen mainScreen];
+    float screenH = (float)windowScreen.frame.size.height;
+
+    ScreenPoint screenPt = CoordTransform::DeviceToScreenMacOS(devicePt, screenH);
+
+    NSRect frame = self.frame;
+    NSPoint newOrigin = NSMakePoint(screenPt.x - frame.size.width / 2.0, screenPt.y - frame.size.height / 2.0);
+
+    // Clamp to screen bounds
+    NSRect screenFrame = windowScreen.frame;
+    newOrigin.x = MAX(screenFrame.origin.x, MIN(newOrigin.x, screenFrame.origin.x + screenFrame.size.width - frame.size.width));
+    newOrigin.y = MAX(screenFrame.origin.y, MIN(newOrigin.y, screenFrame.origin.y + screenFrame.size.height - frame.size.height));
+
+    // Only move if position changed significantly
+    if (std::abs(frame.origin.x - newOrigin.x) < 2.0f && std::abs(frame.origin.y - newOrigin.y) < 2.0f) {
+        return;
+    }
+
+    [self setFrameOrigin:newOrigin];
 }
 
 - (BOOL)canBecomeKeyWindow { return NO; }
@@ -96,7 +123,6 @@ extern bool g_debugMode;
 
 - (void)screenParametersChanged:(NSNotification*)notification {
     DEBUG_LOG("Screen parameters changed, re-evaluating windows...");
-    // Very simple implementation: close old, create new.
     for (GooseWindow* w in _windows) {
         [w close];
     }
@@ -115,9 +141,18 @@ extern bool g_debugMode;
 }
 
 - (void)createWindowForScreen:(NSScreen*)screen {
-    NSRect rect = [screen frame];
-    GooseWindow* window = [[GooseWindow alloc] initWithScreen:screen contentRect:rect];
+    GooseWindow* window = [[GooseWindow alloc] initWithScreen:screen];
     [_windows addObject:window];
+}
+
+- (void)updateWindowPositionsForGeese:(const std::list<Goose>*)geese {
+    if (!geese || geese->empty()) return;
+
+    for (GooseWindow* window in self.windows) {
+        const Goose* primaryGoose = &geese->front();
+        DevicePoint devicePt = {primaryGoose->pos.x, primaryGoose->pos.y};
+        [window centerOnDevicePoint:devicePt];
+    }
 }
 
 - (void)updateWindowForScreen:(NSScreen*)screen {
