@@ -84,8 +84,8 @@ void handleWander(Goose& g, double time, const CursorState& cursor, int w, int h
             g.state = GooseState::CHASE_CURSOR;
             g.chaseStartTime = time;
             g.target = cursor.position;
-            extern void triggerHonk(Goose::HonkState& hs, double time, double cd, double& lastBucket);
-            triggerHonk(g.honkState, time, g_config.honk.chaseCooldown, g.honkState.lastChase);
+            extern void triggerHonk(Goose& g, double time, double cd, double& lastBucket);
+            triggerHonk(g, time, g_config.honk.chaseCooldown, g.honkState.lastChase);
             chased = true;
         }
     }
@@ -145,8 +145,8 @@ void handleWander(Goose& g, double time, const CursorState& cursor, int w, int h
             }
 
             if ((rand() % g_config.honk.wanderHonkDivisor) == 0) {
-                extern void triggerHonk(Goose::HonkState& hs, double time, double cd, double& lastBucket);
-                triggerHonk(g.honkState, time, g_config.honk.genericCooldown, g.honkState.lastGeneric);
+                extern void triggerHonk(Goose& g, double time, double cd, double& lastBucket);
+                triggerHonk(g, time, g_config.honk.genericCooldown, g.honkState.lastGeneric);
             }
         }
     }

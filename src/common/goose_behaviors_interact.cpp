@@ -39,7 +39,7 @@ bool isTargetReached(Goose& g, float threshold) {
 
 CursorAction Goose::UpdateBehaviors(double dt, double time, int w, int h, const CursorState& cursor) {
     extern void initHonkState(Goose::HonkState& hs, double time);
-    extern void updateIdleHonk(Goose::HonkState& hs, double time, double cd, double& lastGeneric);
+    extern void updateIdleHonk(Goose& g, double time, double cd, double& lastGeneric);
     initHonkState(honkState, time);
 
     // --- Joy Suggestions (Dodging) ---
@@ -164,7 +164,7 @@ CursorAction Goose::UpdateBehaviors(double dt, double time, int w, int h, const 
 
     if (state == GooseState::WANDER && time >= honkState.nextIdleHonk) {
         if ((rand() % g_config.honk.idleChanceDivisor) == 0) {
-            updateIdleHonk(honkState, time, g_config.honk.genericCooldown, honkState.lastGeneric);
+            updateIdleHonk(*this, time, g_config.honk.genericCooldown, honkState.lastGeneric);
         } else {
             honkState.nextIdleHonk = time + g_config.honk.idleMin + (static_cast<double>(rand() % 1000) / 1000.0) * (g_config.honk.idleMax - g_config.honk.idleMin);
         }

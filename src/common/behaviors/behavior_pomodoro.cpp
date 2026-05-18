@@ -5,6 +5,7 @@
 // ===========================
 #include "behavior.h"
 #include "behaviors/states/pomodoro_state.h"
+#include "event_bus.h"
 #include "goose.h"
 #include "config.h"
 #include "world.h"
@@ -139,6 +140,7 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
         }
         state->phaseStartTime = time;
         elapsed = 0;
+        EventBus::Instance().Publish(PomodoroPhaseChangedEvent{goose->id, static_cast<int>(state->phase), time});
     }
 
     if (state->phase == PomodoroPhase::Work) {
