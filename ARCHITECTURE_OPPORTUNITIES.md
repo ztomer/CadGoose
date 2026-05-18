@@ -50,8 +50,8 @@ The `world.h` file acts as a dumping ground for global variables and tight coupl
 *   **Phase 1 [DONE]:** `WorldContext` struct defined in [world.h](include/world.h); legacy globals (`g_geese`, `g_droppedItems`, monitors, footprints, crumbs, leaf piles, screen dims, id counters, ui log) moved inside as members.
 *   **Phase 2 [DONE]:** Single `g_world` instance instantiated in [world.cpp](src/common/world.cpp); all 239 call sites updated to `g_world.X`.
 *   **Phase 2.5 [DONE]:** Restored build — committed previously-untracked Actor/behavior_manager/state files and added missing per-behavior state-header includes ([fix commit](#)). 723 tests pass.
-*   **Phase 3 [IN PROGRESS]:** Dependency Injection — thread `WorldContext&` into system entry points (`Actor::tick`, `ActorManager::tickAll`, behavior tick fns via `BehaviorContext::world`), then incrementally rewrite leaf `g_world.X` reads to `ctx.X`. Partial-DI approach: top-level systems take the context; deep helpers migrate opportunistically as touched.
-*   **Phase 4:** Event-Driven Refactoring — for state changes that trigger side effects, migrate from direct variable polling to emitting/listening on the `EventBus`.
+*   **Phase 3 [DONE — partial]:** Dependency Injection — `Actor::tick` virtual now takes `WorldContext&`; `ActorManager::tickAll` forwards it; `Goose::tick` stashes it on `BehaviorContext::world` for behaviors. Leaf-level `g_world.X` reads in deep helpers are deferred — they migrate opportunistically as touched.
+*   **Phase 4 [DONE — partial]:** Event-Driven Refactoring — first publishers wired up: `GooseHonkedEvent` (triggerHonk + behavior_honcker), `GooseJailedEvent` / `GooseFreedEvent` (behavior_jail edge detect), `PomodoroPhaseChangedEvent` (behavior_pomodoro). Remaining events left for opportunistic follow-up: `ItemDropped`, `ItemEaten`, `ToySpawned`, `BallKicked`, `BreadcrumbDropped`, `GooseStuck`, `CursorFastMove`, `GooseTeleported`.
 
 ---
 
@@ -61,7 +61,9 @@ The behavior system (`include/behavior_state.h`) contains tightly coupled state 
 **Opportunity:** Implement a more flexible, data-driven Behavior Tree or State Machine system where behaviors allocate their specific state dynamically or manage it within their own isolated memory pools, rather than bloating a central header file.
 
 ### Detailed Execution Plan:
-*   **Phase 1: Base State Interface:** Refactor `BehaviorState` (which is likely a massive union or heavily bloated struct) into a lightweight base class or a type-erased wrapper (like `std::any` or a variant).
-*   **Phase 2: Concrete States:** Move the specific state variables for each behavior into their own isolated classes (e.g., `RainbowBehaviorState`, `ItemDragState`) defined near the behavior implementation.
-*   **Phase 3: Dynamic Allocation/Storage:** Update the `BehaviorContext` to hold a pointer (or value-semantic wrapper) to the base state, allocating specific states dynamically when a behavior is activated.
-*   **Phase 4: Behavior Updates:** Refactor behavior implementation files to safely downcast or access their specific state type during their tick/update cycles.
+*   **Phase 1 [DONE]:** [behavior_state.h](include/behavior_state.h) is now a lightweight base — `BehaviorState` is just `{ virtual ~BehaviorState(); virtual void Reset(); }`. No union/bloat.
+*   **Phase 2 [DONE]:** Concrete states live in their own headers under [include/behaviors/states/](include/behaviors/states/) (one per behavior: honcker, jail, pomodoro, portal, anger, ball, breadcrumb, drag, health, peeking, rainbow, acid, toys, boredom, interactive_drops).
+*   **Phase 3 [DONE]:** [BehaviorStateManager](include/behavior_manager.h) holds `unordered_map<key, unique_ptr<BehaviorState>>`; concrete states are allocated on first `GetOrCreate<T>(gooseId, behaviorId)`.
+*   **Phase 4 [DONE]:** Behaviors access their state via the templated `GetOrCreate<T>` / `Get<T>` which internally `dynamic_cast`s — see e.g. behavior_honcker.cpp, behavior_jail.cpp.
+
+Section 5 was effectively complete before this audit pass; no code changes needed.
