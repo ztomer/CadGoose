@@ -64,7 +64,7 @@ static constexpr float kPostSectionYGap = 26.0f;
 static constexpr float kPostSectionYGapLarge = 28.0f;
 static constexpr float kPostSliderYGap = 10.0f;
 static constexpr float kPostToggleYGap = 26.0f;
-static constexpr float kPostAutoSaveYGap = 10.0f;
+    static constexpr float kPostAutoSaveYGap = 26.0f;
 static constexpr float kEvilSliderYGap = 20.0f;
 static constexpr float kEvilPromptYGap = 54.0f;
 static constexpr float kEvilPostPromptYGap = 10.0f;
@@ -219,6 +219,24 @@ static constexpr float kRefreshBtnFontSize = 12.0f;
     _refreshBtn.bezelStyle = NSBezelStyleRounded;
     [self addSubview:_refreshBtn];
 
+    // Test Connection button (same row as refresh)
+    NSButton* testBtn = [[NSButton alloc] initWithFrame:NSMakeRect(kRefreshBtnX + kRefreshBtnSize + 8, y, kTestBtnWidth, kControlHeight)];
+    [testBtn setTitle:@"Test Conn"];
+    [testBtn setFont:[NSFont fontWithName:@"Maple Mono" size:kBtnFontSize] ?: [NSFont systemFontOfSize:kBtnFontSize]];
+    [testBtn setTarget:self];
+    [testBtn setAction:@selector(testConnection:)];
+    testBtn.bezelStyle = NSBezelStyleRounded;
+    testBtn.identifier = @"testConnectionBtn";
+    [self addSubview:testBtn];
+
+    _statusLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(marginX, y - kControlHeight - 4, w - marginX*2, kSectionTitleHeight)];
+    _statusLabel.font = [NSFont fontWithName:@"Maple Mono" size:kLabelFontSize] ?: [NSFont systemFontOfSize:kLabelFontSize];
+    _statusLabel.textColor = [NSColor colorWithWhite:0.85 alpha:1.0];
+    _statusLabel.backgroundColor = [NSColor clearColor];
+    _statusLabel.bordered = NO; _statusLabel.editable = NO;
+    _statusLabel.identifier = @"connectionStatus";
+    [self addSubview:_statusLabel];
+
     y -= kControlGap;
 
     // Custom endpoint URL field
@@ -248,26 +266,6 @@ static constexpr float kRefreshBtnFontSize = 12.0f;
     if (prov == 2 || prov == 3) y -= kCustomSectionYDrop;
 
     y -= kPostCustomYGap;
-
-    // Test Connection + status
-    NSButton* testBtn = [[NSButton alloc] initWithFrame:NSMakeRect(marginX, y, kTestBtnWidth, kTestBtnHeight)];
-    [testBtn setTitle:@"Test Conn"];
-    [testBtn setFont:[NSFont fontWithName:@"Maple Mono" size:kBtnFontSize] ?: [NSFont systemFontOfSize:kBtnFontSize]];
-    [testBtn setTarget:self];
-    [testBtn setAction:@selector(testConnection:)];
-    testBtn.bezelStyle = NSBezelStyleRounded;
-    testBtn.identifier = @"testConnectionBtn";
-    [self addSubview:testBtn];
-
-    _statusLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(kStatusLabelX, y + kStatusLabelYOffset, w - 150, kSectionTitleHeight)];
-    _statusLabel.font = [NSFont fontWithName:@"Maple Mono" size:kLabelFontSize] ?: [NSFont systemFontOfSize:kLabelFontSize];
-    _statusLabel.textColor = [NSColor colorWithWhite:0.85 alpha:1.0];
-    _statusLabel.backgroundColor = [NSColor clearColor];
-    _statusLabel.bordered = NO; _statusLabel.editable = NO;
-    _statusLabel.identifier = @"connectionStatus";
-    [self addSubview:_statusLabel];
-
-    y -= kPostTestYGap;
     
     // --- SECTION: Personality ---
     NSTextField* section2 = [[NSTextField alloc] initWithFrame:NSMakeRect(marginX, y, kSectionTitleWidth, kSectionTitleHeight)];

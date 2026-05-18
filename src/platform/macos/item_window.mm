@@ -7,13 +7,19 @@
 #include <cstdio>
 #include <ctime>
 
-extern std::list<DroppedItem> g_droppedItems;
+
+
+// Configurable log path (or use centralized logging)
+static const char* GetItemDragLogPath() {
+    return g_config.general.itemDragLogPath.empty() ? "/tmp/cadgoose_item_drag.log" : g_config.general.itemDragLogPath.c_str();
+}
+static constexpr float kCloseButtonPadding = 4.0f;
 
 static FILE* s_debugFile = NULL;
 
 static void ItemLog(const char* fmt, ...) {
     if (!s_debugFile) {
-        s_debugFile = fopen("/tmp/cadgoose_item_drag.log", "w");
+        s_debugFile = fopen(GetItemDragLogPath(), "w");
     }
     if (!s_debugFile) return;
     time_t now = time(nullptr);
@@ -28,12 +34,34 @@ static void ItemLog(const char* fmt, ...) {
     fflush(s_debugFile);
 }
 
+static BOOL IsItemValid(DroppedItem* item) {
+    if (!item || !item->data) return NO;
+    for (auto& i : g_world.droppedItems) {
+        if (&i == item && i.data) return YES;
+    }
+    return NO;
+}
+
 // ============================================================
 // Coordinate helpers
 // ============================================================
 
 // DEVICE coords: top-left origin, Y-down (item.pos, all game logic)
 // SCREEN coords: bottom-left origin, Y-up (macOS window frame, NSEvent)
+
+
+static DevicePoint GetMouseDeviceCoords(NSEvent* event, NSWindow* window) {
+    NSPoint globalScreenPt;
+    if (event && window) {
+        globalScreenPt = [window convertPointToScreen:[event locationInWindow]];
+    } else {
+        globalScreenPt = [NSEvent mouseLocation];
+    }
+    ScreenPoint screenPt = {(float)globalScreenPt.x, (float)globalScreenPt.y};
+    NSScreen* mainScreen = [NSScreen mainScreen];
+    return CoordTransform::ScreenToDeviceMacOS(screenPt, (float)mainScreen.frame.size.height);
+}
+
 
 // Calculate the bounding box size of a rotated rectangle
 static DevicePoint RotatedBoundsSize(float width, float height, float rotation, float scale) {
@@ -76,15 +104,14 @@ static DevicePoint RotatedBoundsSize(float width, float height, float rotation, 
 - (void)mouseDown:(NSEvent *)event {
     if (!_item || !_item->data) return;
 
-    // Convert window-relative point to global screen coords
+    if (!IsItemValid(_item)) { _item = nullptr; return; }
+
     NSPoint windowPt = [event locationInWindow];
     NSPoint globalScreenPt = [self.window convertPointToScreen:windowPt];
     ScreenPoint screenPt = {(float)globalScreenPt.x, (float)globalScreenPt.y};
-
-    // Convert to DEVICE coords for game logic
     NSScreen* mainScreen = [NSScreen mainScreen];
     float screenH = (float)mainScreen.frame.size.height;
-    DevicePoint mouseDevice = CoordTransform::ScreenToDeviceMacOS(screenPt, screenH);
+    DevicePoint mouseDevice = GetMouseDeviceCoords(event, self.window);
 
     ItemLog("MOUSE_DOWN: windowPt=(%.1f,%.1f) globalScreenPt=(%.1f,%.1f) devicePt=(%.1f,%.1f) screenH=%.1f",
             windowPt.x, windowPt.y, screenPt.x, screenPt.y, mouseDevice.x, mouseDevice.y, screenH);
@@ -135,16 +162,13 @@ static DevicePoint RotatedBoundsSize(float width, float height, float rotation, 
 }
 
 - (void)mouseDragged:(NSEvent *)event {
-    if (!_isDragging || !_item) return;
+    if (!_isDragging || !_item || !_item->data) return;
 
-    // Convert window-relative point to global screen coords
-    NSPoint windowPt = [event locationInWindow];
-    NSPoint globalScreenPt = [self.window convertPointToScreen:windowPt];
+    if (!IsItemValid(_item)) { _isDragging = NO; _item = nullptr; return; }
+
+    NSPoint globalScreenPt = [self.window convertPointToScreen:[event locationInWindow]];
     ScreenPoint screenPt = {(float)globalScreenPt.x, (float)globalScreenPt.y};
-
-    NSScreen* mainScreen = [NSScreen mainScreen];
-    float screenH = (float)mainScreen.frame.size.height;
-    DevicePoint mouseDevice = CoordTransform::ScreenToDeviceMacOS(screenPt, screenH);
+    DevicePoint mouseDevice = GetMouseDeviceCoords(event, self.window);
 
     // Delta in DEVICE coords (same as screen delta since X is same and Y flip cancels in subtraction)
     float dx = mouseDevice.x - _dragStartMouseDevice.x;
@@ -158,6 +182,8 @@ static DevicePoint RotatedBoundsSize(float width, float height, float rotation, 
     _item->pos = newPos;
 
     // Update window frame — same calculation as updatePosition
+    NSScreen* mainScreen = [NSScreen mainScreen];
+    float screenH = (float)mainScreen.frame.size.height;
     float scale = g_config.general.globalScale;
     DevicePoint winSize = RotatedBoundsSize(_item->data->w, _item->data->h, _item->rotation, scale);
     DevicePoint itemCenter = ItemCoords::Center({_item->pos.x, _item->pos.y},
@@ -171,11 +197,15 @@ static DevicePoint RotatedBoundsSize(float width, float height, float rotation, 
 - (void)mouseUp:(NSEvent *)event {
     ItemLog("MOUSE_UP: isDragging=%d", _isDragging);
     _isDragging = NO;
-    ((ItemWindow*)self.parentWindow).isBeingDragged = NO;
+    if (self.parentWindow) {
+        ((ItemWindow*)self.parentWindow).isBeingDragged = NO;
+    }
 }
 
 - (void)drawRect:(NSRect)dirtyRect {
     if (!_item || !_item->data) return;
+
+    if (!IsItemValid(_item)) { _item = nullptr; return; }
 
     CGContextRef ctx = (CGContextRef)[[NSGraphicsContext currentContext] CGContext];
     if (!ctx) return;
@@ -205,10 +235,10 @@ static DevicePoint RotatedBoundsSize(float width, float height, float rotation, 
                                    g_config.render.closeButtonStroke.g,
                                    g_config.render.closeButtonStroke.b, 1.0);
         CGContextSetLineWidth(ctx, 2.0);
-        CGContextMoveToPoint(ctx, closeX + 4, closeY + 4);
-        CGContextAddLineToPoint(ctx, closeX + g_config.render.closeButtonSize - 4, closeY + g_config.render.closeButtonSize - 4);
-        CGContextMoveToPoint(ctx, closeX + g_config.render.closeButtonSize - 4, closeY + 4);
-        CGContextAddLineToPoint(ctx, closeX + 4, closeY + g_config.render.closeButtonSize - 4);
+        CGContextMoveToPoint(ctx, closeX + kCloseButtonPadding, closeY + kCloseButtonPadding);
+        CGContextAddLineToPoint(ctx, closeX + g_config.render.closeButtonSize - kCloseButtonPadding, closeY + g_config.render.closeButtonSize - kCloseButtonPadding);
+        CGContextMoveToPoint(ctx, closeX + g_config.render.closeButtonSize - kCloseButtonPadding, closeY + kCloseButtonPadding);
+        CGContextAddLineToPoint(ctx, closeX + kCloseButtonPadding, closeY + g_config.render.closeButtonSize - kCloseButtonPadding);
         CGContextStrokePath(ctx);
     }
 
@@ -277,6 +307,7 @@ static DevicePoint RotatedBoundsSize(float width, float height, float rotation, 
         self.acceptsMouseMovedEvents = YES;
         self.level = NSStatusWindowLevel;
         self.hasShadow = NO;
+        self.releasedWhenClosed = NO; // Lifetime managed by ItemWindowManager dictionary
         self.collectionBehavior = NSWindowCollectionBehaviorCanJoinAllSpaces |
                                   NSWindowCollectionBehaviorIgnoresCycle;
 
@@ -291,6 +322,8 @@ static DevicePoint RotatedBoundsSize(float width, float height, float rotation, 
 
 - (BOOL)isPointInsideItem:(NSPoint)pt {
     if (!_item || !_item->data) return NO;
+
+    if (!IsItemValid(_item)) { _item = nullptr; return NO; }
 
     // pt is in local view coordinates (top-left origin, Y-down, isFlipped=YES)
     // Convert to DEVICE coords relative to item center
@@ -316,6 +349,8 @@ static DevicePoint RotatedBoundsSize(float width, float height, float rotation, 
 
 - (void)updatePosition {
     if (!_item || !_item->data) return;
+
+    if (!IsItemValid(_item)) { _item = nullptr; return; }
 
     float scale = g_config.general.globalScale;
     DevicePoint winSize = RotatedBoundsSize(_item->data->w, _item->data->h, _item->rotation, scale);
@@ -388,16 +423,13 @@ static DevicePoint RotatedBoundsSize(float width, float height, float rotation, 
     NSMutableArray* toRemove = [NSMutableArray array];
     for (NSNumber* key in _windows) {
         ItemWindow* win = _windows[key];
-        BOOL itemStillValid = NO;
-        for (auto& item : g_droppedItems) {
-            if (win.item == &item && item.data) {
-                itemStillValid = YES;
-                break;
-            }
-        }
-        if (!itemStillValid) {
+        if (!win) continue;
+
+        BOOL itemValid = IsItemValid(win.item);
+        if (!itemValid) {
             [win close];
             [toRemove addObject:key];
+            continue;
         }
     }
     for (NSNumber* key in toRemove) {
@@ -405,7 +437,7 @@ static DevicePoint RotatedBoundsSize(float width, float height, float rotation, 
     }
 
     // Create windows for new items
-    for (auto& item : g_droppedItems) {
+    for (auto& item : g_world.droppedItems) {
         BOOL exists = NO;
         for (NSNumber* key in _windows) {
             ItemWindow* win = _windows[key];
@@ -424,24 +456,13 @@ static DevicePoint RotatedBoundsSize(float width, float height, float rotation, 
     // Update positions and hit states for existing items
     if (_windows.count == 0) return;
 
-    NSPoint rawMouseLoc = [NSEvent mouseLocation];
-    ScreenPoint mouseScreen = {(float)rawMouseLoc.x, (float)rawMouseLoc.y};
-    NSScreen* mainScreen = [NSScreen mainScreen];
-    float screenH = (float)mainScreen.frame.size.height;
-    DevicePoint mouseDevice = CoordTransform::ScreenToDeviceMacOS(mouseScreen, screenH);
+    DevicePoint mouseDevice = GetMouseDeviceCoords(nil, nil);
 
     for (NSNumber* key in _windows) {
         ItemWindow* win = _windows[key];
-        if (!win || !win.item || !win.item->data) continue;
+        if (!win || !win.item) continue;
 
-        // Validate item is still in global list
-        BOOL itemValid = NO;
-        for (auto& item : g_droppedItems) {
-            if (win.item == &item && item.data) {
-                itemValid = YES;
-                break;
-            }
-        }
+        BOOL itemValid = IsItemValid(win.item);
         if (!itemValid) continue;
 
         // Skip position update during drag (window moves via mouseDragged)
@@ -474,117 +495,3 @@ static DevicePoint RotatedBoundsSize(float width, float height, float rotation, 
 
 @end
 
-// ============================================================
-// Drag Test — Programmatic drag synthesis for testing
-// ============================================================
-
-#import <ApplicationServices/ApplicationServices.h>
-
-void ItemWindow_DragTest(float targetX, float targetY) {
-    if (g_droppedItems.empty() || !g_droppedItems.front().data) {
-        ItemLog("DRAG_TEST: no items to drag");
-        return;
-    }
-
-    // Must run on main thread for AppKit calls
-    if (![NSThread isMainThread]) {
-        dispatch_async(dispatch_get_main_queue(), ^{
-            ItemWindow_DragTest(targetX, targetY);
-        });
-        return;
-    }
-
-    DroppedItem& item = g_droppedItems.front();
-    float scale = g_config.general.globalScale;
-    DevicePoint itemCenter = ItemCoords::Center({item.pos.x, item.pos.y},
-                                                 item.data->w, item.data->h, scale);
-
-    ItemLog("DRAG_TEST: itemCenter=(%.1f,%.1f) target=(%.1f,%.1f)",
-            itemCenter.x, itemCenter.y, targetX, targetY);
-
-    // Find the item window
-    ItemWindowManager* manager = [ItemWindowManager shared];
-    ItemWindow* targetWin = nil;
-    ItemContentView* contentView = nil;
-    for (NSNumber* key in manager.windows) {
-        ItemWindow* win = manager.windows[key];
-        if (win && win.item == &item) {
-            targetWin = win;
-            contentView = (ItemContentView*)win.contentView;
-            break;
-        }
-    }
-
-    if (!targetWin || !contentView) {
-        ItemLog("DRAG_TEST: item window not found");
-        return;
-    }
-
-    // Window is sized to rotated bounding box, centered on item center
-    DevicePoint winSize = RotatedBoundsSize(item.data->w, item.data->h, item.rotation, scale);
-
-    // View coords (isFlipped=YES): top-left origin, Y-down
-    // Window coords: bottom-left origin, Y-up
-    // Conversion: windowY = viewHeight - viewY
-    NSPoint viewCenter = NSMakePoint(winSize.x * 0.5f, winSize.y * 0.5f);
-    NSPoint windowCenter = NSMakePoint(viewCenter.x, winSize.y - viewCenter.y);
-
-    // Calculate target view coords
-    NSScreen* mainScreen = [NSScreen mainScreen];
-    float screenH = (float)mainScreen.frame.size.height;
-    ScreenPoint targetScreen = CoordTransform::DeviceToScreenMacOS({targetX, targetY}, screenH);
-    DevicePoint targetDevice = CoordTransform::ScreenToDeviceMacOS(targetScreen, screenH);
-    float dx = targetDevice.x - item.pos.x;
-    float dy = targetDevice.y - item.pos.y;
-    NSPoint viewTarget = NSMakePoint(viewCenter.x + dx, viewCenter.y + dy);
-    NSPoint windowTarget = NSMakePoint(viewTarget.x, winSize.y - viewTarget.y);
-
-    ItemLog("DRAG_TEST: viewCenter=(%.1f,%.1f) windowCenter=(%.1f,%.1f)",
-            viewCenter.x, viewCenter.y, windowCenter.x, windowCenter.y);
-    ItemLog("DRAG_TEST: viewTarget=(%.1f,%.1f) windowTarget=(%.1f,%.1f)",
-            viewTarget.x, viewTarget.y, windowTarget.x, windowTarget.y);
-
-    // Synthesize mouse events with window-local coordinates
-    NSEvent* downEvent = [NSEvent mouseEventWithType:NSEventTypeLeftMouseDown
-                                            location:windowCenter
-                                       modifierFlags:0
-                                           timestamp:NSProcessInfo.processInfo.systemUptime
-                                        windowNumber:targetWin.windowNumber
-                                             context:nil
-                                         eventNumber:0
-                                          clickCount:1
-                                            pressure:1.0];
-
-    NSEvent* dragEvent = [NSEvent mouseEventWithType:NSEventTypeLeftMouseDragged
-                                            location:windowTarget
-                                       modifierFlags:0
-                                           timestamp:NSProcessInfo.processInfo.systemUptime
-                                        windowNumber:targetWin.windowNumber
-                                             context:nil
-                                         eventNumber:1
-                                          clickCount:1
-                                            pressure:1.0];
-
-    NSEvent* upEvent = [NSEvent mouseEventWithType:NSEventTypeLeftMouseUp
-                                          location:windowTarget
-                                     modifierFlags:0
-                                         timestamp:NSProcessInfo.processInfo.systemUptime
-                                      windowNumber:targetWin.windowNumber
-                                           context:nil
-                                       eventNumber:2
-                                        clickCount:1
-                                          pressure:0.0];
-
-    ItemLog("DRAG_TEST: sending mouseDown");
-    [contentView mouseDown:downEvent];
-    usleep(100000);
-
-    ItemLog("DRAG_TEST: sending mouseDragged");
-    [contentView mouseDragged:dragEvent];
-    usleep(100000);
-
-    ItemLog("DRAG_TEST: sending mouseUp");
-    [contentView mouseUp:upEvent];
-
-    ItemLog("DRAG_TEST: done. item.pos now=(%.1f,%.1f)", item.pos.x, item.pos.y);
-}

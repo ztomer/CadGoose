@@ -2,9 +2,6 @@
 // behavior_portal.cpp
 // Portal Behavior - User-controlled portal placement
 // Based on PortalGoos by Moonaliss1
-// Reference: 1 places portal 1, 2 places portal 2, 0 toggles portals on/off
-// Note: No P modifier — just press 1/2/0 directly
-// Uses p1.png and p2.png images
 // ===========================
 #include "behavior.h"
 #include "goose.h"
@@ -12,6 +9,10 @@
 #include "world.h"
 #include "assets.h"
 #include "hotkey.h"
+#include "actor.h"
+#include "actor_portal.h"
+
+#ifdef __APPLE__
 #include "renderer_interface.h"
 #include "cg_renderer.h"
 #include <CoreGraphics/CoreGraphics.h>
@@ -21,25 +22,19 @@ static bool s_portalsOn = true;
 static bool s_p0Pressed = false;
 static bool s_p1Pressed = false;
 static bool s_p2Pressed = false;
-static CGImageRef s_portalImages[2] = {nullptr, nullptr};
 
 static bool IsKeyHeld(int keyCode) {
     return CGEventSourceKeyState(kCGEventSourceStateHIDSystemState, (CGKeyCode)keyCode);
 }
 
 static void init(BehaviorContext& ctx) {
-    if (!s_portalImages[0]) {
-        s_portalImages[0] = g_assets.GetBehaviorImage("Assets/Images/OtherGfx/p1.png");
-        s_portalImages[1] = g_assets.GetBehaviorImage("Assets/Images/OtherGfx/p2.png");
-    }
-    // Don't reset portal state on init - portals should persist across goose spawns
-    // Only create state if it doesn't exist, preserving any previously placed portals
     auto* state = BehaviorStateManager::Instance().GetOrCreate<PortalState>(ctx.goose->id, "portal");
     s_portalsOn = true;
 }
 
 static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
     auto* state = BehaviorStateManager::Instance().GetOrCreate<PortalState>(goose->id, "portal");
+    auto& mgr = ActorManager::Instance();
 
     float p1w = g_config.portal.p1Width;
     float p1h = g_config.portal.p1Height;
@@ -78,7 +73,6 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
         }
     }
 
-    // Get cursor position once
     CGEventSourceRef source = CGEventSourceCreate(kCGEventSourceStateCombinedSessionState);
     CGPoint mousePos = {0, 0};
     bool haveMouse = false;
@@ -103,6 +97,23 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
         state->portalA.active = true;
         state->portalA.portalId = 1;
         fprintf(stderr, "[Portal] Portal 1 placed at (%.0f, %.0f)\n", state->portalA.x, state->portalA.y);
+
+        // Update or create PortalActor A
+        PortalActor* portalA = nullptr;
+        for (int i = 0; i < mgr.totalCount(); i++) {
+            Actor* a = mgr.getByIndex(i);
+            if (a && strcmp(a->type(), "portal") == 0 && a->id() == 1) {
+                portalA = static_cast<PortalActor*>(a);
+                break;
+            }
+        }
+        if (portalA) {
+            portalA->position = {state->portalA.x, state->portalA.y};
+            portalA->active = true;
+        } else {
+            portalA = new PortalActor(PortalActor::PortalA, {state->portalA.x, state->portalA.y});
+            mgr.add(portalA);
+        }
     } else if (!d1Pressed) {
         s_p1Pressed = false;
     }
@@ -113,6 +124,23 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
         state->portalB.active = true;
         state->portalB.portalId = 2;
         fprintf(stderr, "[Portal] Portal 2 placed at (%.0f, %.0f)\n", state->portalB.x, state->portalB.y);
+
+        // Update or create PortalActor B
+        PortalActor* portalB = nullptr;
+        for (int i = 0; i < mgr.totalCount(); i++) {
+            Actor* a = mgr.getByIndex(i);
+            if (a && strcmp(a->type(), "portal") == 0 && a->id() == 2) {
+                portalB = static_cast<PortalActor*>(a);
+                break;
+            }
+        }
+        if (portalB) {
+            portalB->position = {state->portalB.x, state->portalB.y};
+            portalB->active = true;
+        } else {
+            portalB = new PortalActor(PortalActor::PortalB, {state->portalB.x, state->portalB.y});
+            mgr.add(portalB);
+        }
     } else if (!d2Pressed) {
         s_p2Pressed = false;
     }
@@ -126,35 +154,7 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
 }
 
 static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
-    auto* state = BehaviorStateManager::Instance().GetOrCreate<PortalState>(goose->id, "portal");
-
-#ifdef __APPLE__
-    CGContextRef cg = (CGContextRef)renderCtx;
-    if (!cg) return;
-
-    CGRenderer renderer(cg);
-    float scale = ctx.globalScale;
-
-    if (state->portalA.active && s_portalImages[0]) {
-        float w = (float)CGImageGetWidth(s_portalImages[0]);
-        float h = (float)CGImageGetHeight(s_portalImages[0]);
-        Vector2 drawPos{goose->pos.x + (state->portalA.x - goose->pos.x) / scale,
-                        goose->pos.y + (state->portalA.y - goose->pos.y) / scale};
-        renderer.DrawImage(s_portalImages[0], RenderRect{drawPos.x - w/2, drawPos.y - h/2, w, h});
-    } else if (state->portalA.active && !s_portalImages[0]) {
-        fprintf(stderr, "[Portal] g%d: portalA active but image[0] not loaded\n", goose->id);
-    }
-
-    if (state->portalB.active && s_portalImages[1]) {
-        float w = (float)CGImageGetWidth(s_portalImages[1]);
-        float h = (float)CGImageGetHeight(s_portalImages[1]);
-        Vector2 drawPos{goose->pos.x + (state->portalB.x - goose->pos.x) / scale,
-                        goose->pos.y + (state->portalB.y - goose->pos.y) / scale};
-        renderer.DrawImage(s_portalImages[1], RenderRect{drawPos.x - w/2, drawPos.y - h/2, w, h});
-    } else if (state->portalB.active && !s_portalImages[1]) {
-        fprintf(stderr, "[Portal] g%d: portalB active but image[1] not loaded\n", goose->id);
-    }
-#endif
+    (void)goose; (void)ctx; (void)renderCtx;
 }
 
 static Behavior g_portalBehavior = BEHAVIOR_DEF_STARTER(
@@ -163,3 +163,6 @@ static Behavior g_portalBehavior = BEHAVIOR_DEF_STARTER(
 );
 
 REGISTER_BEHAVIOR(g_portalBehavior);
+#else
+// Linux stub
+#endif

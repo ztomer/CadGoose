@@ -7,7 +7,7 @@ namespace fs = std::filesystem;
 
 void Config_SaveGooseNames() {
     g_config.gooseNames.clear();
-    for (const auto& g : g_geese) {
+    for (const auto& g : g_world.geese) {
         g_config.gooseNames.push(g.name);
     }
     Config_SaveAll();

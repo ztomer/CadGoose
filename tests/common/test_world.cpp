@@ -3,10 +3,10 @@
 
 TEST(World_GlobalState) {
     // Verify global state exists and is initially empty
-    ASSERT_EQ(g_geese.size(), 0u);
-    ASSERT_EQ(g_droppedItems.size(), 0u);
-    ASSERT_EQ(g_footprints.size(), 0u);
-    ASSERT_EQ(g_nextId, 0);
+    ASSERT_EQ(g_world.geese.size(), 0u);
+    ASSERT_EQ(g_world.droppedItems.size(), 0u);
+    ASSERT_EQ(g_world.footprints.size(), 0u);
+    ASSERT_EQ(g_world.nextId, 0);
 }
 
 TEST(World_GetGooseById_NotFound) {
@@ -16,11 +16,11 @@ TEST(World_GetGooseById_NotFound) {
 
 TEST(World_UiLog) {
     UiLogPush("Test message");
-    ASSERT_EQ(g_uiLog.size(), 1u);
-    ASSERT_EQ(g_uiLog.front(), "Test message");
+    ASSERT_EQ(g_world.uiLog.size(), 1u);
+    ASSERT_EQ(g_world.uiLog.front(), "Test message");
     
     UiLogPush("Message 2");
-    ASSERT_EQ(g_uiLog.size(), 2u);
+    ASSERT_EQ(g_world.uiLog.size(), 2u);
 }
 
 TEST(World_UiLog_MaxSize) {
@@ -28,10 +28,10 @@ TEST(World_UiLog_MaxSize) {
         UiLogPush("Message " + std::to_string(i));
     }
     // Should not exceed UI_LOG_MAX (12)
-    ASSERT_TRUE(g_uiLog.size() <= 12);
+    ASSERT_TRUE(g_world.uiLog.size() <= 12);
 }
 
 TEST(World_ScreenDimensions) {
-    ASSERT_EQ(g_screenWidth, 1920);
-    ASSERT_EQ(g_screenHeight, 1080);
+    ASSERT_EQ(g_world.screenWidth, 1920);
+    ASSERT_EQ(g_world.screenHeight, 1080);
 }

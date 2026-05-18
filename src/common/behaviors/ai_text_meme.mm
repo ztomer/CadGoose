@@ -3,6 +3,14 @@
 #include "world.h"
 #include "local_llm.h"
 
+static constexpr int kAITextMaxChars = 120;
+static constexpr float kAITextInitialCooldown = 2.0f;
+static constexpr float kAITextErrorCooldown = 5.0f;
+static constexpr float kAITextMinCooldown = 2.0f;
+static constexpr int kAITextHttpTimeout = 600;
+static constexpr int kAITextMaxTokens = 150;
+static constexpr int kAITextFilenameBufSize = 128;
+
 #ifdef __APPLE__
 #import <Cocoa/Cocoa.h>
 #import <CoreGraphics/CoreGraphics.h>
@@ -100,7 +108,7 @@ static std::string BuildPrompt() {
            << " Current active behaviors: " << behaviors
            << ". Color theme: " << colorMode
            << ". Random seed: " << seed
-           << ". Be creative and absurd. Output ONLY the message text, nothing else. No quotes. Max 120 characters.";
+            << ". Be creative and absurd. Output ONLY the message text, nothing else. No quotes. Max " << kAITextMaxChars << " characters.";
     return prompt.str();
 }
 
@@ -110,7 +118,7 @@ static std::string BuildPrompt() {
 static void TryLocalGeneration(const std::string& prompt, float temperature);
 
 static void SendGenerateRequest(const std::string& prompt, float temperature) {
-    s_nextGenTime = [[NSDate date] timeIntervalSince1970] + 2.0;
+    s_nextGenTime = [[NSDate date] timeIntervalSince1970] + kAITextInitialCooldown;
     NSString* nsPrompt = [NSString stringWithUTF8String:prompt.c_str()];
 
     NSString* endpoint = @"";
@@ -126,7 +134,7 @@ static void SendGenerateRequest(const std::string& prompt, float temperature) {
                 fprintf(stderr, "[AITEXT] Foundation provider: no local model available, using file texts\n");
                 // Don't set s_nextGenTime here - let file queue handle it
                 // File texts are always available via Dequeue fallback
-                s_nextGenTime = [[NSDate date] timeIntervalSince1970] + 5.0; // Gentle cooldown
+                s_nextGenTime = [[NSDate date] timeIntervalSince1970] + kAITextErrorCooldown; // Gentle cooldown
             }
             return;
         case 1:
@@ -142,7 +150,7 @@ static void SendGenerateRequest(const std::string& prompt, float temperature) {
             model = [NSString stringWithUTF8String:g_config.ai.customModel.c_str()];
             break;
         default:
-            endpoint = @"http://localhost:1337/v1/chat/completions";
+            endpoint = [NSString stringWithUTF8String:Config::kDefaultChatEndpoint];
             model = @"foundation";
             break;
     }
@@ -156,15 +164,15 @@ static void SendGenerateRequest(const std::string& prompt, float temperature) {
     NSMutableURLRequest* request = [NSMutableURLRequest requestWithURL:url];
     [request setHTTPMethod:@"POST"];
     [request setValue:@"application/json" forHTTPHeaderField:@"Content-Type"];
-    request.timeoutInterval = 600;
+    request.timeoutInterval = kAITextHttpTimeout;
 
     NSDictionary* body = @{
         @"model": model,
         @"messages": @[
-            @{@"role": @"system", @"content": @"You generate short, funny text messages that a goose would leave behind. Output ONLY the message text, no quotes, no explanations. Max 120 characters."},
+            @{@"role": @"system", @"content": [NSString stringWithFormat:@"You generate short, funny text messages that a goose would leave behind. Output ONLY the message text, no quotes, no explanations. Max %d characters.", kAITextMaxChars]},
             @{@"role": @"user", @"content": nsPrompt}
         ],
-        @"max_tokens": @(150),
+        @"max_tokens": @(kAITextMaxTokens),
         @"temperature": @(temperature)
     };
 
@@ -183,7 +191,7 @@ static void SendGenerateRequest(const std::string& prompt, float temperature) {
         double elapsed = [[NSDate date] timeIntervalSinceDate:startTime];
         fprintf(stderr, "[AITEXT] Response in %.1fs\n", elapsed);
         double cooldown = elapsed * 1.5;
-        if (cooldown < 2.0) cooldown = 2.0;
+        if (cooldown < kAITextMinCooldown) cooldown = kAITextMinCooldown;
 
         dispatch_async(dispatch_get_main_queue(), ^{
             s_responseTime = elapsed;
@@ -252,7 +260,7 @@ static void SendGenerateRequest(const std::string& prompt, float temperature) {
                     int seed = (rand() << 16) ^ rand();
                     char hashStr[9];
                     snprintf(hashStr, sizeof(hashStr), "%08zx", hash);
-                    char filename[128];
+                    char filename[kAITextFilenameBufSize];
                     snprintf(filename, sizeof(filename), "%lld_%d_%s.txt", (long long)now, seed, hashStr);
 
                     std::string fullPath = (saveDir / filename).string();
@@ -272,14 +280,14 @@ static void SendGenerateRequest(const std::string& prompt, float temperature) {
 #pragma mark - Local LLM Fallback
 
 static void TryLocalGeneration(const std::string& prompt, float temperature) {
-    s_nextGenTime = [[NSDate date] timeIntervalSince1970] + 2.0;
+    s_nextGenTime = [[NSDate date] timeIntervalSince1970] + kAITextInitialCooldown;
 
     LocalLLM_Generate(prompt, temperature, ^(const std::string& result) {
         dispatch_async(dispatch_get_main_queue(), ^{
             if (result.empty()) {
                 fprintf(stderr, "[AITEXT] Local LLM returned empty, falling back to file texts\n");
                 // Fall back to file texts - they're always available via Dequeue
-                s_nextGenTime = [[NSDate date] timeIntervalSince1970] + 5.0;
+                s_nextGenTime = [[NSDate date] timeIntervalSince1970] + kAITextErrorCooldown;
                 return;
             }
 
@@ -287,7 +295,7 @@ static void TryLocalGeneration(const std::string& prompt, float temperature) {
             std::lock_guard<std::mutex> lock(s_mutex);
             if (SeenHash(hash)) {
                 fprintf(stderr, "[AITEXT] Duplicate local text, skipping\n");
-                s_nextGenTime = [[NSDate date] timeIntervalSince1970] + 5.0;
+                s_nextGenTime = [[NSDate date] timeIntervalSince1970] + kAITextErrorCooldown;
                 return;
             }
 

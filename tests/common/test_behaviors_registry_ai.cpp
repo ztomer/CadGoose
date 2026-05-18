@@ -24,14 +24,14 @@ static void ResetBehaviorState() {
 TEST(BehaviorRegistry, ComprehensiveCount) {
     auto& registry = BehaviorRegistry::Instance();
     size_t count = registry.GetBehaviorCount();
-    EXPECT_GE(count, 20);
+    EXPECT_GE(count, 19);
 }
 
 TEST(BehaviorRegistry, BehaviorIds) {
     auto& registry = BehaviorRegistry::Instance();
 
     const char* expectedIds[] = {
-        "toys", "boredom", "peeking", "affirmations",
+        "toys", "boredom", "peeking",
         "interactive_drops", "pomodoro", "portal", "rainbow", "acid",
         "anger", "health", "honcker", "jail", "nametag",
         "presence", "drag"
@@ -103,10 +103,6 @@ TEST(BehaviorRegistry, ConfigPointers) {
     ASSERT_NE(peeking, nullptr);
     EXPECT_EQ(peeking->configPtr, &g_config.behaviors.fun.peeking);
 
-    Behavior* affirmations = registry.Get("affirmations");
-    ASSERT_NE(affirmations, nullptr);
-    EXPECT_EQ(affirmations->configPtr, &g_config.behaviors.fun.affirmations);
-
     Behavior* interactiveDrops = registry.Get("interactive_drops");
     ASSERT_NE(interactiveDrops, nullptr);
     EXPECT_EQ(interactiveDrops->configPtr, &g_config.behaviors.fun.interactiveDrops);
@@ -115,7 +111,7 @@ TEST(BehaviorRegistry, ConfigPointers) {
 TEST(BehaviorRegistry, EnabledPtrNotNull) {
     auto& registry = BehaviorRegistry::Instance();
     const char* ids[] = {
-        "toys", "boredom", "peeking", "affirmations",
+        "toys", "boredom", "peeking",
         "interactive_drops", "pomodoro", "portal", "rainbow", "acid",
         "anger", "health", "honcker", "jail", "nametag",
         "presence", "drag"

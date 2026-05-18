@@ -8,14 +8,14 @@
 
 #ifdef __linux__
 #include <gtk/gtk.h>
-struct cairo_t;
-typedef struct cairo_t cairo_t;
+// cairo_t is already typedef'd by cairo.h (included via gtk/gtk.h)
 #endif
 
 #include "goose_math.h"
 #include "assets.h"
 #include "cursor_io.h"
 #include "coordinate_system.h"
+#include "actor.h"
 
 enum class GooseState { WANDER, FETCHING, RETURNING, CHASE_CURSOR, SNATCH_CURSOR };
 
@@ -33,7 +33,7 @@ struct Rig {
     FootState lFoot, rFoot;
 };
 
-class Goose {
+class Goose : public Actor {
 public:
     void PickNewTarget(int w, int h);
     
@@ -139,10 +139,15 @@ public:
     static constexpr int SHUDDER_DIR_THRESHOLD = 5; // direction flips per window
     static constexpr float SHUDDER_MOVE_THRESHOLD = 10.0f; // minimum px movement to not count as shudder
 
-    // Behavior system enabled flag
+    // Behavior system enable flag
     bool behaviorsEnabled = true;
     bool isResting = false;
 
+    // Actor interface
+    const char* type() const override { return "goose"; }
+    void tick(double dt, double time) override;
+    void render(IRenderer* renderer) override;
+    bool isAlive() const override { return true; }
 
     Goose(int _id, const std::string& _name, int screenW, int screenH);
 
@@ -171,6 +176,11 @@ private:
     void StartFetch(int w, int h, double time = -1.0);
     CursorAction UpdateBehaviors(double dt, double time, int w, int h, const CursorState& cursor);
     void UpdateChaseCursor(double time, const Vector2& cursorPos);
+    void UpdatePhysics(double dt, int w, int h);
+    void UpdateDetection(double time, int w, int h);
+    void UpdateAnimation(double dt, double time);
+    void UpdateDebug(double time, const CursorState& cursor);
+
 
 #ifdef __linux__
     void DrawHeldItem(cairo_t* cr);

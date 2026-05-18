@@ -168,6 +168,21 @@ ItemData* AssetManager::CreateToyItem(bool isStick) {
 void AssetManager::Honk() { if(g_config.audioEnabled && !honks.empty()) Mix_PlayChannel(-1, honks[rand()%honks.size()], 0); }
 void AssetManager::Pat()  { if(g_config.audioEnabled && !pats.empty())  Mix_PlayChannel(-1, pats[rand()%pats.size()], 0); }
 
+void* AssetManager::GetBehaviorImage(const std::string& name) {
+    fs::path path = ASSET_ROOT / name;
+    if (!fs::exists(path)) return nullptr;
+    GError* err = nullptr;
+    GdkPixbuf* pb = gdk_pixbuf_new_from_file(path.string().c_str(), &err);
+    if (!pb) {
+        if (err) g_error_free(err);
+        return nullptr;
+    }
+    return pb;
+}
+
+void AssetManager::PreloadBehaviorAssets() {
+}
+
 void AssetManager::LoadAudio(std::vector<Mix_Chunk*>& v, std::string p) {
     fs::path path = ASSET_ROOT / p;
     if(fs::exists(path)) v.push_back(Mix_LoadWAV(path.string().c_str()));

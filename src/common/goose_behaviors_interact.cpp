@@ -10,6 +10,13 @@
 #include <cstdio>
 #include <algorithm>
 
+static constexpr float kMinDt = 0.016f;
+static constexpr float kAvoidanceCursorSpeedThreshold = 2500.0f;
+static constexpr float kAvoidanceHeadDistance = 200.0f;
+static constexpr float kAvoidanceFleeDistance = 400.0f;
+static constexpr float kAvoidanceDotProductThreshold = 0.8f;
+static constexpr float kSurprisedTimeout = 1.5f;
+
 static FILE* GetDebugLog() {
     static FILE* f = nullptr;
     if (!f) {
@@ -39,16 +46,16 @@ CursorAction Goose::UpdateBehaviors(double dt, double time, int w, int h, const 
     if (cursor.hasPos() && state != GooseState::SNATCH_CURSOR) {
         Vector2 headPos = GetBeakTipDevice();
         float distToHead = Vector2::Distance(cursor.position, headPos);
-        float cursorSpeed = Vector2::Distance(cursor.position, lastCursorPos) / (dt > 0.001 ? dt : 0.016);
+        float cursorSpeed = Vector2::Distance(cursor.position, lastCursorPos) / (dt > 0.001 ? dt : kMinDt);
         
-        if (g_config.behaviors.fun.avoidance && cursorSpeed > 2500.0f && distToHead < 200.0f && !isSurprised) {
+        if (g_config.behaviors.fun.avoidance && cursorSpeed > kAvoidanceCursorSpeedThreshold && distToHead < kAvoidanceHeadDistance && !isSurprised) {
             Vector2 cursorVel = cursor.position - lastCursorPos;
             Vector2 toGoose = headPos - cursor.position;
             if (Vector2::Length(cursorVel) > 0 && Vector2::Length(toGoose) > 0) {
-                if (Dot(Vector2::Normalize(cursorVel), Vector2::Normalize(toGoose)) > 0.8f) {
+                if (Dot(Vector2::Normalize(cursorVel), Vector2::Normalize(toGoose)) > kAvoidanceDotProductThreshold) {
                     isSurprised = true;
                     surprisedTime = time;
-                    target = pos + Vector2::Normalize(pos - cursor.position) * WorldCoord::Scale(400.0f);
+                    target = pos + Vector2::Normalize(pos - cursor.position) * WorldCoord::Scale(kAvoidanceFleeDistance);
                     state = GooseState::WANDER;
                 }
             }
@@ -57,7 +64,7 @@ CursorAction Goose::UpdateBehaviors(double dt, double time, int w, int h, const 
         lastCursorPos = cursor.position;
     }
     
-    if (isSurprised && time - surprisedTime > 1.5) {
+    if (isSurprised && time - surprisedTime > kSurprisedTimeout) {
         isSurprised = false;
     }
 

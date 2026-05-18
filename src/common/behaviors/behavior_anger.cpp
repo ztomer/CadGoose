@@ -8,6 +8,21 @@
 #include "event_bus.h"
 #include <cmath>
 
+static constexpr float kAngerMaxLevel = 100.0f;
+static constexpr float kAngerHonkIncrease = 15.0f;
+static constexpr float kAngerDefaultDistToCursor = 1000.0f;
+static constexpr float kAngerFlashBaseAlpha = 0.4f;
+static constexpr float kAngerFlashAlphaAmp = 0.3f;
+static constexpr float kAngerFlashFreq = 60.0f;
+static constexpr float kAngerFlashBaseRadius = 40.0f;
+static constexpr float kAngerFlashRadiusAmp = 20.0f;
+static constexpr float kAngerFlashR = 1.0f;
+static constexpr float kAngerFlashG = 0.3f;
+static constexpr float kAngerFlashB = 0.0f;
+static constexpr float kAngerAuraAlphaScale = 0.3f;
+static constexpr float kAngerAuraBaseRadius = 15.0f;
+static constexpr float kAngerAuraRadiusAmp = 20.0f;
+
 
 static void init(BehaviorContext& ctx) {
     auto* state = BehaviorStateManager::Instance().GetOrCreate<AngerState>(ctx.goose->id, "anger");
@@ -20,7 +35,7 @@ static void ensureSubscriptions(Goose* goose, AngerState* state) {
             if (e.gooseId == goose->id) {
                 auto* s = BehaviorStateManager::Instance().Get<AngerState>(goose->id, "anger");
                 if (s) {
-                    s->angerLevel = std::min(100.0f, s->angerLevel + 15.0f);
+                    s->angerLevel = std::min(kAngerMaxLevel, s->angerLevel + kAngerHonkIncrease);
                     s->lastAngerIncrease = e.time;
                 }
             }
@@ -49,7 +64,7 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
     auto* state = BehaviorStateManager::Instance().GetOrCreate<AngerState>(goose->id, "anger");
     ensureSubscriptions(goose, state);
 
-    float distToCursor = 1000.0f;
+    float distToCursor = kAngerDefaultDistToCursor;
     if (g_cursorProvider) {
         CursorState curState = g_cursorProvider->Read();
         if (curState.hasPos()) {
@@ -94,14 +109,14 @@ static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
     bool punching = state->isPunching;
 
     if (punching) {
-        float flashAlpha = 0.4f + 0.3f * sin(ctx.time * 60.0f);
-        float flashRadius = 40.0f + 20.0f * intensity;
+        float flashAlpha = kAngerFlashBaseAlpha + kAngerFlashAlphaAmp * sin(ctx.time * kAngerFlashFreq);
+        float flashRadius = kAngerFlashBaseRadius + kAngerFlashRadiusAmp * intensity;
         renderer.DrawEllipse({goose->pos.x, goose->pos.y}, flashRadius, flashRadius,
-                            RenderColor{1.0f, 0.3f, 0.0f, flashAlpha});
+                            RenderColor{kAngerFlashR, kAngerFlashG, kAngerFlashB, flashAlpha});
     }
 
-    float auraAlpha = intensity * 0.3f;
-    float auraRadius = 15.0f + intensity * 20.0f;
+    float auraAlpha = intensity * kAngerAuraAlphaScale;
+    float auraRadius = kAngerAuraBaseRadius + intensity * kAngerAuraRadiusAmp;
     renderer.DrawEllipse({goose->pos.x, goose->pos.y}, auraRadius, auraRadius,
                         RenderColor{1.0f, 0.1f, 0.0f, auraAlpha});
 #endif

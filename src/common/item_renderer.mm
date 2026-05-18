@@ -1,5 +1,6 @@
 #include "item_renderer.h"
 #include "config.h"
+#include "render_colors.h"
 
 #ifdef __APPLE__
 #import <Foundation/Foundation.h>
@@ -104,7 +105,7 @@ bool TextItemRenderer::DrawDropped(CGContextRef ctx, const DroppedItem& item, fl
     float y = -itemH / 2.0f;
 
     if (item.data->isAIGenerated) {
-        CGContextSetRGBFillColor(ctx, 0.96f, 0.94f, 0.88f, 1.0f);
+        CGContextSetRGBFillColor(ctx, kAIPaperCreamR, kAIPaperCreamG, kAIPaperCreamB, 1.0f);
         CGContextFillRect(ctx, CGRectMake(x, y, itemW, itemH));
         CGContextSetRGBStrokeColor(ctx, 0.6f, 0.5f, 0.4f, 1.0f);
         CGContextSetLineWidth(ctx, 1);
@@ -158,7 +159,7 @@ void ToyItemRenderer::DrawHeld(CGContextRef ctx, const ItemData* item, float ite
         CGContextDrawImage(ctx, CGRectMake(0, 0, itemW, itemH), item->image);
         CGContextRestoreGState(ctx);
     } else {
-        CGContextSetRGBFillColor(ctx, 0.55f, 0.35f, 0.15f, 1.0f);
+        CGContextSetRGBFillColor(ctx, kStickBrownR, kStickBrownG, kStickBrownB, 1.0f);
         CGContextFillRect(ctx, CGRectMake(0, 0, itemW, itemH));
     }
 }
@@ -174,7 +175,7 @@ bool ToyItemRenderer::DrawDropped(CGContextRef ctx, const DroppedItem& item, flo
         CGContextDrawImage(ctx, CGRectMake(0, 0, itemW, itemH), item.data->image);
         CGContextRestoreGState(ctx);
     } else {
-        CGContextSetRGBFillColor(ctx, 0.55f, 0.35f, 0.15f, 1.0f);
+        CGContextSetRGBFillColor(ctx, kStickBrownR, kStickBrownG, kStickBrownB, 1.0f);
         CGContextFillRect(ctx, CGRectMake(x, y, itemW, itemH));
     }
     return false; // No close button for toys

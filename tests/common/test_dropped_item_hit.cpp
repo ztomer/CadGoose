@@ -4,7 +4,7 @@
 #include "../../include/items.h"
 #include "../../include/config.h"
 
-extern std::list<DroppedItem> g_droppedItems;
+
 
 // Replicates the hit test logic from renderer.mm
 // item.pos is in view/device coordinates (top-left origin, Y-down, matching isFlipped=YES view)

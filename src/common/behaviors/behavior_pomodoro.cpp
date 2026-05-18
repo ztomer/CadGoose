@@ -9,7 +9,9 @@
 #include "world.h"
 #include "assets.h"
 #include "renderer_interface.h"
+#ifdef __APPLE__
 #include "cg_renderer.h"
+#endif
 #include <cmath>
 
 // --- Timing and layout constants ---
@@ -63,26 +65,37 @@ static constexpr float kAngleFull = 360.0f;
 static constexpr float kDirTurnSpeed = 5.0f;
 static constexpr float kWalkSpeedMultiplier = 1.0f;
 
+#ifdef __APPLE__
 static CGImageRef s_bedImage = nullptr;
 static CGImageRef s_zzzImages[3] = {nullptr, nullptr, nullptr};
+#endif
 
 extern void Audio_PlayHonk();
+
+// Exposed for EffectWindowManager
+PomodoroBedInfo Pomodoro_GetBedInfo(int gooseId) {
+    auto* state = BehaviorStateManager::Instance().Get<PomodoroState>(gooseId, "pomodoro");
+    if (!state) return {Vector2{0, 0}, false, nullptr};
+    return {state->bedPosition, state->isSleeping, (void*)s_bedImage};
+}
 
 static void init(BehaviorContext& ctx) {
     auto* state = BehaviorStateManager::Instance().GetOrCreate<PomodoroState>(ctx.goose->id, "pomodoro");
     state->Reset();
     state->phaseStartTime = ctx.time;
     state->bedPosition = {
-        (float)g_screenWidth - kBedMarginX,
-        (float)g_screenHeight - kBedMarginY
+        (float)g_world.screenWidth - kBedMarginX,
+        (float)g_world.screenHeight - kBedMarginY
     };
 
+#ifdef __APPLE__
     if (!s_bedImage) {
         s_bedImage = g_assets.GetBehaviorImage("Assets/Items/Bed/bed.png");
         s_zzzImages[0] = g_assets.GetBehaviorImage("Assets/Items/Bed/z1.png");
         s_zzzImages[1] = g_assets.GetBehaviorImage("Assets/Items/Bed/z2.png");
         s_zzzImages[2] = g_assets.GetBehaviorImage("Assets/Items/Bed/z3.png");
     }
+#endif
 }
 
 static double GetPhaseDuration(PomodoroPhase phase) {
@@ -119,8 +132,8 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
             state->isAggressive = false;
             state->isSleeping = false;
             state->bedPosition = {
-                (float)g_screenWidth - kBedMarginX,
-                (float)g_screenHeight - kBedMarginY
+                (float)g_world.screenWidth - kBedMarginX,
+                (float)g_world.screenHeight - kBedMarginY
             };
         }
         state->phaseStartTime = time;
@@ -291,14 +304,18 @@ static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
         CFAttributedStringRef attrStr = CFAttributedStringCreate(NULL, string, attributes);
         CTLineRef line = CTLineCreateWithAttributedString(attrStr);
 
-        if (line) {
-            float textX = headPos.x - textWidth/2 + kTimerTextXPad;
-            float textY = headPos.y - kTimerTextDrawYOffset;
-            CGContextSetTextMatrix(cg, CGAffineTransformMakeScale(1.0, -1.0));
-            CGContextSetTextPosition(cg, textX, textY);
-            CTLineDraw(line, cg);
-            CFRelease(line);
-        }
+    if (line) {
+        // Get actual text width for precise centering (like nametag)
+        CFIndex stringLength = CTLineGetStringRange(line).length;
+        double textWidth = CTLineGetOffsetForStringIndex(line, stringLength, NULL);
+
+        float boxCenterX = headPos.x;
+        float textX = boxCenterX - (float)textWidth / 2.0f;
+        CGContextSetTextMatrix(cg, CGAffineTransformMakeScale(1.0, -1.0));
+        CGContextSetTextPosition(cg, textX, headPos.y - kTimerTextDrawYOffset);
+        CTLineDraw(line, cg);
+        CFRelease(line);
+    }
 
         CFRelease(attrStr);
         CFRelease(string);
@@ -306,26 +323,7 @@ static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
     }
 
     if (state->isSleeping) {
-        Vector2 deviceBedPos = state->bedPosition;
-        Vector2 bedPos{goose->pos.x + (deviceBedPos.x - goose->pos.x) / ctx.globalScale,
-                       goose->pos.y + (deviceBedPos.y - goose->pos.y) / ctx.globalScale};
-        float bedWidth = kBedWidth;
-        float bedHeight = kBedHeight;
-
-        if (s_bedImage) {
-            float imgWidth = (float)CGImageGetWidth(s_bedImage);
-            float imgHeight = (float)CGImageGetHeight(s_bedImage);
-            renderer.DrawImage(s_bedImage, RenderRect{bedPos.x - imgWidth/2, bedPos.y - imgHeight/2, imgWidth, imgHeight});
-        } else {
-            renderer.DrawRoundedRect({bedPos.x - bedWidth/2, bedPos.y - bedHeight/2, bedWidth, bedHeight},
-                                     6.0f,
-                                     RenderColor{kBedFallbackR, kBedFallbackG, kBedFallbackB, kBedFallbackAlpha});
-            renderer.DrawRoundedRect({bedPos.x - bedWidth/2 + kBedInnerPad, bedPos.y - bedHeight/2 + kBedInnerPad,
-                                      bedWidth - kBedInnerPad*2, bedHeight - kBedInnerPad*2},
-                                     4.0f,
-                                     RenderColor{kBedInnerR, kBedInnerG, kBedInnerB, kBedInnerAlpha});
-        }
-
+        // Bed now renders via independent EffectWindow
         const char* zzzStr;
         switch (state->zzzFrame) {
             case 0: zzzStr = "Z"; break;

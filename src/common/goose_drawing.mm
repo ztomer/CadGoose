@@ -9,6 +9,7 @@
 #include "goose_math.h"
 #include "behavior.h"
 #include "item_renderer.h"
+#include "render_colors.h"
 #include <cmath>
 
 #ifdef __APPLE__
@@ -216,11 +217,11 @@ void DrawGoose(Goose* g, CGContextRef ctx) {
     // Surprise mark
     if (g->isSurprised) {
         Vector2 markPos = g->rig.neckHead + up * (-g_config.render.eyeOffsetY - kSurpriseMarkOffsetY);
-        CGContextSetRGBFillColor(ctx, 1.0f, 0.8f, 0.0f, 0.9f);
+        CGContextSetRGBFillColor(ctx, kSurpriseMarkR, kSurpriseMarkG, kSurpriseMarkB, 0.9f);
         CGContextSetRGBStrokeColor(ctx, 0.0f, 0.0f, 0.0f, 1.0f);
         CGContextSetLineWidth(ctx, kSurpriseMarkLineWidth);
-        DrawLine(ctx, markPos, markPos + up * (-kSurpriseMarkLineSize * kSurpriseMarkLineOffset), kSurpriseMarkLineWidth, 1.0f, 0.8f, 0.0f, 1.0f);
-        DrawEllipse(ctx, markPos + up * (-kSurpriseMarkLineSize * kSurpriseMarkLineOffset - kSurpriseMarkDotOffset), kSurpriseMarkDotRadius, kSurpriseMarkDotRadius, 1.0f, 0.8f, 0.0f, 1.0f);
+        DrawLine(ctx, markPos, markPos + up * (-kSurpriseMarkLineSize * kSurpriseMarkLineOffset), kSurpriseMarkLineWidth, kSurpriseMarkR, kSurpriseMarkG, kSurpriseMarkB, 1.0f);
+        DrawEllipse(ctx, markPos + up * (-kSurpriseMarkLineSize * kSurpriseMarkLineOffset - kSurpriseMarkDotOffset), kSurpriseMarkDotRadius, kSurpriseMarkDotRadius, kSurpriseMarkR, kSurpriseMarkG, kSurpriseMarkB, 1.0f);
     }
 
     if (g->heldItem && !facingBack) {

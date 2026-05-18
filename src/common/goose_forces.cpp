@@ -2,6 +2,7 @@
 #include "config.h"
 #include "goose_math.h"
 #include "world.h"
+#include "actor.h"
 #include <cmath>
 
 Vector2 Goose::CalculateSeekForce() {
@@ -30,14 +31,14 @@ Vector2 Goose::CalculateCurveForce(float dist) {
 Vector2 Goose::CalculateSeparationForce() {
     Vector2 force{0, 0};
     if (state == GooseState::WANDER || state == GooseState::FETCHING) {
-        for (auto &other : g_geese) {
-            if (other.id == id) continue;
-            float d = Vector2::Distance(pos, other.pos);
+        for (auto* other : ActorManager::Instance().getGeese()) {
+            if (other->id == id) continue;
+            float d = Vector2::Distance(pos, other->pos);
             if (d > g_config.spawn.separationMinDistance &&
                 d < g_config.spawn.separationMaxDistance) {
                 float strength = (g_config.spawn.separationMaxDistance - d) /
                                 g_config.spawn.separationMaxDistance;
-                Vector2 away = Vector2::Normalize(pos - other.pos);
+                Vector2 away = Vector2::Normalize(pos - other->pos);
                 force += away * (strength * g_config.movement.maxForce *
                                 g_config.spawn.separationForceMultiplier);
             }
@@ -55,8 +56,8 @@ Vector2 Goose::CalculateEdgeAvoidance(int w, int h) {
 
         float margin = g_config.physics.edgeAvoidMargin;
         float bMinX = 0, bMinY = 0, bMaxX = (float)w, bMaxY = (float)h;
-        if (!g_config.cursor.multiMonitorEnabled && !g_monitors.empty()) {
-            for (auto &m : g_monitors) {
+        if (!g_config.cursor.multiMonitorEnabled && !g_world.monitors.empty()) {
+            for (auto &m : g_world.monitors) {
                 if (m.x == 0 && m.y == 0) {
                     bMaxX = (float)m.width;
                     bMaxY = (float)m.height;
@@ -75,8 +76,8 @@ Vector2 Goose::CalculateEdgeAvoidance(int w, int h) {
 
 void Goose::ClampToScreen(int w, int h) {
     float minX = 0.0f, minY = 0.0f, maxX = (float)w, maxY = (float)h;
-    if (!g_config.cursor.multiMonitorEnabled && !g_monitors.empty()) {
-        for (auto &m : g_monitors) {
+    if (!g_config.cursor.multiMonitorEnabled && !g_world.monitors.empty()) {
+        for (auto &m : g_world.monitors) {
             if (m.x == 0 && m.y == 0) {
                 maxX = (float)m.width;
                 maxY = (float)m.height;

@@ -46,8 +46,13 @@ public:
     void Bite();
     void MudSquish();
 
+#ifdef __APPLE__
     CGImageRef GetBehaviorImage(const std::string& name);
     void PreloadBehaviorAssets();
+#elif defined(__linux__)
+    void* GetBehaviorImage(const std::string& name); // returns GdkPixbuf*
+    void PreloadBehaviorAssets();
+#endif
 
 private:
 #ifdef __linux__

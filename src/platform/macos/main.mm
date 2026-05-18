@@ -18,6 +18,21 @@
 #include "window.h"
 #include "renderer.h"
 #include "audio.h"
+
+// --- Menu bar icon constants ---
+static constexpr float kMenuBarIconSize = 16;
+static constexpr float kSpeakerX1 = 4, kSpeakerY1 = 5;
+static constexpr float kSpeakerX2 = 4, kSpeakerY2 = 11;
+static constexpr float kSpeakerX3 = 8, kSpeakerY3 = 11;
+static constexpr float kSpeakerX4 = 12, kSpeakerY4 = 14;
+static constexpr float kSpeakerX5 = 12, kSpeakerY5 = 2;
+static constexpr float kSpeakerX6 = 8, kSpeakerY6 = 5;
+static constexpr float kSlashLineWidth = 2;
+static constexpr float kSlashX1 = 2, kSlashY1 = 14;
+static constexpr float kSlashX2 = 14, kSlashY2 = 2;
+static constexpr float kWaveLineWidth = 1.5;
+static constexpr float kWave1ArcX = 14, kWave1ArcY1 = 5, kWave1ArcY2 = 11, kWave1Radius = 3;
+static constexpr float kWave2ArcX = 15, kWave2ArcY1 = 3, kWave2ArcY2 = 13, kWave2Radius = 5;
 #include "ai_text_meme.h"
 
 extern bool g_debugMode;
@@ -137,8 +152,8 @@ bool Config_IsSystemDarkTheme();
 }
 
 - (void)openAIChat:(id)sender {
-    if (!g_geese.empty()) {
-        AI_OpenChat(g_geese.front().name.c_str());
+    if (!g_world.geese.empty()) {
+        AI_OpenChat(g_world.geese.front().name.c_str());
     } else {
         AI_OpenChat("Goose");
     }
@@ -168,7 +183,7 @@ bool Config_IsSystemDarkTheme();
 }
 
 - (void)updateMuteMenuItem {
-    NSSize size = NSMakeSize(16, 16);
+    NSSize size = NSMakeSize(kMenuBarIconSize, kMenuBarIconSize);
     NSImage* icon = [[NSImage alloc] initWithSize:size];
     [icon lockFocus];
     NSRect rect = NSMakeRect(0, 0, size.width, size.height);
@@ -176,32 +191,32 @@ bool Config_IsSystemDarkTheme();
     
     // Speaker shape: trapezoid + rectangle
     NSBezierPath* speaker = [NSBezierPath bezierPath];
-    [speaker moveToPoint:NSMakePoint(4, 5)];
-    [speaker lineToPoint:NSMakePoint(4, 11)];
-    [speaker lineToPoint:NSMakePoint(8, 11)];
-    [speaker lineToPoint:NSMakePoint(12, 14)];
-    [speaker lineToPoint:NSMakePoint(12, 2)];
-    [speaker lineToPoint:NSMakePoint(8, 5)];
+    [speaker moveToPoint:NSMakePoint(kSpeakerX1, kSpeakerY1)];
+    [speaker lineToPoint:NSMakePoint(kSpeakerX2, kSpeakerY2)];
+    [speaker lineToPoint:NSMakePoint(kSpeakerX3, kSpeakerY3)];
+    [speaker lineToPoint:NSMakePoint(kSpeakerX4, kSpeakerY4)];
+    [speaker lineToPoint:NSMakePoint(kSpeakerX5, kSpeakerY5)];
+    [speaker lineToPoint:NSMakePoint(kSpeakerX6, kSpeakerY6)];
     [speaker closePath];
     [speaker fill];
     
     if (g_config.general.audioMuted) {
         // Add slash for muted state
         NSBezierPath* slash = [NSBezierPath bezierPath];
-        [slash setLineWidth:2];
-        [slash moveToPoint:NSMakePoint(2, 14)];
-        [slash lineToPoint:NSMakePoint(14, 2)];
+        [slash setLineWidth:kSlashLineWidth];
+        [slash moveToPoint:NSMakePoint(kSlashX1, kSlashY1)];
+        [slash lineToPoint:NSMakePoint(kSlashX2, kSlashY2)];
         [slash stroke];
     } else {
         // Add sound waves for unmuted state
         NSBezierPath* wave1 = [NSBezierPath bezierPath];
-        [wave1 setLineWidth:1.5];
-        [wave1 appendBezierPathWithArcFromPoint:NSMakePoint(14, 5) toPoint:NSMakePoint(14, 11) radius:3];
+        [wave1 setLineWidth:kWaveLineWidth];
+        [wave1 appendBezierPathWithArcFromPoint:NSMakePoint(kWave1ArcX, kWave1ArcY1) toPoint:NSMakePoint(kWave1ArcX, kWave1ArcY2) radius:kWave1Radius];
         [wave1 stroke];
         
         NSBezierPath* wave2 = [NSBezierPath bezierPath];
-        [wave2 setLineWidth:1.5];
-        [wave2 appendBezierPathWithArcFromPoint:NSMakePoint(15, 3) toPoint:NSMakePoint(15, 13) radius:5];
+        [wave2 setLineWidth:kWaveLineWidth];
+        [wave2 appendBezierPathWithArcFromPoint:NSMakePoint(kWave2ArcX, kWave2ArcY1) toPoint:NSMakePoint(kWave2ArcX, kWave2ArcY2) radius:kWave2Radius];
         [wave2 stroke];
     }
     
@@ -344,14 +359,14 @@ bool Config_IsSystemDarkTheme();
         DEBUG_LOG("Socket error: %s", error.c_str());
     }
 
-    g_screenWidth = (int)[[NSScreen mainScreen] frame].size.width;
-    g_screenHeight = (int)[[NSScreen mainScreen] frame].size.height;
-    DEBUG_LOG("Screen: %dx%d", g_screenWidth, g_screenHeight);
+    g_world.screenWidth = (int)[[NSScreen mainScreen] frame].size.width;
+    g_world.screenHeight = (int)[[NSScreen mainScreen] frame].size.height;
+    DEBUG_LOG("Screen: %dx%d", g_world.screenWidth, g_world.screenHeight);
 
     AppActions_EnsureInitialGoose();
-    DEBUG_LOG("Geese spawned: %zu", g_geese.size());
+    DEBUG_LOG("Geese spawned: %zu", g_world.geese.size());
 
-    for (auto& g : g_geese) {
+    for (auto& g : g_world.geese) {
         DEBUG_LOG("Goose %d at %.1f,%.1f", g.id, g.pos.x, g.pos.y);
     }
 
@@ -359,8 +374,8 @@ bool Config_IsSystemDarkTheme();
     [self setupMenubar];
     DEBUG_LOG("App ready, entering run loop...");
 
-    if (g_config.behaviors.info.presence && !g_geese.empty()) {
-        auto& goose = g_geese.front();
+    if (g_config.behaviors.info.presence && !g_world.geese.empty()) {
+        auto& goose = g_world.geese.front();
         const char* stateStr = "?";
         switch (goose.state) {
             case GooseState::WANDER: stateStr = "W"; break;

@@ -24,8 +24,6 @@ void RegisterBehaviors(std::vector<ConfigOption>& r) {
         &g_config.behaviors.fun.boredom, OnConfigChange));
     r.push_back(CONFIG_BOOL("Behavior", "peeking_enabled", "Window Peeking Enabled",
         &g_config.behaviors.fun.peeking, OnConfigChange));
-    r.push_back(CONFIG_BOOL("Behavior", "affirmations_enabled", "Custom Affirmations Enabled",
-        &g_config.behaviors.fun.affirmations, OnConfigChange));
     r.push_back(CONFIG_BOOL("Behavior", "interactive_drops_enabled", "Interactive Drops Enabled",
         &g_config.behaviors.fun.interactiveDrops, OnConfigChange));
     r.push_back(CONFIG_BOOL("Behavior", "toys_enabled", "Toys Enabled",
@@ -67,10 +65,6 @@ void RegisterBehaviors(std::vector<ConfigOption>& r) {
         &g_config.portal.hotkey0, OnConfigChange));
     r.push_back(CONFIG_STRING("Behavior", "breadcrumbs_hotkey", "Breadcrumbs Hotkey",
         &g_config.behaviors.breadCrumbs.hotkey, OnConfigChange));
-    r.push_back(CONFIG_FLOAT("Behavior", "affirmations_interval", "Affirmations Interval",
-        &g_config.behaviors.affirmations.interval, 30.0f, 3600.0f, 0.5f, OnConfigChange));
-    r.push_back(CONFIG_STRING("Behavior", "affirmations_custom_message", "Custom Affirmation Message",
-        &g_config.behaviors.affirmations.customMessage, OnConfigChange));
     r.push_back(CONFIG_FLOAT("Behavior", "interactive_drops_puddle_lifetime", "Puddle Lifetime",
         &g_config.behaviors.interactiveDrops.puddleLifetime, 5.0f, 120.0f, 0.5f, OnConfigChange));
     r.push_back(CONFIG_FLOAT("Behavior", "interactive_drops_flower_grow_time", "Flower Grow Time",

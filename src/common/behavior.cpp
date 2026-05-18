@@ -17,12 +17,15 @@ constexpr float GRAVITY = 400.0f;
 constexpr float BOUNCE_FACTOR = 0.7f;
 constexpr float FRICTION = 0.98f;
 constexpr float AIR_RESISTANCE = 0.995f;
+static constexpr float kReferenceFrameRate = 60.0f;
+static constexpr float kBallBounceThreshold = 20.0f;
+static constexpr float kDragResistanceProbability = 0.05f;
 
 // ===========================
 // DT-Scaled Helper Macros
 // ===========================
 #define DT_SCALED_ROTATION(current, degPerSec, dt) (current + (degPerSec) * (dt))
-#define DT_SCALED_VELOCITY(vel, friction, dt) (vel * std::pow(friction, dt * 60.0f))
+#define DT_SCALED_VELOCITY(vel, friction, dt) (vel * std::pow(friction, dt * kReferenceFrameRate))
 #define DT_SCALED_GRAVITY(gravity, dt) (gravity * dt)
 
 // ===========================
@@ -164,7 +167,7 @@ void UpdateBallPhysics(BallState::Ball& ball, float screenWidth, float screenHei
         ball.pos.y = screenBottom - radius;
         ball.vel.y = -ball.vel.y * BOUNCE_FACTOR;
         ball.vel.x *= FRICTION;
-        if (std::abs(ball.vel.y) < 20.0f) {
+        if (std::abs(ball.vel.y) < kBallBounceThreshold) {
             ball.vel.y = 0;
         }
     }
@@ -299,7 +302,7 @@ void TeleportThroughPortal(float& x, float& y, PortalState::Portal& fromPortal,
 // Drag Resistance
 // ===========================
 bool CheckDragResistance(float dragSpeed, float resistanceThreshold, float randomValue) {
-    return dragSpeed > resistanceThreshold && randomValue < 0.05f;
+    return dragSpeed > resistanceThreshold && randomValue < kDragResistanceProbability;
 }
 
 float CalculateDragResistance(float dragSpeed, float maxSpeed) {

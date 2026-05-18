@@ -5,7 +5,7 @@
 #include "../../include/items.h"
 #include "../../include/config.h"
 
-extern std::list<DroppedItem> g_droppedItems;
+
 
 // Replicates the hit test logic from renderer.mm
 static bool HitTestPoint(float mouseX, float mouseY, const DroppedItem& item) {

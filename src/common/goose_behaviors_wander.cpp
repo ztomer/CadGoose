@@ -6,8 +6,11 @@
 #include "goose_math.h"
 #include "assets.h"
 #include "goose_behaviors.h"
+#include "actor.h"
 #include <cmath>
 #include <cstdio>
+
+static constexpr int kWanderMemeProbability = 70;
 
 static FILE* GetDebugLog() {
     static FILE* f = nullptr;
@@ -19,8 +22,8 @@ static FILE* GetDebugLog() {
 }
 
 CursorAction handleChaseCursor(Goose& g, double time, const CursorState& cursor, int w, int h) {
-    extern int g_cursorGrabberId;
-    if (g_cursorGrabberId != -1 && g_cursorGrabberId != g.id) {
+
+    if (g_world.cursorGrabberId != -1 && g_world.cursorGrabberId != g.id) {
         g.state = GooseState::WANDER;
         g.PickNewTarget(w, h);
         return {};
@@ -51,9 +54,9 @@ CursorAction handleChaseCursor(Goose& g, double time, const CursorState& cursor,
     Vector2 neckDev = WorldCoord::RigNeckHead(g);
     fprintf(f, "[CHASE] t=%.1f g%d: dir=%.0f body=(%.0f,%.0f) neck=(%.0f,%.0f) beak=(%.0f,%.0f) cursor=(%.0f,%.0f) dist=%.1f thr=%.1f grab=%d\n",
             time, g.id, g.dir, bodyDev.x, bodyDev.y, neckDev.x, neckDev.y,
-            btPoint.x, btPoint.y, g.target.x, g.target.y, dist, catchThreshold, g_cursorGrabberId);
+            btPoint.x, btPoint.y, g.target.x, g.target.y, dist, catchThreshold, g_world.cursorGrabberId);
     if (dist < catchThreshold) {
-        if (g_cursorGrabberId == -1) {
+        if (g_world.cursorGrabberId == -1) {
             g.StartSnatch(time, g.target);
         } else {
             g.state = GooseState::WANDER;
@@ -64,10 +67,10 @@ CursorAction handleChaseCursor(Goose& g, double time, const CursorState& cursor,
 }
 
 void handleWander(Goose& g, double time, const CursorState& cursor, int w, int h) {
-    extern int g_cursorGrabberId;
+
     bool chased = false;
 
-    bool canChase = (g_cursorGrabberId == -1);
+    bool canChase = (g_world.cursorGrabberId == -1);
     bool chaseEnabled = g.cursorChaseEnabled;
     bool cursorValid = cursor.hasPos();
     if (canChase && chaseEnabled && cursorValid) {
@@ -75,7 +78,7 @@ void handleWander(Goose& g, double time, const CursorState& cursor, int w, int h
         int roll = rand() % 100;
         FILE* f = GetDebugLog();
         fprintf(f, "[WALKER] t=%.1f g%d: grab=-%d ena=%d valid=%d chance=%d roll=%d\n",
-                time, g.id, g_cursorGrabberId, chaseEnabled, cursorValid, totalChance, roll);
+                time, g.id, g_world.cursorGrabberId, chaseEnabled, cursorValid, totalChance, roll);
         if (totalChance > 100) totalChance = 100;
         if (roll < totalChance) {
             g.state = GooseState::CHASE_CURSOR;
@@ -99,8 +102,7 @@ void handleWander(Goose& g, double time, const CursorState& cursor, int w, int h
         if (trigger > g_config.item.maxFetchBias) trigger = g_config.item.maxFetchBias;
 
         int fetchCount = 0;
-        extern std::list<Goose> g_geese;
-        for (auto& other : g_geese) if (other.state == GooseState::FETCHING) fetchCount++;
+        for (auto* other : ActorManager::Instance().getGeese()) if (other->state == GooseState::FETCHING) fetchCount++;
 
         int fetchRoll = rand() % 100;
         fprintf(f, "[FETCH] t=%.1f g%d: trigger=%d roll=%d fetchCount=%d maxGeese=%d\n",
@@ -108,7 +110,7 @@ void handleWander(Goose& g, double time, const CursorState& cursor, int w, int h
 
         if (canFetch && fetchCount < g_config.item.maxFetchGeese && fetchRoll < trigger) {
             int fetchType;
-            if (g_config.general.memesEnabled && rand() % 100 < 70) {
+            if (g_config.general.memesEnabled && rand() % 100 < kWanderMemeProbability) {
                 fetchType = 0;
                 fprintf(f, "[FETCH] t=%.1f g%d: TRIGGERED fetch type=MEME\n", time, g.id);
                 g.ForceFetch(fetchType, w, h, time);
@@ -123,9 +125,9 @@ void handleWander(Goose& g, double time, const CursorState& cursor, int w, int h
             else if (fetchRoll >= trigger) fprintf(f, "[FETCH] g%d: skipped (roll=%d >= trigger=%d)\n", g.id, fetchRoll, trigger);
             g.PickNewTarget(w, h);
 
-            if (g_config.general.memesEnabled && (rand() % 100) < g_config.item.heistChancePercent && !g_droppedItems.empty()) {
+            if (g_config.general.memesEnabled && (rand() % 100) < g_config.item.heistChancePercent && !g_world.droppedItems.empty()) {
                 std::vector<std::list<DroppedItem>::iterator> validItems;
-                for (auto it = g_droppedItems.begin(); it != g_droppedItems.end(); ++it) {
+                for (auto it = g_world.droppedItems.begin(); it != g_world.droppedItems.end(); ++it) {
                     if (!it->pinned) validItems.push_back(it);
                 }
                 if (!validItems.empty()) {

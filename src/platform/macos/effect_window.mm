@@ -1,16 +1,18 @@
 #import "effect_window.h"
+#import "effect_registration.h"
 #import "world.h"
 #import "config.h"
 #import "coordinate_system.h"
-#import "goose_drawing.h"
 #include <cmath>
 #include <cstdio>
-#include <ctime>
 
-extern std::list<LeafPile> g_leafPiles;
-extern RingBuffer<Footprint, kMaxFootprints> g_footprints;
+
+
+// Pomodoro bed accessor from behavior_pomodoro.cpp
+extern PomodoroBedInfo Pomodoro_GetBedInfo(int gooseId);
 
 static constexpr size_t kMaxEffectWindows = 50;
+static constexpr float kEffectWindowMinSize = 40.0f;
 
 // ============================================================
 // EffectContentView — Draws a single effect
@@ -22,6 +24,16 @@ static constexpr size_t kMaxEffectWindows = 50;
     float _posY;
     float _radius;
     double _currentTime;
+    void* _cgImage; // CGImageRef for portals
+}
+
+- (void)setCgImage:(void*)img {
+    _cgImage = img;
+    [self setNeedsDisplay:YES];
+}
+
+- (void*)cgImage {
+    return _cgImage;
 }
 
 - (instancetype)initWithFrame:(NSRect)frame effectType:(EffectType)type {
@@ -55,19 +67,31 @@ static constexpr size_t kMaxEffectWindows = 50;
     CGContextClearRect(ctx, self.bounds);
     CGContextSaveGState(ctx);
 
-    if (_effectType == EffectTypeLeafPile) {
-        // Find the leaf pile at this position and draw it
-        for (auto& pile : g_leafPiles) {
-            if (std::abs(pile.pos.x - _posX) < 1.0f && std::abs(pile.pos.y - _posY) < 1.0f) {
-                // Create a temporary list with just this pile for DrawLeaves
-                std::list<LeafPile> singlePile;
-                singlePile.push_back(pile);
-                // Draw centered in view
-                CGContextTranslateCTM(ctx, -_posX + self.bounds.size.width * 0.5f,
-                                          -_posY + self.bounds.size.height * 0.5f);
-                DrawLeaves(ctx, singlePile, _currentTime);
+    if (_effectType == EffectTypeFootprint) {
+        // Find the footprint at this position and draw it
+        for (const auto& fp : g_world.footprints) {
+            if (std::abs(fp.pos.x - _posX) < 1.0f && std::abs(fp.pos.y - _posY) < 1.0f) {
+                float age = (float)(_currentTime - fp.timeSpawned);
+                float life = (fp.lifetime > 0.0f) ? fp.lifetime : g_config.mud.lifetime;
+                float alpha = std::max(0.0f, 1.0f - (age / life));
+                if (alpha <= 0) break;
+
+                CGContextSetRGBFillColor(ctx, g_config.color.footprint.r, g_config.color.footprint.g, g_config.color.footprint.b, alpha * g_config.color.footprintAlphaMultiplier);
+                CGContextSaveGState(ctx);
+                CGContextTranslateCTM(ctx, self.bounds.size.width * 0.5f, self.bounds.size.height * 0.5f);
+                CGContextRotateCTM(ctx, fp.dir);
+                CGContextFillEllipseInRect(ctx, CGRectMake(-g_config.render.footprintWidth/2, -g_config.render.footprintHeight/2, g_config.render.footprintWidth, g_config.render.footprintHeight));
+                CGContextRestoreGState(ctx);
                 break;
             }
+        }
+    } else if (_effectType == EffectTypePomodoroBed) {
+        // Draw bed image centered in view
+        if (_cgImage) {
+            CGImageRef img = (CGImageRef)_cgImage;
+            float imgW = (float)CGImageGetWidth(img);
+            float imgH = (float)CGImageGetHeight(img);
+            CGContextDrawImage(ctx, CGRectMake(self.bounds.size.width * 0.5f - imgW * 0.5f, self.bounds.size.height * 0.5f - imgH * 0.5f, imgW, imgH), img);
         }
     }
 
@@ -91,11 +115,11 @@ static constexpr size_t kMaxEffectWindows = 50;
 - (BOOL)canBecomeMainWindow { return NO; }
 - (BOOL)isOpaque { return NO; }
 
-- (instancetype)initWithType:(EffectType)type posX:(float)x posY:(float)y radius:(float)rad {
+- (instancetype)initWithType:(EffectType)type posX:(float)x posY:(float)y radius:(float)rad cgImage:(void*)img {
     _hasLastPosition = false;
 
     float size = rad * 2.0f * g_config.general.globalScale;
-    size = std::max(size, 40.0f); // minimum 40x40
+    size = std::max(size, kEffectWindowMinSize); // minimum 40x40
 
     NSScreen* mainScreen = [NSScreen mainScreen];
     float screenH = (float)mainScreen.frame.size.height;
@@ -115,11 +139,13 @@ static constexpr size_t kMaxEffectWindows = 50;
         _posX = x;
         _posY = y;
         _radius = rad;
+        _cgImage = img;
 
         self.backgroundColor = [NSColor clearColor];
         self.ignoresMouseEvents = YES; // Always click-through
         self.level = NSStatusWindowLevel;
         self.hasShadow = NO;
+        self.releasedWhenClosed = NO; // Lifetime managed by EffectWindowManager dictionary
         self.collectionBehavior = NSWindowCollectionBehaviorCanJoinAllSpaces |
                                   NSWindowCollectionBehaviorIgnoresCycle;
 
@@ -127,6 +153,7 @@ static constexpr size_t kMaxEffectWindows = 50;
         _contentView.posX = x;
         _contentView.posY = y;
         _contentView.radius = rad;
+        _contentView.cgImage = img;
         self.contentView = _contentView;
 
         [self orderFront:nil];
@@ -144,7 +171,7 @@ static constexpr size_t kMaxEffectWindows = 50;
     _hasLastPosition = true;
 
     float size = _radius * 2.0f * g_config.general.globalScale;
-    size = std::max(size, 40.0f);
+    size = std::max(size, kEffectWindowMinSize);
 
     NSScreen* mainScreen = [NSScreen mainScreen];
     float screenH = (float)mainScreen.frame.size.height;
@@ -216,52 +243,70 @@ static constexpr size_t kMaxEffectWindows = 50;
 }
 
 - (void)syncWindows {
-    // Remove windows for leaf piles that no longer exist
+    const auto& regs = EffectGetRegistrations();
+
+    // Phase 1: Remove windows for effects that no longer exist
     for (size_t i = 0; i < _count; i++) {
         size_t idx = (_head + i) % kMaxEffectWindows;
         id obj = _windows[idx];
         if (![obj isKindOfClass:[EffectWindow class]]) continue;
 
         EffectWindow* win = (EffectWindow*)obj;
-        BOOL pileStillExists = NO;
-        for (auto& pile : g_leafPiles) {
-            if (std::abs(pile.pos.x - win.posX) < 1.0f &&
-                std::abs(pile.pos.y - win.posY) < 1.0f) {
-                pileStillExists = YES;
+        BOOL effectStillExists = NO;
+
+        // Find the registration for this effect type
+        for (const auto& reg : regs) {
+            if (reg.type == (int)win.effectType) {
+                Vector2 pos = {win.posX, win.posY};
+                if (reg.existsAt(pos)) {
+                    effectStillExists = YES;
+                }
                 break;
             }
         }
-        if (!pileStillExists) {
+
+        if (!effectStillExists) {
             [win closeAndRemove];
             [_windows replaceObjectAtIndex:idx withObject:[NSNull null]];
         }
     }
 
-    // Create windows for new leaf piles
-    for (auto& pile : g_leafPiles) {
-        BOOL exists = NO;
-        for (size_t i = 0; i < _count; i++) {
-            size_t idx = (_head + i) % kMaxEffectWindows;
-            id obj = _windows[idx];
-            if (![obj isKindOfClass:[EffectWindow class]]) continue;
+    // Phase 2: Create windows for new effects
+    for (const auto& reg : regs) {
+        std::vector<Vector2> positions = reg.getPositions();
+        for (const auto& pos : positions) {
+            // Check if window already exists for this position
+            BOOL exists = NO;
+            for (size_t i = 0; i < _count; i++) {
+                size_t idx = (_head + i) % kMaxEffectWindows;
+                id obj = _windows[idx];
+                if (![obj isKindOfClass:[EffectWindow class]]) continue;
 
-            EffectWindow* win = (EffectWindow*)obj;
-            if (std::abs(pile.pos.x - win.posX) < 1.0f &&
-                std::abs(pile.pos.y - win.posY) < 1.0f) {
-                exists = YES;
-                break;
+                EffectWindow* win = (EffectWindow*)obj;
+                if ((int)win.effectType == reg.type &&
+                    std::abs(pos.x - win.posX) < 1.0f &&
+                    std::abs(pos.y - win.posY) < 1.0f) {
+                    exists = YES;
+                    break;
+                }
             }
-        }
-        if (!exists) {
-            EffectWindow* win = [[EffectWindow alloc] initWithType:EffectTypeLeafPile
-                                                              posX:pile.pos.x
-                                                              posY:pile.pos.y
-                                                            radius:pile.rad];
-            [self addWindow:win];
+
+            if (!exists) {
+                float radius = reg.getRadius(pos);
+                EffectWindow* win = [[EffectWindow alloc] initWithType:(EffectType)reg.type
+                                                                  posX:pos.x
+                                                                  posY:pos.y
+                                                                radius:radius cgImage:nil];
+                if (reg.configureWindow) {
+                    reg.configureWindow(win, pos);
+                }
+                [self addWindow:win];
+            }
         }
     }
 
-    // Update positions for existing windows
+    // Phase 3: Update positions and redraw for existing windows
+    double now = [[NSDate date] timeIntervalSince1970];
     for (size_t i = 0; i < _count; i++) {
         size_t idx = (_head + i) % kMaxEffectWindows;
         id obj = _windows[idx];
@@ -269,6 +314,23 @@ static constexpr size_t kMaxEffectWindows = 50;
 
         EffectWindow* win = (EffectWindow*)obj;
         [win updatePosition];
+
+        // Find registration for this effect type to configure content view
+        for (const auto& reg : regs) {
+            if (reg.type == (int)win.effectType) {
+                if (reg.configureContentView) {
+                    Vector2 pos = {win.posX, win.posY};
+                    reg.configureContentView((EffectContentView*)win.contentView, pos);
+                }
+                // Force redraw for effects that need time-based updates (footprint fading)
+                if (reg.type == (int)EffectTypeFootprint) {
+                    EffectContentView* cv = (EffectContentView*)win.contentView;
+                    cv.currentTime = now;
+                    [cv setNeedsDisplay:YES];
+                }
+                break;
+            }
+        }
     }
 }
 

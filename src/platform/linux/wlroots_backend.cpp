@@ -3,9 +3,9 @@
 #include "wlr-virtual-pointer-unstable-v1-client-protocol.h"
 #include <iostream>
 #include <cstring>
-#include "world.h" // g_screenWidth/Height
+#include "world.h" // g_world.screenWidth/Height
 
-#include "world.h" // g_screenWidth/Height
+#include "world.h" // g_world.screenWidth/Height
 
 struct WlrootsImpl {
     struct wl_display* display = nullptr;
@@ -88,8 +88,8 @@ void WlrootsBackend::MoveCursorAbs(int x, int y) {
     if (!m_impl || !m_impl->pointer) return;
 
     // zwlr_virtual_pointer_v1_motion_absolute(pointer, time, x, y, x_extent, y_extent)
-    // We use g_screenWidth/Height as extents.
-    zwlr_virtual_pointer_v1_motion_absolute(m_impl->pointer, 0, x, y, g_screenWidth, g_screenHeight);
+    // We use g_world.screenWidth/Height as extents.
+    zwlr_virtual_pointer_v1_motion_absolute(m_impl->pointer, 0, x, y, g_world.screenWidth, g_world.screenHeight);
     zwlr_virtual_pointer_v1_frame(m_impl->pointer);
     wl_display_flush(m_impl->display);
 }

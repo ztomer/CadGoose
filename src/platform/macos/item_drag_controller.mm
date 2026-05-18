@@ -1,9 +1,10 @@
 #include "item_drag_controller.h"
 #include "config.h"
 #include "coordinate_system.h"
+#include "world.h"
 
 bool ItemDragController::OnMouseDown(DevicePoint mousePt) {
-    for (auto it = g_droppedItems.rbegin(); it != g_droppedItems.rend(); ++it) {
+    for (auto it = g_world.droppedItems.rbegin(); it != g_world.droppedItems.rend(); ++it) {
         DroppedItem& item = *it;
         DevicePoint itemCenter = ItemCoords::Center({item.pos.x, item.pos.y}, item.data->w, item.data->h, g_config.general.globalScale);
 
@@ -13,7 +14,7 @@ bool ItemDragController::OnMouseDown(DevicePoint mousePt) {
                                                 item.rotation, g_config.render.closeButtonSize, g_config.general.globalScale)) {
                     delete item.data;
                     auto forward_it = std::prev(it.base());
-                    g_droppedItems.erase(forward_it);
+                    g_world.droppedItems.erase(forward_it);
                     return true;
                 }
             }
@@ -22,7 +23,7 @@ bool ItemDragController::OnMouseDown(DevicePoint mousePt) {
             m_draggedItem->pinned = true;
             m_dragOffset = {item.pos.x - mousePt.x, item.pos.y - mousePt.y};
             auto forward_it = std::prev(it.base());
-            g_droppedItems.splice(g_droppedItems.end(), g_droppedItems, forward_it);
+            g_world.droppedItems.splice(g_world.droppedItems.end(), g_world.droppedItems, forward_it);
             return true;
         }
     }

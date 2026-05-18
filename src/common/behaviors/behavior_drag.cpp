@@ -8,8 +8,14 @@
 #include "config.h"
 #include "world.h"
 
+#ifdef __APPLE__
+#include <ApplicationServices/ApplicationServices.h>
+#elif defined(__linux__)
+#include <X11/Xlib.h>
+#endif
 
 static constexpr float DRAG_RADIUS = 45.0f;
+static constexpr int kDragDirectionJitterMax = 10;
 
 static void init(BehaviorContext& ctx) {}
 
@@ -30,6 +36,17 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
     bool mouseDown = false;
 #ifdef __APPLE__
     mouseDown = CGEventSourceButtonState(kCGEventSourceStateHIDSystemState, kCGMouseButtonLeft);
+#elif defined(__linux__)
+    Display* dpy = XOpenDisplay(nullptr);
+    if (dpy) {
+        Window root, child;
+        int rootX, rootY, winX, winY;
+        unsigned int mask;
+        if (XQueryPointer(dpy, DefaultRootWindow(dpy), &root, &child, &rootX, &rootY, &winX, &winY, &mask)) {
+            mouseDown = (mask & Button1Mask) != 0;
+        }
+        XCloseDisplay(dpy);
+    }
 #endif
 
     if (onGoose && mouseDown && goose->state != GooseState:: SNATCH_CURSOR) {
@@ -38,7 +55,7 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
         goose->vel.x = 0;
         goose->vel.y = 0;
 
-        goose->dir += (float)(rand() % 21 - 10);
+        goose->dir += (float)(rand() % (kDragDirectionJitterMax * 2 + 1) - kDragDirectionJitterMax);
     }
 }
 

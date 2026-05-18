@@ -6,7 +6,7 @@
 // COORDINATE SPACES:
 //   DEVICE: Screen pixels, top-left origin, Y-down.
 //     All game logic (goose pos, targets, items, cursor) lives here.
-//     g_screenWidth, g_screenHeight are in DEVICE units.
+//     g_world.screenWidth, g_world.screenHeight are in DEVICE units.
 //
 //   WORLD: Goose-local unscaled coords (design units).
 //     Only rig parts (neckHead, body, feet) are defined here.

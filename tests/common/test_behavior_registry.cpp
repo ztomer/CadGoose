@@ -16,13 +16,10 @@ TEST(BehaviorRegistry, AllBehaviorsRegistered) {
     auto& registry = BehaviorRegistry::Instance();
     size_t count = registry.GetBehaviorCount();
     fprintf(stderr, "[INFO] Registered %zu behaviors\n", count);
-    EXPECT_EQ(count, 20) << "Expected 20 behaviors to be registered";
+    EXPECT_EQ(count, 19) << "Expected 19 behaviors to be registered";
 
     auto* acid = registry.Get("acid");
     EXPECT_NE(acid, nullptr) << "acid should be registered";
-
-    auto* affirmations = registry.Get("affirmations");
-    EXPECT_NE(affirmations, nullptr) << "affirmations should be registered";
 
     auto* anger = registry.Get("anger");
     EXPECT_NE(anger, nullptr) << "anger should be registered";
@@ -221,7 +218,6 @@ TEST(BehaviorToggle, ConfigPtrMap) {
         {"toys",     &g_config.behaviors.fun.toysEnabled},
         {"interactive_drops", &g_config.behaviors.fun.interactiveDrops},
         {"peeking",  &g_config.behaviors.fun.peeking},
-        {"affirmations", &g_config.behaviors.fun.affirmations},
         {"boredom",  &g_config.behaviors.fun.boredom},
     };
 

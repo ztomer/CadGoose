@@ -1,43 +1,85 @@
-goose = ["Goosling"]
+goose = ["Ethangoose", "goosling"]
 
 [Debug]
 to_terminal = false
 visuals = false
 
+[Movement]
+base_walk_speed = 180.0
+init_direction_max = 360.0
+run_distance_threshold = 1200.0
+base_run_speed = 480.0
+max_speed = 600.0
+move_distance_threshold = 1.0
+friction = 0.85
+run_speed_multiplier = 1.25
+speed_lerp_rate = 0.05
+arrival_radius = 50.0
+max_force = 350.0
+direction_blend_rate = 0.15
+
+[Honk]
+honk_min_gap = 0.6
+honk_idle_min = 6.0
+honk_idle_max = 14.0
+honk_chase_cooldown = 1.8
+generic_cooldown = 0.9
+idle_check_ahead = 2.0
+idle_chance_divisor = 3
+fetch_cooldown = 1.2
+wander_honk_divisor = 15
+
+[AI]
+ollama_port = 11434
+local_llm_enabled = false
+osaurus_port = 1337
+custom_port = 1337
+evil_level = 1.0
+provider_type = 1
+text_meme_temperature = 1.2
+ollama_model = "llama3"
+text_meme_auto_save = true
+custom_endpoint = "http://localhost:1337/v1/chat/completions"
+custom_model = "foundation"
+text_meme_enabled = true
+enable_mcp = true
+show_status_bar = true
+osaurus_model = "laguna-xs.2-mxfp4"
+mcp_port = 31072
+text_meme_max_queue = 5
+chat_max_history = 100
+local_llm_model_path = ""
+
 [General]
 global_scale = 1.0
 audio_enabled = false
-memes_enabled = true
-light_theme_role = "Default"
-appearance_mode = 2
+audio_muted = false
 dark_theme_role = "Canadian"
+memes_enabled = true
+appearance_mode = 0
+light_theme_role = "Default"
 failsafe_hotkey = "cmd+shift+escape"
 
 [Rig]
-neck_height_moving = 10.0
-head1_offset_y = 4.0
-foot_spacing = 8.0
+body_y = 14.0
 neck_height_idle = 20.0
 neck_lerp_rate = 0.1
-neck_ext_idle = 3.0
-head2_offset_x = 4.0
-neck_ext_moving = 16.0
-head_base_y = 2.0
-head_base_x = 3.0
-head1_offset_x = 2.0
-head1_offset_z = 3.0
-beak_base_offset = 4.0
-head2_offset_y = -2.0
-body_y = 14.0
-underbody_y = 9.0
-beak_len = 12.0
 run_speed_threshold = 150.0
-beak_width = 16.0
-neck_base_x = 15.0
-stride_max = 15.0
 step_lift_height = 3.0
-foot_offset_y = 2.0
+neck_base_x = 15.0
+beak_len = 12.0
+beak_width = 16.0
+stride_max = 15.0
+neck_ext_idle = 3.0
+underbody_y = 9.0
+neck_height_moving = 10.0
 head_forward_bias = 1.0
+neck_ext_moving = 16.0
+head_base_x = 3.0
+head_base_y = 2.0
+beak_base_offset = 4.0
+foot_spacing = 8.0
+foot_offset_y = 2.0
 
 [Asset]
 meme_placeholder_w = 200
@@ -148,13 +190,11 @@ b = 0.82
 
 [Snatch]
 radius_range = 80.0
-tier3_min_delta = 1.0
 angular_speed_base = 1.5
-tier3_max_step = 50.0
+duration = 3.0
 speed_multiplier = 1.25
 offset_max = 120.0
 forward_bias_scale = 0.25
-duration = 3.0
 lateral_bias_limit = 0.75
 forward_bias_min = -0.35
 forward_bias_max = 0.15
@@ -164,30 +204,32 @@ angular_speed_random_range = 5.0
 
 [Render]
 eye_offset_x_back = -3.0
-dropped_item_size = 20.0
-squash_factor = 0.92
-shadow_width = 40.0
 shadow_offset_y = 10.0
 body_height = 22.0
-body_width = 22.0
-debug_tick_mod = 60
-eye_size = 4.0
-shadow_offset_x = 2.0
-footprint_height = 8.0
-frame_dt = 0.016667
 neck_size = 13.0
 foot_size = 8.0
 head1_size = 15.0
+close_button_size = 20.0
 head2_size = 10.0
 shadow_height = 30.0
+eye_size = 4.0
+shadow_offset_x = 2.0
+body_width = 22.0
+debug_tick_mod = 60
+footprint_height = 8.0
+frame_dt = 0.016667
+text_note_font_size = 14.0
+shadow_width = 40.0
+squash_factor = 0.92
+dropped_item_size = 20.0
 beak_width = 16.0
+beak_height = 8.0
+click_radius = 30.0
+beak_max_width = 9.0
+footprint_width = 12.0
 eye_offset_x_front = 3.0
 eye_offset_y = -4.0
 eye_facing_threshold = 0.5
-footprint_width = 12.0
-beak_max_width = 9.0
-click_radius = 30.0
-beak_height = 8.0
 frame_rate = 60.0
 iso_scale_x = 1.0
 iso_scale_y = 0.7
@@ -199,22 +241,22 @@ chase_chance = 1
 multi_monitor_enabled = true
 
 [Item]
-pickup_cooldown = 2.0
 meme_lifetime = 30.0
 text_lifetime = 30.0
 meme_pickup_chance = 10
 heist_chance_percent = 10
-meme_fetch_bias_max = 30
-fetch_base_chance = 2
+item_pickup_cooldown = 2.0
 item_lifetime = 15.0
+fetch_base_chance = 2
+item_fetch_cooldown = 4.0
 max_fetch_bias = 100
 max_dropped_texts = 20
 max_fetch_geese = 3
 max_dropped_memes = 20
+meme_fetch_bias_max = 30
 note_fetch_bias_max = 20
 attack_mouse_bias_max = 25
 heist_approach_margin = 8
-fetch_cooldown = 4.0
 
 [Physics]
 bounce_factor_corner = 0.8
@@ -244,89 +286,48 @@ curve_fade_distance = 200.0
 curve_fade_min_vel = 10.0
 
 [Spawn]
-target_reached_threshold_return = 60.0
-fetch_edge_margin = 40.0
-separation_min_distance = 1.0
+margin_y = 100.0
+item_drop_margin_x = 300.0
 margin_x = 200.0
+separation_max_distance = 70.0
 random_target_margin_x = 100.0
 target_reached_threshold_normal = 30.0
+fetch_edge_margin = 40.0
+target_reached_threshold_return = 60.0
+separation_min_distance = 1.0
+item_pickup_distance = 28.0
 target_reached_min_return = 50.0
 separation_force_multiplier = 1.5
 target_reached_min_normal = 25.0
-item_drop_margin_x = 300.0
-margin_y = 100.0
-item_drop_margin_y = 200.0
 random_target_margin_y = 100.0
-item_pickup_distance = 28.0
+item_drop_margin_y = 200.0
 catch_threshold_base = 22.0
 wander_target_offset = 200.0
 catch_threshold_min = 15.0
 wander_target_margin = 400.0
 max_fetching_geese = 100
-separation_max_distance = 70.0
 
 [Screen]
 default_width = 60
 default_height = 1080
 
-[Honk]
-min_gap = 0.6
-generic_cooldown = 0.9
-idle_check_ahead = 2.0
-idle_chance_divisor = 3
-idle_max = 14.0
-fetch_cooldown = 1.2
-chase_cooldown = 1.8
-idle_min = 6.0
-wander_honk_divisor = 15
-
-[Movement]
-base_walk_speed = 180.0
-init_direction_max = 360.0
-run_distance_threshold = 1200.0
-base_run_speed = 480.0
-max_speed = 600.0
-move_distance_threshold = 1.0
-friction = 0.85
-run_speed_multiplier = 1.25
-speed_lerp_rate = 0.05
-arrival_radius = 50.0
-max_force = 350.0
-direction_blend_rate = 0.15
-
-[AI]
-ollama_port = 11434
-local_llm_enabled = false
-osaurus_port = 1337
-custom_port = 1337
-evil_level = 1.0
-provider_type = 1
-text_meme_temperature = 1.2
-ollama_model = "llama3"
-text_meme_auto_save = true
-custom_endpoint = "http://localhost:1337/v1/chat/completions"
-custom_model = "foundation"
-text_meme_enabled = true
-enable_mcp = true
-show_status_bar = true
-osaurus_model = "laguna-xs.2-mxfp4"
-mcp_port = 31072
-text_meme_max_queue = 5
-chat_max_history = 100
-local_llm_model_path = ""
+[Mud]
+mud_enabled = true
+mud_lifetime = 15.0
+mud_chance = 15
 
 [Step]
-lift_run = 7.0
+step_time_wander = 0.2
+step_lift_run = 7.0
+step_duration_walk = 0.16
 step_trigger_walk = 5.0
 overshoot_run = 4.0
-time_wander = 0.2
-step_trigger_run = 9.0
-time_fetch = 0.15
-duration_walk = 0.16
-overshoot_walk = 1.5
+step_lift_walk = 3.0
+step_duration_run = 0.085
+step_time_fetch = 0.15
 time_snatch = 0.12
-lift_walk = 3.0
-duration_run = 0.085
+overshoot_walk = 1.5
+step_trigger_run = 9.0
 snap_distance = 50.0
 min_duration = 0.001
 dist_factor_base = 10.0
@@ -339,41 +340,33 @@ left_foot_angle = -15.0
 right_foot_angle = 15.0
 zero_velocity_threshold = 0.001
 
-[Mud]
-enabled = true
-lifetime = 15.0
-chance = 15
-
 [Behavior]
-autumn_leaves_enabled = false
+interactive_drops_enabled = false
+autumn_leaves_enabled = true
 rainbow_enabled = false
 interactive_drops_puddle_lifetime = 30.0
 anger_enabled = false
 avoidance_enabled = false
-affirmations_custom_message = ""
 boredom_enabled = false
-breadcrumbs_enabled = false
+breadcrumbs_enabled = true
 peeking_enabled = false
 acid_enabled = false
 ball_enabled = true
 honcker_hotkey = "f"
-interactive_drops_enabled = false
-toys_enabled = true
+toys_enabled = false
 jail_enabled = false
 drag_enabled = false
 nametag_enabled = true
-affirmations_enabled = false
 portal_hotkey_1 = "1"
 presence_enabled = false
 jail_hotkey_o = "o"
-affirmations_interval = 300.0
 config_gui_enabled = false
-honcker_enabled = true
+honcker_enabled = false
 visible_enabled = true
 hats_enabled = false
 ai_enabled = false
 health_enabled = false
-portals_enabled = false
+portals_enabled = true
 pomodoro_enabled = false
 jail_hotkey_p = "p"
 portal_hotkey_2 = "2"

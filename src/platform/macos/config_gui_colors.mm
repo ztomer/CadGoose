@@ -63,13 +63,14 @@ static float* ColorFieldForIdentifier(NSString* ident) {
     CGFloat w = self.bounds.size.width;
 
     // --- Appearance mode row ---
-    NSTextField* appearanceLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(12, y + 2, 80, 20)];
+    NSTextField* appearanceLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(12, y - 2, 80, 24)];
     appearanceLabel.stringValue = @"Appearance:";
     appearanceLabel.font = [NSFont fontWithName:@"Maple Mono" size:13] ?: [NSFont systemFontOfSize:13];
     appearanceLabel.textColor = [NSColor whiteColor];
     appearanceLabel.backgroundColor = [NSColor clearColor];
     appearanceLabel.bordered = NO;
     appearanceLabel.editable = NO;
+    appearanceLabel.alignment = NSTextAlignmentLeft;
     [self addSubview:appearanceLabel];
 
     NSSegmentedControl* modeControl = [[NSSegmentedControl alloc] initWithFrame:NSMakeRect(96, y - 2, 180, 24)];
@@ -140,13 +141,13 @@ static float* ColorFieldForIdentifier(NSString* ident) {
 
     // --- Color editor rows ---
     auto addColorRow = [&](NSString* label, float* rPtr, float* gPtr, float* bPtr, NSString* prefix, float yPos) -> float {
-        NSTextField* lf = [[NSTextField alloc] initWithFrame:NSMakeRect(12, yPos, labelW, 16)];
+        NSTextField* lf = [[NSTextField alloc] initWithFrame:NSMakeRect(12, yPos, 60, 16)];
         lf.font = [NSFont fontWithName:@"Maple Mono" size:11] ?: [NSFont systemFontOfSize:11];
         lf.textColor = [NSColor whiteColor];
         lf.backgroundColor = [NSColor clearColor];
         lf.bordered = NO; lf.editable = NO;
         lf.stringValue = label;
-        lf.alignment = NSTextAlignmentRight;
+        lf.alignment = NSTextAlignmentLeft;
         [self addSubview:lf];
 
         auto addSlider = [&](float colX, float* ptr, NSString* sid) {

@@ -2,6 +2,7 @@
 #include "world.h"
 #include "config.h"
 #include "goose.h"
+#include "actor.h"
 #include <cmath>
 
 static constexpr double ESC_KILL_HOLD_SECONDS = 1.0;
@@ -90,15 +91,15 @@ static void UpdateEscapeHoldHud() {
 }
 
 void ClearAllGooseState() {
-    for (auto& item : g_droppedItems) {
+    for (auto& item : g_world.droppedItems) {
         delete item.data;
     }
-    g_droppedItems.clear();
-    g_footprints.clear();
-    g_geese.clear();
-    g_cursorGrabberId = -1;
-    g_selectedGooseId = 0;
-    g_nextId = 0;
+    g_world.droppedItems.clear();
+    g_world.footprints.clear();
+    g_world.geese.clear();
+    g_world.cursorGrabberId = -1;
+    g_world.selectedGooseId = 0;
+    g_world.nextId = 0;
 }
 
 static void MaybeTriggerEscapeKill() {
@@ -117,14 +118,14 @@ static void MaybeTriggerEscapeKill() {
 static gboolean cb_window_key_pressed(GtkEventControllerKey*, guint keyval, guint, GdkModifierType, gpointer) {
     if (keyval != GDK_KEY_Escape) return FALSE;
 
-    if (g_cursorGrabberId != -1) {
-        for (auto& g : g_geese) {
-            if (g.id == g_cursorGrabberId && g.state == GooseState::SNATCH_CURSOR) {
+    if (g_world.cursorGrabberId != -1) {
+        for (auto* g : ActorManager::Instance().getGeese()) {
+            if (g->id == g_world.cursorGrabberId && g->state == GooseState::SNATCH_CURSOR) {
                 UiLogPush("ESC pressed: ending snatch");
-                g.state = GooseState::WANDER;
-                g.PickNewTarget(g_config.screen.width, g_config.screen.height);
-                g.stepTime = g_config.step.timeWander;
-                g_cursorGrabberId = -1;
+                g->state = GooseState::WANDER;
+                g->PickNewTarget(g_config.screen.width, g_config.screen.height);
+                g->stepTime = g_config.step.timeWander;
+                g_world.cursorGrabberId = -1;
             }
         }
     }

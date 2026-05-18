@@ -4,13 +4,20 @@
 // ===========================
 #include "world.h"
 #include "config.h"
+#include "actor.h"
+#include "actor_leafpile.h"
 
 #ifdef __APPLE__
 #import <AppKit/AppKit.h>
 #endif
 
+static constexpr float kLeafPileExpiry = 10.0f;
+static constexpr int kMaxLeafPiles = 10;
+static constexpr float kLeafPileSizeMin = 50.0f;
+static constexpr float kLeafPileSizeMax = 100.0f;
+
 void World_CleanupExpired(double currentTime) {
-    g_droppedItems.remove_if([&](DroppedItem& i) {
+    g_world.droppedItems.remove_if([&](DroppedItem& i) {
         float lifetime = g_config.item.itemLifetime;
         if (i.data->type == ItemData::MEME) lifetime = g_config.item.memeLifetime;
         else if (i.data->type == ItemData::TEXT) lifetime = g_config.item.textLifetime;
@@ -21,17 +28,17 @@ void World_CleanupExpired(double currentTime) {
     });
 
     int memeCount = 0, textCount = 0;
-    for (const auto& item : g_droppedItems) {
+    for (const auto& item : g_world.droppedItems) {
         if (item.data->type == ItemData::MEME) memeCount++;
         else if (item.data->type == ItemData::TEXT) textCount++;
     }
 
     if (memeCount > g_config.item.maxDroppedMemes) {
         int toRemove = memeCount - g_config.item.maxDroppedMemes;
-        for (auto it = g_droppedItems.begin(); it != g_droppedItems.end() && toRemove > 0; ) {
+        for (auto it = g_world.droppedItems.begin(); it != g_world.droppedItems.end() && toRemove > 0; ) {
             if (it->data->type == ItemData::MEME && !it->pinned) {
                 delete it->data;
-                it = g_droppedItems.erase(it);
+                it = g_world.droppedItems.erase(it);
                 toRemove--;
             } else {
                 ++it;
@@ -41,10 +48,10 @@ void World_CleanupExpired(double currentTime) {
 
     if (textCount > g_config.item.maxDroppedTexts) {
         int toRemove = textCount - g_config.item.maxDroppedTexts;
-        for (auto it = g_droppedItems.begin(); it != g_droppedItems.end() && toRemove > 0; ) {
+        for (auto it = g_world.droppedItems.begin(); it != g_world.droppedItems.end() && toRemove > 0; ) {
             if (it->data->type == ItemData::TEXT && !it->pinned) {
                 delete it->data;
-                it = g_droppedItems.erase(it);
+                it = g_world.droppedItems.erase(it);
                 toRemove--;
             } else {
                 ++it;
@@ -52,44 +59,66 @@ void World_CleanupExpired(double currentTime) {
         }
     }
 
-    while (!g_footprints.empty()) {
-        Footprint& fp = g_footprints.front();
+    while (!g_world.footprints.empty()) {
+        Footprint& fp = g_world.footprints.front();
         float life = (fp.lifetime > 0.0f) ? fp.lifetime : g_config.mud.lifetime;
         if ((currentTime - fp.timeSpawned) > life) {
-            g_footprints.pop();
+            g_world.footprints.pop();
         } else {
             break;
         }
     }
 
-    g_leafPiles.remove_if([&](const LeafPile& p) {
-        return (p.timeSinceKicked > 0.0f && currentTime - p.timeSinceKicked > 10.0f);
-    });
+    // Leaf piles are now managed by ActorManager — cleanup handled there
 }
 
 void World_TickLeafPiles(double currentTime, float dt, Goose* nearestGoose) {
     if (!g_config.behaviors.fun.autumnLeaves) return;
-    for (auto& pile : g_leafPiles) {
-        pile.Tick(nearestGoose, currentTime, dt);
+
+    auto& mgr = ActorManager::Instance();
+    for (int i = 0; i < mgr.totalCount(); i++) {
+        Actor* a = mgr.getByIndex(i);
+        if (!a || strcmp(a->type(), "leafpile") != 0) continue;
+
+        LeafPileActor* pile = static_cast<LeafPileActor*>(a);
+        if (!pile->isAlive()) continue;
+
+        // Check if goose is near to kick the pile
+        if (nearestGoose && Vector2::Distance(nearestGoose->pos, pile->position) < pile->radius + g_config.render.footSize) {
+            float walkSpeed = g_config.movement.baseWalkSpeed;
+            float chargeSpeed = g_config.movement.baseRunSpeed;
+            float currentSpeed = nearestGoose->currentSpeed;
+            float gooseSpeedPercentage = (currentSpeed - walkSpeed) / (chargeSpeed - walkSpeed);
+            if (gooseSpeedPercentage < 0.0f) gooseSpeedPercentage = 0.0f;
+            if (gooseSpeedPercentage > 1.0f) gooseSpeedPercentage = 1.0f;
+            pile->kick(nearestGoose->vel, currentTime, gooseSpeedPercentage);
+        }
+
+        pile->tick(dt, currentTime);
     }
 }
 
 void World_SpawnRandomLeafPile(float screenWidth, float screenHeight, double currentTime) {
     if (!g_config.behaviors.fun.autumnLeaves) return;
-    if (g_leafPiles.size() >= 10) return;
-    LeafPile pile;
-    pile.Init(Vector2{
+
+    auto& mgr = ActorManager::Instance();
+    int activeCount = mgr.countByType("leafpile");
+    if (activeCount >= kMaxLeafPiles) return;
+
+    Vector2 pos{
         (float)(rand() % (int)std::max(1.0f, screenWidth)),
         (float)(rand() % (int)std::max(1.0f, screenHeight))
-    }, 50.0f, 100.0f, currentTime);
-    g_leafPiles.push_back(pile);
+    };
+    float radius = kLeafPileSizeMin + (rand() % (int)(kLeafPileSizeMax - kLeafPileSizeMin));
+    LeafPileActor* pile = new LeafPileActor(pos, radius, kLeafPileSizeMax, currentTime);
+    mgr.add(pile);
 }
 
 bool ItemHitTest(NSPoint p, float viewHeight, DroppedItem** hitItem, float closeButtonSize) {
     // p is in VIEW coords (isFlipped=YES → same as DEVICE coords)
     DevicePoint mousePt = {(float)p.x, (float)p.y};
 
-    for (auto it = g_droppedItems.rbegin(); it != g_droppedItems.rend(); ++it) {
+    for (auto it = g_world.droppedItems.rbegin(); it != g_world.droppedItems.rend(); ++it) {
         DroppedItem& item = *it;
         DevicePoint itemPos = {item.pos.x, item.pos.y};
         if (HitTest::PointInItem(mousePt, itemPos, item.data->w, item.data->h, item.rotation, g_config.general.globalScale)) {
@@ -108,25 +137,25 @@ bool CheckCloseButton(float lx, float ly, float w, float h, float closeButtonSiz
 
 void DeleteDroppedItem(DroppedItem* item) {
     delete item->data;
-    for (auto it = g_droppedItems.begin(); it != g_droppedItems.end(); ++it) {
+    for (auto it = g_world.droppedItems.begin(); it != g_world.droppedItems.end(); ++it) {
         if (&(*it) == item) {
-            g_droppedItems.erase(it);
+            g_world.droppedItems.erase(it);
             break;
         }
     }
 }
 
 void MoveItemToFront(DroppedItem* item) {
-    for (auto it = g_droppedItems.begin(); it != g_droppedItems.end(); ++it) {
+    for (auto it = g_world.droppedItems.begin(); it != g_world.droppedItems.end(); ++it) {
         if (&(*it) == item) {
-            g_droppedItems.splice(g_droppedItems.end(), g_droppedItems, it);
+            g_world.droppedItems.splice(g_world.droppedItems.end(), g_world.droppedItems, it);
             break;
         }
     }
 }
 
 bool ShouldAcceptMouseEvents() {
-    return !g_droppedItems.empty();
+    return !g_world.droppedItems.empty();
 }
 
 bool Config_IsSystemDarkTheme() {

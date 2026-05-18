@@ -1,3 +1,6 @@
+#include "ui_drawing.h"
+#include "ui_tick.h"
+#include "ui_debug.h"
 // ui.cpp
 #include "ui.h"
 #include "ui_controls.h"
@@ -7,6 +10,7 @@
 #include "config.h"
 #include "assets.h"
 #include "goose.h"
+#include "actor.h"
 #include <algorithm>
 #include <iostream>
 #include <vector>
@@ -20,6 +24,51 @@
 #include "ram_tracker.h"
 
 namespace fs = std::filesystem;
+
+// --- Input region constants ---
+static constexpr int kGooseInputRegionMargin = 100;
+static constexpr int kGooseInputRegionPad = 30;
+static constexpr int kGooseInputRegionSize = 60;
+static constexpr int kItemInputRegionMargin = 500;
+
+// --- Footprint constants ---
+static constexpr float kFootprintAlpha = 0.5f;
+static constexpr float kFootprintPadR = 0.45f;
+static constexpr float kFootprintPadG = 0.25f;
+static constexpr float kFootprintPadB = 0.1f;
+static constexpr float kFootprintPadScaleX = 6;
+static constexpr float kFootprintPadScaleY = 8;
+static constexpr float kFootprintToeScaleX = 3;
+static constexpr float kFootprintToeScaleY = 5;
+static constexpr float kFootprintToeOffsetX = 3;
+static constexpr float kFootprintToeOffsetY = 5;
+
+// --- Debug overlay constants ---
+static constexpr float kDebugOrangeR = 1.0f;
+static constexpr float kDebugOrangeG = 0.5f;
+static constexpr float kDebugOrangeB = 0.0f;
+static constexpr float kDebugOrangeAlpha = 0.8f;
+static constexpr float kDebugPointRadius = 4;
+static constexpr int kDebugCircleRadius = 40;
+static constexpr float kDebugIdLabelOffsetX = 15;
+static constexpr float kDebugIdLabelOffsetY = -25;
+static constexpr float kDebugDashPattern1 = 4.0;
+static constexpr float kDebugDashPattern2 = 2.0;
+static constexpr float kDebugTargetDotRadius = 6;
+static constexpr float kSimDt = 0.1f;
+static constexpr int kSimSteps = 15;
+static constexpr float kSimBreakDist = 10.0f;
+static constexpr float kSimMaxDist = 2000.0f;
+static constexpr float kTickDt = 1.0f / 60.0f;
+static constexpr float kLinuxFootprintFadeStart = 0.7f;
+static constexpr float kLinuxTextPadding = 10;
+static constexpr float kLinuxNametagYOffset = 75.0f;
+static constexpr float kLinuxNametagPadX = 4;
+static constexpr float kLinuxNametagPadY = 2;
+static constexpr float kLinuxNametagPadW = 8;
+static constexpr float kLinuxNametagPadH = 4;
+static constexpr float kLinuxInfoLabelOffsetY = -10;
+static constexpr float kLinuxBeakTipRadius = 4;
 
 // --- Input region ------------------------------------------------------------
 // Make overlay click-through except where geese/items are drawn.
@@ -35,22 +84,22 @@ void UpdateInputRegion(GtkWindow* window, const MonitorInfo& m) {
         return;
     }
 
-    for (auto& goose : g_geese) {
+    for (auto* goose : ActorManager::Instance().getGeese()) {
         // Calculate relative position to this monitor
-        float localX = goose.pos.x - m.x;
-        float localY = goose.pos.y - m.y;
+        float localX = goose->pos.x - m.x;
+        float localY = goose->pos.y - m.y;
         
         // Only add to region if it's within/near this monitor's bounds
-        if (localX > -100 && localX < m.width + 100 && localY > -100 && localY < m.height + 100) {
-            cairo_rectangle_int_t r = { (int)localX - 30, (int)localY - 30, 60, 60 };
+        if (localX > -kGooseInputRegionMargin && localX < m.width + kGooseInputRegionMargin && localY > -kGooseInputRegionMargin && localY < m.height + kGooseInputRegionMargin) {
+            cairo_rectangle_int_t r = { (int)localX - kGooseInputRegionPad, (int)localY - kGooseInputRegionPad, kGooseInputRegionSize, kGooseInputRegionSize };
             cairo_region_union_rectangle(region, &r);
         }
     }
 
-    for (auto& item : g_droppedItems) {
+    for (auto& item : g_world.droppedItems) {
         float localX = item.pos.x - m.x;
         float localY = item.pos.y - m.y;
-        if (localX > -500 && localX < m.width + 500 && localY > -500 && localY < m.height + 500) {
+        if (localX > -kItemInputRegionMargin && localX < m.width + kItemInputRegionMargin && localY > -kItemInputRegionMargin && localY < m.height + kItemInputRegionMargin) {
             cairo_rectangle_int_t r = { (int)localX, (int)localY, (int)(item.data->w * g_config.globalScale), (int)(item.data->h * g_config.globalScale) };
             cairo_region_union_rectangle(region, &r);
         }
@@ -63,112 +112,6 @@ void UpdateInputRegion(GtkWindow* window, const MonitorInfo& m) {
     cairo_region_destroy(region);
 }
 
-static void DrawFootprints(cairo_t* cr) {
-    for (auto& fp : g_footprints) {
-        double age = g_time - fp.timeSpawned;
-        float alpha = 0.5f;
-        float life = (fp.lifetime > 0.0f) ? fp.lifetime : g_config.mudLifetime;
-        float fadeStart = life * 0.7f;
-        float fadeDur = life - fadeStart;
-        if (age > fadeStart) alpha = 0.5f * (1.0f - (float)(age - fadeStart) / fadeDur);
-        if (alpha <= 0) continue;
-
-        cairo_save(cr);
-        cairo_translate(cr, fp.pos.x, fp.pos.y);
-        cairo_scale(cr, g_config.globalScale, g_config.globalScale);
-        cairo_rotate(cr, fp.dir * G_PI / 180.0);
-        
-        cairo_set_source_rgba(cr, 0.45, 0.25, 0.1, alpha);
-        
-        cairo_save(cr);
-        cairo_scale(cr, 6, 8);
-        cairo_arc(cr, 0, 0, 1.0, 0, 2*G_PI);
-        cairo_fill(cr);
-        cairo_restore(cr);
-
-        cairo_save(cr);
-        cairo_translate(cr, -3, -5);
-        cairo_scale(cr, 3, 5);
-        cairo_arc(cr, 0, 0, 1.0, 0, 2*G_PI);
-        cairo_fill(cr);
-        cairo_restore(cr);
-
-        cairo_save(cr);
-        cairo_translate(cr, 3, -5);
-        cairo_scale(cr, 3, 5);
-        cairo_arc(cr, 0, 0, 1.0, 0, 2*G_PI);
-        cairo_fill(cr);
-        cairo_restore(cr);
-
-        cairo_restore(cr);
-    }
-}
-
-static void DrawDroppedItems(cairo_t* cr) {
-    for (auto& item : g_droppedItems) {
-        if (!std::isfinite(item.pos.x) || !std::isfinite(item.pos.y) || !std::isfinite(item.rotation)) {
-            continue; // Skip corrupted items
-        }
-
-        cairo_save(cr);
-        float s = g_config.globalScale;
-        // Center the coordinate system on the item, applying global scale
-        cairo_translate(cr, item.pos.x + item.data->w * 0.5f * s, item.pos.y + item.data->h * 0.5f * s);
-        cairo_scale(cr, s, s);
-        cairo_rotate(cr, item.rotation);
-        
-        if (cairo_status(cr) != CAIRO_STATUS_SUCCESS) {
-            std::cerr << "[UI] Cairo error after item transform: " << cairo_status_to_string(cairo_status(cr)) << std::endl;
-            cairo_restore(cr);
-            continue;
-        }
-
-        // Draw from top-left relative to scaled center
-        cairo_translate(cr, -item.data->w * 0.5f, -item.data->h * 0.5f);
-
-        if (item.data->type == ItemData::MEME && item.data->pixbuf) {
-            set_source_pixbuf_manual(cr, item.data->pixbuf, 0, 0);
-            cairo_paint(cr);
-        } else if (item.data->type == ItemData::TEXT) {
-            cairo_set_source_rgb(cr, 1, 1, 0.85);
-            cairo_rectangle(cr, 0, 0, item.data->w, item.data->h);
-            cairo_fill_preserve(cr);
-            cairo_set_source_rgb(cr, 0, 0, 0);
-            cairo_set_line_width(cr, 2);
-            cairo_stroke(cr);
-
-            PangoLayout* layout = pango_cairo_create_layout(cr);
-            pango_layout_set_text(layout, item.data->Text().c_str(), -1);
-            pango_layout_set_width(layout, (item.data->w - 10) * PANGO_SCALE);
-            cairo_move_to(cr, 5, 5);
-            pango_cairo_show_layout(cr, layout);
-            g_object_unref(layout);
-        }
-        cairo_restore(cr);
-
-        // Visual debug for items: draw a point at their center
-        if (g_config.debugVisuals) {
-            cairo_save(cr);
-            Vector2 center = item.pos + Vector2{(float)item.data->w * 0.5f, (float)item.data->h * 0.5f} * s;
-            cairo_set_source_rgba(cr, 1, 0.5, 0, 0.8); // Orange point
-            cairo_arc(cr, center.x, center.y, 4, 0, G_PI * 2);
-            cairo_fill(cr);
-            
-            // Label for time left
-            char timeBuf[16];
-            snprintf(timeBuf, sizeof(timeBuf), "%.1fs", 15.0 - (g_time - item.timeDropped));
-            cairo_move_to(cr, center.x + 8, center.y + 8);
-            PangoLayout* tLayout = pango_cairo_create_layout(cr);
-            pango_layout_set_text(tLayout, timeBuf, -1);
-            cairo_set_source_rgba(cr, 1, 1, 1, 0.6);
-            pango_cairo_show_layout(cr, tLayout);
-            g_object_unref(tLayout);
-            cairo_restore(cr);
-        }
-    }
-}
-
-// --- Drawing (see ui_drawing.cpp) -----------------------------------------
 void draw_overlay(GtkDrawingArea* area, cairo_t* cr, int width, int height, gpointer data) {
     MonitorInfo* m = (MonitorInfo*)data;
     if (!m || cairo_status(cr) != CAIRO_STATUS_SUCCESS) return;
@@ -188,15 +131,15 @@ void draw_overlay(GtkDrawingArea* area, cairo_t* cr, int width, int height, gpoi
     DrawDroppedItems(cr);
 
     // Draw Geese
-    for (auto& g : g_geese) {
+    for (auto* g : ActorManager::Instance().getGeese()) {
         if (cairo_status(cr) != CAIRO_STATUS_SUCCESS) break;
-        g.Draw(cr);
+        g->Draw(cr);
 
         // Minecraft-style name tag
-        if (!g.name.empty()) {
+        if (!g->name.empty()) {
             cairo_save(cr);
             PangoLayout* layout = pango_cairo_create_layout(cr);
-            std::string tagText = "[#" + std::to_string(g.id) + "] " + g.name;
+            std::string tagText = "[#" + std::to_string(g->id) + "] " + g->name;
             pango_layout_set_text(layout, tagText.c_str(), -1);
             
             PangoFontDescription* desc = pango_font_description_from_string("Sans Bold 10");
@@ -207,11 +150,11 @@ void draw_overlay(GtkDrawingArea* area, cairo_t* cr, int width, int height, gpoi
             pango_layout_get_pixel_size(layout, &tw, &th);
 
             float tagX = g.pos.x - tw / 2.0f;
-            float tagY = g.pos.y - 75.0f * g_config.globalScale; // Position above head
+            float tagY = g.pos.y - kLinuxNametagYOffset * g_config.globalScale; // Position above head
 
             // Background rectangle (translucent dark)
             cairo_set_source_rgba(cr, 0, 0, 0, 0.4);
-            cairo_rectangle(cr, tagX - 4, tagY - 2, tw + 8, th + 4);
+            cairo_rectangle(cr, tagX - kLinuxNametagPadX, tagY - kLinuxNametagPadY, tw + kLinuxNametagPadW, th + kLinuxNametagPadH);
             cairo_fill(cr);
 
             // White text
@@ -230,7 +173,7 @@ void draw_overlay(GtkDrawingArea* area, cairo_t* cr, int width, int height, gpoi
             // 1. Highlight circle around goose
             cairo_set_source_rgba(cr, 1, 1, 0, 0.15);
             cairo_set_line_width(cr, 2.0);
-            cairo_arc(cr, g.pos.x, g.pos.y, 40, 0, G_PI * 2);
+            cairo_arc(cr, g.pos.x, g.pos.y, kDebugCircleRadius, 0, G_PI * 2);
             cairo_fill_preserve(cr);
             cairo_set_source_rgba(cr, 1, 1, 0, 0.4);
             cairo_stroke(cr);
@@ -239,7 +182,7 @@ void draw_overlay(GtkDrawingArea* area, cairo_t* cr, int width, int height, gpoi
             char idBuf[16];
             snprintf(idBuf, sizeof(idBuf), "ID %d", g.id);
             cairo_set_source_rgba(cr, 1, 1, 0, 0.9);
-            cairo_move_to(cr, g.pos.x + 15, g.pos.y - 25);
+            cairo_move_to(cr, g.pos.x + kDebugIdLabelOffsetX, g.pos.y + kDebugIdLabelOffsetY);
             PangoLayout* idLayout = pango_cairo_create_layout(cr);
             pango_layout_set_text(idLayout, idBuf, -1);
             pango_cairo_show_layout(cr, idLayout);
@@ -255,7 +198,7 @@ void draw_overlay(GtkDrawingArea* area, cairo_t* cr, int width, int height, gpoi
             // Draw line to target (dashed)
             cairo_set_source_rgba(cr, 0, 1, 0, 0.5);
             cairo_set_line_width(cr, 1.5);
-            double dashes[] = {4.0, 2.0};
+            double dashes[] = {kDebugDashPattern1, kDebugDashPattern2};
             cairo_set_dash(cr, dashes, 2, 0);
             cairo_move_to(cr, origin.x, origin.y);
             cairo_line_to(cr, g.target.x, g.target.y);
@@ -267,7 +210,7 @@ void draw_overlay(GtkDrawingArea* area, cairo_t* cr, int width, int height, gpoi
             if (g.state == GooseState::RETURNING) cairo_set_source_rgba(cr, 1, 0, 1, 0.8); // Purple for drop point
             if (g.state == GooseState::FETCHING) cairo_set_source_rgba(cr, 0, 1, 1, 0.8);  // Cyan for fetch point
             
-            cairo_arc(cr, g.target.x, g.target.y, 6, 0, G_PI * 2);
+            cairo_arc(cr, g.target.x, g.target.y, kDebugTargetDotRadius, 0, G_PI * 2);
             cairo_fill(cr);
 
             // 4. Threshold circle (Drop Zone / Catch Zone)
@@ -302,20 +245,20 @@ void draw_overlay(GtkDrawingArea* area, cairo_t* cr, int width, int height, gpoi
 
             // 6. Draw Beak Tip (btPoint) clearly
             Vector2 bt = g.GetBeakTipDevice();
-            cairo_set_source_rgba(cr, 1, 0.5, 0, 0.8);
+            cairo_set_source_rgba(cr, kDebugOrangeR, kDebugOrangeG, kDebugOrangeB, kDebugOrangeAlpha);
             cairo_arc(cr, bt.x, bt.y, 4, 0, G_PI * 2);
             cairo_fill(cr);
 
             // Enhanced Path Visualization: Predictive Curve Simulation
             Vector2 simPos = origin;
             Vector2 simVel = (Vector2::Length(g.vel) < 1.0f) ? (Vector2::Normalize(g.target - origin) * g.currentSpeed) : g.vel;
-            float simDt = 0.1f; // Simulation step
+            float simDt = kSimDt; // Simulation step
             
             cairo_set_source_rgba(cr, 1, 1, 1, 0.3);
-            for (int i = 0; i < 15; i++) {
+            for (int i = 0; i < kSimSteps; i++) {
                 Vector2 toTarget = g.target - simPos;
                 float d = Vector2::Length(toTarget);
-                if (d < 10.0f) break;
+                if (d < kSimBreakDist) break;
 
                 Vector2 desired = Vector2::Normalize(toTarget) * g.currentSpeed;
                 Vector2 seek = (desired - simVel) * 2.0f;
@@ -338,7 +281,7 @@ void draw_overlay(GtkDrawingArea* area, cairo_t* cr, int width, int height, gpoi
                 simPos = nextSimPos;
                 
                 // Avoid infinite simulation if something goes wrong
-                if (Vector2::Distance(simPos, origin) > 2000.0f) break;
+                if (Vector2::Distance(simPos, origin) > kSimMaxDist) break;
             }
 
             cairo_restore(cr);
@@ -353,72 +296,6 @@ void draw_overlay(GtkDrawingArea* area, cairo_t* cr, int width, int height, gpoi
     }
 }
 
-gboolean on_tick(gpointer data) {
-    g_time += 1.0 / 60.0;
-    MaybeTriggerEscapeKill();
-    UpdateEscapeHoldHud();
-
-    CursorState cursor = {};
-    CursorAction action = {};
-    if (g_cursorProvider) {
-        cursor = g_cursorProvider->Read();
-    }
-
-    for (auto& g : g_geese) {
-        CursorAction a = g.Update(1.0 / 60.0, g_time, g_screenWidth, g_screenHeight, cursor);
-        if (!a.isNone()) action = a;
-    }
-
-    if (g_cursorProvider && !action.isNone()) {
-        g_cursorProvider->Execute(action);
-    }
-
-    g_droppedItems.remove_if([](DroppedItem& i) {
-        bool exp = i.isExpired(g_time);
-        if (exp) delete i.data;
-        return exp;
-    });
-
-    while (!g_footprints.empty()) {
-        Footprint& fp = g_footprints.front();
-        float life = (fp.lifetime > 0.0f) ? fp.lifetime : g_config.mudLifetime;
-        if ((g_time - fp.timeSpawned) > life) {
-            g_footprints.pop();
-        } else {
-            break;
-        }
-    }
-
-    // We pass a window to setup_overlay, but we need to update ALL overlays.
-    // However, on_tick is associated with a specific canvas.
-    // To keep it simple, we queue draw on all monitors.
-    // This is handled by setup_overlay_window which spawns timers or we can use a global signal.
-    gtk_widget_queue_draw(GTK_WIDGET(data));
-    
-    // Find matching MonitorInfo for this canvas to update its input region
-    for (auto& mi : g_monitors) {
-        // This is a bit hacky but works: find window that contains this canvas
-        GtkRoot* root = gtk_widget_get_root(GTK_WIDGET(data));
-        if (root && GTK_IS_WINDOW(root)) {
-            // Need to match monitor to window. Let's store window in MonitorInfo.
-            // Simplified: just update input region for this specific window.
-            UpdateInputRegion(GTK_WINDOW(root), mi);
-            break; 
-        }
-    }
-
-    static int tick = 0;
-    if ((++tick % 10) == 0) RefreshSelectedGooseUi();
-    return G_SOURCE_CONTINUE;
-}
-
-// --- Callbacks (in ui_callbacks.cpp) ------------------------------------
-
-// --- Registry UI (in ui_factory.cpp) -----------------------------------
-
-// --- Control panel (see ui_control_panel.cpp) -------------------------------
-
-// --- Overlay window ----------------------------------------------------------
 void setup_overlay_window(GtkApplication* app) {
     g_uiApp = app;
     ASSET_ROOT = fs::current_path() / ASSET_ROOT_NAME;
@@ -432,8 +309,8 @@ void setup_overlay_window(GtkApplication* app) {
     GListModel* monitors = gdk_display_get_monitors(display);
     
     int minX = 0, minY = 0, maxX = 0, maxY = 0;
-    g_monitors.clear();
-    g_overlayCanvases.clear();
+    g_world.monitors.clear();
+    g_world.overlayCanvases.clear();
 
     for (unsigned int i = 0; i < g_list_model_get_n_items(monitors); i++) {
         GdkMonitor* monitor = (GdkMonitor*)g_list_model_get_item(monitors, i);
@@ -446,7 +323,7 @@ void setup_overlay_window(GtkApplication* app) {
         mi.width = geom.width;
         mi.height = geom.height;
         mi.monitor = monitor;
-        g_monitors.push_back(mi);
+        g_world.monitors.push_back(mi);
 
         if (mi.x < minX) minX = mi.x;
         if (mi.y < minY) minY = mi.y;
@@ -466,9 +343,9 @@ void setup_overlay_window(GtkApplication* app) {
 
         GtkWidget* canvas = gtk_drawing_area_new();
         // Pass the MonitorInfo reference
-        gtk_drawing_area_set_draw_func(GTK_DRAWING_AREA(canvas), draw_overlay, &g_monitors.back(), NULL);
+        gtk_drawing_area_set_draw_func(GTK_DRAWING_AREA(canvas), draw_overlay, &g_world.monitors.back(), NULL);
         gtk_window_set_child(overlay, canvas);
-        g_overlayCanvases.push_back(canvas);
+        g_world.overlayCanvases.push_back(canvas);
 
         g_timeout_add(16, on_tick, canvas);
         gtk_window_present(overlay);
@@ -477,13 +354,13 @@ void setup_overlay_window(GtkApplication* app) {
     // Set globally unified screen dimensions.
     // If multi-monitor is disabled, clamp world bounds to the primary monitor
     // so geese/cursor logic won't drift into hidden monitors and crash at edges.
-    if (!g_config.multiMonitorEnabled && !g_monitors.empty()) {
-        const MonitorInfo& primary = g_monitors.front();
-        g_screenWidth = primary.width;
-        g_screenHeight = primary.height;
+    if (!g_config.multiMonitorEnabled && !g_world.monitors.empty()) {
+        const MonitorInfo& primary = g_world.monitors.front();
+        g_world.screenWidth = primary.width;
+        g_world.screenHeight = primary.height;
     } else {
-        g_screenWidth = maxX;
-        g_screenHeight = maxY;
+        g_world.screenWidth = maxX;
+        g_world.screenHeight = maxY;
     }
     
     // Global style for transparent windows
