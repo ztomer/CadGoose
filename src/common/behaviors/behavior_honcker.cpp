@@ -6,6 +6,7 @@
 // ===========================
 #include "behavior.h"
 #include "behaviors/states/honcker_state.h"
+#include "event_bus.h"
 #include "goose.h"
 #include "config.h"
 #include "world.h"
@@ -43,6 +44,7 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
 
     if (pressed && !s_wasPressed) {
         g_assets.Honk();
+        EventBus::Instance().Publish(GooseHonkedEvent{goose->id, goose->pos.x, goose->pos.y, time});
         auto* state = BehaviorStateManager::Instance().GetOrCreate<HonckerState>(goose->id, "honcker");
         state->visible = true;
         state->lastShowTime = time;
@@ -91,6 +93,7 @@ REGISTER_BEHAVIOR(g_honckerBehavior);
 
 void Honcker_Honk(Goose* goose, double time) {
     g_assets.Honk();
+    EventBus::Instance().Publish(GooseHonkedEvent{goose->id, goose->pos.x, goose->pos.y, time});
     auto* state = BehaviorStateManager::Instance().GetOrCreate<HonckerState>(goose->id, "honcker");
     state->visible = true;
     state->lastShowTime = time;
