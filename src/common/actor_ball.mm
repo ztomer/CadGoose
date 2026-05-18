@@ -83,7 +83,7 @@ void BallActor::onCursorKick(const Vector2& cursorPos, double time) {
     }
 }
 
-void BallActor::tick(double dt, double time) {
+void BallActor::tick(WorldContext& ctx, double dt, double time) {
     if (!active) return;
 
     Vector2 delta = velocity * (float)dt;

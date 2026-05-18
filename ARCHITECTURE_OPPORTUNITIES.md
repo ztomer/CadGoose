@@ -47,10 +47,11 @@ The `world.h` file acts as a dumping ground for global variables and tight coupl
 **Opportunity:** Encapsulate the global state into a `WorldContext` or `EngineState` object that is passed down to systems via dependency injection, or managed strictly by the `EventBus`. This eliminates hidden dependencies and makes unit testing significantly easier.
 
 ### Detailed Execution Plan:
-*   **Phase 1: Context Struct Definition:** Create a new `WorldContext` (or `EngineState`) struct/class and move all global variables from `world.h` into it as members.
-*   **Phase 2: Context Instantiation:** Update the main application entry point to instantiate a single instance of `WorldContext`.
-*   **Phase 3: Dependency Injection:** Refactor all systems, update functions, and behavior ticks that previously accessed global state to instead accept a `WorldContext&` as a parameter.
-*   **Phase 4: Event-Driven Refactoring:** For state changes that trigger side effects, migrate from direct variable polling to emitting and listening for events via the `EventBus`.
+*   **Phase 1 [DONE]:** `WorldContext` struct defined in [world.h](include/world.h); legacy globals (`g_geese`, `g_droppedItems`, monitors, footprints, crumbs, leaf piles, screen dims, id counters, ui log) moved inside as members.
+*   **Phase 2 [DONE]:** Single `g_world` instance instantiated in [world.cpp](src/common/world.cpp); all 239 call sites updated to `g_world.X`.
+*   **Phase 2.5 [DONE]:** Restored build — committed previously-untracked Actor/behavior_manager/state files and added missing per-behavior state-header includes ([fix commit](#)). 723 tests pass.
+*   **Phase 3 [IN PROGRESS]:** Dependency Injection — thread `WorldContext&` into system entry points (`Actor::tick`, `ActorManager::tickAll`, behavior tick fns via `BehaviorContext::world`), then incrementally rewrite leaf `g_world.X` reads to `ctx.X`. Partial-DI approach: top-level systems take the context; deep helpers migrate opportunistically as touched.
+*   **Phase 4:** Event-Driven Refactoring — for state changes that trigger side effects, migrate from direct variable polling to emitting/listening on the `EventBus`.
 
 ---
 

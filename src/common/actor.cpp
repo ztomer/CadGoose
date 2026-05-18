@@ -3,6 +3,7 @@
 
 #include "actor.h"
 #include "goose.h"
+#include "world.h"
 #include <algorithm>
 
 ActorManager& ActorManager::Instance() {
@@ -19,10 +20,10 @@ void ActorManager::remove(Actor* actor) {
     actors.erase(std::remove(actors.begin(), actors.end(), actor), actors.end());
 }
 
-void ActorManager::tickAll(double dt, double time) {
+void ActorManager::tickAll(WorldContext& ctx, double dt, double time) {
     for (auto* actor : actors) {
         if (actor->active) {
-            actor->tick(dt, time);
+            actor->tick(ctx, dt, time);
         }
     }
 }

@@ -10,6 +10,7 @@
 #include <cstring>
 
 class Goose; // forward declaration
+struct WorldContext; // forward declaration
 
 class Actor {
 public:
@@ -22,7 +23,7 @@ public:
     virtual int id() const { return 0; }
 
     // Lifecycle
-    virtual void tick(double dt, double time) = 0;
+    virtual void tick(WorldContext& ctx, double dt, double time) = 0;
     virtual void render(IRenderer* renderer) = 0;
     virtual bool isAlive() const = 0;  // false = remove from manager
 
@@ -47,7 +48,7 @@ public:
     void add(Actor* actor);
     void remove(Actor* actor);
 
-    void tickAll(double dt, double time);
+    void tickAll(WorldContext& ctx, double dt, double time);
     void renderAll(IRenderer* renderer);
     void cleanup();  // remove dead actors
 

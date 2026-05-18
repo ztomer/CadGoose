@@ -1,4 +1,4 @@
-# Install script for directory: /Users/ztomer/Projects/CadGoose
+# Install script for directory: /Users/ztomer/Projects/CadGoose/.claude/worktrees/cool-hellman-cb08ae
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -12,7 +12,7 @@ if(NOT DEFINED CMAKE_INSTALL_CONFIG_NAME)
     string(REGEX REPLACE "^[^A-Za-z0-9_]+" ""
            CMAKE_INSTALL_CONFIG_NAME "${BUILD_TYPE}")
   else()
-    set(CMAKE_INSTALL_CONFIG_NAME "Release")
+    set(CMAKE_INSTALL_CONFIG_NAME "")
   endif()
   message(STATUS "Install configuration: \"${CMAKE_INSTALL_CONFIG_NAME}\"")
 endif()
@@ -39,13 +39,13 @@ endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for the subdirectory.
-  include("/Users/ztomer/Projects/CadGoose/build/vendor/toml11/cmake_install.cmake")
+  include("/Users/ztomer/Projects/CadGoose/.claude/worktrees/cool-hellman-cb08ae/build/vendor/toml11/cmake_install.cmake")
 endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
 if(CMAKE_INSTALL_LOCAL_ONLY)
-  file(WRITE "/Users/ztomer/Projects/CadGoose/build/install_local_manifest.txt"
+  file(WRITE "/Users/ztomer/Projects/CadGoose/.claude/worktrees/cool-hellman-cb08ae/build/install_local_manifest.txt"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")
 endif()
 if(CMAKE_INSTALL_COMPONENT)
@@ -61,6 +61,6 @@ else()
 endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
-  file(WRITE "/Users/ztomer/Projects/CadGoose/build/${CMAKE_INSTALL_MANIFEST}"
+  file(WRITE "/Users/ztomer/Projects/CadGoose/.claude/worktrees/cool-hellman-cb08ae/build/${CMAKE_INSTALL_MANIFEST}"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")
 endif()

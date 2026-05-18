@@ -39,7 +39,7 @@ FlowerActor::~FlowerActor() {
 #endif
 }
 
-void FlowerActor::tick(double dt, double time) {
+void FlowerActor::tick(WorldContext& ctx, double dt, double time) {
     if (!active) return;
 
     double age = time - m_spawnTime;

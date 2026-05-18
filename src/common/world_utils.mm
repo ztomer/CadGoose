@@ -94,7 +94,7 @@ void World_TickLeafPiles(double currentTime, float dt, Goose* nearestGoose) {
             pile->kick(nearestGoose->vel, currentTime, gooseSpeedPercentage);
         }
 
-        pile->tick(dt, currentTime);
+        pile->tick(g_world, dt, currentTime);
     }
 }
 

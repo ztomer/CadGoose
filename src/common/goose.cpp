@@ -537,13 +537,13 @@ void Goose::UpdateDrag(double dt) {
   }
 }
 
-void Goose::tick(double dt, double time) {
+void Goose::tick(WorldContext& world, double dt, double time) {
     CursorState cursor = {};
     if (g_cursorProvider) {
         cursor = g_cursorProvider->Read();
     }
 
-    CursorAction action = Update(dt, time, g_world.screenWidth, g_world.screenHeight, cursor);
+    CursorAction action = Update(dt, time, world.screenWidth, world.screenHeight, cursor);
 
     if (g_cursorProvider && !action.isNone()) {
         g_cursorProvider->Execute(action);
@@ -553,6 +553,7 @@ void Goose::tick(double dt, double time) {
     ctx.goose = this;
     ctx.time = time;
     ctx.isJailed = false;
+    ctx.world = &world;
     BehaviorRegistry::Instance().TickAll(this, dt, time);
 }
 

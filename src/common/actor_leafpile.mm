@@ -87,7 +87,7 @@ void LeafPileActor::kick(Vector2 kickVelocity, double currentTime, float gooseSp
     }
 }
 
-void LeafPileActor::tick(double dt, double time) {
+void LeafPileActor::tick(WorldContext& ctx, double dt, double time) {
     if (!active) return;
 
     if (m_timeSinceKicked > 0.0f) {
