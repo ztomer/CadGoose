@@ -13,6 +13,7 @@ struct BehaviorContext {
     bool isJailed = false;
     void* stats = nullptr;
     IRenderer* renderer = nullptr; // Platform-agnostic rendering interface
+    WorldContext* world = nullptr; // injected per tick; non-null inside Goose::tick / behavior dispatch
 };
 
 struct BehaviorStats {

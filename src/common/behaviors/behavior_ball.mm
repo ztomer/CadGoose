@@ -62,7 +62,7 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
     }
 
     // Tick ball physics (position, velocity, animation, bounds)
-    s_ballActor->tick(dt, time);
+    s_ballActor->tick(*ctx.world, dt, time);
 }
 
 static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {

@@ -145,7 +145,7 @@ public:
 
     // Actor interface
     const char* type() const override { return "goose"; }
-    void tick(double dt, double time) override;
+    void tick(WorldContext& ctx, double dt, double time) override;
     void render(IRenderer* renderer) override;
     bool isAlive() const override { return true; }
 

@@ -45,7 +45,7 @@ PortalActor::~PortalActor() {
 #endif
 }
 
-void PortalActor::tick(double dt, double time) {
+void PortalActor::tick(WorldContext& ctx, double dt, double time) {
     (void)dt; (void)time;
     // Portal stays at its position until explicitly removed
 }

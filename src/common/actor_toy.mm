@@ -50,7 +50,7 @@ ToyActor::~ToyActor() {
 #endif
 }
 
-void ToyActor::tick(double dt, double time) {
+void ToyActor::tick(WorldContext& ctx, double dt, double time) {
     if (!active) return;
 
     double age = time - m_spawnTime;

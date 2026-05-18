@@ -39,7 +39,7 @@ JailActor::~JailActor() {
 #endif
 }
 
-void JailActor::tick(double dt, double time) {
+void JailActor::tick(WorldContext& ctx, double dt, double time) {
     (void)dt; (void)time;
     // Jail stays at its position until explicitly removed
 }

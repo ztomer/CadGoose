@@ -44,7 +44,7 @@ BreadcrumbActor::~BreadcrumbActor() {
 #endif
 }
 
-void BreadcrumbActor::tick(double dt, double time) {
+void BreadcrumbActor::tick(WorldContext& ctx, double dt, double time) {
     (void)dt;
     if (!active) return;
 

@@ -4,6 +4,7 @@
 
 #pragma once
 
+struct WorldContext;
 #include "actor.h"
 
 class PortalActor : public Actor {
@@ -15,7 +16,7 @@ public:
 
     const char* type() const override { return "portal"; }
     int id() const override { return m_portalId; }
-    void tick(double dt, double time) override;
+    void tick(WorldContext& ctx, double dt, double time) override;
     void render(IRenderer* renderer) override;
     bool isAlive() const override { return active; }
 
