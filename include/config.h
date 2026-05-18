@@ -69,6 +69,7 @@ struct GeneralConfig {
   std::string lightThemeRole = "Default";
   std::string darkThemeRole = "Canadian";
   std::string failsafeHotkey = "cmd+shift+escape";
+  std::string itemDragLogPath = "";
 };
 
 struct ScreenConfig {
@@ -356,7 +357,6 @@ struct BehaviorConfig {
     bool avoidance = true;
     bool boredom = false;
     bool peeking = true;
-    bool affirmations = false;
     bool interactiveDrops = false;
     bool toysEnabled = true;
   } fun;
@@ -420,11 +420,6 @@ struct BehaviorConfig {
   } ball;
   struct BreadCrumbsConfig { int maxCrumbs = 50; float lifetime = 10.0f; float spawnDist = 15.0f; float size = 5.0f; std::string hotkey = "right shift"; } breadCrumbs;
   struct HatsConfig { std::string path; float sizeX = 32.0f; float sizeY = 24.0f; float offsetX = 0.0f; float offsetY = -15.0f; } hats;
-  struct AffirmationsConfig {
-    bool enabled = false;
-    float interval = 300.0f;
-    std::string customMessage;
-  } affirmations;
   struct InteractiveDropsConfig {
     float puddleLifetime = 30.0f;
     float flowerGrowTime = 10.0f;
@@ -461,6 +456,11 @@ struct Config {
     bool hasReasoningContent = false;  // model outputs thinking via reasoning_content
     bool prependJsonTrigger = false;   // prepend "Output JSON now." to system prompt
   };
+
+  // Default AI endpoint URLs
+  static constexpr const char* kDefaultChatEndpoint = "http://localhost:1337/v1/chat/completions";
+  static constexpr const char* kDefaultModelsEndpoint = "http://localhost:1337/v1/models";
+
   struct AIConfig {
     int providerType = 0; // ProviderType enum (stored as int for config registry)
     int osaurusPort = 1337;

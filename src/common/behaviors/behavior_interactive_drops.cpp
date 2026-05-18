@@ -3,91 +3,38 @@
 #include "config.h"
 #include "world.h"
 #include "goose_math.h"
-#include "renderer_interface.h"
-#include "cg_renderer.h"
-#include <CoreGraphics/CoreGraphics.h>
+#include "actor.h"
+#include "actor_flower.h"
 #include <ctime>
 #include <cmath>
+#include <vector>
+
+static constexpr int kInteractiveDropProbability = 400;
 
 static void init(BehaviorContext& ctx) {
-    auto* state = BehaviorStateManager::Instance().GetOrCreate<InteractiveDropsState>(ctx.goose->id, "interactive_drops");
-    state->Reset();
+    (void)ctx;
 }
 
 static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
-    auto* state = BehaviorStateManager::Instance().GetOrCreate<InteractiveDropsState>(goose->id, "interactive_drops");
+    (void)ctx;
 
     if (goose->heldItem) return;
     if (goose->state != GooseState::WANDER) return;
 
-    double lastDrop = state->lastDropTime;
-    if (lastDrop == 0) lastDrop = goose->lastDropTime;
-    bool shouldDrop = (time - lastDrop >= g_config.behaviors.interactiveDrops.dropInterval) && ((rand() % 400) == 0);
+    double lastDrop = goose->lastDropTime;
+    bool shouldDrop = (time - lastDrop >= g_config.behaviors.interactiveDrops.dropInterval) && ((rand() % kInteractiveDropProbability) == 0);
 
     if (shouldDrop) {
         Vector2 dropPos = goose->GetBeakTipDevice();
-        InteractiveFlower flower;
-        flower.pos = dropPos;
-        flower.spawnTime = time;
-        flower.hue = (rand() % 360) / 360.0f * 360.0f;
-        state->flowers.push_back(flower);
-        state->lastDropTime = time;
+        float hue = (rand() % 360) / 360.0f * 360.0f;
+        FlowerActor* flower = new FlowerActor(dropPos, hue, time);
+        ActorManager::Instance().add(flower);
         g_assets.Bite();
-    }
-
-    for (auto it = state->flowers.begin(); it != state->flowers.end(); ) {
-        double age = time - it->spawnTime;
-        float growTime = g_config.behaviors.interactiveDrops.flowerGrowTime;
-        if (age > growTime * 3.0f) {
-            it = state->flowers.erase(it);
-            continue;
-        }
-        if (age < growTime) {
-            float p = (float)age / growTime;
-            it->growth = p;
-            it->stemHeight = 15.0f * p;
-            it->petalSize = 5.0f * p;
-        }
-        ++it;
     }
 }
 
 static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
-    auto* state = BehaviorStateManager::Instance().GetOrCreate<InteractiveDropsState>(goose->id, "interactive_drops");
-
-#ifdef __APPLE__
-    CGContextRef cg = (CGContextRef)renderCtx;
-    if (!cg) return;
-
-    CGRenderer renderer(cg);
-    renderer.SaveState();
-
-    float scale = ctx.globalScale;
-
-    for (auto& f : state->flowers) {
-        if (f.growth <= 0.01f) continue;
-        Vector2 drawPos{goose->pos.x + (f.pos.x - goose->pos.x) / scale,
-                        goose->pos.y + (f.pos.y - goose->pos.y) / scale};
-
-        renderer.DrawLine({drawPos.x, drawPos.y}, {drawPos.x, drawPos.y - f.stemHeight},
-                         RenderColor{0.2f, 0.6f, 0.2f, 0.8f}, 2.0f);
-
-        float h = f.hue;
-        float r, g, b;
-        HSV_to_RGB(h, 1.0f, 0.8f, &r, &g, &b);
-        RenderColor petalColor{r, g, b, 0.8f};
-        for (int i = 0; i < 5; i++) {
-            float angle = i * 72.0f * (M_PI / 180.0f);
-            float px = drawPos.x + std::cos(angle) * f.petalSize;
-            float py = drawPos.y - f.stemHeight + std::sin(angle) * f.petalSize * 0.5f;
-            renderer.DrawEllipse({px, py}, f.petalSize * 0.5f, f.petalSize * 0.3f, petalColor);
-        }
-        renderer.DrawEllipse({drawPos.x, drawPos.y - f.stemHeight}, 2.0f, 2.0f,
-                            RenderColor{1.0f, 0.9f, 0.3f, 0.9f});
-    }
-
-    renderer.RestoreState();
-#endif
+    (void)goose; (void)ctx; (void)renderCtx;
 }
 
 static Behavior g_interactiveDropsBehavior = BEHAVIOR_DEF_GROUND(

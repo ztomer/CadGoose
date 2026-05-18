@@ -56,4 +56,7 @@ public:
 
     // Alpha
     virtual void SetAlpha(float alpha) = 0;
+
+    // Native context access (platform-specific)
+    virtual void* nativeContext() const { return nullptr; }
 };

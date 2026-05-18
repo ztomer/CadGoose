@@ -200,7 +200,7 @@ TEST(Integration, Goose_WanderToChase) {
     c.caps = CAP_GET_POS;
     c.position = {500, 500};
 
-    g_cursorGrabberId = -1;
+    g_world.cursorGrabberId = -1;
 
     g.Update(0.1, 0.0, 1920, 1080, c);
 
@@ -220,7 +220,7 @@ TEST(Integration, Goose_SnatchCursor) {
     c.caps = CAP_GET_POS | CAP_MOVE_ABS;
     c.position = {0, 0};
 
-    g_cursorGrabberId = -1;
+    g_world.cursorGrabberId = -1;
     g.Update(0.1, 0.0, 1920, 1080, c);
 
     c.position = g.GetBeakTipDevice();
@@ -228,7 +228,7 @@ TEST(Integration, Goose_SnatchCursor) {
     g.Update(0.1, 0.1, 1920, 1080, c);
 
     EXPECT_EQ(g.state, GooseState::SNATCH_CURSOR);
-    EXPECT_EQ(g_cursorGrabberId, 2);
+    EXPECT_EQ(g_world.cursorGrabberId, 2);
 }
 
 TEST(Integration, Goose_SnatchRelease) {
@@ -236,7 +236,7 @@ TEST(Integration, Goose_SnatchRelease) {
     g.state = GooseState::SNATCH_CURSOR;
     g.snatchStartTime = 0.0;
     g.snatchDuration = 3.0f;
-    g_cursorGrabberId = 3;
+    g_world.cursorGrabberId = 3;
 
     CursorState c;
     c.caps = CAP_GET_POS | CAP_MOVE_ABS;
@@ -244,11 +244,11 @@ TEST(Integration, Goose_SnatchRelease) {
 
     g.Update(0.1, 1.0, 1920, 1080, c);
     EXPECT_EQ(g.state, GooseState::SNATCH_CURSOR);
-    EXPECT_EQ(g_cursorGrabberId, 3);
+    EXPECT_EQ(g_world.cursorGrabberId, 3);
 
     g.Update(0.1, 3.5, 1920, 1080, c);
     EXPECT_EQ(g.state, GooseState::WANDER);
-    EXPECT_EQ(g_cursorGrabberId, -1);
+    EXPECT_EQ(g_world.cursorGrabberId, -1);
 }
 
 TEST(Integration, Goose_FetchItem) {
@@ -291,14 +291,14 @@ TEST(Integration, Goose_DropItem) {
     g.target = {100, 100};
     g.heldItem = g_assets.GetRandomMeme(1920, 1080, 0.1f);
 
-    int initialDrops = g_droppedItems.size();
+    int initialDrops = g_world.droppedItems.size();
 
     CursorState c;
     g.Update(0.1, 0.0, 1920, 1080, c);
 
     EXPECT_EQ(g.state, GooseState::WANDER);
     EXPECT_EQ(g.heldItem, nullptr);
-    EXPECT_EQ(g_droppedItems.size(), initialDrops + 1);
+    EXPECT_EQ(g_world.droppedItems.size(), initialDrops + 1);
 }
 
 TEST(GooseStateMachine, FetchStartTimeSetOnForceFetch) {

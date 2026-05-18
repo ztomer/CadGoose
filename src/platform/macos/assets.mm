@@ -3,6 +3,7 @@
 #include "audio.h"
 #include "config.h"
 #include "world.h"
+#include "render_colors.h"
 #include <iostream>
 #include <random>
 #include <filesystem>
@@ -268,10 +269,10 @@ ItemData* AssetManager::CreateToyItem(bool isStick) {
 
     if (ctx) {
         if (isStick) {
-            CGContextSetRGBFillColor(ctx, 0.55f, 0.35f, 0.15f, 1.0f);
+            CGContextSetRGBFillColor(ctx, kStickBrownR, kStickBrownG, kStickBrownB, 1.0f);
             CGContextFillRect(ctx, CGRectMake(0, 0, toyW, toyH));
         } else {
-            CGContextSetRGBFillColor(ctx, 0.8f, 0.2f, 0.2f, 1.0f);
+            CGContextSetRGBFillColor(ctx, kToyBallRedR, kToyBallRedG, kToyBallRedB, 1.0f);
             CGContextFillEllipseInRect(ctx, CGRectMake(0, 0, toyW, toyH));
         }
 

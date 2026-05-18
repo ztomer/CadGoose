@@ -145,14 +145,14 @@ TEST(GooseStateMachine, FetchingCreatesItem) {
 }
 
 TEST(MultiGoose, SeparationForcePushesApart) {
-    g_geese.clear();
-    g_nextId = 100;
+    g_world.geese.clear();
+    g_world.nextId = 100;
 
-    Goose& g1 = g_geese.emplace_back(100, "Sep1", 1920, 1080);
+    Goose& g1 = g_world.geese.emplace_back(100, "Sep1", 1920, 1080);
     g1.pos = {500, 500};
     g1.state = GooseState::WANDER;
 
-    Goose& g2 = g_geese.emplace_back(101, "Sep2", 1920, 1080);
+    Goose& g2 = g_world.geese.emplace_back(101, "Sep2", 1920, 1080);
     g2.pos = {520, 500};
     g2.state = GooseState::WANDER;
 
@@ -181,7 +181,7 @@ TEST(MultiGoose, SeparationForcePushesApart) {
 
     EXPECT_GT(totalDist, 10.0f) << "Geese should move (separation or seek)";
 
-    g_geese.clear();
+    g_world.geese.clear();
 }
 
 TEST(ConfigValidation, SliderKeysMatchConfigKeys) {
@@ -282,7 +282,7 @@ TEST(GooseStates, SnatchReleaseTransitionsToWander) {
     g.state = GooseState::SNATCH_CURSOR;
     g.snatchStartTime = 0.0;
     g.snatchDuration = 0.5f;
-    g_cursorGrabberId = g.id;
+    g_world.cursorGrabberId = g.id;
 
     CursorState c;
     c.caps = CAP_GET_POS | CAP_MOVE_ABS;
@@ -293,8 +293,8 @@ TEST(GooseStates, SnatchReleaseTransitionsToWander) {
 
     g.Update(1.0/60.0, 0.7, 1920, 1080, c);
     EXPECT_EQ(g.state, GooseState::WANDER) << "Snatch should end after duration";
-    EXPECT_EQ(g_cursorGrabberId, -1) << "Cursor grab should be released";
-    g_cursorGrabberId = -1;
+    EXPECT_EQ(g_world.cursorGrabberId, -1) << "Cursor grab should be released";
+    g_world.cursorGrabberId = -1;
 }
 
 TEST(EdgeCase, GooseAtScreenCorner) {

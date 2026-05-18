@@ -19,7 +19,7 @@ jobs:
           submodules: recursive
 
       - name: Install dependencies
-        run: brew install cmake googletest
+        run: brew install cmake googletest mimalloc
 
       - name: Configure & Build
         run: |

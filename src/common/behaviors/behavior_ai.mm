@@ -7,6 +7,7 @@
 #include "config.h"
 #include "world.h"
 #include "ai_mcp_bridge.h"
+#include "actor.h"
 #include <string>
 #include <vector>
 #include <cstring>
@@ -381,8 +382,8 @@ static constexpr float kChatFontSize = 13.0f;
 
 - (void)populateGoosePopup {
     [self.goosePopup removeAllItems];
-    for (const auto& g : g_geese) {
-        NSString* gName = [NSString stringWithUTF8String:g.name.c_str()];
+    for (const auto* g : ActorManager::Instance().getGeese()) {
+        NSString* gName = [NSString stringWithUTF8String:g->name.c_str()];
         [self.goosePopup addItemWithTitle:gName];
         if ([gName isEqualToString:self.gooseName]) {
             [self.goosePopup selectItemAtIndex:self.goosePopup.numberOfItems - 1];

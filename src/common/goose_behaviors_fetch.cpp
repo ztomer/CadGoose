@@ -11,6 +11,8 @@
 #include <cstdio>
 #include <algorithm>
 
+static constexpr float kSnatchAngularSpeedDivisor = 100.0f;
+
 static FILE* GetDebugLog() {
     static FILE* f = nullptr;
     if (!f) {
@@ -31,8 +33,8 @@ static void triggerHonkLocal(Goose::HonkState& hs, double time, double cd, doubl
 }
 
 void Goose::StartSnatch(double time, const Vector2& cursorPos) {
-    extern int g_cursorGrabberId;
-    g_cursorGrabberId = id;
+
+    g_world.cursorGrabberId = id;
     state = GooseState::SNATCH_CURSOR;
     snatchStartTime = time;
     snatchAnchor = pos;
@@ -45,7 +47,7 @@ void Goose::StartSnatch(double time, const Vector2& cursorPos) {
 
     snatchAngle = 0.0f;
     snatchRadius = g_config.snatch.radiusBase + (rand() % (int)g_config.snatch.radiusRange);
-    snatchAngularSpeed = ((rand() % 2) ? 1.0f : -1.0f) * (g_config.snatch.angularSpeedBase + (rand() % (int)g_config.snatch.angularSpeedRandomRange) / 100.0f);
+    snatchAngularSpeed = ((rand() % 2) ? 1.0f : -1.0f) * (g_config.snatch.angularSpeedBase + (rand() % (int)g_config.snatch.angularSpeedRandomRange) / kSnatchAngularSpeedDivisor);
     currentSpeed = g_config.movement.baseRunSpeed * g_config.snatch.speedMultiplier;
     stepTime = g_config.step.timeSnatch;
 
@@ -54,13 +56,13 @@ void Goose::StartSnatch(double time, const Vector2& cursorPos) {
 }
 
 void Goose::EndSnatch(double time, int w, int h) {
-    extern int g_cursorGrabberId;
+
     FILE* f = GetDebugLog();
-    fprintf(f, "[ENDSNATCH] t=%.1f g%d: was state=%d grabId=%d\n", time, id, state, g_cursorGrabberId);
+    fprintf(f, "[ENDSNATCH] t=%.1f g%d: was state=%d grabId=%d\n", time, id, state, g_world.cursorGrabberId);
     stepTime = g_config.step.timeWander;
-    if (g_cursorGrabberId == id) {
-        fprintf(f, "[ENDSNATCH] g%d: releasing cursor grab (was %d)\n", id, g_cursorGrabberId);
-        g_cursorGrabberId = -1;
+    if (g_world.cursorGrabberId == id) {
+        fprintf(f, "[ENDSNATCH] g%d: releasing cursor grab (was %d)\n", id, g_world.cursorGrabberId);
+        g_world.cursorGrabberId = -1;
     }
     state = GooseState::WANDER;
     fprintf(f, "[ENDSNATCH] g%d: now state=%d\n", id, state);
@@ -78,12 +80,12 @@ static bool canPickupItem(double timeSinceDropped) {
 
 void tryPickupItem(Goose& g, double time, int w, int h) {
     if (!shouldPickupItem(g)) return;
-    extern std::list<DroppedItem> g_droppedItems;
-    if (g_droppedItems.empty()) return;
+
+    if (g_world.droppedItems.empty()) return;
 
     Vector2 btPoint = g.GetBeakTipDevice();
 
-    for (auto it = g_droppedItems.begin(); it != g_droppedItems.end(); ++it) {
+    for (auto it = g_world.droppedItems.begin(); it != g_world.droppedItems.end(); ++it) {
         if (it->pinned) continue;
         Vector2 itemCenter = WorldCoord::ItemCenter(*it);
         float dist = Vector2::Distance(btPoint, itemCenter);
@@ -94,7 +96,7 @@ void tryPickupItem(Goose& g, double time, int w, int h) {
             fprintf(stderr, "[FETCH] tryPickupItem g%d picking up item at (%.0f,%.0f) dist=%.0f\n",
                     g.id, itemCenter.x, itemCenter.y, dist);
             g.heldItem = it->data;
-            g_droppedItems.erase(it);
+            g_world.droppedItems.erase(it);
             g.state = GooseState::RETURNING;
             g.target = {static_cast<float>(rand() % (std::max(1, (int)(w - g_config.spawn.itemDropMarginX * 2)) + (int)g_config.spawn.itemDropMarginX)),
                         static_cast<float>(rand() % (std::max(1, (int)(h - g_config.spawn.itemDropMarginY * 2)) + (int)g_config.spawn.itemDropMarginY))};
@@ -180,8 +182,8 @@ void handleReturning(Goose& g, double time, int w, int h) {
             if (drop.pos.x > maxX) drop.pos.x = maxX;
             if (drop.pos.y > maxY) drop.pos.y = maxY;
 
-            extern std::list<DroppedItem> g_droppedItems;
-            g_droppedItems.push_back(drop);
+
+            g_world.droppedItems.push_back(drop);
             fprintf(stderr, "[FETCH] handleReturning g%d dropped item at (%.0f,%.0f) rot=%.1f\n",
                     g.id, drop.pos.x, drop.pos.y, drop.rotation);
         } else {

@@ -4,7 +4,7 @@
 #include "items.h"
 #include <list>
 
-extern std::list<DroppedItem> g_droppedItems;
+
 
 // ItemDragController handles hit-testing and drag operations for dropped items.
 // All coordinates are in DEVICE space (screen pixels, top-left origin, Y-down).

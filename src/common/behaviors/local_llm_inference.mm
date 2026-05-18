@@ -20,6 +20,8 @@ static constexpr int kMaxGen = 48;
 static constexpr int kEOS = 2;
 static constexpr int kTopK = 40;
 static constexpr float kLogitFloor = -1e30f;
+static constexpr int kLLMLoadWaitMs = 30000;
+static constexpr int kLLMLoadPollIntervalUs = 100000; // 100ms
 
 static std::queue<std::string> s_resultQueue;
 static std::mutex s_queueMutex;
@@ -190,8 +192,8 @@ void LocalLLM_Generate(const std::string& prompt, float temperature,
         LocalLLM_Init();
         // Wait for model to load (max 30 seconds)
         int waitMs = 0;
-        while (LocalLLM_GetState() == LocalLLMState::Loading && waitMs < 30000) {
-            usleep(100000); // 100ms
+        while (LocalLLM_GetState() == LocalLLMState::Loading && waitMs < kLLMLoadWaitMs) {
+            usleep(kLLMLoadPollIntervalUs); // 100ms
             waitMs += 100;
         }
         if (LocalLLM_GetState() != LocalLLMState::Ready || !LocalLLM_GetModel()) {

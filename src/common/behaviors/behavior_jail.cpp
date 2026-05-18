@@ -9,28 +9,39 @@
 #include "world.h"
 #include "hotkey.h"
 #include "ring_buffer.h"
-#include "renderer_interface.h"
-#include "cg_renderer.h"
+#include "actor.h"
+#include "actor_jail.h"
+
 #ifdef __APPLE__
-#include <CoreText/CoreText.h>
+#include <ApplicationServices/ApplicationServices.h>
+#elif defined(__linux__)
+#include <X11/Xlib.h>
+#include <X11/keysym.h>
 #endif
 
 static bool s_oWasKeyDown = false;
 static bool s_pWasKeyDown = false;
-static constexpr size_t kMaxJails = 10;
 static RingBuffer<Vector2, kMaxJails> s_jails;
 static bool s_jailsActive = false;
 static double s_lastInputTime = 0;
 
-#ifdef __APPLE__
-static CTFontRef s_jailFont = nullptr;
-static void cleanupJailFont() {
-    if (s_jailFont) { CFRelease(s_jailFont); s_jailFont = nullptr; }
-}
-#endif
-
 static bool IsKeyPressed(int keyCode) {
+#ifdef __APPLE__
     return CGEventSourceKeyState(kCGEventSourceStateHIDSystemState, (CGKeyCode)keyCode);
+#elif defined(__linux__)
+    Display* dpy = XOpenDisplay(nullptr);
+    if (!dpy) return false;
+    char keys[32];
+    XQueryKeymap(dpy, keys);
+    int keyIndex = keyCode / 8;
+    int keyBit = keyCode % 8;
+    bool pressed = (keys[keyIndex] & (1 << keyBit)) != 0;
+    XCloseDisplay(dpy);
+    return pressed;
+#else
+    (void)keyCode;
+    return false;
+#endif
 }
 
 static void init(BehaviorContext& ctx) {
@@ -45,6 +56,15 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
         state->isJailed = false;
         s_jailsActive = false;
         s_jails.clear();
+        // Remove all jail actors
+        auto& mgr = ActorManager::Instance();
+        for (int i = mgr.totalCount() - 1; i >= 0; i--) {
+            Actor* a = mgr.getByIndex(i);
+            if (a && strcmp(a->type(), "jail") == 0) {
+                mgr.remove(a);
+                delete a;
+            }
+        }
         return;
     }
 
@@ -62,11 +82,22 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
         bool oDown = IsKeyPressed(KeyNameToKeyCode(g_config.behaviors.jail.hotkeyO));
         if (oDown && !s_oWasKeyDown) {
             if (s_jailsActive) {
-                // Reset functionality: if active, placing a new trap clears the old ones
                 s_jails.clear();
                 s_jailsActive = false;
+                // Remove all jail actors
+                auto& mgr = ActorManager::Instance();
+                for (int i = mgr.totalCount() - 1; i >= 0; i--) {
+                    Actor* a = mgr.getByIndex(i);
+                    if (a && strcmp(a->type(), "jail") == 0) {
+                        mgr.remove(a);
+                        delete a;
+                    }
+                }
             }
             s_jails.push(cursorPos);
+            // Create jail actor
+            JailActor* jail = new JailActor(cursorPos);
+            ActorManager::Instance().add(jail);
         }
         s_oWasKeyDown = oDown;
 
@@ -82,7 +113,6 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
     ctx.isJailed = state->isJailed;
 
     if (state->isJailed) {
-        // Find nearest trap
         Vector2 nearest = s_jails[0];
         float minDist = Vector2::Distance(goose->pos, nearest);
         for (size_t i = 1; i < s_jails.size(); ++i) {
@@ -101,51 +131,13 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
 }
 
 static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
-    if (goose->id != 0 || s_jails.empty()) return;
-
-#ifdef __APPLE__
-    CGContextRef cg = (CGContextRef)renderCtx;
-    if (!cg) return;
-
-    CGRenderer renderer(cg);
-    renderer.SaveState();
-
-    float jailSize = g_config.behaviors.jail.size;
-    float scale = ctx.globalScale;
-    float pulse = 0.6f + 0.4f * sin(ctx.time * 3.0f);
-    bool jailed = s_jailsActive;
-
-    for (const auto& jailPos : s_jails) {
-        Vector2 drawPos{goose->pos.x + (jailPos.x - goose->pos.x) / scale,
-                        goose->pos.y + (jailPos.y - goose->pos.y) / scale};
-        RenderRect rect{drawPos.x - jailSize/2, drawPos.y - jailSize/2, jailSize, jailSize};
-
-        float strokeAlpha = jailed ? 1.0f : pulse * 0.6f;
-        float fillAlpha = jailed ? 0.2f : 0.05f;
-        RenderColor jailColor{1.0f, 0.6f, 0.0f, strokeAlpha};
-
-        renderer.DrawRectOutline(rect, jailColor, jailed ? 4.0f : 2.0f);
-        renderer.DrawRect(rect, RenderColor{1.0f, 0.6f, 0.0f, fillAlpha});
-
-        const char* label = jailed ? "JAIL" : "SET";
-        if (!s_jailFont) s_jailFont = CTFontCreateWithName(CFSTR("Helvetica-Bold"), 14.0f, NULL);
-        if (s_jailFont) {
-            float textX = drawPos.x - jailSize/2;
-            float textY = drawPos.y - jailSize/2 - 20.0f;
-            renderer.Translate(textX, textY);
-            renderer.Scale(1.0f, -1.0f);
-            renderer.DrawText(label, {0, 0}, RenderColor{1.0f, 0.6f, 0.0f, strokeAlpha}, 14.0f);
-        }
-    }
-
-    renderer.RestoreState();
-#endif
+    (void)goose; (void)ctx; (void)renderCtx;
 }
 
 static Behavior g_jailBehavior = BEHAVIOR_DEF_CUSTOM(
     "jail", "Jail", "Press O to set jail position, P to trap goose. Based on GooseJail by WackyModer",
     g_config.behaviors.control.jail, init, tick, render,
-    [](BehaviorContext&) { cleanupJailFont(); }, true, false
+    [](BehaviorContext&) {}, true, false
 );
 
 REGISTER_BEHAVIOR(g_jailBehavior);

@@ -8,6 +8,14 @@
 #include <signal.h>
 #include <cstdlib>
 
+#ifdef __APPLE__
+#include <spawn.h>
+#include <mach-o/dyld.h>
+#include <limits.h>
+#include <paths.h>
+extern char** environ;
+#endif
+
 // Declared external to integrate with logging where necessary.
 bool g_debugMode = false;
 
@@ -28,6 +36,54 @@ static bool IsRunning() {
 }
 
 static int DaemonizeProcess() {
+#ifdef __APPLE__
+    // On macOS, fork() corrupts the Objective-C runtime (autorelease pools, etc.).
+    // Use posix_spawn to launch a clean child process with --foreground flag.
+    char* argv[] = {
+        const_cast<char*>("/usr/bin/open"),
+        const_cast<char*>("-n"),          // new instance
+        const_cast<char*>("-j"),          // hide dock icon (background app)
+        const_cast<char*>("-a"),
+        const_cast<char*>("CadGoose"),    // app name (requires .app bundle)
+        nullptr
+    };
+
+    // Fallback: if not in a .app bundle, spawn the binary directly with --foreground
+    char exePath[PATH_MAX];
+    uint32_t size = sizeof(exePath);
+    if (_NSGetExecutablePath(exePath, &size) == 0) {
+        char* childArgv[] = {
+            exePath,
+            const_cast<char*>("--foreground"),
+            nullptr
+        };
+        pid_t pid;
+        posix_spawn_file_actions_t actions;
+        posix_spawn_file_actions_init(&actions);
+        // Redirect stdout/stderr to /dev/null in the child
+        int devNull = open("/dev/null", O_RDWR);
+        if (devNull >= 0) {
+            posix_spawn_file_actions_adddup2(&actions, devNull, STDOUT_FILENO);
+            posix_spawn_file_actions_adddup2(&actions, devNull, STDERR_FILENO);
+            posix_spawn_file_actions_addclose(&actions, devNull);
+        }
+
+        int ret = posix_spawn(&pid, exePath, &actions, nullptr, childArgv, environ);
+        if (devNull >= 0) close(devNull);
+        posix_spawn_file_actions_destroy(&actions);
+
+        if (ret != 0) {
+            std::cerr << "Failed to spawn background process: " << strerror(ret) << std::endl;
+            return 1;
+        }
+        std::cout << "Desktop Goose started in background (PID " << pid << ")" << std::endl;
+        return 0;
+    }
+
+    std::cerr << "Failed to resolve executable path" << std::endl;
+    return 1;
+#else
+    // Linux: traditional double-fork daemonization
     pid_t pid = fork();
     if (pid < 0) {
         std::cerr << "Failed to fork background process" << std::endl;
@@ -40,8 +96,7 @@ static int DaemonizeProcess() {
     }
 
     if (setsid() < 0) _exit(1);
-    
-#ifndef __APPLE__
+
     signal(SIGHUP, SIG_IGN);
 
     pid = fork();
@@ -59,9 +114,9 @@ static int DaemonizeProcess() {
         dup2(devNull, STDERR_FILENO);
         if (devNull > STDERR_FILENO) close(devNull);
     }
-#endif
 
     return -1;
+#endif
 }
 
 int AppCli_HandleCommand(int argc, char** argv, int* appArgc) {

@@ -1,6 +1,6 @@
 // ===========================
 // test_behaviors_fun.cpp
-// Tests for fun behaviors: toys, boredom, peeking, affirmations, interactive_drops
+// Tests for fun behaviors: toys, boredom, peeking, interactive_drops
 // ===========================
 #include "gtest/gtest.h"
 #include <cmath>
@@ -264,66 +264,6 @@ TEST(PeekingBehavior, ConfigPointer) {
     g_config.behaviors.fun.peeking = false;
     EXPECT_EQ(g_config.behaviors.fun.peeking, false);
     g_config.behaviors.fun.peeking = true;
-}
-
-// ===========================
-// Affirmations Behavior Tests
-// ===========================
-TEST(AffirmationsBehavior, DefaultMessages) {
-    const char* msgs[] = {
-        "You're doing great!",
-        "Drink some water!",
-        "Take a break!",
-        "You got this!",
-        "Stay awesome!",
-        "You are enough!",
-        "Keep going!",
-        "You matter!",
-        "Breathe!",
-        "Have a snack!"
-    };
-    int count = sizeof(msgs) / sizeof(msgs[0]);
-    EXPECT_EQ(count, 10);
-    for (int i = 0; i < count; ++i) {
-        EXPECT_STRNE(msgs[i], "");
-    }
-}
-
-TEST(AffirmationsBehavior, CustomMessageTemplate) {
-    std::string msg = "Hello {}!";
-    std::string gooseName = "Honker";
-    size_t pos = msg.find("{}");
-    EXPECT_NE(pos, std::string::npos);
-    msg.replace(pos, 2, gooseName);
-    EXPECT_EQ(msg, "Hello Honker!");
-}
-
-TEST(AffirmationsBehavior, CustomMessageNoTemplate) {
-    std::string msg = "You're awesome!";
-    size_t pos = msg.find("{}");
-    EXPECT_EQ(pos, std::string::npos);
-    EXPECT_EQ(msg, "You're awesome!");
-}
-
-TEST(AffirmationsBehavior, IntervalCheck) {
-    double time = 1000.0;
-    double lastDropTime = 500.0;
-    float interval = 300.0f;
-    EXPECT_TRUE(time - lastDropTime >= interval);
-
-    lastDropTime = 800.0;
-    EXPECT_FALSE(time - lastDropTime >= interval);
-}
-
-TEST(AffirmationsBehavior, ConfigPointer) {
-    EXPECT_EQ(g_config.behaviors.fun.affirmations, false);
-    g_config.behaviors.fun.affirmations = true;
-    EXPECT_EQ(g_config.behaviors.fun.affirmations, true);
-    g_config.behaviors.fun.affirmations = false;
-}
-
-TEST(AffirmationsBehavior, IntervalConfig) {
-    EXPECT_FLOAT_EQ(g_config.behaviors.affirmations.interval, 300.0f);
 }
 
 // ===========================

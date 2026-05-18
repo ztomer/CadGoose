@@ -7,8 +7,23 @@
 #include "config.h"
 #include "world.h"
 #include "renderer_interface.h"
+#include "render_colors.h"
 #include "cg_renderer.h"
 #include <cstring>
+
+static constexpr float kNametagCharWidth = 8.0f;
+static constexpr float kNametagBoxHeight = 18.0f;
+static constexpr float kNametagBoxXPad = 4.0f;
+static constexpr float kNametagBoxYOffset = 40.0f;
+static constexpr float kNametagBoxPad = 2.0f;
+static constexpr float kNametagBoxWidthPad = 12.0f;
+static constexpr float kNametagBoxHeightPad = 4.0f;
+static constexpr float kNametagCornerRadius = 6.0f;
+static constexpr float kNametagHighlightPad = 1.0f;
+static constexpr float kNametagHighlightWidthPad = 10.0f;
+static constexpr float kNametagHighlightCornerRadius = 4.0f;
+static constexpr float kNametagHighlightAlpha = 0.08f;
+static constexpr float kNametagTextYOffset = 25.0f;
 
 static CTFontRef s_nameFont = nullptr;
 static CGColorRef s_nameWhite = nullptr;
@@ -51,19 +66,19 @@ static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
     const char* name = goose->name.c_str();
     size_t nameLen = strlen(name);
 
-    float nameWidth = (float)nameLen * 8.0f;
-    float boxHeight = 18.0f;
-    float boxX = headPos.x - nameWidth / 2.0f - 4.0f;
-    float boxY = headPos.y - 40.0f;
+    float nameWidth = (float)nameLen * kNametagCharWidth;
+    float boxHeight = kNametagBoxHeight;
+    float boxX = headPos.x - nameWidth / 2.0f - kNametagBoxXPad;
+    float boxY = headPos.y - kNametagBoxYOffset;
 
     // Liquid glass background
-    renderer.DrawRoundedRect({boxX - 2.0f, boxY - 2.0f, nameWidth + 12.0f, boxHeight + 4.0f},
-                             6.0f,
-                             RenderColor{0.15f, 0.15f, 0.15f, 0.85f});
+    renderer.DrawRoundedRect({boxX - kNametagBoxPad, boxY - kNametagBoxPad, nameWidth + kNametagBoxWidthPad, boxHeight + kNametagBoxHeightPad},
+                             kNametagCornerRadius,
+                             MakeNametagBg(0.85f));
     // Subtle highlight for liquid glass effect
-    renderer.DrawRoundedRect({boxX - 1.0f, boxY - 1.0f, nameWidth + 10.0f, (boxHeight + 4.0f) * 0.5f},
-                             4.0f,
-                             RenderColor{1.0f, 1.0f, 1.0f, 0.08f});
+    renderer.DrawRoundedRect({boxX - kNametagHighlightPad, boxY - kNametagHighlightPad, nameWidth + kNametagHighlightWidthPad, (boxHeight + kNametagBoxHeightPad) * 0.5f},
+                             kNametagHighlightCornerRadius,
+                             RenderColor{1.0f, 1.0f, 1.0f, kNametagHighlightAlpha});
 
     float fontSize = g_config.behaviors.nametag.size;
     ensureNameFont(fontSize);
@@ -85,7 +100,7 @@ static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
 
             float boxCenterX = headPos.x;
             float textX = boxCenterX - (float)textWidth / 2.0f;
-            CGContextSetTextPosition(cg, textX, headPos.y - 25.0f);
+            CGContextSetTextPosition(cg, textX, headPos.y - kNametagTextYOffset);
             CTLineDraw(line, cg);
             CFRelease(line);
         }

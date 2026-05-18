@@ -1,11 +1,19 @@
+#include <cstdarg>
 #include "goose.h"
 #include "assets.h"
 #include "behavior.h"
 #include "config.h"
 #include "goose_math.h"
 #include "world.h"
+#include "cursor_backend.h"
 #include <cmath>
 #include <cstdio>
+
+#ifdef __APPLE__
+#include "goose_drawing.h"
+#include "cg_renderer.h"
+#include <CoreGraphics/CoreGraphics.h>
+#endif
 
 // --- Magic numbers extracted as named constants ---
 static constexpr const char* kDebugLogPath = "/tmp/goose_debug.log";
@@ -18,6 +26,7 @@ static constexpr float kSpeedEpsilon = 1e-4f;
 static constexpr float kNighttimeSpeedFactor = 0.6f;
 static constexpr int kNighttimeStartHour = 23;
 static constexpr int kNighttimeEndHour = 6;
+static constexpr float kShudderDirChangeThreshold = 90.0f;
 static constexpr int kNighttimeCheckIntervalSec = 60;
 
 static bool IsNighttime() {
@@ -54,23 +63,33 @@ static FILE *GetDebugLog() {
   return s_debugLog;
 }
 
+static void DebugLog(const char* fmt, ...) {
+    FILE *f = GetDebugLog();
+    if (!f) return;
+    va_list args;
+    va_start(args, fmt);
+    vfprintf(f, fmt, args);
+    va_end(args);
+    fflush(f);
+}
+
 static void LogTick(double time, const CursorState &cursor) {
   FILE *f = GetDebugLog();
   if (!f)
     return;
-  fprintf(f, "[T%.1f] cur=%d", time, g_cursorGrabberId);
+  fprintf(f, "[T%.1f] cur=%d", time, g_world.cursorGrabberId);
   if (cursor.hasPos())
     fprintf(f, " c(%.0f,%.0f)", cursor.position.x, cursor.position.y);
   else
     fprintf(f, " c(-,-)");
   fprintf(f, " geese:");
-  for (auto &g : g_geese) {
+  for (auto* g : ActorManager::Instance().getGeese()) {
     const char* stateNames[] = {"W", "F", "R", "C", "S"};
-    fprintf(f, " %d%s@(%d,%d)d%dv(%d,%d)s%d", g.id, stateNames[static_cast<int>(g.state)], (int)g.pos.x,
-            (int)g.pos.y, (int)g.dir, (int)g.vel.x, (int)g.vel.y,
-            (int)g.currentSpeed);
-    if (g.state == GooseState::SNATCH_CURSOR)
-      fprintf(f, " a=%.1f r=%.0f", g.snatchAngle, g.snatchRadius);
+    fprintf(f, " %d%s@(%d,%d)d%dv(%d,%d)s%d", g->id, stateNames[static_cast<int>(g->state)], (int)g->pos.x,
+            (int)g->pos.y, (int)g->dir, (int)g->vel.x, (int)g->vel.y,
+            (int)g->currentSpeed);
+    if (g->state == GooseState::SNATCH_CURSOR)
+      fprintf(f, " a=%.1f r=%.0f", g->snatchAngle, g->snatchRadius);
   }
   fprintf(f, "\n");
 }
@@ -122,12 +141,10 @@ Vector2 Goose::GetBeakTipDevice() {
       WorldCoord::Scale(g_config.rig.beakBaseOffset + g_config.rig.beakLen);
   Vector2 beakTipDevice = neckHeadDev + fwd * totalBeakOffset;
 
-  FILE *f = GetDebugLog();
-  if (f && state == GooseState::SNATCH_CURSOR) {
-    fprintf(f, "[BTDEV] g%d: dir=%.0f neck(%.0f,%.0f) btDev(%.0f,%.0f)\n", id,
+  if (state == GooseState::SNATCH_CURSOR) {
+    DebugLog("[BTDEV] g%d: dir=%.0f neck(%.0f,%.0f) btDev(%.0f,%.0f)\n", id,
             dir, neckHeadDev.x, neckHeadDev.y, beakTipDevice.x,
             beakTipDevice.y);
-    fflush(f);
   }
 
   return beakTipDevice;
@@ -245,7 +262,7 @@ void Goose::SolveFeet(double time) {
                                              : g_config.step.rightFootAngle);
           fp.timeSpawned = time;
           fp.lifetime = mudLifetime;
-          g_footprints.push(fp);
+          g_world.footprints.push(fp);
         }
         
         if (time - lastStepSoundTime > stepSoundCooldown) {
@@ -296,28 +313,7 @@ static float CalculateTargetSpeed(const Goose& g, float dist) {
   return g.isSurprised ? g_config.movement.baseRunSpeed * kSurprisedSpeedMultiplier : baseSpeed;
 }
 
-CursorAction Goose::Update(double dt, double time, int w, int h,
-                           const CursorState &cursor) {
-  lastUpdateTime = time;
-  if (state != prevState) {
-    FILE *f = GetDebugLog();
-    const char *stateNames[] = {"W", "F", "R", "C", "S"};
-    fprintf(f, "!! t=%.1f g%d %s->%s tgt(%.0f,%.0f) c(%.0f,%.0f)\n", time, id,
-            stateNames[static_cast<int>(prevState)], stateNames[static_cast<int>(state)], target.x, target.y, cursor.position.x,
-            cursor.position.y);
-    prevState = state;
-    s_stateChanged = true;
-  }
-
-  s_lastLogTime += dt;
-  if (s_lastLogTime > kLogInterval || s_stateChanged) {
-    LogTick(time, cursor);
-    s_lastLogTime = 0;
-    s_stateChanged = false;
-  }
-
-  CursorAction action = UpdateBehaviors(dt, time, w, h, cursor);
-
+void Goose::UpdatePhysics(double dt, int w, int h) {
   if (isResting) {
     vel = {0, 0};
     currentSpeed = 0.0f;
@@ -351,21 +347,21 @@ CursorAction Goose::Update(double dt, double time, int w, int h,
 
   pos = pos + vel * (float)dt;
   ClampToScreen(w, h);
+}
 
+void Goose::UpdateDetection(double time, int w, int h) {
   // Shudder detection: track rapid direction changes without significant movement
   float distSinceLastShudderCheck = Vector2::Length(pos - shudderLastPos);
   float dirChange = std::abs(dir - shudderLastDir);
-  if (dirChange > 90.0f) {
+  if (dirChange > kShudderDirChangeThreshold) {
     shudderDirChanges++;
   }
   shudderLastPos = pos;
   shudderLastDir = dir;
   if (time - shudderCheckTime > SHUDDER_WINDOW) {
     if (shudderDirChanges >= SHUDDER_DIR_THRESHOLD && distSinceLastShudderCheck < SHUDDER_MOVE_THRESHOLD) {
-      FILE *f = GetDebugLog();
-      fprintf(f, "[SHUDDER] t=%.1f g%d pos(%.0f,%.0f) dir=%.0f dirChanges=%d distMoved=%.0f state=%d\n",
+      DebugLog("[SHUDDER] t=%.1f g%d pos(%.0f,%.0f) dir=%.0f dirChanges=%d distMoved=%.0f state=%d\n",
               time, id, pos.x, pos.y, dir, shudderDirChanges, distSinceLastShudderCheck, (int)state);
-      fflush(f);
     }
     shudderDirChanges = 0;
     shudderCheckTime = time;
@@ -384,8 +380,7 @@ CursorAction Goose::Update(double dt, double time, int w, int h,
       stuckCheckTime = time;
     } else if (time - stuckCheckTime > kStuckThresholdTime) {
       // Goose is stuck, pick new wander target
-      FILE *f = GetDebugLog();
-      fprintf(f, "[STUCK] t=%.1f g%d pos(%.0f,%.0f) state=%d vel(%.1f,%.1f)\n",
+      DebugLog("[STUCK] t=%.1f g%d pos(%.0f,%.0f) state=%d vel(%.1f,%.1f)\n",
               time, id, pos.x, pos.y, (int)state, vel.x, vel.y);
       target = Vector2((float)(rand() % (int)w), (float)(rand() % (int)h));
       stuckCheckPos = pos;
@@ -396,39 +391,64 @@ CursorAction Goose::Update(double dt, double time, int w, int h,
     stuckCheckPos = pos;
     stuckCheckTime = time;
   }
+}
 
+void Goose::UpdateAnimation(double dt, double time) {
   UpdateDirection();
   UpdateRig();
+  SolveFeet(time);
+  UpdateDrag(dt);
+}
 
+void Goose::UpdateDebug(double time, const CursorState& cursor) {
   if (debugSnatch && state == GooseState::SNATCH_CURSOR &&
       time - lastDebugLog > debugLogInterval) {
     lastDebugLog = time;
     Vector2 btDev = GetBeakTipDevice();
-    FILE *f = GetDebugLog();
-    if (f) {
-      fprintf(f,
-              "[S%d] t=%.2f pos(%.1f,%.1f) dir=%.1f vel(%.1f,%.1f) spd=%.0f "
-              "tgt(%.0f,%.0f) btDev(%.0f,%.0f) angle=%.2f fwd(%.2f,%.2f) "
-              "anchor(%.0f,%.0f) radius=%.0f cursor(%.0f,%.0f) grabber=%d\n",
-              id, time, pos.x, pos.y, dir, vel.x, vel.y, currentSpeed, target.x,
-              target.y, btDev.x, btDev.y, snatchAngle, snatchFwd.x, snatchFwd.y,
-              snatchAnchor.x, snatchAnchor.y, snatchRadius, cursor.position.x,
-              cursor.position.y, g_cursorGrabberId);
-      fflush(f);
-    }
+    DebugLog("[S%d] t=%.2f pos(%.1f,%.1f) dir=%.1f vel(%.1f,%.1f) spd=%.0f "
+            "tgt(%.0f,%.0f) btDev(%.0f,%.0f) angle=%.2f fwd(%.2f,%.2f) "
+            "anchor(%.0f,%.0f) radius=%.0f cursor(%.0f,%.0f) grabber=%d\n",
+            id, time, pos.x, pos.y, dir, vel.x, vel.y, currentSpeed, target.x,
+            target.y, btDev.x, btDev.y, snatchAngle, snatchFwd.x, snatchFwd.y,
+            snatchAnchor.x, snatchAnchor.y, snatchRadius, cursor.position.x,
+            cursor.position.y, g_world.cursorGrabberId);
+  }
+}
+
+CursorAction Goose::Update(double dt, double time, int w, int h,
+                           const CursorState &cursor) {
+  lastUpdateTime = time;
+  if (state != prevState) {
+    const char *stateNames[] = {"W", "F", "R", "C", "S"};
+    DebugLog("!! t=%.1f g%d %s->%s tgt(%.0f,%.0f) c(%.0f,%.0f)\n", time, id,
+            stateNames[static_cast<int>(prevState)], stateNames[static_cast<int>(state)], target.x, target.y, cursor.position.x,
+            cursor.position.y);
+    prevState = state;
+    s_stateChanged = true;
   }
 
-  SolveFeet(time);
-  UpdateDrag(dt);
+  s_lastLogTime += dt;
+  if (s_lastLogTime > kLogInterval || s_stateChanged) {
+    LogTick(time, cursor);
+    s_lastLogTime = 0;
+    s_stateChanged = false;
+  }
+
+  CursorAction action = UpdateBehaviors(dt, time, w, h, cursor);
+
+  UpdatePhysics(dt, w, h);
+  UpdateDetection(time, w, h);
+  UpdateAnimation(dt, time);
+  UpdateDebug(time, cursor);
 
   return action;
 }
 
 void Goose::ForceFetch(int type, int w, int h, double time) {
-  fprintf(stderr, "[FF] g%d ForceFetch type=%d w=%d h=%d\n", id, type, w, h);
+  DebugLog("[FF] g%d ForceFetch type=%d w=%d h=%d\n", id, type, w, h);
   forceItemFetch = type;
   StartFetch(w, h, time);
-  fprintf(stderr, "[FF] after StartFetch state=%d heldItem=%p\n", (int)state, (void*)heldItem);
+  DebugLog("[FF] after StartFetch state=%d heldItem=%p\n", (int)state, (void*)heldItem);
 }
 
 void Goose::ForceFetchText(const std::string &text, int w, int h) {
@@ -514,4 +534,51 @@ void Goose::UpdateDrag(double dt) {
       
       dragRot += rotDiff * g_config.physics.dragRotationSpeed * (float)dt;
   }
+}
+
+void Goose::tick(double dt, double time) {
+    CursorState cursor = {};
+    if (g_cursorProvider) {
+        cursor = g_cursorProvider->Read();
+    }
+
+    CursorAction action = Update(dt, time, g_world.screenWidth, g_world.screenHeight, cursor);
+
+    if (g_cursorProvider && !action.isNone()) {
+        g_cursorProvider->Execute(action);
+    }
+
+    BehaviorContext ctx;
+    ctx.goose = this;
+    ctx.time = time;
+    ctx.isJailed = false;
+    BehaviorRegistry::Instance().TickAll(this, dt, time);
+}
+
+void Goose::render(IRenderer* renderer) {
+#ifdef __APPLE__
+    CGContextRef ctx = (CGContextRef)renderer->nativeContext();
+    if (!ctx) return;
+
+    CGContextSaveGState(ctx);
+    CGContextTranslateCTM(ctx, pos.x, pos.y);
+    CGContextScaleCTM(ctx, g_config.general.globalScale, g_config.general.globalScale);
+    CGContextTranslateCTM(ctx, -pos.x, -pos.y);
+    BehaviorRegistry::Instance().RenderPass(this, ctx, true);
+    CGContextRestoreGState(ctx);
+
+    DrawGoose(this, ctx);
+    if (heldItem) {
+        DrawHeldItem(this, ctx);
+    }
+
+    CGContextSaveGState(ctx);
+    CGContextTranslateCTM(ctx, pos.x, pos.y);
+    CGContextScaleCTM(ctx, g_config.general.globalScale, g_config.general.globalScale);
+    CGContextTranslateCTM(ctx, -pos.x, -pos.y);
+    BehaviorRegistry::Instance().RenderPass(this, ctx, false);
+    CGContextRestoreGState(ctx);
+#else
+    (void)renderer;
+#endif
 }

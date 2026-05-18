@@ -5,6 +5,13 @@ set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+option(ENABLE_ASAN "Enable AddressSanitizer" OFF)
+if(ENABLE_ASAN AND APPLE)
+    message(STATUS "AddressSanitizer enabled")
+    add_compile_options(-fsanitize=address -fno-omit-frame-pointer)
+    add_link_options(-fsanitize=address)
+endif()
+
 find_program(CCACHE_PROGRAM ccache)
 if(CCACHE_PROGRAM)
     message(STATUS "ccache found: ${CCACHE_PROGRAM}")
@@ -116,6 +123,8 @@ elseif(LINUX)
         set(LS_LIBRARIES "")
         set(LS_INCLUDE_DIRS "")
         set(LS_CFLAGS_OTHER "")
+    else()
+        target_compile_definitions(CadGoose PRIVATE GTK4_LAYER_SHELL_ENABLED)
     endif()
     pkg_check_modules(SDL2 REQUIRED sdl2)
     pkg_check_modules(SDL2MIXER REQUIRED SDL2_mixer)
@@ -264,7 +273,7 @@ if(APPLE)
         src/common/config.cpp
         src/common/config_helpers.h
         src/common/config_load.cpp
-        src/common/config_registry_general.cpp
+        src/common/config_registry_generated.cpp
         src/common/config_registry_behaviors.cpp
         src/common/config_registry_render.cpp
         src/common/config_registry_ai.cpp
@@ -277,26 +286,33 @@ if(APPLE)
         src/common/goose_behaviors_fetch.cpp
         src/common/goose_behaviors_interact.cpp
         src/common/items.cpp
+        src/common/actor.cpp
+        src/common/actor_ball.mm
+        src/common/actor_toy.mm
+        src/common/actor_flower.mm
+        src/common/actor_jail.mm
+        src/common/actor_portal.mm
+        src/common/actor_breadcrumb.mm
+        src/common/actor_leafpile.mm
         src/common/world.cpp
         src/common/behaviors/behavior_honcker.cpp
         src/common/behaviors/behavior_rainbow.cpp
         src/common/behaviors/behavior_health.cpp
         src/common/behaviors/behavior_pomodoro.cpp
-        src/common/behaviors/behavior_ball.cpp
+        src/common/behaviors/behavior_ball.mm
         src/common/behaviors/behavior_breadcrumbs.cpp
+        src/common/behaviors/behavior_anger.cpp
         src/common/behaviors/behavior_hats.cpp
         src/common/behaviors/behavior_acid.cpp
         src/common/behaviors/behavior_drag.cpp
         src/common/behaviors/behavior_jail.cpp
         src/common/behaviors/behavior_portal.cpp
-        src/common/behaviors/behavior_anger.cpp
-        src/common/behaviors/behavior_nametag.cpp
-        src/common/behaviors/behavior_presence.cpp
+        src/common/behaviors/behavior_interactive_drops.cpp
         src/common/behaviors/behavior_toys.cpp
         src/common/behaviors/behavior_boredom.cpp
+        src/common/behaviors/behavior_nametag.cpp
+        src/common/behaviors/behavior_presence.cpp
         src/common/behaviors/behavior_peeking.cpp
-        src/common/behaviors/behavior_affirmations.cpp
-        src/common/behaviors/behavior_interactive_drops.cpp
         src/common/hotkey.cpp
         src/common/event_bus.cpp
         src/common/mcp_server.cpp
@@ -316,6 +332,10 @@ if(APPLE)
             src/common/world_utils.mm
             src/common/behaviors/behavior_ai.mm
             src/common/behaviors/ai_http_client.mm
+            src/common/behaviors/ai_model_profiles.mm
+            src/common/behaviors/ai_think_block_stripper.mm
+            src/common/behaviors/ai_local_llm_adapter.mm
+            src/common/behaviors/ai_prompt_builder.mm
             src/common/behaviors/ai_text_meme.mm
             src/common/behaviors/local_llm_tokenizer.mm
             src/common/behaviors/local_llm_model.mm
@@ -354,7 +374,12 @@ if(APPLE)
             src/platform/macos/renderer.mm
             src/platform/macos/item_drag_controller.mm
             src/platform/macos/item_window.mm
+            src/platform/macos/item_window_test.mm
             src/platform/macos/effect_window.mm
+            src/platform/macos/effect_registration.mm
+            src/platform/macos/effect_reg_footprint.mm
+            src/platform/macos/effect_reg_pomodorobed.mm
+            src/platform/macos/behavior_element_window.mm
             src/platform/macos/audio.mm
             src/platform/macos/command_socket.cpp
             tests/common/presence_stub.cpp

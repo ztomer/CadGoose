@@ -25,7 +25,6 @@
     if ([key isEqualToString:@"avoidance_enabled"]) return @"🏃";
     if ([key isEqualToString:@"boredom_enabled"]) return @"😮‍💨";
     if ([key isEqualToString:@"peeking_enabled"]) return @"👀";
-    if ([key isEqualToString:@"affirmations_enabled"]) return @"💬";
     if ([key isEqualToString:@"interactive_drops_enabled"]) return @"💧";
     if ([key isEqualToString:@"appearance.colors"]) return @"🎨";
     return @"🦆";

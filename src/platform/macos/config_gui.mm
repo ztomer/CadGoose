@@ -223,7 +223,6 @@ void s_setBoolValue(const std::string& key, bool value) {
     [self addRow:@"Avoidance" key:@"avoidance_enabled" desc:@"Goose dodges fast-moving cursor"];
     [self addRow:@"Boredom Sigh" key:@"boredom_enabled" desc:@"Goose sighs dramatically after 10+ minutes idle"];
     [self addRow:@"Window Peeking" key:@"peeking_enabled" desc:@"Goose peeks head around monitor bezel at screen edges"];
-    [self addRow:@"Custom Affirmations" key:@"affirmations_enabled" desc:@"Goose drops configurable positive messages"];
     [self addRow:@"Interactive Drops" key:@"interactive_drops_enabled" desc:@"Goose drops puddles that splash or flowers that grow"];
     [self addRow:@"Toys" key:@"toys_enabled" desc:@"Scatter interactive toys for the goose"];
 
@@ -345,7 +344,9 @@ void s_setBoolValue(const std::string& key, bool value) {
             label.font = [NSFont fontWithName:@"Maple Mono" size:kNameFontSize] ?: [NSFont systemFontOfSize:kNameFontSize weight:NSFontWeightSemibold];
             label.textColor = [NSColor colorWithRed:0.9 green:0.1 blue:0.1 alpha:1.0];
         }
-        label.frame = NSMakeRect(kRowPaddingX, 6, self.listWidth - kRowPaddingX * 2, kHeaderRowHeight - 12);
+        // Position label near bottom of header row to create more space above (group separation)
+        // and less space below (closer to its own group)
+        label.frame = NSMakeRect(kRowPaddingX, 2, self.listWidth - kRowPaddingX * 2, kHeaderRowHeight - 4);
         label.stringValue = item[@"name"];
         return label;
     }

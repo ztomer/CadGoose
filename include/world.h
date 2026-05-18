@@ -36,6 +36,13 @@ struct Footprint {
     float lifetime;
 };
 
+struct Crumbs {
+    Vector2 pos;
+    double time;
+    float lifetime;
+    bool eaten = false;
+};
+
 struct Leaf {
     Vector2 curPosPlanar;
     float curPosZ;
@@ -60,25 +67,34 @@ struct LeafPile {
     void Tick(Goose* g, double currentTime, float dt);
 };
 
-extern std::list<Goose> g_geese;
-extern std::list<MonitorInfo> g_monitors;
-extern std::list<DroppedItem> g_droppedItems;
 constexpr size_t kMaxFootprints = 500;
-extern RingBuffer<Footprint, kMaxFootprints> g_footprints;
-extern std::list<LeafPile> g_leafPiles;
-extern int g_nextId;
-extern int g_screenWidth;
-extern int g_screenHeight;
-extern int g_selectedGooseId;
+constexpr size_t kMaxCrumbs = 200;
+constexpr size_t kMaxJails = 10;
+
+struct WorldContext {
+    std::list<Goose> geese;
+    std::list<MonitorInfo> monitors;
+    std::list<DroppedItem> droppedItems;
+    RingBuffer<Footprint, kMaxFootprints> footprints;
+    RingBuffer<Crumbs, kMaxCrumbs> crumbs;
+    std::list<LeafPile> leafPiles;
+    
+    int nextId = 0;
+    int screenWidth = 0;
+    int screenHeight = 0;
+    int selectedGooseId = 0;
+    int cursorGrabberId = -1;
+    int frameId = 0;
+
+    std::deque<std::string> uiLog;
 
 #ifdef __linux__
-extern GtkWidget* g_entryNote;
-extern std::vector<GtkWidget*> g_overlayCanvases;
+    GtkWidget* entryNote = nullptr;
+    std::vector<GtkWidget*> overlayCanvases;
 #endif
+};
 
-extern std::deque<std::string> g_uiLog;
-extern int g_cursorGrabberId; // id of goose currently dragging the cursor, -1 = none
-extern int g_frameId;          // incrementing frame counter for duplicate update guard
+extern WorldContext g_world;
 
 // ============================================================
 // WorldCoord — Coordinate transformation helpers
@@ -141,5 +157,41 @@ public:
 
 void UiLogPush(const std::string& s);
 Goose* GetGooseById(int id);
+
+// Pomodoro bed accessor (defined in behavior_pomodoro.cpp)
+struct PomodoroBedInfo {
+    Vector2 position;
+    bool visible;
+    void* bedImage; // CGImageRef
+};
+PomodoroBedInfo Pomodoro_GetBedInfo(int gooseId);
+
+
+struct InteractivePuddle {
+    Vector2 pos{0, 0};
+    Vector2 vel{0, 0};
+    float radius = 15.0f;
+    double spawnTime = 0;
+    bool splashed = false;
+    float maxRadius = 40.0f;
+    float alpha = 0.6f;
+};
+
+struct InteractiveFlower {
+    Vector2 pos{0, 0};
+    double spawnTime = 0;
+    float growth = 0.0f;
+    float stemHeight = 0.0f;
+    float petalSize = 0.0f;
+    float hue = 0.0f;
+};
+
+struct Toy {
+    Vector2 pos{0, 0};
+    float angle = 0;
+    double time{0};
+    bool active = false;
+    enum class Type : int { Stick = 0, Ball = 1 } type = Type::Stick;
+};
 
 #endif // WORLD_H

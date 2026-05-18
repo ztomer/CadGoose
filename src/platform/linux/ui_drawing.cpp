@@ -4,6 +4,7 @@
 #include "config.h"
 #include "assets.h"
 #include "goose.h"
+#include "actor.h"
 #include <algorithm>
 #include <cstdio>
 #include <cmath>
@@ -94,7 +95,7 @@ static void draw_beak(cairo_t* cr, const Goose& g) {
 
 static void draw_footprints(cairo_t* cr, int screenH) {
     const auto now = std::chrono::steady_clock::now();
-    for (const auto& fp : g_footprints) {
+    for (const auto& fp : g_world.footprints) {
         auto age = std::chrono::duration_cast<std::chrono::milliseconds>(now - fp.timestamp).count();
         float alpha = 1.0f - (float)age / fp.lifetime;
         if (alpha <= 0) continue;
@@ -140,7 +141,7 @@ static void draw_goose(cairo_t* cr, const Goose& g, int screenH) {
         g.pos.y < -100 || g.pos.y > g_config.screen.height + 100)
         return;
 
-    const bool selected = (g.id == g_selectedGooseId);
+    const bool selected = (g.id == g_world.selectedGooseId);
     const bool chasing = (g.state == GooseState::CHASE);
     const bool snatching = (g.state == GooseState::SNATCH_CURSOR);
 
@@ -172,19 +173,19 @@ static void draw_mud_layer(cairo_t* cr, int screenH) {
     for (const auto& m : g_mudPatches) {
         draw_mud(cr, m, screenH);
     }
-    for (const auto& g : g_geese) {
-        if (g.state == GooseState::MUD && g.activeMud) {
-            draw_mud(cr, *g.activeMud, screenH);
+    for (const auto* g : ActorManager::Instance().getGeese()) {
+        if (g->state == GooseState::MUD && g->activeMud) {
+            draw_mud(cr, *g->activeMud, screenH);
         }
     }
 }
 
 static void draw_cursor_grab_indicator(cairo_t* cr, int screenH) {
-    if (g_cursorGrabberId == -1 || !g_cursorPosSet) return;
+    if (g_world.cursorGrabberId == -1 || !g_cursorPosSet) return;
 
     const Goose* g = nullptr;
-    for (const auto& gx : g_geese) {
-        if (gx.id == g_cursorGrabberId) { g = &gx; break; }
+    for (const auto* gx : ActorManager::Instance().getGeese()) {
+        if (gx->id == g_world.cursorGrabberId) { g = gx; break; }
     }
     if (!g) return;
 
@@ -208,16 +209,16 @@ static void draw_debug(cairo_t* cr, int screenW, int screenH) {
 
     const char* filter = g_config.debugShowSelectedOnly ? "Selected" : nullptr;
     if (filter) {
-        if (g_selectedGooseId == 0) return;
-        for (const auto& g : g_geese) {
-            if (g.id == g_selectedGooseId) {
+        if (g_world.selectedGooseId == 0) return;
+        for (const auto* g : ActorManager::Instance().getGeese()) {
+            if (g->id == g_world.selectedGooseId) {
                 int y = screenH - 60;
                 cairo_select_font_face(cr, "monospace", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_BOLD);
                 cairo_set_font_size(cr, 14);
                 cairo_set_source_rgb(cr, 1, 1, 1);
                 char buf[256];
                 snprintf(buf, sizeof(buf), "[#%d] Pos(%.0f,%.0f) Vel(%.1f,%.1f) State=%s Step=%.2f",
-                    g.id, g.pos.x, g.pos.y, g.vel.x, g.vel.y, StateName(g.state), g.stepTime);
+                    g->id, g->pos.x, g->pos.y, g->vel.x, g->vel.y, StateName(g->state), g->stepTime);
                 cairo_move_to(cr, 12, y);
                 cairo_show_text(cr, buf);
                 return;
@@ -232,12 +233,12 @@ static void draw_debug(cairo_t* cr, int screenW, int screenH) {
     cairo_set_source_rgb(cr, 1, 1, 0.8);
 
     snprintf(buf, sizeof(buf), "Geese: %zu  Mud: %zu  Items: %zu  FPS: %.0f  RAM: %.1f MB",
-        g_geese.size(), g_mudPatches.size(), g_droppedItems.size(), 1.0 / g_frameDelta, g_ramMB);
+        ActorManager::Instance().getGeese().size(), g_mudPatches.size(), g_world.droppedItems.size(), 1.0 / g_frameDelta, g_ramMB);
     cairo_move_to(cr, 12, y += 18);
     cairo_show_text(cr, buf);
 
     snprintf(buf, sizeof(buf), "Cursor: (%.0f, %.0f)  Grabber: #%d",
-        g_cursorPos.x, g_cursorPos.y, g_cursorGrabberId);
+        g_cursorPos.x, g_cursorPos.y, g_world.cursorGrabberId);
     cairo_move_to(cr, 12, y += 18);
     cairo_show_text(cr, buf);
 
@@ -250,9 +251,9 @@ static void draw_debug(cairo_t* cr, int screenW, int screenH) {
     cairo_move_to(cr, 12, y += 18);
     cairo_show_text(cr, buf);
 
-    if (!g_uiLog.empty()) {
+    if (!g_world.uiLog.empty()) {
         cairo_set_source_rgb(cr, 0.8, 0.8, 0.8);
-        snprintf(buf, sizeof(buf), "LOG: %s", g_uiLog.back().c_str());
+        snprintf(buf, sizeof(buf), "LOG: %s", g_world.uiLog.back().c_str());
         cairo_move_to(cr, 12, y += 18);
         cairo_show_text(cr, buf);
     }
@@ -269,10 +270,10 @@ static void draw_debug(cairo_t* cr, int screenW, int screenH) {
 }
 
 static void render_goose_cursor(cairo_t* cr, int screenH) {
-    if (g_cursorGrabberId == -1 || !g_cursorPosSet) return;
+    if (g_world.cursorGrabberId == -1 || !g_cursorPosSet) return;
 
-    for (const auto& g : g_geese) {
-        if (g.id != g_cursorGrabberId) continue;
+    for (const auto* g : ActorManager::Instance().getGeese()) {
+        if (g->id != g_world.cursorGrabberId) continue;
 
         const char* name = "cursor_goose.png";
         cairo_surface_t* surface = g_assets.Get(name);
@@ -288,39 +289,185 @@ static void render_goose_cursor(cairo_t* cr, int screenH) {
 }
 
 static void draw_dropped_items(cairo_t* cr, int screenH) {
-    for (const auto& item : g_droppedItems) {
+    for (const auto& item : g_world.droppedItems) {
         draw_dropped_item(cr, item, screenH);
     }
 }
 
-void draw_overlay(GtkDrawingArea*, cairo_t* cr, int width, int height, gpointer data) {
+
+// --- Extracted from ui.cpp ---
+void DrawFootprints(cairo_t* cr) {
+    for (auto& fp : g_world.footprints) {
+        double age = g_time - fp.timeSpawned;
+        float alpha = kFootprintAlpha;
+        float life = (fp.lifetime > 0.0f) ? fp.lifetime : g_config.mudLifetime;
+        float fadeStart = life * 0.7f;
+        float fadeDur = life - fadeStart;
+        if (age > fadeStart) alpha = kFootprintAlpha * (1.0f - (float)(age - fadeStart) / fadeDur);
+        if (alpha <= 0) continue;
+
+        cairo_save(cr);
+        cairo_translate(cr, fp.pos.x, fp.pos.y);
+        cairo_scale(cr, g_config.globalScale, g_config.globalScale);
+        cairo_rotate(cr, fp.dir * G_PI / 180.0);
+        
+        cairo_set_source_rgba(cr, kFootprintPadR, kFootprintPadG, kFootprintPadB, alpha);
+        
+        cairo_save(cr);
+        cairo_scale(cr, kFootprintPadScaleX, kFootprintPadScaleY);
+        cairo_arc(cr, 0, 0, 1.0, 0, 2*G_PI);
+        cairo_fill(cr);
+        cairo_restore(cr);
+
+        cairo_save(cr);
+        cairo_translate(cr, -kFootprintToeOffsetX, -kFootprintToeOffsetY);
+        cairo_scale(cr, kFootprintToeScaleX, kFootprintToeScaleY);
+        cairo_arc(cr, 0, 0, 1.0, 0, 2*G_PI);
+        cairo_fill(cr);
+        cairo_restore(cr);
+
+        cairo_save(cr);
+        cairo_translate(cr, kFootprintToeOffsetX, -kFootprintToeOffsetY);
+        cairo_scale(cr, kFootprintToeScaleX, kFootprintToeScaleY);
+        cairo_arc(cr, 0, 0, 1.0, 0, 2*G_PI);
+        cairo_fill(cr);
+        cairo_restore(cr);
+
+        cairo_restore(cr);
+    }
+}
+
+void DrawDroppedItems(cairo_t* cr) {
+    for (auto& item : g_world.droppedItems) {
+        if (!std::isfinite(item.pos.x) || !std::isfinite(item.pos.y) || !std::isfinite(item.rotation)) {
+            continue; // Skip corrupted items
+        }
+
+        cairo_save(cr);
+        float s = g_config.globalScale;
+        // Center the coordinate system on the item, applying global scale
+        cairo_translate(cr, item.pos.x + item.data->w * 0.5f * s, item.pos.y + item.data->h * 0.5f * s);
+        cairo_scale(cr, s, s);
+        cairo_rotate(cr, item.rotation);
+        
+        if (cairo_status(cr) != CAIRO_STATUS_SUCCESS) {
+            std::cerr << "[UI] Cairo error after item transform: " << cairo_status_to_string(cairo_status(cr)) << std::endl;
+            cairo_restore(cr);
+            continue;
+        }
+
+        // Draw from top-left relative to scaled center
+        cairo_translate(cr, -item.data->w * 0.5f, -item.data->h * 0.5f);
+
+        if (item.data->type == ItemData::MEME && item.data->pixbuf) {
+            set_source_pixbuf_manual(cr, item.data->pixbuf, 0, 0);
+            cairo_paint(cr);
+        } else if (item.data->type == ItemData::TEXT) {
+            cairo_set_source_rgb(cr, 1, 1, 0.85);
+            cairo_rectangle(cr, 0, 0, item.data->w, item.data->h);
+            cairo_fill_preserve(cr);
+            cairo_set_source_rgb(cr, 0, 0, 0);
+            cairo_set_line_width(cr, 2);
+            cairo_stroke(cr);
+
+            PangoLayout* layout = pango_cairo_create_layout(cr);
+            pango_layout_set_text(layout, item.data->Text().c_str(), -1);
+            pango_layout_set_width(layout, (item.data->w - kLinuxTextPadding) * PANGO_SCALE);
+            cairo_move_to(cr, kLinuxTextPadding / 2, kLinuxTextPadding / 2);
+            pango_cairo_show_layout(cr, layout);
+            g_object_unref(layout);
+        }
+        cairo_restore(cr);
+
+        // Visual debug for items: draw a point at their center
+        if (g_config.debugVisuals) {
+            cairo_save(cr);
+            Vector2 center = item.pos + Vector2{(float)item.data->w * 0.5f, (float)item.data->h * 0.5f} * s;
+            cairo_set_source_rgba(cr, kDebugOrangeR, kDebugOrangeG, kDebugOrangeB, kDebugOrangeAlpha); // Orange point
+            cairo_arc(cr, center.x, center.y, kDebugPointRadius, 0, G_PI * 2);
+            cairo_fill(cr);
+            
+            // Label for time left
+            char timeBuf[16];
+            snprintf(timeBuf, sizeof(timeBuf), "%.1fs", g_config.item.itemLifetime - (g_time - item.timeDropped));
+            cairo_move_to(cr, center.x + 8, center.y + 8);
+            PangoLayout* tLayout = pango_cairo_create_layout(cr);
+            pango_layout_set_text(tLayout, timeBuf, -1);
+            cairo_set_source_rgba(cr, 1, 1, 1, 0.6);
+            pango_cairo_show_layout(cr, tLayout);
+            g_object_unref(tLayout);
+            cairo_restore(cr);
+        }
+    }
+}
+
+// --- Drawing (see ui_drawing.cpp) -----------------------------------------
+void draw_overlay(GtkDrawingArea* area, cairo_t* cr, int width, int height, gpointer data) {
     MonitorInfo* m = (MonitorInfo*)data;
-    int screenH = m ? m->height : height;
+    if (!m || cairo_status(cr) != CAIRO_STATUS_SUCCESS) return;
 
-    cairo_set_source_rgba(cr, 0, 0, 0, 0);
-    cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
-    cairo_paint(cr);
-
-    draw_mud_layer(cr, screenH);
-    draw_footprints(cr, screenH);
-    draw_dropped_items(cr, screenH);
-
-    for (const auto& g : g_geese) {
-        draw_goose(cr, g, screenH);
+    if (!g_config->multiMonitorEnabled && (m->x != 0 || m->y != 0)) {
+        cairo_save(cr);
+        cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
+        cairo_paint(cr);
+        cairo_restore(cr);
+        return;
     }
 
-    render_goose_cursor(cr, screenH);
-    draw_cursor_grab_indicator(cr, screenH);
+    cairo_save(cr); 
+    cairo_translate(cr, -m->x, -m->y);
 
-    draw_debug(cr, width, screenH);
+    DrawFootprints(cr);
+    DrawDroppedItems(cr);
+
+    // Draw Geese
+    for (auto* g : ActorManager::Instance().getGeese()) {
+        if (cairo_status(cr) != CAIRO_STATUS_SUCCESS) break;
+        g->Draw(cr);
+
+        // Minecraft-style name tag
+        if (!g->name.empty()) {
+            cairo_save(cr);
+            PangoLayout* layout = pango_cairo_create_layout(cr);
+            std::string tagText = "[#" + std::to_string(g->id) + "] " + g->name;
+            pango_layout_set_text(layout, tagText.c_str(), -1);
+            
+            PangoFontDescription* desc = pango_font_description_from_string("Sans Bold 10");
+            pango_layout_set_font_description(layout, desc);
+            pango_font_description_free(desc);
+
+            int tw, th;
+            pango_layout_get_pixel_size(layout, &tw, &th);
+
+            float tagX = g->pos.x - tw / 2.0f;
+            float tagY = g->pos.y - kLinuxNametagYOffset * g_config->globalScale; // Position above head
+
+            // Background rectangle (translucent dark)
+            cairo_set_source_rgba(cr, 0, 0, 0, 0.4);
+            cairo_rectangle(cr, tagX - kLinuxNametagPadX, tagY - kLinuxNametagPadY, tw + kLinuxNametagPadW, th + kLinuxNametagPadH);
+            cairo_fill(cr);
+
+            // White text
+            cairo_set_source_rgb(cr, 1, 1, 1);
+            cairo_move_to(cr, tagX, tagY);
+            pango_cairo_show_layout(cr, layout);
+
+            g_object_unref(layout);
+            cairo_restore(cr);
+        }
+
+        if (g_config->debugVisuals) {
+            Vector2 origin = g->pos;
+            if (g->state == GooseState::FETCHING || g->state == GooseState::RETURNING || g->state == GooseState::CHASE_CURSOR) {
+                origin = g->GetBeakTipDevice();
+            }
+            draw_goose_debug_visuals(cr, g, origin);
+        }
+    cairo_restore(cr); 
+
+    // Debug overlay (only on the primary monitor window)
+    if (m->x == 0 && m->y == 0) {
+        draw_debug_overlay(cr);
+    }
 }
 
-void draw_debug_overlay(cairo_t* cr, int width, int height) {
-    cairo_set_source_rgba(cr, 0, 0, 0, 0.5);
-    cairo_paint(cr);
-    cairo_set_source_rgb(cr, 1, 0, 0);
-    cairo_select_font_face(cr, "monospace", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_BOLD);
-    cairo_set_font_size(cr, 24);
-    cairo_move_to(cr, width / 2.0 - 100, height / 2.0);
-    cairo_show_text(cr, "DEBUG OVERLAY");
-}

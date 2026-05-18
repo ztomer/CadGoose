@@ -6,7 +6,12 @@
 #include "goose.h"
 #include "config.h"
 #include "renderer_interface.h"
+#include "render_colors.h"
 #include "cg_renderer.h"
+
+static constexpr float kHealthBarWidth = 40.0f;
+static constexpr float kHealthBarHeight = 4.0f;
+static constexpr float kHealthBarYOffset = 50.0f;
 
 static void init(BehaviorContext& ctx) {
     auto* state = BehaviorStateManager::Instance().GetOrCreate<HealthState>(ctx.goose->id, "health");
@@ -44,12 +49,12 @@ static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
 
     CGRenderer renderer(cg);
 
-    float barWidth = 40.0f;
-    float barHeight = 4.0f;
+    float barWidth = kHealthBarWidth;
+    float barHeight = kHealthBarHeight;
     float x = goose->pos.x - barWidth / 2;
-    float y = goose->pos.y - 50.0f;
+    float y = goose->pos.y - kHealthBarYOffset;
 
-    renderer.DrawRect({x, y, barWidth, barHeight}, RenderColor{0.2f, 0.2f, 0.2f, 0.8f});
+    renderer.DrawRect({x, y, barWidth, barHeight}, MakeHealthBarBg(0.8f));
 
     float healthPct = state->currentHealth / state->maxHealth;
     renderer.DrawRect({x, y, barWidth * healthPct, barHeight},

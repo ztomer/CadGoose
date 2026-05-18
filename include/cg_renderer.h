@@ -141,6 +141,10 @@ public:
         CGContextSetAlpha(m_ctx, alpha);
     }
 
+    void* nativeContext() const override {
+        return (void*)m_ctx;
+    }
+
 private:
     CGContextRef m_ctx;
 };

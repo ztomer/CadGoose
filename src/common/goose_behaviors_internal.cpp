@@ -18,7 +18,7 @@ static FILE* GetDebugLog() {
 }
 
 Vector2 GetSnatchForward(float dir, const Vector2& isoScale) {
-    float rad = dir * static_cast<float>(PI) / 180.0f;
+    float rad = dir * DEG_TO_RAD;
     return {std::cos(rad) * isoScale.x, std::sin(rad) * isoScale.y};
 }
 

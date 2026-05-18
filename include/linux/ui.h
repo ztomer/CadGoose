@@ -1,6 +1,8 @@
 #pragma once
 #include <gtk/gtk.h>
+#ifdef GTK4_LAYER_SHELL_ENABLED
 #include <gtk4-layer-shell.h>
+#endif
 
 void setup_overlay_window(GtkApplication* app);
 struct MonitorInfo;

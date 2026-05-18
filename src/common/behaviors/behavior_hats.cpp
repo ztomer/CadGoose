@@ -4,8 +4,13 @@
 #include "world.h"
 #include "assets.h"
 #include "renderer_interface.h"
-#include "cg_renderer.h"
 #include <cmath>
+
+static constexpr float kFacingLeftMin = 90.0f;
+static constexpr float kFacingLeftMax = 270.0f;
+
+#ifdef __APPLE__
+#include "cg_renderer.h"
 
 static CGImageRef s_hatImage = nullptr;
 static CGImageRef s_hatScaled = nullptr;
@@ -20,6 +25,10 @@ static void init(BehaviorContext& ctx) {
         s_hatImage = g_assets.GetBehaviorImage("Assets/Images/OtherGfx/hat_default.png");
     }
 }
+#else
+static void cleanupHat(BehaviorContext&) {}
+static void init(BehaviorContext& ctx) {}
+#endif
 
 static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
 }
@@ -66,7 +75,7 @@ static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
     renderer.SaveState();
     renderer.Translate(screenX, screenY);
 
-    bool facingLeft = (dir > 90.0f && dir < 270.0f);
+    bool facingLeft = (dir > kFacingLeftMin && dir < kFacingLeftMax);
     if (facingLeft) {
         renderer.Scale(-1.0f, 1.0f);
     }

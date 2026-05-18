@@ -9,6 +9,7 @@ struct DevicePoint;
 @interface GooseWindow : NSWindow
 @property (nonatomic, strong) GooseView* gooseView;
 - (void)centerOnDevicePoint:(DevicePoint)devicePt;
+- (void)updateSizeForGoose:(const Goose*)goose;
 @end
 
 #ifdef __cplusplus

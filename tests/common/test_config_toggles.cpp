@@ -8,8 +8,7 @@
 #include "behavior.h"
 #include "world.h"
 
-extern int g_screenWidth;
-extern int g_screenHeight;
+
 
 TEST(BehaviorToggles, AllBehaviorTogglesDirectAccess) {
     Config_Init();
@@ -36,7 +35,6 @@ TEST(BehaviorToggles, AllBehaviorTogglesDirectAccess) {
     EXPECT_TRUE(g_config.behaviors.fun.avoidance);
     EXPECT_FALSE(g_config.behaviors.fun.boredom);
     EXPECT_TRUE(g_config.behaviors.fun.peeking);
-    EXPECT_FALSE(g_config.behaviors.fun.affirmations);
     EXPECT_FALSE(g_config.behaviors.fun.interactiveDrops);
     EXPECT_TRUE(g_config.behaviors.fun.toysEnabled);
 
@@ -59,7 +57,7 @@ TEST(BehaviorToggles, AllRegisteredInRegistry) {
         "ball_enabled", "breadcrumbs_enabled", "hats_enabled",
         "rainbow_enabled", "acid_enabled", "anger_enabled",
         "autumn_leaves_enabled", "avoidance_enabled", "boredom_enabled",
-        "peeking_enabled", "affirmations_enabled", "interactive_drops_enabled",
+        "peeking_enabled", "interactive_drops_enabled",
         "toys_enabled",
         "honcker_enabled", "jail_enabled", "portals_enabled",
         "drag_enabled",

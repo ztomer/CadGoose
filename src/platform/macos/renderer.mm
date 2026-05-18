@@ -2,6 +2,7 @@
 #import "window.h"
 #import "item_window.h"
 #import "effect_window.h"
+#import "goose_drawing.h"
 #import <vector>
 #import <cmath>
 #import <algorithm>
@@ -19,6 +20,8 @@
 #include "ai_text_meme.h"
 #include "world_utils.h"
 #include "coordinate_system.h"
+#include "actor.h"
+#include "cg_renderer.h"
 
 void Honcker_Honk(Goose* goose, double time);
 float Rainbow_GetHue(int gooseId);
@@ -47,6 +50,10 @@ extern bool g_debugMode;
 // --- Timer and rendering constants ---
 static constexpr int kWorldCleanupTickInterval = 60;
 static constexpr int kLeafSpawnProbabilityDenominator = 600;
+static constexpr float kDisplayLinkMinFps = 30;
+static constexpr float kDisplayLinkMaxFps = 60;
+static constexpr float kDisplayLinkDefaultFps = 60;
+static constexpr float kSpeedRedrawThreshold = 0.01f;
 
 static void DrawEllipse(CGContextRef ctx, Vector2 p, float rx, float ry, float r, float g, float b, float a) {
     CGContextSetRGBFillColor(ctx, r, g, b, a);
@@ -125,7 +132,7 @@ static BOOL s_hasPrimary = NO;
 
     self.displayLink = [self displayLinkWithTarget:self selector:@selector(onFrameRefresh:)];
     if (@available(macOS 14.0, *)) {
-        self.displayLink.preferredFrameRateRange = CAFrameRateRangeMake(30, 60, 60);
+        self.displayLink.preferredFrameRateRange = CAFrameRateRangeMake(kDisplayLinkMinFps, kDisplayLinkMaxFps, kDisplayLinkDefaultFps);
     }
     [self.displayLink addToRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
     DEBUG_LOG("  CADisplayLink created and added to run loop");
@@ -149,8 +156,8 @@ static BOOL s_hasPrimary = NO;
 
     if (key == 'f' || key == 'F') {
         fprintf(stderr, "[HONCKER] F key pressed\n");
-        for (auto& g : g_geese) {
-            Honcker_Honk(&g, self.currentTime);
+        for (auto* g : ActorManager::Instance().getGeese()) {
+            Honcker_Honk(g, self.currentTime);
         }
     }
 }
@@ -175,35 +182,17 @@ static BOOL s_hasPrimary = NO;
     self.currentTime += dt;
     self.tickCount++;
 
-    CursorAction action = {};
-
-    CursorState cursor = {};
-    if (self.isPrimary && g_cursorProvider) {
-        cursor = g_cursorProvider->Read();
-    }
-
     if (self.isPrimary) {
-        for (auto& g : g_geese) {
-            CursorAction a = g.Update(dt, self.currentTime, g_screenWidth, g_screenHeight, cursor);
-            if (!a.isNone()) action = a;
-            if (g.currentSpeed > 0.01f) self.needsRedraw = YES;
-            if (g_debugMode && self.tickCount % g_config.render.debugTickMod == 0) {
-                DEBUG_LOG("Goose %d pos: %.1f,%.1f speed: %.1f", g.id, g.pos.x, g.pos.y, g.currentSpeed);
-            }
+        // Tick all actors (geese, toys, flowers, etc.)
+        ActorManager::Instance().tickAll(dt, self.currentTime);
 
-            BehaviorContext ctx;
-            ctx.goose = &g;
-            ctx.time = self.currentTime;
-            ctx.isJailed = false;
-            BehaviorRegistry::Instance().TickAll(&g, dt, self.currentTime);
+        // Update window positions for geese
+        auto geese = ActorManager::Instance().getGeese();
+        std::list<Goose> gooseList;
+        for (auto* g : geese) {
+            gooseList.push_back(*g);
         }
-
-        [[WindowManager shared] updateWindowPositionsForGeese:&g_geese];
-    }
-
-    if (g_cursorProvider && !action.isNone()) {
-        g_cursorProvider->Execute(action);
-        self.needsRedraw = YES;
+        [[WindowManager shared] updateWindowPositionsForGeese:&gooseList];
     }
 
     if (self.tickCount % kWorldCleanupTickInterval == 0) {
@@ -213,20 +202,20 @@ static BOOL s_hasPrimary = NO;
 
     if (g_config.behaviors.fun.autumnLeaves) {
         if (rand() % kLeafSpawnProbabilityDenominator == 0) {
-            World_SpawnRandomLeafPile(g_screenWidth, g_screenHeight, self.currentTime);
+            World_SpawnRandomLeafPile(g_world.screenWidth, g_world.screenHeight, self.currentTime);
         }
+        auto geese = ActorManager::Instance().getGeese();
         World_TickLeafPiles(self.currentTime, dt,
-                            g_geese.empty() ? nullptr : &g_geese.front());
+                            geese.empty() ? nullptr : geese.front());
     }
 
     // Sync effect windows (leaves, mud, etc.)
     [[EffectWindowManager shared] syncWindows];
-    if (!g_leafPiles.empty()) self.needsRedraw = YES;
+    if (!g_world.leafPiles.empty()) self.needsRedraw = YES;
 
-    if (!g_droppedItems.empty()) {
-        [[ItemWindowManager shared] syncWindows];
-        self.needsRedraw = YES;
-    }
+    // Always sync item windows — needed to clean up orphaned windows when goose picks up last item
+    [[ItemWindowManager shared] syncWindows];
+    if (!g_world.droppedItems.empty()) self.needsRedraw = YES;
 
     if (self.needsRedraw) {
         [self setNeedsDisplay:YES];
@@ -256,28 +245,17 @@ static BOOL s_hasPrimary = NO;
     // Translate from device coords to view coords (view origin = window top-left)
     CGContextTranslateCTM(ctx, -viewOriginDevice.x, -viewOriginDevice.y);
 
-    for (auto& g : g_geese) {
-        CGContextSaveGState(ctx);
-        CGContextTranslateCTM(ctx, g.pos.x, g.pos.y);
-        CGContextScaleCTM(ctx, g_config.general.globalScale, g_config.general.globalScale);
-        CGContextTranslateCTM(ctx, -g.pos.x, -g.pos.y);
-        BehaviorRegistry::Instance().RenderPass(&g, ctx, true);
-        CGContextRestoreGState(ctx);
+    // Render all actors (geese, toys, flowers, etc.)
+    CGRenderer renderer(ctx);
+    ActorManager::Instance().renderAll(&renderer);
 
-        DrawGoose(&g, ctx);
-        if (g.heldItem) {
-            DrawHeldItem(&g, ctx);
-        }
-
-        CGContextSaveGState(ctx);
-        CGContextTranslateCTM(ctx, g.pos.x, g.pos.y);
-        CGContextScaleCTM(ctx, g_config.general.globalScale, g_config.general.globalScale);
-        CGContextTranslateCTM(ctx, -g.pos.x, -g.pos.y);
-        BehaviorRegistry::Instance().RenderPass(&g, ctx, false);
-        CGContextRestoreGState(ctx);
+    // Draw debug overlay
+    auto geese = ActorManager::Instance().getGeese();
+    std::list<Goose> gooseList;
+    for (auto* g : geese) {
+        gooseList.push_back(*g);
     }
-
-    DrawDebugOverlay(ctx, g_geese);
+    DrawDebugOverlay(ctx, gooseList);
     CGContextRestoreGState(ctx);
 }
 

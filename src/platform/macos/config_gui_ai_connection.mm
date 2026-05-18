@@ -17,7 +17,7 @@ static constexpr float kModelPopupTag = 101;
      if (prov == 1) return [NSString stringWithFormat:@"http://localhost:%d/v1/models", g_config.ai.osaurusPort];
      if (prov == 2) return [NSString stringWithFormat:@"http://localhost:%d/api/tags", g_config.ai.ollamaPort];
      if (prov == 3) return [NSString stringWithUTF8String:g_config.ai.customEndpoint.c_str()];
-     return @"http://localhost:1337/v1/models";
+      return [NSString stringWithUTF8String:Config::kDefaultModelsEndpoint];
  }
 
 - (void)refreshModels:(id)sender {

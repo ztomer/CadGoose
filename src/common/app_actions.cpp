@@ -2,6 +2,7 @@
 #include "config.h"
 #include "world.h"
 #include "behavior.h"
+#include "actor.h"
 
 #include <fstream>
 #include <iomanip>
@@ -19,16 +20,17 @@ void AppActions_SetApplication(void* app) {}
 Goose* AppActions_SpawnGoose(const std::string& requestedName) {
     std::string name = requestedName;
     if (name.empty()) {
-        size_t idx = g_geese.size();
+        size_t idx = g_world.geese.size();
         if (idx < g_config.gooseNames.size() && !g_config.gooseNames[idx].empty()) {
             name = g_config.gooseNames[idx];
         } else {
-            name = "Goose " + std::to_string(g_nextId);
+            name = "Goose " + std::to_string(g_world.nextId);
         }
     }
 
-    g_geese.emplace_back(g_nextId++, name, g_screenWidth, g_screenHeight);
-    Goose* goose = &g_geese.back();
+    g_world.geese.emplace_back(g_world.nextId++, name, g_world.screenWidth, g_world.screenHeight);
+    Goose* goose = &g_world.geese.back();
+    ActorManager::Instance().add(goose);
     BehaviorRegistry::Instance().InitAll(goose);
 
 #if defined(__linux__)
@@ -38,26 +40,35 @@ Goose* AppActions_SpawnGoose(const std::string& requestedName) {
 }
 
 void AppActions_EnsureInitialGoose() {
-    if (!g_geese.empty()) return;
+    if (!g_world.geese.empty()) return;
     AppActions_SpawnGoose("");
 }
 
 void AppActions_ClearGeese() {
-    for (auto& item : g_droppedItems) {
+    for (auto& item : g_world.droppedItems) {
         delete item.data;
     }
-    g_droppedItems.clear();
-    g_footprints.clear();
+    g_world.droppedItems.clear();
+    g_world.footprints.clear();
 
     Config_SaveGooseNames();
 
-    g_geese.clear();
-    g_cursorGrabberId = -1;
-    g_selectedGooseId = 0;
-    g_nextId = 0;
+    // Remove all goose actors from ActorManager
+    auto& mgr = ActorManager::Instance();
+    for (int i = mgr.totalCount() - 1; i >= 0; i--) {
+        Actor* a = mgr.getByIndex(i);
+        if (a && strcmp(a->type(), "goose") == 0) {
+            mgr.remove(a);
+        }
+    }
+
+    g_world.geese.clear();
+    g_world.cursorGrabberId = -1;
+    g_world.selectedGooseId = 0;
+    g_world.nextId = 0;
 
 #if defined(__linux__)
-    for (GtkWidget* canvas : g_overlayCanvases) {
+    for (GtkWidget* canvas : g_world.overlayCanvases) {
         if (canvas) gtk_widget_queue_draw(canvas);
     }
     UiLogPush("Cleared all geese.");
@@ -115,12 +126,12 @@ std::string AppActions_GetStatus() {
     std::ostringstream out;
     out << std::fixed << std::setprecision(1);
     out << "running=1\n";
-    out << "goose_count=" << g_geese.size() << "\n";
+    out << "goose_count=" << g_world.geese.size() << "\n";
     out << "config_path=" << Config_GetPath() << "\n";
     out << GetRamUsageReport();
 
-    if (!g_geese.empty()) {
-        const auto& g = g_geese.front();
+    if (!g_world.geese.empty()) {
+        const auto& g = g_world.geese.front();
         out << "goose_pos=" << g.pos.x << "," << g.pos.y << "\n";
         out << "goose_state=";
         switch (g.state) {
@@ -134,8 +145,8 @@ std::string AppActions_GetStatus() {
         out << "goose_heldItem=" << (g.heldItem ? "yes" : "no") << "\n";
     }
 
-    out << "dropped_items=" << g_droppedItems.size() << "\n";
-    for (const auto& item : g_droppedItems) {
+    out << "dropped_items=" << g_world.droppedItems.size() << "\n";
+    for (const auto& item : g_world.droppedItems) {
         if (!item.data) {
             out << "item_null\n";
             continue;
@@ -185,15 +196,15 @@ std::string AppActions_HandleCommand(const std::vector<std::string>& args) {
     }
 
     if (command == "fetch") {
-        if (g_geese.empty()) return "error no goose\n";
+        if (g_world.geese.empty()) return "error no goose\n";
         int type = 0;
         if (args.size() > 1) {
             if (args[1] == "text") type = 1;
             else if (args[1] == "meme") type = 0;
         }
-        fprintf(stderr, "[CLI] fetch type=%d g_geese.size=%zu\n", type, g_geese.size());
-        g_geese.front().ForceFetch(type, g_screenWidth, g_screenHeight);
-        fprintf(stderr, "[CLI] after ForceFetch state=%d heldItem=%p\n", (int)g_geese.front().state, (void*)g_geese.front().heldItem);
+        fprintf(stderr, "[CLI] fetch type=%d g_world.geese.size=%zu\n", type, g_world.geese.size());
+        g_world.geese.front().ForceFetch(type, g_world.screenWidth, g_world.screenHeight);
+        fprintf(stderr, "[CLI] after ForceFetch state=%d heldItem=%p\n", (int)g_world.geese.front().state, (void*)g_world.geese.front().heldItem);
         return "ok force_fetch type=" + std::to_string(type) + "\n";
     }
 
