@@ -4,6 +4,7 @@
 // Based on AcidGoose by F!NN
 // ===========================
 #include "behavior.h"
+#include "behaviors/states/acid_state.h"
 #include "goose.h"
 #include "config.h"
 

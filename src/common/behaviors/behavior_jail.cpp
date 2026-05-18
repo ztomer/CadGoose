@@ -4,6 +4,7 @@
 // Based on GooseJail by WackyModer
 // ===========================
 #include "behavior.h"
+#include "behaviors/states/jail_state.h"
 #include "goose.h"
 #include "config.h"
 #include "world.h"

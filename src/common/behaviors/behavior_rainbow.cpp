@@ -3,6 +3,7 @@
 // Rainbow Behavior - Cycle through rainbow colors
 // ===========================
 #include "behavior.h"
+#include "behaviors/states/rainbow_state.h"
 #include "goose.h"
 #include "config.h"
 

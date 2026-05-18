@@ -2,6 +2,7 @@
 // test_behaviors_pomodoro_portal.cpp
 // Tests for pomodoro and portal behaviors
 // ===========================
+#include "behaviors/states/all.h"
 #include "gtest/gtest.h"
 #include <cmath>
 #include <string>

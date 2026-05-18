@@ -2,6 +2,7 @@
 // test_behaviors_visual.cpp
 // Tests for visual/emotional behaviors: rainbow, acid, anger, health
 // ===========================
+#include "behaviors/states/all.h"
 #include "gtest/gtest.h"
 #include <cmath>
 #include <string>

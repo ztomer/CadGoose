@@ -4,6 +4,7 @@
 // Work for 25 minutes, break for 5, long break after 4 sessions
 // ===========================
 #include "behavior.h"
+#include "behaviors/states/pomodoro_state.h"
 #include "goose.h"
 #include "config.h"
 #include "world.h"

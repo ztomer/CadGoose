@@ -2,6 +2,7 @@
 // test_behaviors_control.cpp
 // Tests for control/info behaviors: honcker, jail, nametag, presence, drag
 // ===========================
+#include "behaviors/states/all.h"
 #include "gtest/gtest.h"
 #include <cmath>
 #include <string>

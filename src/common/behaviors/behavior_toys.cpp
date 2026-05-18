@@ -4,6 +4,7 @@
 // Each toy is a ToyActor with its own window.
 // ===========================
 #include "behavior.h"
+#include "behaviors/states/toys_state.h"
 #include "goose.h"
 #include "config.h"
 #include "world.h"

@@ -4,6 +4,7 @@
 // Based on PortalGoos by Moonaliss1
 // ===========================
 #include "behavior.h"
+#include "behaviors/states/portal_state.h"
 #include "goose.h"
 #include "config.h"
 #include "world.h"
