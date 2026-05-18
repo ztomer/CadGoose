@@ -3,6 +3,7 @@
 // Health System - Goose health bar
 // ===========================
 #include "behavior.h"
+#include "behaviors/states/health_state.h"
 #include "goose.h"
 #include "config.h"
 #include "renderer_interface.h"

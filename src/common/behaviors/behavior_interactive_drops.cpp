@@ -1,4 +1,5 @@
 #include "behavior.h"
+#include "behaviors/states/interactive_drops_state.h"
 #include "goose.h"
 #include "config.h"
 #include "world.h"

@@ -4,6 +4,7 @@
 // Based on DragGoose by euandeas/Straaft
 // ===========================
 #include "behavior.h"
+#include "behaviors/states/drag_state.h"
 #include "goose.h"
 #include "config.h"
 #include "world.h"

@@ -1,4 +1,5 @@
 #include "behavior.h"
+#include "behaviors/states/boredom_state.h"
 #include "goose.h"
 #include "config.h"
 #include "world.h"

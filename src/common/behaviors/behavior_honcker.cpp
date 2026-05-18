@@ -5,6 +5,7 @@
 // Reference: uses GetAsyncKeyState(0x46) for F key detection
 // ===========================
 #include "behavior.h"
+#include "behaviors/states/honcker_state.h"
 #include "goose.h"
 #include "config.h"
 #include "world.h"

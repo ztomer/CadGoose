@@ -2,6 +2,7 @@
 #include "goose.h"
 #include "assets.h"
 #include "behavior.h"
+#include "behaviors/states/jail_state.h"
 #include "config.h"
 #include "goose_math.h"
 #include "world.h"
