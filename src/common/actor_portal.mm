@@ -21,9 +21,9 @@ PortalActor::PortalActor(Type type, const Vector2& pos)
     , m_window(nullptr), m_windowKey(nullptr)
 #endif
 {
-    position = {pos.x, pos.y};
-    active = true;
-    radius = PORTAL_SIZE * 0.5f;
+    m_position = {pos.x, pos.y};
+    m_active = true;
+    m_radius = PORTAL_SIZE * 0.5f;
 
 #ifdef __APPLE__
     const char* imageName = (type == PortalA) ? "Assets/Images/OtherGfx/p1.png" : "Assets/Images/OtherGfx/p2.png";
@@ -47,16 +47,16 @@ PortalActor::~PortalActor() {
 
 void PortalActor::tick(WorldContext& ctx, double dt, double time) {
     (void)dt; (void)time;
-    // Portal stays at its position until explicitly removed
+    // Portal stays at its m_position until explicitly removed
 }
 
 void PortalActor::render(IRenderer* renderer) {
-    if (!active) return;
+    if (!m_active) return;
 
 #ifdef __APPLE__
     float winSize = PORTAL_SIZE;
-    float winX = position.x - winSize / 2.0f;
-    float winY = position.y - winSize / 2.0f;
+    float winX = m_position.x - winSize / 2.0f;
+    float winY = m_position.y - winSize / 2.0f;
 
     if (!m_window) {
         m_window = (void*)CFBridgingRetain([[BehaviorElementWindow alloc]

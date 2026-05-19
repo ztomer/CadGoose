@@ -20,7 +20,7 @@ public:
     const char* type() const override { return "ball"; }
     void tick(WorldContext& ctx, double dt, double time) override;
     void render(IRenderer* renderer) override;
-    bool isAlive() const override { return active; }
+    bool isAlive() const override { return m_active; }
 
     // Physics state
     Vector2 velocity;

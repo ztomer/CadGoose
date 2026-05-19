@@ -87,7 +87,7 @@ void World_TickLeafPiles(double currentTime, float dt, Goose* nearestGoose) {
 
         // Check if goose is near to kick the pile (the per-frame leaf-particle
         // simulation itself runs from the actor's tick via ActorManager::tickAll).
-        if (nearestGoose && Vector2::Distance(nearestGoose->pos, pile->position.toVector2()) < pile->radius + g_config.render.footSize) {
+        if (nearestGoose && Vector2::Distance(nearestGoose->pos, pile->position().toVector2()) < pile->radius() + g_config.render.footSize) {
             float walkSpeed = g_config.movement.baseWalkSpeed;
             float chargeSpeed = g_config.movement.baseRunSpeed;
             float currentSpeed = nearestGoose->currentSpeed;

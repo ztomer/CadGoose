@@ -18,7 +18,7 @@ public:
     int id() const override { return m_instanceId; }
     void tick(WorldContext& ctx, double dt, double time) override;
     void render(IRenderer* renderer) override;
-    bool isAlive() const override { return active; }
+    bool isAlive() const override { return m_active; }
 
     Type toyType() const { return m_type; }
     float angle() const { return m_angle; }

@@ -27,17 +27,21 @@ public:
     virtual void render(IRenderer* renderer) = 0;
     virtual bool isAlive() const = 0;  // false = remove from manager
 
-    // Position in device coordinates
-    DevicePoint position;
-
-    // Visual/collision radius
-    float radius;
-
-    // Active flag
-    bool active;
+    // Accessors — fields are protected so external code goes through these.
+    // (Subclasses can touch the underlying members directly.)
+    DevicePoint position() const { return m_position; }
+    void setPosition(DevicePoint p) { m_position = p; }
+    float radius() const { return m_radius; }
+    void setRadius(float r) { m_radius = r; }
+    bool isActive() const { return m_active; }
+    void setActive(bool a) { m_active = a; }
 
 protected:
-    Actor() : position{0, 0}, radius(0), active(true) {}
+    Actor() : m_position{0, 0}, m_radius(0), m_active(true) {}
+
+    DevicePoint m_position;
+    float m_radius;
+    bool m_active;
 };
 
 // ActorManager — owns all actors, ticks/renders/cleans them up.

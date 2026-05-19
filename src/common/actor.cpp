@@ -24,7 +24,7 @@ void ActorManager::remove(Actor* actor) {
 
 void ActorManager::tickAll(WorldContext& ctx, double dt, double time) {
     for (auto* actor : actors) {
-        if (actor->active) {
+        if (actor->isActive()) {
             actor->tick(ctx, dt, time);
         }
     }
@@ -32,7 +32,7 @@ void ActorManager::tickAll(WorldContext& ctx, double dt, double time) {
 
 void ActorManager::renderAll(IRenderer* renderer) {
     for (auto* actor : actors) {
-        if (actor->active && actor->isAlive()) {
+        if (actor->isActive() && actor->isAlive()) {
             actor->render(renderer);
         }
     }
@@ -51,7 +51,7 @@ void ActorManager::cleanup() {
 
 Actor* ActorManager::findByType(const char* type, int id) {
     for (auto* actor : actors) {
-        if (actor->active && strcmp(actor->type(), type) == 0) {
+        if (actor->isActive() && strcmp(actor->type(), type) == 0) {
             if (id < 0 || actor->id() == id) {
                 return actor;
             }
@@ -63,7 +63,7 @@ Actor* ActorManager::findByType(const char* type, int id) {
 int ActorManager::countByType(const char* type) const {
     int count = 0;
     for (auto* actor : actors) {
-        if (actor->active && strcmp(actor->type(), type) == 0) {
+        if (actor->isActive() && strcmp(actor->type(), type) == 0) {
             count++;
         }
     }
@@ -89,7 +89,7 @@ const std::vector<Goose*>& ActorManager::getGeese() const {
         geeseCache.clear();
         geeseCache.reserve(actors.size());
         for (auto* actor : actors) {
-            if (actor->active && strcmp(actor->type(), "goose") == 0) {
+            if (actor->isActive() && strcmp(actor->type(), "goose") == 0) {
                 geeseCache.push_back(static_cast<Goose*>(actor));
             }
         }

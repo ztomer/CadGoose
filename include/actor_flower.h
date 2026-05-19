@@ -15,7 +15,7 @@ public:
     const char* type() const override { return "flower"; }
     void tick(WorldContext& ctx, double dt, double time) override;
     void render(IRenderer* renderer) override;
-    bool isAlive() const override { return active; }
+    bool isAlive() const override { return m_active; }
 
     float growth() const { return m_growth; }
     float stemHeight() const { return m_stemHeight; }

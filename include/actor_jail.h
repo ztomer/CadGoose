@@ -15,7 +15,7 @@ public:
     const char* type() const override { return "jail"; }
     void tick(WorldContext& ctx, double dt, double time) override;
     void render(IRenderer* renderer) override;
-    bool isAlive() const override { return active; }
+    bool isAlive() const override { return m_active; }
 
 private:
     static constexpr float JAIL_SIZE = 40.0f;
