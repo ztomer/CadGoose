@@ -72,7 +72,6 @@ mkdir -p build && cd build && cmake .. -DCMAKE_BUILD_TYPE=Release && make -j$(sy
 - **WorldContext** — Exists in `world.h` with all global state encapsulated: `geese`, `monitors`, `droppedItems`, `footprints`, `crumbs`, `leafPiles`, screen dimensions, cursor state.
 
 ## Known Bugs (May 18, 2026)
-- **Config generator broken** — `tools/generate_config.py` produces incorrect code. Generated file deleted; behaviors tab uses hand-written registry pattern.
-- **behavior_manager.h:78** — Hash collision risk in `MakeKey()` (32-bit behavior hash, improved from 16-bit but still theoretical collision possible)
-- **ai_http_client.mm** — Recursive tool call loop could stack overflow if tools call each other (max 5 turns)
-- **ui.cpp (Linux)** — Fragile monitor-to-window matching in tick loop
+- **Config generator** — Works correctly for registry generation. GUI generation intentionally skipped (incompatible with `config_gui.mm` key-based lookup architecture).
+- **g_world.droppedItems** — 127 references across codebase. `DroppedItemActor` scaffold ready for future migration.
+- **Stale pointer risk in item_window.mm** — Mitigated by `IsItemValid()` check before every use + `std::list` pointer stability guarantees.
