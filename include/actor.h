@@ -67,8 +67,10 @@ public:
         return actors[index];
     }
 
-    // Get all Goose actors
-    std::vector<Goose*> getGeese() const;
+    // Get all Goose actors. Returns a reference to a cached vector that's
+    // rebuilt only when the actor set changes — safe to call many times
+    // per frame without per-call allocation.
+    const std::vector<Goose*>& getGeese() const;
 
     // Delete and remove all actors of a given type (owning cleanup)
     void destroyAllOfType(const char* type);
@@ -76,4 +78,8 @@ public:
 private:
     ActorManager() = default;
     std::vector<Actor*> actors;
+    mutable std::vector<Goose*> geeseCache;
+    mutable bool geeseCacheDirty = true;
+
+    void invalidateCaches() { geeseCacheDirty = true; }
 };
