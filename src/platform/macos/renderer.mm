@@ -182,6 +182,12 @@ static BOOL s_hasPrimary = NO;
     double dt = g_config.render.frameDt;
     self.currentTime += dt;
     self.tickCount++;
+    // Publish the tick counter so subsystems that don't have direct access
+    // to the renderer's currentTime (e.g. effect-window-manager registrations
+    // that compare against fp.timeSpawned) can read it. Used to be compared
+    // against wall-clock NSDate, which silently made footprint ages enormous
+    // and filtered every footprint out.
+    g_time = self.currentTime;
 
     if (self.isPrimary) {
         // Tick all actors (geese, toys, flowers, etc.)

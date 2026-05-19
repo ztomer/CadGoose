@@ -305,8 +305,11 @@ static constexpr float kEffectWindowMinSize = 40.0f;
         }
     }
 
-    // Phase 3: Update positions and redraw for existing windows
-    double now = [[NSDate date] timeIntervalSince1970];
+    // Phase 3: Update positions and redraw for existing windows.
+    // Use the renderer's tick clock (g_time) — wall-clock NSDate diverges
+    // from fp.timeSpawned which is also tick-time, making age compute as
+    // billions of seconds and zeroing alpha on every footprint.
+    double now = g_time;
     for (size_t i = 0; i < _count; i++) {
         size_t idx = (_head + i) % kMaxEffectWindows;
         id obj = _windows[idx];
