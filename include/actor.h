@@ -10,6 +10,7 @@
 #include <cstring>
 
 class Goose; // forward declaration
+class DroppedItemActor; // forward declaration
 struct WorldContext; // forward declaration
 
 class Actor {
@@ -76,6 +77,13 @@ public:
     // per frame without per-call allocation.
     const std::vector<Goose*>& getGeese() const;
 
+    // Get all DroppedItem actors (cached like getGeese).
+    const std::vector<DroppedItemActor*>& getDroppedItems() const;
+
+    // Delete and remove all dropped-item actors. Convenience for tests /
+    // session resets — equivalent to destroyAllOfType("dropped_item").
+    void removeAllDroppedItems() { destroyAllOfType("dropped_item"); }
+
     // Delete and remove all actors of a given type (owning cleanup)
     void destroyAllOfType(const char* type);
 
@@ -83,7 +91,12 @@ private:
     ActorManager() = default;
     std::vector<Actor*> actors;
     mutable std::vector<Goose*> geeseCache;
+    mutable std::vector<DroppedItemActor*> droppedItemsCache;
     mutable bool geeseCacheDirty = true;
+    mutable bool droppedItemsCacheDirty = true;
 
-    void invalidateCaches() { geeseCacheDirty = true; }
+    void invalidateCaches() {
+        geeseCacheDirty = true;
+        droppedItemsCacheDirty = true;
+    }
 };

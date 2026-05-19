@@ -5,7 +5,7 @@
 TEST(World_GlobalState) {
     // Verify global state exists and is initially empty
     ASSERT_EQ(ActorManager::Instance().getGeese().size(), 0u);
-    ASSERT_EQ(g_world.droppedItems.size(), 0u);
+    ASSERT_EQ(ActorManager::Instance().getDroppedItems().size(), 0u);
     ASSERT_EQ(g_world.footprints.size(), 0u);
     ASSERT_EQ(g_world.nextId, 0);
 }

@@ -293,7 +293,6 @@ TEST(HeadlessRendering, DragController_HitAndDrag) {
     EXPECT_EQ(controller.GetDraggedItem(), nullptr);
 
     ActorManager::Instance().removeAllDroppedItems();
-    delete data;
 }
 
 TEST(HeadlessRendering, DragController_Miss) {
@@ -315,7 +314,6 @@ TEST(HeadlessRendering, DragController_Miss) {
     EXPECT_EQ(controller.GetDraggedItem(), nullptr);
 
     ActorManager::Instance().removeAllDroppedItems();
-    delete data;
 }
 
 TEST(HeadlessRendering, DragController_CloseButtonDeletes) {
@@ -361,7 +359,6 @@ TEST(HeadlessRendering, DragController_ToyNoCloseButton) {
 
     controller.OnMouseUp();
     ActorManager::Instance().removeAllDroppedItems();
-    delete data;
 }
 
 TEST(HeadlessRendering, DragController_DragOffsetPreserved) {
@@ -393,7 +390,6 @@ TEST(HeadlessRendering, DragController_DragOffsetPreserved) {
 
     controller.OnMouseUp();
     ActorManager::Instance().removeAllDroppedItems();
-    delete data;
 }
 
 TEST(HeadlessRendering, DragController_MultipleItems_TopmostWins) {

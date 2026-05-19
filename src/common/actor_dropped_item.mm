@@ -13,9 +13,9 @@ DroppedItemActor::DroppedItemActor(const DroppedItem& item)
     , m_window(nullptr), m_windowKey(nullptr)
 #endif
 {
-    position = {item.pos.x, item.pos.y};
-    radius = item.data ? std::max(item.data->w, item.data->h) * 0.5f : 0;
-    active = true;
+    m_position = {item.pos.x, item.pos.y};
+    m_radius = item.data ? std::max(item.data->w, item.data->h) * 0.5f : 0;
+    m_active = true;
 
     ActorManager::Instance().add(this);
 
@@ -46,7 +46,8 @@ bool DroppedItemActor::isExpired() const {
     return elapsed > g_config.item.itemLifetime;
 }
 
-void DroppedItemActor::tick(double dt, double time) {
+void DroppedItemActor::tick(WorldContext& ctx, double dt, double time) {
+    (void)ctx;
     (void)dt;
     (void)time;
 

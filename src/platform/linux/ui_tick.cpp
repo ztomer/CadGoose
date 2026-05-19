@@ -26,11 +26,9 @@ gboolean on_tick(gpointer data) {
         g_cursorProvider->Execute(action);
     }
 
-    g_world.droppedItems.remove_if([](DroppedItem& i) {
-        bool exp = i.isExpired(g_time);
-        if (exp) delete i.data;
-        return exp;
-    });
+    // DroppedItemActor::isAlive() returns false for expired items;
+    // ActorManager::cleanup() will then delete them (and their owned data).
+    ActorManager::Instance().cleanup();
 
     while (!g_world.footprints.empty()) {
         Footprint& fp = g_world.footprints.front();

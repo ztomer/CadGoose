@@ -252,7 +252,3 @@ static BOOL s_hasPrimary = NO;
 }
 
 @end
-te(ctx);
-}
-
-@end
