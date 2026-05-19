@@ -34,7 +34,7 @@ gboolean on_tick(gpointer data) {
 
     while (!g_world.footprints.empty()) {
         Footprint& fp = g_world.footprints.front();
-        float life = (fp.lifetime > 0.0f) ? fp.lifetime : g_config.mudLifetime;
+        float life = (fp.lifetime > 0.0f) ? fp.lifetime : g_config.mud.lifetime;
         if ((g_time - fp.timeSpawned) > life) {
             g_world.footprints.pop();
         } else {
