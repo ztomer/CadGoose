@@ -50,8 +50,8 @@ CursorAction handleChaseCursor(Goose& g, double time, const CursorState& cursor,
     float catchThreshold = std::max(WorldCoord::Scale(22.0f), 15.0f);
     float dist = Vector2::Distance(btPoint, g.target);
     FILE* f = GetDebugLog();
-    Vector2 bodyDev = WorldCoord::RigBody(g);
-    Vector2 neckDev = WorldCoord::RigNeckHead(g);
+    Vector2 bodyDev = WorldCoord::RigBody(g).toVector2();
+    Vector2 neckDev = WorldCoord::RigNeckHead(g).toVector2();
     fprintf(f, "[CHASE] t=%.1f g%d: dir=%.0f body=(%.0f,%.0f) neck=(%.0f,%.0f) beak=(%.0f,%.0f) cursor=(%.0f,%.0f) dist=%.1f thr=%.1f grab=%d\n",
             time, g.id, g.dir, bodyDev.x, bodyDev.y, neckDev.x, neckDev.y,
             btPoint.x, btPoint.y, g.target.x, g.target.y, dist, catchThreshold, g_world.cursorGrabberId);
@@ -132,7 +132,7 @@ void handleWander(Goose& g, double time, const CursorState& cursor, int w, int h
                 }
                 if (!validItems.empty()) {
                     auto it = validItems[rand() % validItems.size()];
-                    Vector2 centerDevice = WorldCoord::ItemCenter(*it);
+                    Vector2 centerDevice = WorldCoord::ItemCenter(*it).toVector2();
                     Vector2 gooseScreen = g.pos;
                     Vector2 toCenter = centerDevice - gooseScreen;
                     float len = Vector2::Length(toCenter);

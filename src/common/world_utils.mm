@@ -84,7 +84,7 @@ void World_TickLeafPiles(double currentTime, float dt, Goose* nearestGoose) {
         if (!pile->isAlive()) continue;
 
         // Check if goose is near to kick the pile
-        if (nearestGoose && Vector2::Distance(nearestGoose->pos, pile->position) < pile->radius + g_config.render.footSize) {
+        if (nearestGoose && Vector2::Distance(nearestGoose->pos, pile->position.toVector2()) < pile->radius + g_config.render.footSize) {
             float walkSpeed = g_config.movement.baseWalkSpeed;
             float chargeSpeed = g_config.movement.baseRunSpeed;
             float currentSpeed = nearestGoose->currentSpeed;

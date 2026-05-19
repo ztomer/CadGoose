@@ -91,7 +91,7 @@ void tryPickupItem(Goose& g, double time, int w, int h) {
 
     for (auto it = g_world.droppedItems.begin(); it != g_world.droppedItems.end(); ++it) {
         if (it->pinned) continue;
-        Vector2 itemCenter = WorldCoord::ItemCenter(*it);
+        Vector2 itemCenter = WorldCoord::ItemCenter(*it).toVector2();
         float dist = Vector2::Distance(btPoint, itemCenter);
         float pickupDist = WorldCoord::Scale(g_config.spawn.itemPickupDistance);
         if (dist < pickupDist) {
@@ -168,13 +168,13 @@ void handleReturning(Goose& g, double time, int w, int h) {
         drop.data = g.heldItem;
 
         Vector2 btPoint = g.GetBeakTipDevice();
-        drop.pos = btPoint - WorldCoord::ItemHalfSize(g.heldItem);
+        drop.pos = btPoint - WorldCoord::ItemHalfSize(g.heldItem).toVector2();
         drop.rotation = g.dragRot;
         drop.timeDropped = time;
 
         if (std::isfinite(drop.pos.x) && std::isfinite(drop.pos.y) && std::isfinite(drop.rotation)) {
             float minX = 0.0f, minY = 0.0f;
-            Vector2 itemHalf = WorldCoord::ItemHalfSize(g.heldItem);
+            Vector2 itemHalf = WorldCoord::ItemHalfSize(g.heldItem).toVector2();
             float maxX = static_cast<float>(w) - itemHalf.x * 2.0f;
             float maxY = static_cast<float>(h) - itemHalf.y * 2.0f;
 

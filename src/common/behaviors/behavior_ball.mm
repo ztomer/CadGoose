@@ -36,7 +36,7 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
     if (s_ballActor->wasKicked()) {
         s_ballActor->clearKickedFlag();
         if (goose->state == GooseState::WANDER) {
-            goose->target = s_ballActor->position;
+            goose->target = s_ballActor->position.toVector2();
             goose->currentSpeed = g_config.movement.baseWalkSpeed * 0.7f;
         }
     }
@@ -58,7 +58,7 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
 
     // Chase ball if it's moving
     if (goose->state == GooseState::CHASE_CURSOR && s_ballActor->speed > 5.0f) {
-        goose->target = s_ballActor->position;
+        goose->target = s_ballActor->position.toVector2();
     }
 
     // Tick ball physics (position, velocity, animation, bounds)

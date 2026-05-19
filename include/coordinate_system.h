@@ -44,7 +44,8 @@ struct DevicePoint {
     DevicePoint() = default;
     DevicePoint(float x_, float y_) : x(x_), y(y_) {}
     explicit DevicePoint(Vector2 v) : x(v.x), y(v.y) {}
-    operator Vector2() const { return {x, y}; }
+    explicit operator Vector2() const { return {x, y}; }
+    Vector2 toVector2() const { return {x, y}; }
 
     DevicePoint operator+(const DevicePoint& o) const { return {x + o.x, y + o.y}; }
     DevicePoint operator-(const DevicePoint& o) const { return {x - o.x, y - o.y}; }
