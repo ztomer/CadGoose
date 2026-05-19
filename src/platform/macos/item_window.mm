@@ -3,6 +3,8 @@
 #import "config.h"
 #import "item_renderer.h"
 #import "coordinate_system.h"
+#import "actor.h"
+#import "actor_dropped_item.h"
 #include <cmath>
 #include <cstdio>
 #include <ctime>
@@ -36,8 +38,9 @@ static void ItemLog(const char* fmt, ...) {
 
 static BOOL IsItemValid(DroppedItem* item) {
     if (!item || !item->data) return NO;
-    for (auto& i : g_world.droppedItems) {
-        if (&i == item && i.data) return YES;
+    auto items = ActorManager::Instance().getDroppedItems();
+    for (auto* actor : items) {
+        if (&actor->item() == item && actor->data()) return YES;
     }
     return NO;
 }
@@ -436,22 +439,7 @@ static DevicePoint RotatedBoundsSize(float width, float height, float rotation, 
         [_windows removeObjectForKey:key];
     }
 
-    // Create windows for new items
-    for (auto& item : g_world.droppedItems) {
-        BOOL exists = NO;
-        for (NSNumber* key in _windows) {
-            ItemWindow* win = _windows[key];
-            if (win.item == &item) {
-                exists = YES;
-                break;
-            }
-        }
-        if (!exists && item.data) {
-            NSNumber* key = @(_nextId++);
-            ItemWindow* win = [[ItemWindow alloc] initWithItem:&item];
-            _windows[key] = win;
-        }
-    }
+    // Windows are created by DroppedItemActor on construction
 
     // Update positions and hit states for existing items
     if (_windows.count == 0) return;

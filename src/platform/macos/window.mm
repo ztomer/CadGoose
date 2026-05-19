@@ -204,11 +204,11 @@ static float CalculateGooseWindowSize(const Goose* goose) {
     [_windows addObject:window];
 }
 
-- (void)updateWindowPositionsForGeese:(const std::list<Goose>*)geese {
-    if (!geese || geese->empty()) return;
+- (void)updateWindowPositionsForGeese:(const std::vector<Goose*>&)geese {
+    if (geese.empty()) return;
 
     for (GooseWindow* window in self.windows) {
-        const Goose* primaryGoose = &geese->front();
+        const Goose* primaryGoose = geese.front();
         DevicePoint devicePt = {primaryGoose->pos.x, primaryGoose->pos.y};
         [window updateSizeForGoose:primaryGoose];
         [window centerOnDevicePoint:devicePt];

@@ -564,6 +564,15 @@ src/common/actor_breadcrumb.mm.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/src/common/actor_breadcrumb.mm.o
 .PHONY : src/common/actor_breadcrumb.mm.o
 
+src/common/actor_dropped_item.o: src/common/actor_dropped_item.mm.o
+.PHONY : src/common/actor_dropped_item.o
+
+# target to build an object file
+src/common/actor_dropped_item.mm.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/common/actor_dropped_item.mm.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/src/common/actor_dropped_item.mm.o
+.PHONY : src/common/actor_dropped_item.mm.o
+
 src/common/actor_flower.o: src/common/actor_flower.mm.o
 .PHONY : src/common/actor_flower.o
 
@@ -732,6 +741,7 @@ src/common/behaviors/ai_local_llm_adapter.o: src/common/behaviors/ai_local_llm_a
 # target to build an object file
 src/common/behaviors/ai_local_llm_adapter.mm.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/common/behaviors/ai_local_llm_adapter.mm.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/src/common/behaviors/ai_local_llm_adapter.mm.o
 .PHONY : src/common/behaviors/ai_local_llm_adapter.mm.o
 
 src/common/behaviors/ai_model_profiles.o: src/common/behaviors/ai_model_profiles.mm.o
@@ -740,6 +750,7 @@ src/common/behaviors/ai_model_profiles.o: src/common/behaviors/ai_model_profiles
 # target to build an object file
 src/common/behaviors/ai_model_profiles.mm.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/common/behaviors/ai_model_profiles.mm.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/src/common/behaviors/ai_model_profiles.mm.o
 .PHONY : src/common/behaviors/ai_model_profiles.mm.o
 
 src/common/behaviors/ai_prompt_builder.o: src/common/behaviors/ai_prompt_builder.mm.o
@@ -748,6 +759,7 @@ src/common/behaviors/ai_prompt_builder.o: src/common/behaviors/ai_prompt_builder
 # target to build an object file
 src/common/behaviors/ai_prompt_builder.mm.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/common/behaviors/ai_prompt_builder.mm.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/src/common/behaviors/ai_prompt_builder.mm.o
 .PHONY : src/common/behaviors/ai_prompt_builder.mm.o
 
 src/common/behaviors/ai_text_meme.o: src/common/behaviors/ai_text_meme.mm.o
@@ -765,6 +777,7 @@ src/common/behaviors/ai_think_block_stripper.o: src/common/behaviors/ai_think_bl
 # target to build an object file
 src/common/behaviors/ai_think_block_stripper.mm.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/common/behaviors/ai_think_block_stripper.mm.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/src/common/behaviors/ai_think_block_stripper.mm.o
 .PHONY : src/common/behaviors/ai_think_block_stripper.mm.o
 
 src/common/behaviors/behavior_acid.o: src/common/behaviors/behavior_acid.cpp.o
@@ -2126,6 +2139,7 @@ src/platform/macos/item_window_test.o: src/platform/macos/item_window_test.mm.o
 # target to build an object file
 src/platform/macos/item_window_test.mm.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGoose.dir/build.make CMakeFiles/CadGoose.dir/src/platform/macos/item_window_test.mm.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/CadGooseTests.dir/build.make CMakeFiles/CadGooseTests.dir/src/platform/macos/item_window_test.mm.o
 .PHONY : src/platform/macos/item_window_test.mm.o
 
 src/platform/macos/main.o: src/platform/macos/main.mm.o
@@ -3166,6 +3180,7 @@ help:
 	@echo "... src/common/actor.s"
 	@echo "... src/common/actor_ball.o"
 	@echo "... src/common/actor_breadcrumb.o"
+	@echo "... src/common/actor_dropped_item.o"
 	@echo "... src/common/actor_flower.o"
 	@echo "... src/common/actor_jail.o"
 	@echo "... src/common/actor_leafpile.o"

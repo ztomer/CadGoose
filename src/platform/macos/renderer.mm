@@ -188,11 +188,7 @@ static BOOL s_hasPrimary = NO;
 
         // Update window positions for geese
         auto geese = ActorManager::Instance().getGeese();
-        std::list<Goose> gooseList;
-        for (auto* g : geese) {
-            gooseList.push_back(*g);
-        }
-        [[WindowManager shared] updateWindowPositionsForGeese:&gooseList];
+        [[WindowManager shared] updateWindowPositionsForGeese:geese];
     }
 
     if (self.tickCount % kWorldCleanupTickInterval == 0) {
@@ -215,7 +211,7 @@ static BOOL s_hasPrimary = NO;
 
     // Always sync item windows — needed to clean up orphaned windows when goose picks up last item
     [[ItemWindowManager shared] syncWindows];
-    if (!g_world.droppedItems.empty()) self.needsRedraw = YES;
+    if (!ActorManager::Instance().getDroppedItems().empty()) self.needsRedraw = YES;
 
     if (self.needsRedraw) {
         [self setNeedsDisplay:YES];
@@ -257,6 +253,10 @@ static BOOL s_hasPrimary = NO;
     }
     DrawDebugOverlay(ctx, gooseList);
     CGContextRestoreGState(ctx);
+}
+
+@end
+te(ctx);
 }
 
 @end

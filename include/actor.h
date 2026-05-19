@@ -40,6 +40,8 @@ protected:
 };
 
 // ActorManager — owns all actors, ticks/renders/cleans them up.
+class DroppedItemActor; // forward declaration
+
 class ActorManager {
 public:
     static ActorManager& Instance();
@@ -68,6 +70,12 @@ public:
 
     // Get all Goose actors
     std::vector<Goose*> getGeese() const;
+
+    // Get all DroppedItem actors
+    std::vector<DroppedItemActor*> getDroppedItems() const;
+
+    // Remove all DroppedItem actors
+    void removeAllDroppedItems();
 
 private:
     ActorManager() = default;

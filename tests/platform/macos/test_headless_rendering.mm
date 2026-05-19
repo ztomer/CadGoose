@@ -6,9 +6,8 @@
 #include "../../include/config.h"
 #include "../../include/items.h"
 #include "../../include/world.h"
-
-
-
+#include "../../include/actor.h"
+#include "../../include/actor_dropped_item.h"
 // ============================================================
 // HitTest at Different Scales
 // ============================================================
@@ -265,7 +264,7 @@ static ItemData* CreateTestItem(int w, int h, ItemData::Type type) {
 }
 
 TEST(HeadlessRendering, DragController_HitAndDrag) {
-    g_world.droppedItems.clear();
+    ActorManager::Instance().removeAllDroppedItems();
     g_config.general.globalScale = 1.0f;
     ItemData* data = CreateTestItem(100, 80, ItemData::MEME);
     DroppedItem item;
@@ -273,7 +272,7 @@ TEST(HeadlessRendering, DragController_HitAndDrag) {
     item.pos = {450, 360};  // top-left corner (center will be at 500, 400)
     item.rotation = 0;
     item.pinned = false;
-    g_world.droppedItems.push_back(item);
+    new DroppedItemActor(item);
 
     ItemDragController controller;
 
@@ -293,12 +292,12 @@ TEST(HeadlessRendering, DragController_HitAndDrag) {
     controller.OnMouseUp();
     EXPECT_EQ(controller.GetDraggedItem(), nullptr);
 
+    ActorManager::Instance().removeAllDroppedItems();
     delete data;
-    g_world.droppedItems.clear();
 }
 
 TEST(HeadlessRendering, DragController_Miss) {
-    g_world.droppedItems.clear();
+    ActorManager::Instance().removeAllDroppedItems();
     g_config.general.globalScale = 1.0f;
     ItemData* data = CreateTestItem(100, 80, ItemData::MEME);
     DroppedItem item;
@@ -306,7 +305,7 @@ TEST(HeadlessRendering, DragController_Miss) {
     item.pos = {450, 360};  // top-left (center at 500, 400)
     item.rotation = 0;
     item.pinned = false;
-    g_world.droppedItems.push_back(item);
+    new DroppedItemActor(item);
 
     ItemDragController controller;
 
@@ -315,12 +314,12 @@ TEST(HeadlessRendering, DragController_Miss) {
     EXPECT_FALSE(controller.OnMouseDown(mouseDown));
     EXPECT_EQ(controller.GetDraggedItem(), nullptr);
 
+    ActorManager::Instance().removeAllDroppedItems();
     delete data;
-    g_world.droppedItems.clear();
 }
 
 TEST(HeadlessRendering, DragController_CloseButtonDeletes) {
-    g_world.droppedItems.clear();
+    ActorManager::Instance().removeAllDroppedItems();
     g_config.general.globalScale = 1.0f;
     ItemData* data = CreateTestItem(100, 80, ItemData::MEME);
     DroppedItem item;
@@ -328,7 +327,7 @@ TEST(HeadlessRendering, DragController_CloseButtonDeletes) {
     item.pos = {450, 360};  // top-left (center at 500, 400)
     item.rotation = 0;
     item.pinned = false;
-    g_world.droppedItems.push_back(item);
+    new DroppedItemActor(item);
 
     ItemDragController controller;
 
@@ -336,13 +335,13 @@ TEST(HeadlessRendering, DragController_CloseButtonDeletes) {
     DevicePoint mouseDown{455, 365};
     EXPECT_TRUE(controller.OnMouseDown(mouseDown));
     EXPECT_EQ(controller.GetDraggedItem(), nullptr); // Item deleted, no drag
-    EXPECT_EQ(g_world.droppedItems.size(), 0);
+    EXPECT_EQ(ActorManager::Instance().getDroppedItems().size(), 0u);
 
-    g_world.droppedItems.clear();
+    ActorManager::Instance().removeAllDroppedItems();
 }
 
 TEST(HeadlessRendering, DragController_ToyNoCloseButton) {
-    g_world.droppedItems.clear();
+    ActorManager::Instance().removeAllDroppedItems();
     g_config.general.globalScale = 1.0f;
     ItemData* data = CreateTestItem(100, 80, ItemData::TOY);
     DroppedItem item;
@@ -350,7 +349,7 @@ TEST(HeadlessRendering, DragController_ToyNoCloseButton) {
     item.pos = {450, 360};  // top-left (center at 500, 400)
     item.rotation = 0;
     item.pinned = false;
-    g_world.droppedItems.push_back(item);
+    new DroppedItemActor(item);
 
     ItemDragController controller;
 
@@ -358,15 +357,15 @@ TEST(HeadlessRendering, DragController_ToyNoCloseButton) {
     DevicePoint mouseDown{455, 365};
     EXPECT_TRUE(controller.OnMouseDown(mouseDown));
     EXPECT_NE(controller.GetDraggedItem(), nullptr); // Drag started, not deleted
-    EXPECT_EQ(g_world.droppedItems.size(), 1);
+    EXPECT_EQ(ActorManager::Instance().getDroppedItems().size(), 1u);
 
     controller.OnMouseUp();
+    ActorManager::Instance().removeAllDroppedItems();
     delete data;
-    g_world.droppedItems.clear();
 }
 
 TEST(HeadlessRendering, DragController_DragOffsetPreserved) {
-    g_world.droppedItems.clear();
+    ActorManager::Instance().removeAllDroppedItems();
     g_config.general.globalScale = 1.0f;
     ItemData* data = CreateTestItem(100, 80, ItemData::MEME);
     DroppedItem item;
@@ -374,7 +373,7 @@ TEST(HeadlessRendering, DragController_DragOffsetPreserved) {
     item.pos = {450, 360};  // top-left (center at 500, 400)
     item.rotation = 0;
     item.pinned = false;
-    g_world.droppedItems.push_back(item);
+    new DroppedItemActor(item);
 
     ItemDragController controller;
 
@@ -393,12 +392,12 @@ TEST(HeadlessRendering, DragController_DragOffsetPreserved) {
     EXPECT_FLOAT_EQ(controller.GetDraggedItem()->pos.y, 460);  // 530 + (360-430)
 
     controller.OnMouseUp();
+    ActorManager::Instance().removeAllDroppedItems();
     delete data;
-    g_world.droppedItems.clear();
 }
 
 TEST(HeadlessRendering, DragController_MultipleItems_TopmostWins) {
-    g_world.droppedItems.clear();
+    ActorManager::Instance().removeAllDroppedItems();
     g_config.general.globalScale = 1.0f;
 
     // Bottom item (larger)
@@ -408,7 +407,7 @@ TEST(HeadlessRendering, DragController_MultipleItems_TopmostWins) {
     item1.pos = {450, 360};  // top-left (center at 500, 400)
     item1.rotation = 0;
     item1.pinned = false;
-    g_world.droppedItems.push_back(item1);
+    new DroppedItemActor(item1);
 
     // Top item (smaller, added later, renders on top)
     ItemData* data2 = CreateTestItem(60, 60, ItemData::TEXT);
@@ -417,7 +416,7 @@ TEST(HeadlessRendering, DragController_MultipleItems_TopmostWins) {
     item2.pos = {470, 370};  // top-left (center at 500, 400)
     item2.rotation = 0;
     item2.pinned = false;
-    g_world.droppedItems.push_back(item2);
+    new DroppedItemActor(item2);
 
     ItemDragController controller;
 
@@ -433,7 +432,7 @@ TEST(HeadlessRendering, DragController_MultipleItems_TopmostWins) {
     EXPECT_EQ(dragged->data->type, ItemData::TEXT);
 
     controller.OnMouseUp();
+    ActorManager::Instance().removeAllDroppedItems();
     delete data1;
     delete data2;
-    g_world.droppedItems.clear();
 }

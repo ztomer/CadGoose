@@ -2,19 +2,22 @@
 #include "config.h"
 #include "coordinate_system.h"
 #include "world.h"
+#include "actor.h"
+#include "actor_dropped_item.h"
 
 bool ItemDragController::OnMouseDown(DevicePoint mousePt) {
-    for (auto it = g_world.droppedItems.rbegin(); it != g_world.droppedItems.rend(); ++it) {
-        DroppedItem& item = *it;
+    auto items = ActorManager::Instance().getDroppedItems();
+    // Iterate in reverse for z-order (last added = on top)
+    for (auto it = items.rbegin(); it != items.rend(); ++it) {
+        DroppedItemActor* actor = *it;
+        DroppedItem& item = actor->item();
         DevicePoint itemCenter = ItemCoords::Center({item.pos.x, item.pos.y}, item.data->w, item.data->h, g_config.general.globalScale);
 
         if (HitTest::PointInItem(mousePt, itemCenter, item.data->w, item.data->h, item.rotation, g_config.general.globalScale)) {
             if (item.data->type != ItemData::TOY) {
                 if (HitTest::PointInCloseButton(mousePt, itemCenter, item.data->w, item.data->h,
                                                 item.rotation, g_config.render.closeButtonSize, g_config.general.globalScale)) {
-                    delete item.data;
-                    auto forward_it = std::prev(it.base());
-                    g_world.droppedItems.erase(forward_it);
+                    ActorManager::Instance().remove(actor);
                     return true;
                 }
             }
@@ -22,8 +25,7 @@ bool ItemDragController::OnMouseDown(DevicePoint mousePt) {
             m_draggedItem = &item;
             m_draggedItem->pinned = true;
             m_dragOffset = {item.pos.x - mousePt.x, item.pos.y - mousePt.y};
-            auto forward_it = std::prev(it.base());
-            g_world.droppedItems.splice(g_world.droppedItems.end(), g_world.droppedItems, forward_it);
+            // With per-item windows, z-order is controlled by window level, not list order
             return true;
         }
     }

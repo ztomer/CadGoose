@@ -13,11 +13,11 @@ struct DevicePoint;
 @end
 
 #ifdef __cplusplus
-#include <list>
+#include <vector>
 @interface WindowManager : NSObject
 + (instancetype)shared;
 - (void)createWindowsForAllScreens;
-- (void)updateWindowPositionsForGeese:(const std::list<Goose>*)geese;
+- (void)updateWindowPositionsForGeese:(const std::vector<Goose*>&)geese;
 - (void)updateWindowForScreen:(NSScreen*)screen;
 - (GooseWindow*)windowForScreen:(NSScreen*)screen;
 - (NSArray<GooseWindow*>*)windows;

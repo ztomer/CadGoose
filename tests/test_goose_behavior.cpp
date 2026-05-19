@@ -7,6 +7,8 @@
 #include "world.h"
 #include "assets.h"
 #include "config.h"
+#include "actor.h"
+#include "actor_dropped_item.h"
 
 struct ConfigSpec {
     bool debugToTerminal = false;
@@ -291,14 +293,14 @@ TEST(Integration, Goose_DropItem) {
     g.target = {100, 100};
     g.heldItem = g_assets.GetRandomMeme(1920, 1080, 0.1f);
 
-    int initialDrops = g_world.droppedItems.size();
+    int initialDrops = ActorManager::Instance().getDroppedItems().size();
 
     CursorState c;
     g.Update(0.1, 0.0, 1920, 1080, c);
 
     EXPECT_EQ(g.state, GooseState::WANDER);
     EXPECT_EQ(g.heldItem, nullptr);
-    EXPECT_EQ(g_world.droppedItems.size(), initialDrops + 1);
+    EXPECT_EQ(ActorManager::Instance().getDroppedItems().size(), initialDrops + 1);
 }
 
 TEST(GooseStateMachine, FetchStartTimeSetOnForceFetch) {

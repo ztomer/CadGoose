@@ -5,6 +5,7 @@
 #include "world.h"
 #include "config.h"
 #include "actor.h"
+#include "actor_dropped_item.h"
 #include "actor_leafpile.h"
 
 #ifdef __APPLE__
@@ -17,47 +18,40 @@ static constexpr float kLeafPileSizeMin = 50.0f;
 static constexpr float kLeafPileSizeMax = 100.0f;
 
 void World_CleanupExpired(double currentTime) {
-    g_world.droppedItems.remove_if([&](DroppedItem& i) {
-        float lifetime = g_config.item.itemLifetime;
-        if (i.data->type == ItemData::MEME) lifetime = g_config.item.memeLifetime;
-        else if (i.data->type == ItemData::TEXT) lifetime = g_config.item.textLifetime;
+    // DroppedItemActor::isAlive() checks isExpired(), so cleanup() removes them
+    auto& mgr = ActorManager::Instance();
 
-        bool exp = !i.pinned && ((currentTime - i.timeDropped) > lifetime);
-        if (exp) delete i.data;
-        return exp;
-    });
-
+    // Enforce max meme/text counts before cleanup
     int memeCount = 0, textCount = 0;
-    for (const auto& item : g_world.droppedItems) {
-        if (item.data->type == ItemData::MEME) memeCount++;
-        else if (item.data->type == ItemData::TEXT) textCount++;
+    auto items = mgr.getDroppedItems();
+    for (auto* actor : items) {
+        if (actor->data()->type == ItemData::MEME) memeCount++;
+        else if (actor->data()->type == ItemData::TEXT) textCount++;
     }
 
     if (memeCount > g_config.item.maxDroppedMemes) {
         int toRemove = memeCount - g_config.item.maxDroppedMemes;
-        for (auto it = g_world.droppedItems.begin(); it != g_world.droppedItems.end() && toRemove > 0; ) {
-            if (it->data->type == ItemData::MEME && !it->pinned) {
-                delete it->data;
-                it = g_world.droppedItems.erase(it);
+        for (auto* actor : items) {
+            if (toRemove <= 0) break;
+            if (actor->data()->type == ItemData::MEME && !actor->pinned()) {
+                mgr.remove(actor);
                 toRemove--;
-            } else {
-                ++it;
             }
         }
     }
 
     if (textCount > g_config.item.maxDroppedTexts) {
         int toRemove = textCount - g_config.item.maxDroppedTexts;
-        for (auto it = g_world.droppedItems.begin(); it != g_world.droppedItems.end() && toRemove > 0; ) {
-            if (it->data->type == ItemData::TEXT && !it->pinned) {
-                delete it->data;
-                it = g_world.droppedItems.erase(it);
+        for (auto* actor : items) {
+            if (toRemove <= 0) break;
+            if (actor->data()->type == ItemData::TEXT && !actor->pinned()) {
+                mgr.remove(actor);
                 toRemove--;
-            } else {
-                ++it;
             }
         }
     }
+
+    mgr.cleanup();
 
     while (!g_world.footprints.empty()) {
         Footprint& fp = g_world.footprints.front();
@@ -118,8 +112,12 @@ bool ItemHitTest(NSPoint p, float viewHeight, DroppedItem** hitItem, float close
     // p is in VIEW coords (isFlipped=YES → same as DEVICE coords)
     DevicePoint mousePt = {(float)p.x, (float)p.y};
 
-    for (auto it = g_world.droppedItems.rbegin(); it != g_world.droppedItems.rend(); ++it) {
-        DroppedItem& item = *it;
+    auto& mgr = ActorManager::Instance();
+    auto items = mgr.getDroppedItems();
+    // Iterate in reverse for z-order (last added = on top)
+    for (auto it = items.rbegin(); it != items.rend(); ++it) {
+        DroppedItemActor* actor = *it;
+        DroppedItem& item = actor->item();
         DevicePoint itemPos = {item.pos.x, item.pos.y};
         if (HitTest::PointInItem(mousePt, itemPos, item.data->w, item.data->h, item.rotation, g_config.general.globalScale)) {
             *hitItem = &item;
@@ -136,26 +134,24 @@ bool CheckCloseButton(float lx, float ly, float w, float h, float closeButtonSiz
 }
 
 void DeleteDroppedItem(DroppedItem* item) {
-    delete item->data;
-    for (auto it = g_world.droppedItems.begin(); it != g_world.droppedItems.end(); ++it) {
-        if (&(*it) == item) {
-            g_world.droppedItems.erase(it);
+    auto& mgr = ActorManager::Instance();
+    auto items = mgr.getDroppedItems();
+    for (auto* actor : items) {
+        if (&actor->item() == item) {
+            mgr.remove(actor);
             break;
         }
     }
 }
 
 void MoveItemToFront(DroppedItem* item) {
-    for (auto it = g_world.droppedItems.begin(); it != g_world.droppedItems.end(); ++it) {
-        if (&(*it) == item) {
-            g_world.droppedItems.splice(g_world.droppedItems.end(), g_world.droppedItems, it);
-            break;
-        }
-    }
+    // With per-item windows, z-order is controlled by window level, not list order.
+    // This function is kept for API compatibility but is now a no-op.
+    (void)item;
 }
 
 bool ShouldAcceptMouseEvents() {
-    return !g_world.droppedItems.empty();
+    return !ActorManager::Instance().getDroppedItems().empty();
 }
 
 bool Config_IsSystemDarkTheme() {
