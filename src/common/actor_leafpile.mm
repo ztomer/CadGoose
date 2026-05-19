@@ -31,14 +31,14 @@ static RenderColor LeafColors[4] = {
 };
 
 LeafPileActor::LeafPileActor(const Vector2& pos, float radius, float height, double currentTime)
-    : Actor(), m_radius(radius), m_height(height), m_timeCreated(currentTime), m_timeSinceKicked(-1.0f)
+    : Actor(), m_height(height), m_timeCreated(currentTime), m_timeSinceKicked(-1.0f)
 #ifdef __APPLE__
     , m_window(nullptr), m_windowKey(nullptr)
 #endif
 {
-    position = {pos.x, pos.y};
-    active = true;
-    this->radius = radius;
+    m_position = {pos.x, pos.y};
+    m_active = true;
+    m_radius = radius;
 
     m_leaves.resize(LEAVES_PER_PILE);
     for (int i = 0; i < LEAVES_PER_PILE; i++) {
@@ -48,7 +48,7 @@ LeafPileActor::LeafPileActor(const Vector2& pos, float radius, float height, dou
         float num = (rng_util::RandRange(1000)) / 1000.0f;
         num *= num;
         m_leaves[i].curPosZ = num * height;
-        m_leaves[i].curPosPlanar = val * radius * (1.0f - num);
+        m_leaves[i].curPosPlanar = val * m_radius * (1.0f - num);
         m_leaves[i].curPosPlanar.y *= 0.6f;
         m_leaves[i].velPlanar = Vector2{0.0f, 0.0f};
         m_leaves[i].velZ = 0.0f;
@@ -89,7 +89,7 @@ void LeafPileActor::kick(Vector2 kickVelocity, double currentTime, float gooseSp
 }
 
 void LeafPileActor::tick(WorldContext& ctx, double dt, double time) {
-    if (!active) return;
+    if (!m_active) return;
 
     if (m_timeSinceKicked > 0.0f) {
         for (size_t i = 0; i < m_leaves.size(); i++) {
@@ -106,12 +106,12 @@ void LeafPileActor::tick(WorldContext& ctx, double dt, double time) {
 }
 
 void LeafPileActor::render(IRenderer* renderer) {
-    if (!active) return;
+    if (!m_active) return;
 
 #ifdef __APPLE__
     float winSize = m_radius * 2.0f + 20.0f;
-    float winX = position.x - winSize / 2.0f;
-    float winY = position.y - winSize / 2.0f;
+    float winX = m_position.x - winSize / 2.0f;
+    float winY = m_position.y - winSize / 2.0f;
 
     if (!m_window) {
         m_window = (void*)CFBridgingRetain([[BehaviorElementWindow alloc]

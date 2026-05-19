@@ -21,9 +21,9 @@ BreadcrumbActor::BreadcrumbActor(const Vector2& pos, double spawnTime, float lif
     , m_window(nullptr), m_windowKey(nullptr)
 #endif
 {
-    position = {pos.x, pos.y};
-    active = true;
-    radius = CRUMB_SIZE * 0.5f;
+    m_position = {pos.x, pos.y};
+    m_active = true;
+    m_radius = CRUMB_SIZE * 0.5f;
 
 #ifdef __APPLE__
     m_image = (void*)g_assets.GetBehaviorImage("Assets/Images/OtherGfx/crumbs.png");
@@ -46,15 +46,15 @@ BreadcrumbActor::~BreadcrumbActor() {
 
 void BreadcrumbActor::tick(WorldContext& ctx, double dt, double time) {
     (void)dt;
-    if (!active) return;
+    if (!m_active) return;
 
     if (time - m_spawnTime > m_lifetime) {
-        active = false;
+        m_active = false;
     }
 }
 
 void BreadcrumbActor::render(IRenderer* renderer) {
-    if (!active) return;
+    if (!m_active) return;
 
 #ifdef __APPLE__
     double age = g_time - m_spawnTime;
@@ -62,8 +62,8 @@ void BreadcrumbActor::render(IRenderer* renderer) {
     if (alpha < 0) alpha = 0;
 
     float winSize = CRUMB_SIZE;
-    float winX = position.x - winSize / 2.0f;
-    float winY = position.y - winSize / 2.0f;
+    float winX = m_position.x - winSize / 2.0f;
+    float winY = m_position.y - winSize / 2.0f;
 
     if (!m_window) {
         m_window = (void*)CFBridgingRetain([[BehaviorElementWindow alloc]

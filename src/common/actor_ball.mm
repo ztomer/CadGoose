@@ -31,9 +31,9 @@ BallActor::BallActor()
     , m_window(nil), m_windowKey(nil)
 #endif
 {
-    position = {BALL_INIT_X, BALL_INIT_Y};
-    radius = GetBallSize();
-    active = true;
+    m_position = {BALL_INIT_X, BALL_INIT_Y};
+    m_radius = GetBallSize();
+    m_active = true;
 
 #ifdef __APPLE__
     m_images[0] = g_assets.GetBehaviorImage("Assets/Images/OtherGfx/ball.png");
@@ -57,9 +57,9 @@ BallActor::~BallActor() {
 
 void BallActor::onGooseKick(const Vector2& goosePos, float gooseFootSize, double time) {
     float kickDist = gooseFootSize * 0.8f;
-    float dist = Vector2::Distance(position.toVector2(), goosePos);
+    float dist = Vector2::Distance(m_position.toVector2(), goosePos);
     if (dist < kickDist && time - lastKickTime > KICK_COOLDOWN) {
-        Vector2 dir = Vector2::Normalize(Vector2{position.x - goosePos.x, position.y - goosePos.y});
+        Vector2 dir = Vector2::Normalize(Vector2{m_position.x - goosePos.x, m_position.y - goosePos.y});
         velocity = dir * KICK_SPEED;
         speed = KICK_SPEED;
         lastKickTime = time;
@@ -67,31 +67,31 @@ void BallActor::onGooseKick(const Vector2& goosePos, float gooseFootSize, double
         animationGap = ANIM_GAP_MIN;
         m_wasKicked = true;
         // gooseId is unknown here (the actor doesn't track who kicked it), so -1 means "goose"
-        EventBus::Instance().Publish(BallKickedEvent{-1, position.x, position.y, velocity.x, velocity.y});
+        EventBus::Instance().Publish(BallKickedEvent{-1, m_position.x, m_position.y, velocity.x, velocity.y});
         g_assets.Honk();
     }
 }
 
 void BallActor::onCursorKick(const Vector2& cursorPos, double time) {
-    float dist = std::hypot(cursorPos.x - position.x, cursorPos.y - position.y);
-    if (dist < radius && time - lastKickTime > KICK_COOLDOWN) {
-        Vector2 dir = Vector2::Normalize(Vector2{position.x - cursorPos.x, position.y - cursorPos.y});
+    float dist = std::hypot(cursorPos.x - m_position.x, cursorPos.y - m_position.y);
+    if (dist < m_radius && time - lastKickTime > KICK_COOLDOWN) {
+        Vector2 dir = Vector2::Normalize(Vector2{m_position.x - cursorPos.x, m_position.y - cursorPos.y});
         velocity = dir * KICK_SPEED;
         speed = KICK_SPEED;
         lastKickTime = time;
         lastAnimateTime = time;
         animationGap = ANIM_GAP_MIN;
         m_wasKicked = true;
-        EventBus::Instance().Publish(BallKickedEvent{0, position.x, position.y, velocity.x, velocity.y});
+        EventBus::Instance().Publish(BallKickedEvent{0, m_position.x, m_position.y, velocity.x, velocity.y});
         g_assets.Honk();
     }
 }
 
 void BallActor::tick(WorldContext& ctx, double dt, double time) {
-    if (!active) return;
+    if (!m_active) return;
 
     Vector2 delta = velocity * (float)dt;
-    position = {position.x + delta.x, position.y + delta.y};
+    m_position = {m_position.x + delta.x, m_position.y + delta.y};
     speed *= (1.0f - DECELERATION * (float)dt);
     velocity = Vector2::Normalize(velocity) * speed;
 
@@ -113,17 +113,17 @@ void BallActor::tick(WorldContext& ctx, double dt, double time) {
 }
 
 void BallActor::clampToBounds(float margin, float screenWidth, float screenHeight) {
-    if (position.x < margin) { position.x = margin; velocity.x *= -0.5f; }
-    if (position.x > screenWidth - margin) { position.x = screenWidth - margin; velocity.x *= -0.5f; }
-    if (position.y < margin) { position.y = margin; velocity.y *= -0.5f; }
-    if (position.y > screenHeight - margin) { position.y = screenHeight - margin; velocity.y *= -0.5f; }
+    if (m_position.x < margin) { m_position.x = margin; velocity.x *= -0.5f; }
+    if (m_position.x > screenWidth - margin) { m_position.x = screenWidth - margin; velocity.x *= -0.5f; }
+    if (m_position.y < margin) { m_position.y = margin; velocity.y *= -0.5f; }
+    if (m_position.y > screenHeight - margin) { m_position.y = screenHeight - margin; velocity.y *= -0.5f; }
 }
 
 void BallActor::render(IRenderer* renderer) {
-    if (!active) return;
+    if (!m_active) return;
 
 #ifdef __APPLE__
-    float drawSize = radius;
+    float drawSize = m_radius;
     CGImageRef img = (CGImageRef)m_images[currentFrame % ANIM_FRAME_COUNT];
     float imgDrawW = drawSize;
     float imgDrawH = drawSize;
@@ -136,10 +136,10 @@ void BallActor::render(IRenderer* renderer) {
         imgDrawH = imgH * imgScale;
     }
 
-    float winW = radius * 2.0f;
-    float winH = radius * 2.0f;
-    float winX = position.x - winW / 2.0f;
-    float winY = position.y - winH / 2.0f;
+    float winW = m_radius * 2.0f;
+    float winH = m_radius * 2.0f;
+    float winX = m_position.x - winW / 2.0f;
+    float winY = m_position.y - winH / 2.0f;
     float imgOffsetX = (winW - imgDrawW) * 0.5f;
     float imgOffsetY = (winH - imgDrawH) * 0.5f;
 

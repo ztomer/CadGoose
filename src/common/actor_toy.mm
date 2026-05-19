@@ -24,12 +24,12 @@ ToyActor::ToyActor(Type type, const Vector2& pos, int instanceId)
     , m_window(nullptr), m_windowKey(nullptr)
 #endif
 {
-    position = {pos.x, pos.y};
-    active = true;
+    m_position = {pos.x, pos.y};
+    m_active = true;
     m_spawnTime = g_time;
     m_angle = (float)(rng_util::RandRange(360));
 
-    radius = (type == Stick) ? 12.0f : 15.0f;
+    m_radius = (type == Stick) ? 12.0f : 15.0f;
 
 #ifdef __APPLE__
     m_images[0] = g_assets.GetBehaviorImage("Assets/Images/OtherGfx/stick.png");
@@ -52,24 +52,24 @@ ToyActor::~ToyActor() {
 }
 
 void ToyActor::tick(WorldContext& ctx, double dt, double time) {
-    if (!active) return;
+    if (!m_active) return;
 
     double age = time - m_spawnTime;
     if (age > TOY_LIFETIME) {
-        active = false;
+        m_active = false;
     }
 }
 
 void ToyActor::render(IRenderer* renderer) {
-    if (!active) return;
+    if (!m_active) return;
 
 #ifdef __APPLE__
     double age = g_time - m_spawnTime;
     float alpha = std::min(1.0f, (float)age / 0.5f);
 
     float winSize = (m_type == Stick) ? STICK_LENGTH : BALL_RADIUS * 2.0f;
-    float winX = position.x - winSize / 2.0f;
-    float winY = position.y - winSize / 2.0f;
+    float winX = m_position.x - winSize / 2.0f;
+    float winY = m_position.y - winSize / 2.0f;
 
     if (!m_window) {
         m_window = (void*)CFBridgingRetain([[BehaviorElementWindow alloc]

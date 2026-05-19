@@ -114,8 +114,8 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
             }
         }
         if (portalA) {
-            portalA->position = {state->portalA.x, state->portalA.y};
-            portalA->active = true;
+            portalA->setPosition({state->portalA.x, state->portalA.y});
+            portalA->setActive(true);
         } else {
             portalA = new PortalActor(PortalActor::PortalA, {state->portalA.x, state->portalA.y});
             mgr.add(portalA);
@@ -141,8 +141,8 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
             }
         }
         if (portalB) {
-            portalB->position = {state->portalB.x, state->portalB.y};
-            portalB->active = true;
+            portalB->setPosition({state->portalB.x, state->portalB.y});
+            portalB->setActive(true);
         } else {
             portalB = new PortalActor(PortalActor::PortalB, {state->portalB.x, state->portalB.y});
             mgr.add(portalB);
