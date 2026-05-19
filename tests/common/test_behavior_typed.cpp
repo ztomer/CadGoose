@@ -11,6 +11,10 @@
 #include "goose.h"
 #include "config.h"
 #include "world.h"
+#include "behaviors/states/portal_state.h"
+#include "behaviors/states/anger_state.h"
+#include "behaviors/states/ball_state.h"
+#include "behaviors/states/pomodoro_state.h"
 
 TEST(PortalState, DefaultValues) {
     PortalState state;

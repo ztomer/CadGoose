@@ -11,6 +11,9 @@
 #include "goose.h"
 #include "config.h"
 #include "world.h"
+#include "behaviors/states/ball_state.h"
+#include "behaviors/states/health_state.h"
+#include "behaviors/states/portal_state.h"
 
 TEST(BehaviorInteraction, HonkCooldownWithFasterTick) {
     double honkCooldown = 0.5;

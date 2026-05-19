@@ -5,6 +5,7 @@
 #include "behavior.h"
 #include "goose.h"
 #include "config.h"
+#include "behaviors/states/rainbow_state.h"
 
 
 static void init(BehaviorContext& ctx) {

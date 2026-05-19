@@ -8,6 +8,7 @@
 #include "config.h"
 #include "goose.h"
 #include "world.h"
+#include "behaviors/states/breadcrumb_state.h"
 
 TEST(BreadCrumbsBehavior, BreadCrumbStateCreation) {
     auto& mgr = BehaviorStateManager::Instance();

@@ -9,6 +9,7 @@
 #include "config.h"
 #include "goose.h"
 #include "world.h"
+#include "behaviors/states/ball_state.h"
 
 static void ResetBallGlobals() {
 }

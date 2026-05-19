@@ -6,6 +6,7 @@
 #include "renderer_interface.h"
 #include "cg_renderer.h"
 #include "event_bus.h"
+#include "behaviors/states/anger_state.h"
 #include <cmath>
 
 static constexpr float kAngerMaxLevel = 100.0f;

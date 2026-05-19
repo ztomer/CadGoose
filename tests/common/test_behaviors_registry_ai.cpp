@@ -13,6 +13,9 @@
 #include "world.h"
 #include "ai_text_meme.h"
 #include "hotkey.h"
+#include "behaviors/states/rainbow_state.h"
+#include "behaviors/states/acid_state.h"
+#include "behaviors/states/portal_state.h"
 
 static void ResetBehaviorState() {
     BehaviorStateManager::Instance().ClearAll();

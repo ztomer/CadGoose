@@ -11,6 +11,9 @@
 #include "goose.h"
 #include "config.h"
 #include "world.h"
+#include "behaviors/states/jail_state.h"
+#include "behaviors/states/ball_state.h"
+#include "behaviors/states/acid_state.h"
 
 TEST(BehaviorStateManager, Singleton) {
     auto& mgr1 = BehaviorStateManager::Instance();

@@ -7,6 +7,12 @@
 #include "world.h"
 #include "config.h"
 #include "goose_math.h"
+#include "behaviors/states/jail_state.h"
+#include "behaviors/states/ball_state.h"
+#include "behaviors/states/breadcrumb_state.h"
+#include "behaviors/states/health_state.h"
+#include "behaviors/states/anger_state.h"
+#include "behaviors/states/portal_state.h"
 #include <cmath>
 #include <algorithm>
 

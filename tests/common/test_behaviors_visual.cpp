@@ -11,6 +11,10 @@
 #include "config.h"
 #include "goose.h"
 #include "world.h"
+#include "behaviors/states/rainbow_state.h"
+#include "behaviors/states/acid_state.h"
+#include "behaviors/states/anger_state.h"
+#include "behaviors/states/health_state.h"
 
 static void ResetBehaviorState() {
     BehaviorStateManager::Instance().ClearAll();

@@ -11,6 +11,7 @@
 #include "hotkey.h"
 #include "actor.h"
 #include "actor_portal.h"
+#include "behaviors/states/portal_state.h"
 
 #ifdef __APPLE__
 #include "renderer_interface.h"

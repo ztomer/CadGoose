@@ -7,6 +7,7 @@
 #include "../../src/common/config_helpers.h"
 #include "behavior.h"
 #include "world.h"
+#include "behaviors/states/toys_state.h"
 
 
 
