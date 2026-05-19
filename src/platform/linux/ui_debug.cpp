@@ -14,7 +14,7 @@ void UiLogTrim();
 const char* GetGooseStateStr(GooseState s);
 
 void draw_debug_overlay(cairo_t* cr, int width, int height, bool verbose, bool selectedOnly) {
-    if (!g_config.debugToTerminal) return;
+    if (!g_config.debug.toTerminal) return;
 
     UiLogTrim();
 
@@ -38,7 +38,7 @@ void draw_debug_overlay(cairo_t* cr, int width, int height, bool verbose, bool s
     lines.emplace_back(buf);
 
     snprintf(buf, sizeof(buf), "Config | scale:%.2f  walk:%.0f  run:%.0f  memes:%s  cursorDefaults:%s (%d%%)  snatch:%.1fs",
-             g_config.globalScale,
+             g_config.general.globalScale,
              g_config.baseWalkSpeed,
              g_config.baseRunSpeed,
              g_config.memesEnabled ? "on" : "off",

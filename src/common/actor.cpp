@@ -37,11 +37,12 @@ void ActorManager::renderAll(IRenderer* renderer) {
 }
 
 void ActorManager::cleanup() {
-    actors.erase(
-        std::remove_if(actors.begin(), actors.end(),
-            [](Actor* a) { return !a->isAlive(); }),
-        actors.end()
-    );
+    auto partition = std::stable_partition(actors.begin(), actors.end(),
+        [](Actor* a) { return a->isAlive(); });
+    for (auto it = partition; it != actors.end(); ++it) {
+        delete *it;
+    }
+    actors.erase(partition, actors.end());
 }
 
 Actor* ActorManager::findByType(const char* type, int id) {

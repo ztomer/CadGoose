@@ -85,8 +85,10 @@ static void LogTick(double time, const CursorState &cursor) {
     fprintf(f, " c(-,-)");
   fprintf(f, " geese:");
   for (auto* g : ActorManager::Instance().getGeese()) {
-    const char* stateNames[] = {"W", "F", "R", "C", "S"};
-    fprintf(f, " %d%s@(%d,%d)d%dv(%d,%d)s%d", g->id, stateNames[static_cast<int>(g->state)], (int)g->pos.x,
+    static constexpr const char* stateNames[] = {"W", "F", "R", "C", "S"};
+    int si = static_cast<int>(g->state);
+    const char* sn = (si >= 0 && si < (int)(sizeof(stateNames)/sizeof(stateNames[0]))) ? stateNames[si] : "?";
+    fprintf(f, " %d%s@(%d,%d)d%dv(%d,%d)s%d", g->id, sn, (int)g->pos.x,
             (int)g->pos.y, (int)g->dir, (int)g->vel.x, (int)g->vel.y,
             (int)g->currentSpeed);
     if (g->state == GooseState::SNATCH_CURSOR)
@@ -420,9 +422,14 @@ CursorAction Goose::Update(double dt, double time, int w, int h,
                            const CursorState &cursor) {
   lastUpdateTime = time;
   if (state != prevState) {
-    const char *stateNames[] = {"W", "F", "R", "C", "S"};
+    static constexpr const char* stateNames[] = {"W", "F", "R", "C", "S"};
+    constexpr int kStateCount = (int)(sizeof(stateNames)/sizeof(stateNames[0]));
+    int pi = static_cast<int>(prevState);
+    int ci = static_cast<int>(state);
+    const char* prevSn = (pi >= 0 && pi < kStateCount) ? stateNames[pi] : "?";
+    const char* curSn  = (ci >= 0 && ci < kStateCount) ? stateNames[ci] : "?";
     DebugLog("!! t=%.1f g%d %s->%s tgt(%.0f,%.0f) c(%.0f,%.0f)\n", time, id,
-            stateNames[static_cast<int>(prevState)], stateNames[static_cast<int>(state)], target.x, target.y, cursor.position.x,
+            prevSn, curSn, target.x, target.y, cursor.position.x,
             cursor.position.y);
     prevState = state;
     s_stateChanged = true;

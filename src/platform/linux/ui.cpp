@@ -1,4 +1,4 @@
-#include "ui_drawing.h"
+
 #include "ui_tick.h"
 #include "ui_debug.h"
 // ui.cpp
@@ -77,7 +77,7 @@ void UpdateInputRegion(GtkWindow* window, const MonitorInfo& m) {
     cairo_region_t* region = cairo_region_create();
 
     // Respect multi-monitor toggle for input as well
-    if (!g_config.multiMonitorEnabled && (m.x != 0 || m.y != 0)) {
+    if (!g_config.cursor.multiMonitorEnabled && (m.x != 0 || m.y != 0)) {
         GdkSurface* s = gtk_native_get_surface(GTK_NATIVE(window));
         if (s) gdk_surface_set_input_region(s, region);
         cairo_region_destroy(region);
@@ -100,7 +100,7 @@ void UpdateInputRegion(GtkWindow* window, const MonitorInfo& m) {
         float localX = item.pos.x - m.x;
         float localY = item.pos.y - m.y;
         if (localX > -kItemInputRegionMargin && localX < m.width + kItemInputRegionMargin && localY > -kItemInputRegionMargin && localY < m.height + kItemInputRegionMargin) {
-            cairo_rectangle_int_t r = { (int)localX, (int)localY, (int)(item.data->w * g_config.globalScale), (int)(item.data->h * g_config.globalScale) };
+            cairo_rectangle_int_t r = { (int)localX, (int)localY, (int)(item.data->w * g_config.general.globalScale), (int)(item.data->h * g_config.general.globalScale) };
             cairo_region_union_rectangle(region, &r);
         }
     }
@@ -116,7 +116,7 @@ void draw_overlay(GtkDrawingArea* area, cairo_t* cr, int width, int height, gpoi
     MonitorInfo* m = (MonitorInfo*)data;
     if (!m || cairo_status(cr) != CAIRO_STATUS_SUCCESS) return;
 
-    if (!g_config.multiMonitorEnabled && (m->x != 0 || m->y != 0)) {
+    if (!g_config.cursor.multiMonitorEnabled && (m->x != 0 || m->y != 0)) {
         cairo_save(cr);
         cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
         cairo_paint(cr);
@@ -131,15 +131,16 @@ void draw_overlay(GtkDrawingArea* area, cairo_t* cr, int width, int height, gpoi
     DrawDroppedItems(cr);
 
     // Draw Geese
-    for (auto* g : ActorManager::Instance().getGeese()) {
+    for (auto* gp : ActorManager::Instance().getGeese()) {
         if (cairo_status(cr) != CAIRO_STATUS_SUCCESS) break;
-        g->Draw(cr);
+        Goose& g = *gp;
+        g.Draw(cr);
 
         // Minecraft-style name tag
-        if (!g->name.empty()) {
+        if (!g.name.empty()) {
             cairo_save(cr);
             PangoLayout* layout = pango_cairo_create_layout(cr);
-            std::string tagText = "[#" + std::to_string(g->id) + "] " + g->name;
+            std::string tagText = "[#" + std::to_string(g.id) + "] " + g.name;
             pango_layout_set_text(layout, tagText.c_str(), -1);
             
             PangoFontDescription* desc = pango_font_description_from_string("Sans Bold 10");
@@ -150,7 +151,7 @@ void draw_overlay(GtkDrawingArea* area, cairo_t* cr, int width, int height, gpoi
             pango_layout_get_pixel_size(layout, &tw, &th);
 
             float tagX = g.pos.x - tw / 2.0f;
-            float tagY = g.pos.y - kLinuxNametagYOffset * g_config.globalScale; // Position above head
+            float tagY = g.pos.y - kLinuxNametagYOffset * g_config.general.globalScale; // Position above head
 
             // Background rectangle (translucent dark)
             cairo_set_source_rgba(cr, 0, 0, 0, 0.4);
@@ -167,7 +168,7 @@ void draw_overlay(GtkDrawingArea* area, cairo_t* cr, int width, int height, gpoi
         }
 
         // Visual debug: highlight all geese when enabled
-        if (g_config.debugVisuals) {
+        if (g_config.debug.visuals) {
             cairo_save(cr);
             
             // 1. Highlight circle around goose
@@ -214,9 +215,9 @@ void draw_overlay(GtkDrawingArea* area, cairo_t* cr, int width, int height, gpoi
             cairo_fill(cr);
 
             // 4. Threshold circle (Drop Zone / Catch Zone)
-            float threshold = std::max(30.0f * g_config.globalScale, 25.0f);
-            if (g.state == GooseState::RETURNING) threshold = std::max(50.0f * g_config.globalScale, 40.0f);
-            if (g.state == GooseState::CHASE_CURSOR) threshold = std::max(22.0f * g_config.globalScale, 15.0f);
+            float threshold = std::max(30.0f * g_config.general.globalScale, 25.0f);
+            if (g.state == GooseState::RETURNING) threshold = std::max(50.0f * g_config.general.globalScale, 40.0f);
+            if (g.state == GooseState::CHASE_CURSOR) threshold = std::max(22.0f * g_config.general.globalScale, 15.0f);
 
             cairo_set_source_rgba(cr, 1, 1, 1, 0.2); // Faint white circle
             cairo_set_line_width(cr, 1.0);
@@ -226,11 +227,11 @@ void draw_overlay(GtkDrawingArea* area, cairo_t* cr, int width, int height, gpoi
             // 5. Text info under ID
             const char* stateName = "UNKNOWN";
             switch(g.state) {
-                case WANDER: stateName = "WANDER"; break;
-                case FETCHING: stateName = "FETCHING"; break;
-                case RETURNING: stateName = "RETURNING"; break;
-                case CHASE_CURSOR: stateName = "CHASE"; break;
-                case SNATCH_CURSOR: stateName = "SNATCH"; break;
+                case GooseState::WANDER: stateName = "WANDER"; break;
+                case GooseState::FETCHING: stateName = "FETCHING"; break;
+                case GooseState::RETURNING: stateName = "RETURNING"; break;
+                case GooseState::CHASE_CURSOR: stateName = "CHASE"; break;
+                case GooseState::SNATCH_CURSOR: stateName = "SNATCH"; break;
             }
             float dist = Vector2::Distance(origin, g.target);
             char infoBuf[64];
@@ -354,7 +355,7 @@ void setup_overlay_window(GtkApplication* app) {
     // Set globally unified screen dimensions.
     // If multi-monitor is disabled, clamp world bounds to the primary monitor
     // so geese/cursor logic won't drift into hidden monitors and crash at edges.
-    if (!g_config.multiMonitorEnabled && !g_world.monitors.empty()) {
+    if (!g_config.cursor.multiMonitorEnabled && !g_world.monitors.empty()) {
         const MonitorInfo& primary = g_world.monitors.front();
         g_world.screenWidth = primary.width;
         g_world.screenHeight = primary.height;
