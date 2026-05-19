@@ -2,7 +2,15 @@
 #define TOYS_STATE_H
 
 #include "behavior_state.h"
-#include "world.h"
+#include "goose_math.h"
+
+struct Toy {
+    Vector2 pos{0, 0};
+    float angle = 0;
+    double time{0};
+    bool active = false;
+    enum class Type : int { Stick = 0, Ball = 1 } type = Type::Stick;
+};
 
 struct ToysState : public BehaviorState {
     static constexpr int MAX_TOYS = 5;
