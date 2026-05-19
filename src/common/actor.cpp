@@ -65,6 +65,18 @@ int ActorManager::countByType(const char* type) const {
     return count;
 }
 
+void ActorManager::destroyAllOfType(const char* type) {
+    auto newEnd = std::remove_if(actors.begin(), actors.end(),
+        [type](Actor* a) {
+            if (a && strcmp(a->type(), type) == 0) {
+                delete a;
+                return true;
+            }
+            return false;
+        });
+    actors.erase(newEnd, actors.end());
+}
+
 std::vector<Goose*> ActorManager::getGeese() const {
     std::vector<Goose*> geese;
     for (auto* actor : actors) {

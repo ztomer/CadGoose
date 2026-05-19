@@ -70,6 +70,9 @@ public:
     // Get all Goose actors
     std::vector<Goose*> getGeese() const;
 
+    // Delete and remove all actors of a given type (owning cleanup)
+    void destroyAllOfType(const char* type);
+
 private:
     ActorManager() = default;
     std::vector<Actor*> actors;

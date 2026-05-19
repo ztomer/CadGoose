@@ -5,6 +5,7 @@
 #include "goose_math.h"
 #include "goose.h"
 #include "world.h"
+#include "actor.h"
 #include "config.h"
 
 TEST(GooseBehaviors, DragSetsPosAndZerosVel) {
@@ -145,14 +146,18 @@ TEST(GooseStateMachine, FetchingCreatesItem) {
 }
 
 TEST(MultiGoose, SeparationForcePushesApart) {
-    g_world.geese.clear();
+    ActorManager::Instance().destroyAllOfType("goose");
     g_world.nextId = 100;
 
-    Goose& g1 = g_world.geese.emplace_back(100, "Sep1", 1920, 1080);
+    Goose* g1ptr = new Goose(100, "Sep1", 1920, 1080);
+    ActorManager::Instance().add(g1ptr);
+    Goose& g1 = *g1ptr;
     g1.pos = {500, 500};
     g1.state = GooseState::WANDER;
 
-    Goose& g2 = g_world.geese.emplace_back(101, "Sep2", 1920, 1080);
+    Goose* g2ptr = new Goose(101, "Sep2", 1920, 1080);
+    ActorManager::Instance().add(g2ptr);
+    Goose& g2 = *g2ptr;
     g2.pos = {520, 500};
     g2.state = GooseState::WANDER;
 
@@ -181,7 +186,7 @@ TEST(MultiGoose, SeparationForcePushesApart) {
 
     EXPECT_GT(totalDist, 10.0f) << "Geese should move (separation or seek)";
 
-    g_world.geese.clear();
+    ActorManager::Instance().destroyAllOfType("goose");
 }
 
 TEST(ConfigValidation, SliderKeysMatchConfigKeys) {

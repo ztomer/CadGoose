@@ -273,9 +273,9 @@ static constexpr float kDetailIdRowSpacing = 28;
     [_contentView addSubview:sectionLabel];
     y -= 24;
 
-    for (auto it = g_world.geese.begin(); it != g_world.geese.end(); ++it) {
+    for (auto* g : ActorManager::Instance().getGeese()) {
         NSTextField* idLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(kDetailIdLabelX, y, kDetailIdLabelWidth, kDetailIdLabelHeight)];
-        idLabel.stringValue = [NSString stringWithFormat:@"#%d", it->id];
+        idLabel.stringValue = [NSString stringWithFormat:@"#%d", g->id];
         idLabel.font = [NSFont systemFontOfSize:11];
         idLabel.textColor = [NSColor colorWithWhite:0.85 alpha:1.0];
         idLabel.backgroundColor = [NSColor clearColor];
@@ -285,10 +285,10 @@ static constexpr float kDetailIdRowSpacing = 28;
         [_contentView addSubview:idLabel];
 
         NSTextField* nameField = [[NSTextField alloc] initWithFrame:NSMakeRect(52, y, self.bounds.size.width - 64, 22)];
-        nameField.stringValue = [NSString stringWithUTF8String:it->name.c_str()];
+        nameField.stringValue = [NSString stringWithUTF8String:g->name.c_str()];
         nameField.font = [NSFont systemFontOfSize:12];
         nameField.bezelStyle = NSTextFieldRoundedBezel;
-        nameField.tag = it->id;
+        nameField.tag = g->id;
         nameField.target = self;
         nameField.action = @selector(gooseNameChanged:);
         [_contentView addSubview:nameField];
@@ -302,9 +302,9 @@ static constexpr float kDetailIdRowSpacing = 28;
 - (void)gooseNameChanged:(NSTextField*)sender {
     int gooseId = (int)sender.tag;
     std::string newName = std::string([sender.stringValue UTF8String]);
-    for (auto it = g_world.geese.begin(); it != g_world.geese.end(); ++it) {
-        if (it->id == gooseId) {
-            it->name = newName;
+    for (auto* g : ActorManager::Instance().getGeese()) {
+        if (g->id == gooseId) {
+            g->name = newName;
             break;
         }
     }
