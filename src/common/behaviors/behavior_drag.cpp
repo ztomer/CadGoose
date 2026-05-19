@@ -4,6 +4,7 @@
 // Based on DragGoose by euandeas/Straaft
 // ===========================
 #include "behavior.h"
+#include "random_util.h"
 #include "behaviors/states/drag_state.h"
 #include "goose.h"
 #include "config.h"
@@ -56,7 +57,7 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
         goose->vel.x = 0;
         goose->vel.y = 0;
 
-        goose->dir += (float)(rand() % (kDragDirectionJitterMax * 2 + 1) - kDragDirectionJitterMax);
+        goose->dir += (float)(rng_util::RandRange(kDragDirectionJitterMax * 2 + 1) - kDragDirectionJitterMax);
     }
 }
 

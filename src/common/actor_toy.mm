@@ -2,6 +2,7 @@
 // Toy actor implementation — stick or ball on the ground with its own window.
 
 #include "actor_toy.h"
+#include "random_util.h"
 #include "actor.h"
 #include "config.h"
 #include "world.h"
@@ -26,7 +27,7 @@ ToyActor::ToyActor(Type type, const Vector2& pos, int instanceId)
     position = {pos.x, pos.y};
     active = true;
     m_spawnTime = g_time;
-    m_angle = (float)(rand() % 360);
+    m_angle = (float)(rng_util::RandRange(360));
 
     radius = (type == Stick) ? 12.0f : 15.0f;
 

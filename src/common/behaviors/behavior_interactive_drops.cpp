@@ -1,4 +1,5 @@
 #include "behavior.h"
+#include "random_util.h"
 #include "behaviors/states/interactive_drops_state.h"
 #include "goose.h"
 #include "config.h"
@@ -23,11 +24,11 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
     if (goose->state != GooseState::WANDER) return;
 
     double lastDrop = goose->lastDropTime;
-    bool shouldDrop = (time - lastDrop >= g_config.behaviors.interactiveDrops.dropInterval) && ((rand() % kInteractiveDropProbability) == 0);
+    bool shouldDrop = (time - lastDrop >= g_config.behaviors.interactiveDrops.dropInterval) && ((rng_util::RandRange(kInteractiveDropProbability)) == 0);
 
     if (shouldDrop) {
         Vector2 dropPos = goose->GetBeakTipDevice();
-        float hue = (rand() % 360) / 360.0f * 360.0f;
+        float hue = (rng_util::RandRange(360)) / 360.0f * 360.0f;
         FlowerActor* flower = new FlowerActor(dropPos, hue, time);
         ActorManager::Instance().add(flower);
         g_assets.Bite();

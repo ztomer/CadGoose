@@ -1,6 +1,7 @@
 // goose_behaviors_interact.cpp
 // Interaction behaviors (avoidance, main UpdateBehaviors loop)
 #include "goose.h"
+#include "random_util.h"
 #include "world.h"
 #include "config.h"
 #include "goose_math.h"
@@ -73,8 +74,8 @@ CursorAction Goose::UpdateBehaviors(double dt, double time, int w, int h, const 
     if (heldItem != nullptr && state == GooseState::WANDER) {
         state = GooseState::RETURNING;
         if (target.x < 0 || target.x > w || target.y < 0 || target.y > h) {
-            target = {static_cast<float>(rand() % (std::max(1, w - (int)g_config.spawn.wanderTargetMargin)) + (int)g_config.spawn.wanderTargetOffset),
-                      static_cast<float>(rand() % (std::max(1, h - (int)g_config.spawn.wanderTargetMargin)) + (int)g_config.spawn.wanderTargetOffset)};
+            target = {static_cast<float>(rng_util::RandRange(std::max(1, w - (int)g_config.spawn.wanderTargetMargin)) + (int)g_config.spawn.wanderTargetOffset),
+                      static_cast<float>(rng_util::RandRange(std::max(1, h - (int)g_config.spawn.wanderTargetMargin)) + (int)g_config.spawn.wanderTargetOffset)};
         }
     }
 
@@ -165,10 +166,10 @@ CursorAction Goose::UpdateBehaviors(double dt, double time, int w, int h, const 
     }
 
     if (state == GooseState::WANDER && time >= honkState.nextIdleHonk) {
-        if ((rand() % g_config.honk.idleChanceDivisor) == 0) {
+        if ((rng_util::RandRange(g_config.honk.idleChanceDivisor)) == 0) {
             updateIdleHonk(*this, time, g_config.honk.genericCooldown, honkState.lastGeneric);
         } else {
-            honkState.nextIdleHonk = time + g_config.honk.idleMin + (static_cast<double>(rand() % 1000) / 1000.0) * (g_config.honk.idleMax - g_config.honk.idleMin);
+            honkState.nextIdleHonk = time + g_config.honk.idleMin + (static_cast<double>(rng_util::RandRange(1000)) / 1000.0) * (g_config.honk.idleMax - g_config.honk.idleMin);
         }
     }
 

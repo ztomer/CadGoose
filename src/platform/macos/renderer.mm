@@ -10,6 +10,7 @@
 #import <QuartzCore/CADisplayLink.h>
 
 #include "goose.h"
+#include "random_util.h"
 #include "goose_drawing.h"
 #include "world.h"
 #include "config.h"
@@ -197,7 +198,7 @@ static BOOL s_hasPrimary = NO;
     }
 
     if (g_config.behaviors.fun.autumnLeaves) {
-        if (rand() % kLeafSpawnProbabilityDenominator == 0) {
+        if (rng_util::RandRange(kLeafSpawnProbabilityDenominator) == 0) {
             World_SpawnRandomLeafPile(g_world.screenWidth, g_world.screenHeight, self.currentTime);
         }
         auto geese = ActorManager::Instance().getGeese();

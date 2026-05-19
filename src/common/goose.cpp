@@ -1,4 +1,5 @@
 #include <cstdarg>
+#include "random_util.h"
 #include "goose.h"
 #include "assets.h"
 #include "behavior.h"
@@ -110,17 +111,17 @@ static void CloseDebugLog() {
 
 Goose::Goose(int id_, const std::string &name_, int screenW, int screenH)
     : id(id_), name(name_) {
-  pos = {(float)(rand() % (int)(screenW - g_config.spawn.marginX * 2) +
+  pos = {(float)(rng_util::RandRange((int)(screenW - g_config.spawn.marginX * 2)) +
                  g_config.spawn.marginX),
-         (float)(rand() % (int)(screenH - g_config.spawn.marginY * 2) +
+         (float)(rng_util::RandRange((int)(screenH - g_config.spawn.marginY * 2)) +
                  g_config.spawn.marginY)};
   target = pos;
-  dir = (float)(rand() % (int)g_config.movement.initDirectionMax);
+  dir = (float)(rng_util::RandRange((int)g_config.movement.initDirectionMax));
   currentSpeed = g_config.movement.baseWalkSpeed;
 
   attackMouseBias = 0;
-  memeFetchBias = rand() % g_config.item.memeFetchBiasMax;
-  noteFetchBias = rand() % g_config.item.noteFetchBiasMax;
+  memeFetchBias = rng_util::RandRange(g_config.item.memeFetchBiasMax);
+  noteFetchBias = rng_util::RandRange(g_config.item.noteFetchBiasMax);
 
   cursorChaseEnabled = g_config.cursor.chaseEnabled;
   cursorChaseChance = 5;
@@ -259,7 +260,7 @@ void Goose::SolveFeet(double time) {
         f.currentPos = home;
         f.moveStartTime = -1;
 
-        if (mudEnabled && (rand() % 100) < mudChance) {
+        if (mudEnabled && (rng_util::RandRange(100)) < mudChance) {
           Footprint fp;
           fp.pos = home; // already device coords (GetFootHome returns pos + offset)
           fp.dir = dir + ((&f == &rig.lFoot) ? g_config.step.leftFootAngle
@@ -387,7 +388,7 @@ void Goose::UpdateDetection(double time, int w, int h) {
       DebugLog("[STUCK] t=%.1f g%d pos(%.0f,%.0f) state=%d vel(%.1f,%.1f)\n",
               time, id, pos.x, pos.y, (int)state, vel.x, vel.y);
       EventBus::Instance().Publish(GooseStuckEvent{id, pos.x, pos.y, time - stuckCheckTime});
-      target = Vector2((float)(rand() % (int)w), (float)(rand() % (int)h));
+      target = Vector2((float)(rng_util::RandRange((int)w)), (float)(rng_util::RandRange((int)h)));
       stuckCheckPos = pos;
       stuckCheckTime = time;
     }
@@ -479,24 +480,24 @@ void Goose::StartFetch(int w, int h, double time) {
   state = GooseState::FETCHING;
   if (time > 0) fetchStartTime = time;
 
-  int side = rand() % 4;
+  int side = rng_util::RandRange(4);
   float edgeMargin = g_config.spawn.fetchEdgeMargin;
   switch (side) {
   case 0:
-    target = {-edgeMargin, (float)(rand() % h)};
+    target = {-edgeMargin, (float)(rng_util::RandRange(h))};
     break;
   case 1:
-    target = {(float)w + edgeMargin, (float)(rand() % h)};
+    target = {(float)w + edgeMargin, (float)(rng_util::RandRange(h))};
     break;
   case 2:
-    target = {(float)(rand() % w), -edgeMargin};
+    target = {(float)(rng_util::RandRange(w)), -edgeMargin};
     break;
   case 3:
-    target = {(float)(rand() % w), (float)h + edgeMargin};
+    target = {(float)(rng_util::RandRange(w)), (float)h + edgeMargin};
     break;
   }
 
-  parabolicCurvature = ((rand() % (int)kFetchCurvatureRange) - (int)kFetchCurvatureCenter) / kFetchCurvatureDivisor;
+  parabolicCurvature = ((rng_util::RandRange((int)kFetchCurvatureRange)) - (int)kFetchCurvatureCenter) / kFetchCurvatureDivisor;
 }
 
 void Goose::PickNewTarget(int w, int h) {
@@ -506,8 +507,8 @@ void Goose::PickNewTarget(int w, int h) {
   parabolicCurvature = 0;
 
   float margin = g_config.spawn.marginX;
-  target = {(float)(rand() % (int)(w - margin * 2) + margin),
-            (float)(rand() % (int)(h - margin * 2) + margin)};
+  target = {(float)(rng_util::RandRange((int)(w - margin * 2)) + margin),
+            (float)(rng_util::RandRange((int)(h - margin * 2)) + margin)};
 }
 
 void Goose::UpdateDrag(double dt) {

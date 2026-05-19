@@ -4,6 +4,7 @@
 // Based on AcidGoose by F!NN
 // ===========================
 #include "behavior.h"
+#include "random_util.h"
 #include "behaviors/states/acid_state.h"
 #include "goose.h"
 #include "config.h"
@@ -25,7 +26,7 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
     auto* state = BehaviorStateManager::Instance().GetOrCreate<AcidState>(goose->id, "acid");
 
     if (!state->isSpinning) {
-        if (rand() % g_config.behaviors.acid.triggerChance == 0) {
+        if (rng_util::RandRange(g_config.behaviors.acid.triggerChance) == 0) {
             state->isSpinning = true;
             state->rotationAccumulator = 0.0f;
         }

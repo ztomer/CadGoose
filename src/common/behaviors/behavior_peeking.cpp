@@ -1,4 +1,5 @@
 #include "behavior.h"
+#include "random_util.h"
 #include "behaviors/states/peeking_state.h"
 #include "goose.h"
 #include "config.h"
@@ -29,7 +30,7 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
         double peekDuration = time - state->peekStartTime;
         if (peekDuration > kPeekMaxDuration) {
             state->isPeeking = false;
-            state->nextPeekTime = time + kPeekIntervalMin + (rand() % kPeekIntervalMax);
+            state->nextPeekTime = time + kPeekIntervalMin + (rng_util::RandRange(kPeekIntervalMax));
         }
         return;
     }
@@ -45,7 +46,7 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
     else if (posDev.x > screenW - margin) { atEdge = true; state->peekSide = 1; }
     else { state->peekSide = 0; }
 
-    if (atEdge && (rand() % kPeekProbabilityDivisor) == 0) {
+    if (atEdge && (rng_util::RandRange(kPeekProbabilityDivisor)) == 0) {
         state->isPeeking = true;
         state->peekStartTime = time;
     }

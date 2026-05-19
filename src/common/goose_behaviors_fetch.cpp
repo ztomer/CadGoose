@@ -1,6 +1,7 @@
 // goose_behaviors_fetch.cpp
 // Fetch behavior logic
 #include "goose.h"
+#include "random_util.h"
 #include "world.h"
 #include "config.h"
 #include "goose_math.h"
@@ -27,7 +28,7 @@ static FILE* GetDebugLog() {
     return f;
 }
 
-static inline double Rand01() { return static_cast<double>(rand() % 1000) / 1000.0; }
+static inline double Rand01() { return static_cast<double>(rng_util::RandRange(1000)) / 1000.0; }
 
 void Goose::StartSnatch(double time, const Vector2& cursorPos) {
 
@@ -43,8 +44,8 @@ void Goose::StartSnatch(double time, const Vector2& cursorPos) {
     snatchOffset.y = Clamp(Dot(cursorDelta, catchRight), -g_config.snatch.offsetMax, g_config.snatch.offsetMax);
 
     snatchAngle = 0.0f;
-    snatchRadius = g_config.snatch.radiusBase + (rand() % (int)g_config.snatch.radiusRange);
-    snatchAngularSpeed = ((rand() % 2) ? 1.0f : -1.0f) * (g_config.snatch.angularSpeedBase + (rand() % (int)g_config.snatch.angularSpeedRandomRange) / kSnatchAngularSpeedDivisor);
+    snatchRadius = g_config.snatch.radiusBase + (rng_util::RandRange((int)g_config.snatch.radiusRange));
+    snatchAngularSpeed = ((rng_util::RandRange(2)) ? 1.0f : -1.0f) * (g_config.snatch.angularSpeedBase + (rng_util::RandRange((int)g_config.snatch.angularSpeedRandomRange)) / kSnatchAngularSpeedDivisor);
     currentSpeed = g_config.movement.baseRunSpeed * g_config.snatch.speedMultiplier;
     stepTime = g_config.step.timeSnatch;
 
@@ -95,8 +96,8 @@ void tryPickupItem(Goose& g, double time, int w, int h) {
             g.heldItem = it->data;
             g_world.droppedItems.erase(it);
             g.state = GooseState::RETURNING;
-            g.target = {static_cast<float>(rand() % (std::max(1, (int)(w - g_config.spawn.itemDropMarginX * 2)) + (int)g_config.spawn.itemDropMarginX)),
-                        static_cast<float>(rand() % (std::max(1, (int)(h - g_config.spawn.itemDropMarginY * 2)) + (int)g_config.spawn.itemDropMarginY))};
+            g.target = {static_cast<float>(rng_util::RandRange(std::max(1, (int)(w - g_config.spawn.itemDropMarginX * 2)) + (int)g_config.spawn.itemDropMarginX)),
+                        static_cast<float>(rng_util::RandRange(std::max(1, (int)(h - g_config.spawn.itemDropMarginY * 2)) + (int)g_config.spawn.itemDropMarginY))};
             g_assets.Bite();
             triggerHonk(g, time, g_config.honk.fetchCooldown, g.honkState.lastFetch);
             return;
@@ -132,7 +133,7 @@ void handleFetching(Goose& g, double time, int w, int h) {
         }
     } else {
         FETCH_LOG("[FETCH] handleFetching g%d random fetch (forceItemFetch=%d)\n", g.id, g.forceItemFetch);
-        g.heldItem = (rand() % 2 == 0) ? g_assets.GetRandomMeme() : g_assets.GetRandomText();
+        g.heldItem = (rng_util::RandRange(2) == 0) ? g_assets.GetRandomMeme() : g_assets.GetRandomText();
     }
 
     FETCH_LOG("[FETCH] handleFetching g%d heldItem=%p image=%p after creation\n",
@@ -144,8 +145,8 @@ void handleFetching(Goose& g, double time, int w, int h) {
     if (g.heldItem) {
         g.state = GooseState::RETURNING;
         FETCH_LOG("[FETCH] handleFetching g%d -> RETURNING, dragPos=(%.1f,%.1f) dragInit=%d\n", g.id, g.dragPos.x, g.dragPos.y, g.dragInit);
-        g.target = {static_cast<float>(rand() % (std::max(1, w - (int)g_config.spawn.wanderTargetMargin)) + (int)g_config.spawn.wanderTargetOffset),
-                    static_cast<float>(rand() % (std::max(1, h - (int)g_config.spawn.wanderTargetMargin)) + (int)g_config.spawn.wanderTargetOffset)};
+        g.target = {static_cast<float>(rng_util::RandRange(std::max(1, w - (int)g_config.spawn.wanderTargetMargin)) + (int)g_config.spawn.wanderTargetOffset),
+                    static_cast<float>(rng_util::RandRange(std::max(1, h - (int)g_config.spawn.wanderTargetMargin)) + (int)g_config.spawn.wanderTargetOffset)};
         triggerHonk(g, time, g_config.honk.fetchCooldown, g.honkState.lastFetch);
     } else {
         FETCH_LOG("[FETCH] handleFetching g%d heldItem=null, -> WANDER\n", g.id);

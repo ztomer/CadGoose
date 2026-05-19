@@ -4,6 +4,7 @@
 // Each toy is a ToyActor with its own window.
 // ===========================
 #include "behavior.h"
+#include "random_util.h"
 #include "behaviors/states/toys_state.h"
 #include "event_bus.h"
 #include "goose.h"
@@ -44,11 +45,11 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
         float screenH = (float)g_world.screenHeight;
 
         Vector2 spawnPos{
-            margin + (float)(rand() % (int)(screenW - margin * 2)),
-            margin + (float)(rand() % (int)(screenH - margin * 2))
+            margin + (float)(rng_util::RandRange((int)(screenW - margin * 2))),
+            margin + (float)(rng_util::RandRange((int)(screenH - margin * 2)))
         };
 
-        ToyActor::Type type = (rand() % 2 == 0) ? ToyActor::Stick : ToyActor::Ball;
+        ToyActor::Type type = (rng_util::RandRange(2) == 0) ? ToyActor::Stick : ToyActor::Ball;
         ToyActor* toy = new ToyActor(type, spawnPos, s_nextToyId++);
         mgr.add(toy);
         EventBus::Instance().Publish(ToySpawnedEvent{spawnPos.x, spawnPos.y, static_cast<int>(type)});
@@ -89,8 +90,8 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
             goose->state = GooseState::RETURNING;
             float margin = kToySpawnMargin;
             goose->target = {
-                margin + (float)(rand() % (int)(g_world.screenWidth - margin * 2)),
-                margin + (float)(rand() % (int)(g_world.screenHeight - margin * 2))
+                margin + (float)(rng_util::RandRange((int)(g_world.screenWidth - margin * 2))),
+                margin + (float)(rng_util::RandRange((int)(g_world.screenHeight - margin * 2)))
             };
             g_assets.Bite();
             g_assets.Honk();
