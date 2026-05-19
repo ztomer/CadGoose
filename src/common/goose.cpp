@@ -3,6 +3,7 @@
 #include "assets.h"
 #include "behavior.h"
 #include "behaviors/states/jail_state.h"
+#include "event_bus.h"
 #include "config.h"
 #include "goose_math.h"
 #include "world.h"
@@ -385,6 +386,7 @@ void Goose::UpdateDetection(double time, int w, int h) {
       // Goose is stuck, pick new wander target
       DebugLog("[STUCK] t=%.1f g%d pos(%.0f,%.0f) state=%d vel(%.1f,%.1f)\n",
               time, id, pos.x, pos.y, (int)state, vel.x, vel.y);
+      EventBus::Instance().Publish(GooseStuckEvent{id, pos.x, pos.y, time - stuckCheckTime});
       target = Vector2((float)(rand() % (int)w), (float)(rand() % (int)h));
       stuckCheckPos = pos;
       stuckCheckTime = time;
