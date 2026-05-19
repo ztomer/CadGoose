@@ -11,6 +11,10 @@
 #include <cstdio>
 #include <algorithm>
 
+// Gate verbose fetch tracing behind the debug-to-terminal flag so the
+// release path doesn't spam stderr every tick.
+#define FETCH_LOG(...) do { if (g_config.debug.toTerminal) { fprintf(stderr, __VA_ARGS__); } } while (0)
+
 static constexpr float kSnatchAngularSpeedDivisor = 100.0f;
 
 static FILE* GetDebugLog() {
@@ -93,7 +97,7 @@ void tryPickupItem(Goose& g, double time, int w, int h) {
         if (dist < pickupDist) {
             if (!canPickupItem(time - it->timeDropped)) continue;
 
-            fprintf(stderr, "[FETCH] tryPickupItem g%d picking up item at (%.0f,%.0f) dist=%.0f\n",
+            FETCH_LOG("[FETCH] tryPickupItem g%d picking up item at (%.0f,%.0f) dist=%.0f\n",
                     g.id, itemCenter.x, itemCenter.y, dist);
             g.heldItem = it->data;
             g_world.droppedItems.erase(it);
@@ -108,37 +112,37 @@ void tryPickupItem(Goose& g, double time, int w, int h) {
 }
 
 void handleFetching(Goose& g, double time, int w, int h) {
-    fprintf(stderr, "[FETCH] handleFetching g%d called state=%d forceItemFetch=%d forcedTextEmpty=%d\n",
+    FETCH_LOG("[FETCH] handleFetching g%d called state=%d forceItemFetch=%d forcedTextEmpty=%d\n",
             g.id, (int)g.state, g.forceItemFetch, g.forcedText.empty());
 
     if (g.heldItem) {
-        fprintf(stderr, "[FETCH] handleFetching g%d deleting existing heldItem\n", g.id);
+        FETCH_LOG("[FETCH] handleFetching g%d deleting existing heldItem\n", g.id);
         delete g.heldItem;
         g.heldItem = nullptr;
     }
 
     if (!g.forcedText.empty()) {
-        fprintf(stderr, "[FETCH] handleFetching g%d creating text item from forcedText (len=%zu)\n", g.id, g.forcedText.size());
+        FETCH_LOG("[FETCH] handleFetching g%d creating text item from forcedText (len=%zu)\n", g.id, g.forcedText.size());
         g.heldItem = g_assets.CreateTextItem(g.forcedText);
     } else if (g.forceItemFetch == 0) {
-        fprintf(stderr, "[FETCH] handleFetching g%d getting random meme\n", g.id);
+        FETCH_LOG("[FETCH] handleFetching g%d getting random meme\n", g.id);
         g.heldItem = g_assets.GetRandomMeme(w, h, 0.1f);
     } else if (g.forceItemFetch == 1) {
-        fprintf(stderr, "[FETCH] handleFetching g%d dequeuing AI text\n", g.id);
+        FETCH_LOG("[FETCH] handleFetching g%d dequeuing AI text\n", g.id);
         std::string text = AI_TextMeme_Dequeue();
         if (!text.empty()) {
-            fprintf(stderr, "[FETCH] handleFetching g%d AI text dequeued (len=%zu)\n", g.id, text.size());
+            FETCH_LOG("[FETCH] handleFetching g%d AI text dequeued (len=%zu)\n", g.id, text.size());
             g.heldItem = g_assets.CreateTextItem(text);
         } else {
-            fprintf(stderr, "[FETCH] handleFetching g%d AI text empty, falling back to file text\n", g.id);
+            FETCH_LOG("[FETCH] handleFetching g%d AI text empty, falling back to file text\n", g.id);
             g.heldItem = g_assets.GetRandomText();
         }
     } else {
-        fprintf(stderr, "[FETCH] handleFetching g%d random fetch (forceItemFetch=%d)\n", g.id, g.forceItemFetch);
+        FETCH_LOG("[FETCH] handleFetching g%d random fetch (forceItemFetch=%d)\n", g.id, g.forceItemFetch);
         g.heldItem = (rand() % 2 == 0) ? g_assets.GetRandomMeme() : g_assets.GetRandomText();
     }
 
-    fprintf(stderr, "[FETCH] handleFetching g%d heldItem=%p image=%p after creation\n",
+    FETCH_LOG("[FETCH] handleFetching g%d heldItem=%p image=%p after creation\n",
             g.id, (void*)g.heldItem, g.heldItem ? (void*)g.heldItem->image : nullptr);
 
     g.forceItemFetch = -1;
@@ -146,19 +150,19 @@ void handleFetching(Goose& g, double time, int w, int h) {
 
     if (g.heldItem) {
         g.state = GooseState::RETURNING;
-        fprintf(stderr, "[FETCH] handleFetching g%d -> RETURNING, dragPos=(%.1f,%.1f) dragInit=%d\n", g.id, g.dragPos.x, g.dragPos.y, g.dragInit);
+        FETCH_LOG("[FETCH] handleFetching g%d -> RETURNING, dragPos=(%.1f,%.1f) dragInit=%d\n", g.id, g.dragPos.x, g.dragPos.y, g.dragInit);
         g.target = {static_cast<float>(rand() % (std::max(1, w - (int)g_config.spawn.wanderTargetMargin)) + (int)g_config.spawn.wanderTargetOffset),
                     static_cast<float>(rand() % (std::max(1, h - (int)g_config.spawn.wanderTargetMargin)) + (int)g_config.spawn.wanderTargetOffset)};
         triggerHonkLocal(g.honkState, time, g_config.honk.fetchCooldown, g.honkState.lastFetch);
     } else {
-        fprintf(stderr, "[FETCH] handleFetching g%d heldItem=null, -> WANDER\n", g.id);
+        FETCH_LOG("[FETCH] handleFetching g%d heldItem=null, -> WANDER\n", g.id);
         g.state = GooseState::WANDER;
         g.PickNewTarget(w, h);
     }
 }
 
 void handleReturning(Goose& g, double time, int w, int h) {
-    fprintf(stderr, "[FETCH] handleReturning g%d called heldItem=%p\n", g.id, (void*)g.heldItem);
+    FETCH_LOG("[FETCH] handleReturning g%d called heldItem=%p\n", g.id, (void*)g.heldItem);
     if (g.heldItem) {
         DroppedItem drop;
         drop.data = g.heldItem;
@@ -184,10 +188,10 @@ void handleReturning(Goose& g, double time, int w, int h) {
 
 
             g_world.droppedItems.push_back(drop);
-            fprintf(stderr, "[FETCH] handleReturning g%d dropped item at (%.0f,%.0f) rot=%.1f\n",
+            FETCH_LOG("[FETCH] handleReturning g%d dropped item at (%.0f,%.0f) rot=%.1f\n",
                     g.id, drop.pos.x, drop.pos.y, drop.rotation);
         } else {
-            fprintf(stderr, "[FETCH] handleReturning g%d DISCARDING item (non-finite pos: %.1f,%.1f rot:%.1f)\n",
+            FETCH_LOG("[FETCH] handleReturning g%d DISCARDING item (non-finite pos: %.1f,%.1f rot:%.1f)\n",
                     g.id, drop.pos.x, drop.pos.y, drop.rotation);
             delete g.heldItem;
         }
@@ -201,6 +205,6 @@ void handleReturning(Goose& g, double time, int w, int h) {
     g.state = GooseState::WANDER;
     g.PickNewTarget(w, h);
     g.stepTime = g_config.step.timeWander;
-    fprintf(stderr, "[FETCH] handleReturning g%d -> WANDER lastDrop=%.1f\n", g.id, g.lastDropTime);
+    FETCH_LOG("[FETCH] handleReturning g%d -> WANDER lastDrop=%.1f\n", g.id, g.lastDropTime);
     triggerHonkLocal(g.honkState, time, g_config.honk.fetchCooldown, g.honkState.lastFetch);
 }
