@@ -388,3 +388,52 @@ TEST(EventBusTest, UnsubscribeNonExistent) {
     // Should not crash
     EventBus::Instance().Unsubscribe(99999);
 }
+
+// Regression: Publish must snapshot subscribers before invoking so a
+// handler that unsubscribes (or publishes again) doesn't invalidate
+// the iterator under the shared_lock. Pre-fix this crashed or skipped
+// the final handler depending on rehash timing.
+TEST(EventBusTest, PublishSurvivesUnsubscribeFromHandler) {
+    EventBus::Instance().Clear();
+
+    std::atomic<int> calls{0};
+    SubscriptionId selfSub = 0;
+
+    selfSub = EventBus::Instance().Subscribe<GooseHonkedEvent>(
+        [&calls, &selfSub](const GooseHonkedEvent&) {
+            calls++;
+            EventBus::Instance().Unsubscribe(selfSub);
+        });
+
+    SubscriptionId otherSub = EventBus::Instance().Subscribe<GooseHonkedEvent>(
+        [&calls](const GooseHonkedEvent&) { calls++; });
+
+    EventBus::Instance().Publish(GooseHonkedEvent{1, 0, 0, 0});
+
+    // Both handlers should run in the first publish (snapshot taken before invocation).
+    EXPECT_EQ(calls.load(), 2);
+
+    // On the next publish, only the surviving handler runs.
+    EventBus::Instance().Publish(GooseHonkedEvent{1, 0, 0, 0});
+    EXPECT_EQ(calls.load(), 3);
+
+    EventBus::Instance().Unsubscribe(otherSub);
+}
+
+// Regression: handler that publishes a different event from inside
+// its handler used to deadlock when Publish held the shared_lock
+// across the inner Publish call.
+TEST(EventBusTest, NestedPublishFromHandler) {
+    EventBus::Instance().Clear();
+
+    std::atomic<int> innerCalls{0};
+    EventBus::Instance().Subscribe<GooseHonkedEvent>(
+        [](const GooseHonkedEvent&) {
+            EventBus::Instance().Publish(GooseDamagedEvent{1, 1.0f, 0});
+        });
+    EventBus::Instance().Subscribe<GooseDamagedEvent>(
+        [&innerCalls](const GooseDamagedEvent&) { innerCalls++; });
+
+    EventBus::Instance().Publish(GooseHonkedEvent{1, 0, 0, 0});
+    EXPECT_EQ(innerCalls.load(), 1);
+}
