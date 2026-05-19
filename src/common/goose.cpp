@@ -139,7 +139,7 @@ Vector2 Goose::GetBeakTipDevice() {
   Vector2 rawFwd = Vector2::FromAngleDegrees(dir);
   Vector2 fwd{rawFwd.x * ISO_SCALE.x, rawFwd.y * ISO_SCALE.y};
 
-  Vector2 neckHeadDev = WorldCoord::RigNeckHead(*this);
+  Vector2 neckHeadDev = WorldCoord::RigNeckHead(*this).toVector2();
   float totalBeakOffset =
       WorldCoord::Scale(g_config.rig.beakBaseOffset + g_config.rig.beakLen);
   Vector2 beakTipDevice = neckHeadDev + fwd * totalBeakOffset;

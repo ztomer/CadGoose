@@ -66,7 +66,7 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
         if (!toy) continue;
         if (!toy->isAlive()) continue;
 
-        float dist = Vector2::Distance(goose->pos, toy->position);
+        float dist = Vector2::Distance(goose->pos, toy->position.toVector2());
         if (dist < nearestDist) {
             nearestDist = dist;
             nearestToy = toy;
@@ -98,7 +98,7 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
 
     // Wander toward toy if close enough
     if (goose->state == GooseState::WANDER && nearestDist < kToyWanderDetectRange) {
-        goose->target = nearestToy->position;
+        goose->target = nearestToy->position.toVector2();
     }
 }
 

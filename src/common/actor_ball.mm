@@ -56,7 +56,7 @@ BallActor::~BallActor() {
 
 void BallActor::onGooseKick(const Vector2& goosePos, float gooseFootSize, double time) {
     float kickDist = gooseFootSize * 0.8f;
-    float dist = Vector2::Distance(position, goosePos);
+    float dist = Vector2::Distance(position.toVector2(), goosePos);
     if (dist < kickDist && time - lastKickTime > KICK_COOLDOWN) {
         Vector2 dir = Vector2::Normalize(Vector2{position.x - goosePos.x, position.y - goosePos.y});
         velocity = dir * KICK_SPEED;

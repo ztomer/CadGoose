@@ -179,7 +179,7 @@ static DevicePoint RotatedBoundsSize(float width, float height, float rotation, 
     ItemLog("DRAG: globalScreenPt=(%.1f,%.1f) devicePt=(%.1f,%.1f) delta=(%.1f,%.1f) newPos=(%.1f,%.1f)",
             screenPt.x, screenPt.y, mouseDevice.x, mouseDevice.y, dx, dy, newPos.x, newPos.y);
 
-    _item->pos = newPos;
+    _item->pos = newPos.toVector2();
 
     // Update window frame — same calculation as updatePosition
     NSScreen* mainScreen = [NSScreen mainScreen];
