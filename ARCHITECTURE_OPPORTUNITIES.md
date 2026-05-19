@@ -31,7 +31,7 @@ Tests: 722 passing, 32 GUI-only skipped, 1 pre-existing flaky LLM test (`LocalLL
 - Read sites (app_actions, config_save, config_gui_detail, main.mm, ui_callbacks, ui_escape, tests) query `ActorManager::Instance().getGeese()`.
 - `std::list<Goose> geese` removed from `WorldContext`.
 
-**Remaining dual-tracking in `WorldContext`** (smaller scope, lower urgency): `droppedItems`, `footprints`, `crumbs`, `leafPiles` are still WorldContext-owned. `LeafPile` already has an Actor mirror (`actor_leafpile.mm`); the others are simpler value collections and may not need Actor wrapping. Migrate opportunistically.
+**Remaining dual-tracking in `WorldContext`**: only `droppedItems`, `footprints`, `crumbs` now. `leafPiles` was removed — it was vestigial dead state after the LeafPileActor migration, and `World_TickLeafPiles` was redundantly second-ticking each pile (now fixed). The remaining three are intentionally kept as value-typed collections because their access patterns (RingBuffer for footprints/crumbs particles; `std::list` with `splice`/`erase-by-iterator` for droppedItems) don't fit the `vector<Actor*>` shape — Actor wrapping would add complexity without benefit.
 
 ---
 
