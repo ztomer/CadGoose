@@ -8,10 +8,12 @@ The codebase currently suffers from "dual-tracking" and fragmented logic. For ex
 **Opportunity:** Fully migrate all entities (Geese, Items, Particles) into a unified Entity-Component-System (ECS) or complete the Actor model. This would eliminate the parallel tracking systems and centralize lifecycle management.
 
 ### Detailed Execution Plan:
-*   **Phase 1: Feature Parity & Audit:** Audit the `ActorManager` to ensure it can support all current operations performed on `g_geese` and `g_droppedItems` (e.g., spatial querying, typed iteration, depth sorting).
-*   **Phase 2: Entity Migration:** Create specific `Actor` subclasses or Entity configurations for Geese, Items, and Particles if they don't already exist. Ensure their instantiation goes through the `ActorManager`.
-*   **Phase 3: System Updates:** Update all systems (physics, rendering, AI behaviors) that currently iterate over the global lists in `world.h` to instead query the `ActorManager` for relevant entities.
-*   **Phase 4: Cleanup:** Remove `g_geese`, `g_droppedItems`, and related legacy tracking lists from `world.h`. Verify no memory leaks exist during entity destruction.
+*   **Phase 1 [DONE]:** Audit complete — `ActorManager` supports typed iteration via `getGeese()`, generic add/remove, and a new `destroyAllOfType(type)` for owning cleanup. Each game entity has an Actor subclass (BallActor, ToyActor, FlowerActor, JailActor, BreadcrumbActor, LeafPileActor, PortalActor).
+*   **Phase 2 [DONE]:** Goose instantiation goes through `ActorManager::Instance().add(new Goose(...))` — call sites in app_actions.cpp, ui_callbacks.cpp, and tests updated. Other actor types already used this pattern.
+*   **Phase 3 [DONE]:** All systems / call sites that iterated `g_world.geese` now query `ActorManager::Instance().getGeese()` — app_actions, config_save, config_gui_detail, main.mm, ui_callbacks, ui_escape, tests.
+*   **Phase 4 [DONE]:** `std::list<Goose> geese` removed from `WorldContext`. `destroyAllOfType("goose")` deletes the heap-allocated Goose instances on clear. 722 tests pass.
+
+Remaining dual-tracking in WorldContext (smaller scope, lower urgency): `droppedItems`, `footprints`, `crumbs`, `leafPiles` are still WorldContext-owned. LeafPile already has an Actor mirror (`actor_leafpile.mm`); the others are simpler value collections and may not need Actor wrapping.
 
 ---
 

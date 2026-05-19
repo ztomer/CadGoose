@@ -96,7 +96,7 @@ void ClearAllGooseState() {
     }
     g_world.droppedItems.clear();
     g_world.footprints.clear();
-    g_world.geese.clear();
+    ActorManager::Instance().destroyAllOfType("goose");
     g_world.cursorGrabberId = -1;
     g_world.selectedGooseId = 0;
     g_world.nextId = 0;

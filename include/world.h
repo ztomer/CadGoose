@@ -72,7 +72,7 @@ constexpr size_t kMaxCrumbs = 200;
 constexpr size_t kMaxJails = 10;
 
 struct WorldContext {
-    std::list<Goose> geese;
+    // Geese are now owned by ActorManager — query via ActorManager::Instance().getGeese()
     std::list<MonitorInfo> monitors;
     std::list<DroppedItem> droppedItems;
     RingBuffer<Footprint, kMaxFootprints> footprints;

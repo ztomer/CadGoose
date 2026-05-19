@@ -72,8 +72,9 @@ void cb_spawn(GtkButton*, gpointer) {
         gtk_editable_set_text(GTK_EDITABLE(g_entryGooseName), "");
     }
     if (name.empty()) name = "Goose " + std::to_string(g_world.nextId);
-    g_world.geese.emplace_back(g_world.nextId++, name, g_world.screenWidth, g_world.screenHeight);
-    Goose& g = g_world.geese.back();
+    Goose* gptr = new Goose(g_world.nextId++, name, g_world.screenWidth, g_world.screenHeight);
+    ActorManager::Instance().add(gptr);
+    Goose& g = *gptr;
     bool randize = true;
     if (g_chkRandomizeBias) randize = gtk_check_button_get_active(GTK_CHECK_BUTTON(g_chkRandomizeBias));
     if (randize) {
@@ -228,7 +229,15 @@ static void cb_randomize_biases_selected(GtkButton*, gpointer) {
 }
 void cb_attack_cursor(GtkButton*, gpointer) {
     Goose* g = GetGooseById(g_world.selectedGooseId);
-    if (!g) { if (g_world.geese.empty()) g_world.geese.emplace_back(g_world.nextId++, "", g_world.screenWidth, g_world.screenHeight); g = &g_world.geese.front(); }
+    if (!g) {
+        auto geese = ActorManager::Instance().getGeese();
+        if (geese.empty()) {
+            g = new Goose(g_world.nextId++, "", g_world.screenWidth, g_world.screenHeight);
+            ActorManager::Instance().add(g);
+        } else {
+            g = geese.front();
+        }
+    }
     g->state = CHASE_CURSOR;
     if (g_cursorProvider) { CursorState cs = g_cursorProvider->Read(); if (cs.caps & CAP_GET_POS && cs.position.x >= 0) g->target = cs.position; }
 }
