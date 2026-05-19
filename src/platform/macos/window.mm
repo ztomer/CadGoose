@@ -67,7 +67,14 @@ static float CalculateGooseWindowSize(const Goose* goose) {
 - (instancetype)initWithScreen:(NSScreen*)screen {
     DEBUG_LOG("GooseWindow initWithScreen START");
 
-    NSRect rect = NSMakeRect(0, 0, kGooseWindowSize, kGooseWindowSize);
+    // Make the window cover the entire screen. Originally each window was a
+    // 600x600 box centered on the front goose, which meant additional geese
+    // (rendered into the same CGContext at their true device coords) were
+    // clipped against the small window's bounds and were invisible. A
+    // screen-sized window keeps the math simple and lets every goose draw
+    // inside it. Click-through (`ignoresMouseEvents = YES`) means the full
+    // screen window doesn't steal interaction.
+    NSRect rect = [screen frame];
     self = [super initWithContentRect:rect
                             styleMask:NSWindowStyleMaskBorderless
                               backing:NSBackingStoreBuffered
@@ -93,7 +100,9 @@ static float CalculateGooseWindowSize(const Goose* goose) {
 
         DEBUG_LOG("  window props set: opaque=%d, ignoresMouse=%d", self.opaque, self.ignoresMouseEvents);
 
-        self.gooseView = [[GooseView alloc] initWithFrame:rect];
+        // Local-coord rect for the contentView (origin at 0, size of screen).
+        NSRect contentRect = NSMakeRect(0, 0, rect.size.width, rect.size.height);
+        self.gooseView = [[GooseView alloc] initWithFrame:contentRect];
         DEBUG_LOG("  gooseView created: %p", self.gooseView);
 
         self.contentView = self.gooseView;
@@ -205,14 +214,14 @@ static float CalculateGooseWindowSize(const Goose* goose) {
 }
 
 - (void)updateWindowPositionsForGeese:(const std::vector<Goose*>&)geese {
+    // The goose windows are screen-sized and stationary now; each tick all we
+    // need is to mark the views dirty so they redraw the actors at their
+    // current device coords. No per-frame frame reshaping or recentering on
+    // the front goose (which used to leave secondary geese clipped outside
+    // a 600x600 window).
     if (geese.empty()) return;
-
     for (GooseWindow* window in self.windows) {
-        const Goose* primaryGoose = geese.front();
-        if (!primaryGoose) continue;
-        DevicePoint devicePt = {primaryGoose->pos.x, primaryGoose->pos.y};
-        [window updateSizeForGoose:primaryGoose];
-        [window centerOnDevicePoint:devicePt];
+        [window.gooseView setNeedsDisplay:YES];
     }
 }
 

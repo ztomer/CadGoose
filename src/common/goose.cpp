@@ -131,10 +131,22 @@ Goose::Goose(int id_, const std::string &name_, int screenW, int screenH)
   mudChance = g_config.mud.chance;
   mudLifetime = g_config.mud.lifetime;
   ISO_SCALE = {g_config.physics.isoScaleX, g_config.physics.isoScaleY};
-  rig.lFoot.currentPos = {0, 0};
-  rig.rFoot.currentPos = {0, 0};
+
+  // Seed feet at their home positions instead of (0, 0). Without this, the
+  // first SolveFeet call uses the (0, 0) sentinel to detect "uninitialized"
+  // and resets to home, but the *moveDuration* member stays at the struct's
+  // default 0.2 until the first step actually triggers. Combined with the
+  // single-foot-at-a-time gate in SolveFeet, this means the leg animation
+  // visibly lags the body for the first few seconds after spawn — the
+  // "skating" the rig had pre-first-fetch. Pre-seeding home positions and
+  // step durations puts the rig in a valid walking state from frame 1.
+  rig.lFoot.currentPos = GetFootHome(g_config.step.leftFootAngle);
+  rig.rFoot.currentPos = GetFootHome(g_config.step.rightFootAngle);
   rig.lFoot.moveStartTime = -1.0;
   rig.rFoot.moveStartTime = -1.0;
+  rig.lFoot.moveDuration = g_config.step.durationWalk;
+  rig.rFoot.moveDuration = g_config.step.durationWalk;
+
   PickNewTarget(screenW, screenH);
 }
 
