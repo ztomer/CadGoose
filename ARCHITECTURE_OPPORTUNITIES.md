@@ -2,6 +2,8 @@
 
 This document tracked a planned migration away from a global-state-heavy, "god-object" design toward a modular Actor-based system built on `EventBus`, `IRenderer`, and `ActorManager`. As of 2026-05-18, four of the five sections are complete; one is intentionally deferred with rationale.
 
+A separate code-review pass ([docs/ARCHITECTURE_REVIEW.md](docs/ARCHITECTURE_REVIEW.md)) added a list of concrete bugs and smells; the actionable items are tracked at the bottom of this doc under [Review follow-ups](#review-follow-ups).
+
 ## Status summary
 
 | §  | Topic                                  | Status                                                  |
@@ -124,3 +126,38 @@ Event types defined in `event_bus.h` but not yet published in production code (o
 - Behaviors access their state via the templated `GetOrCreate<T>` / `Get<T>` which internally `dynamic_cast`s.
 
 No code changes needed; this entry stays in the doc as a reference to the existing design.
+
+---
+
+## Review follow-ups (from [docs/ARCHITECTURE_REVIEW.md](docs/ARCHITECTURE_REVIEW.md))
+
+### Fixed
+| # | Item | What was done |
+|---|---|---|
+| C1 | Duplicate `draw_overlay` ODR | Deleted stale `src/platform/linux/ui_drawing.{cpp,h}`; ui.cpp's version is the canonical one registered with GTK |
+| C2 | ui_drawing.cpp uses dead config fields | Covered by deletion above |
+| C3 | ui_tick.cpp `g_config.mudLifetime` | → `g_config.mud.lifetime` |
+| C4 | ui.cpp `g_config.multiMonitorEnabled` | → `g_config.cursor.multiMonitorEnabled` |
+| C5 | ui.cpp `g_config.globalScale` | → `g_config.general.globalScale` |
+| C6 | ui_callbacks.cpp flat config refs | Each rewritten to its nested home; also fixed unqualified `GooseState::` enum cases and `g.X`→`gp->X` style |
+| C7 | renderer.mm deep-copying Goose every tick | `updateWindowPositionsForGeese` / `DrawDebugOverlay` now take `const std::vector<Goose*>&` |
+| C8 | `ActorManager::cleanup()` leaks dead actors | Now `delete`s before erase |
+| N1 | `DrawingInit()` undefined `cr` | Covered by ui_drawing.cpp removal |
+| N4 | excessive `[FETCH]` stderr noise | Wrapped 16 callsites in `FETCH_LOG` gated on `g_config.debug.toTerminal` |
+| N5 | `EventBus::Publish` iterating under shared_lock | Snapshot the handler list, drop the lock, then invoke — safe for re-entrant publish / (un)subscribe |
+| A1 | `coordinate_system.h` implicit `operator Vector2()` defeats typed coords | Made `explicit`; added `toVector2()` named accessor; fixed 9 leaf-level callers |
+| A3 | `getGeese()` allocated a vector every call | Cached behind a dirty flag invalidated by `add/remove/cleanup/destroyAllOfType` |
+| A4 | CMakeLists.txt duplicate `APPLICATIONSERVICES_LIBRARY` | Removed |
+| A5 | `stateNames[]` no bounds check | Both sites in goose.cpp now bounds-check before indexing |
+
+### Reviewed — stale or "preference, not bug"
+| # | Item | Resolution |
+|---|---|---|
+| C9 | "extern static" triggerHonk | Stale — wander's `extern triggerHonk` already links to the non-static def in `goose_behaviors_internal.cpp`; the static in `fetch.cpp` is `triggerHonkLocal` (different name) |
+| C10 | Dead structs in world.h | Stale — `InteractivePuddle`, `InteractiveFlower`, `Toy` are referenced by `interactive_drops_state.h` and `toys_state.h` |
+| A7 | ui_drawing.cpp / ui.cpp duplicate drawing | Resolved by C1 deletion |
+| A2 | Public mutable Actor fields | Direct field access is intentional POD-style; encapsulating would be ceremony without payoff (same justification as §2) |
+| A6 | world.h is a God header | Same content as §2 audit; deferred |
+| A8 | 79 `rand() % N` calls with modulo bias | Game RNG; the bias is irrelevant at game-scale Ns. Skipped |
+| N2 | `config.h` 517 lines | Cosmetic; large but readable single source of truth |
+| N3 | `item_window.mm` 4 responsibilities | Cosmetic; tightly coupled by intent (one window's lifecycle) |
