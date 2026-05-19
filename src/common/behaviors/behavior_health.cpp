@@ -44,11 +44,8 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
 static void render(Goose* goose, BehaviorContext& ctx, IRenderer* irenderer) {
     auto* state = BehaviorStateManager::Instance().GetOrCreate<HealthState>(goose->id, "health");
 
-#ifdef __APPLE__
-    CGContextRef cg = (CGContextRef)(irenderer ? irenderer->nativeContext() : nullptr);
-    if (!cg) return;
-
-    CGRenderer renderer(cg);
+    if (!irenderer) return;
+    IRenderer& renderer = *irenderer;
 
     float barWidth = kHealthBarWidth;
     float barHeight = kHealthBarHeight;
@@ -60,7 +57,6 @@ static void render(Goose* goose, BehaviorContext& ctx, IRenderer* irenderer) {
     float healthPct = state->currentHealth / state->maxHealth;
     renderer.DrawRect({x, y, barWidth * healthPct, barHeight},
                      RenderColor{1.0f - healthPct, healthPct, 0.0f, 1.0f});
-#endif
 }
 
 void Health_Damage(Goose* goose, float amount, double time) {

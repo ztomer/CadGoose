@@ -8,7 +8,6 @@
 #include "world.h"
 #include "renderer_interface.h"
 #include "render_colors.h"
-#include "cg_renderer.h"
 #include <cstring>
 
 static constexpr float kNametagCharWidth = 8.0f;
@@ -25,23 +24,7 @@ static constexpr float kNametagHighlightCornerRadius = 4.0f;
 static constexpr float kNametagHighlightAlpha = 0.08f;
 static constexpr float kNametagTextYOffset = 25.0f;
 
-static CTFontRef s_nameFont = nullptr;
-static CGColorRef s_nameWhite = nullptr;
-static float s_nameFontSize = 0;
-
-static void cleanupNameFont(BehaviorContext&) {
-    if (s_nameFont) { CFRelease(s_nameFont); s_nameFont = nullptr; }
-    if (s_nameWhite) { CGColorRelease(s_nameWhite); s_nameWhite = nullptr; }
-    s_nameFontSize = 0;
-}
-
-static void ensureNameFont(float fontSize) {
-    if (s_nameFont && s_nameFontSize == fontSize) return;
-    if (s_nameFont) { CFRelease(s_nameFont); s_nameFont = nullptr; }
-    s_nameFont = CTFontCreateWithName(CFSTR("Helvetica"), fontSize, NULL);
-    s_nameFontSize = fontSize;
-    if (!s_nameWhite) s_nameWhite = CGColorCreateGenericRGB(1.0f, 1.0f, 1.0f, 1.0f);
-}
+static void cleanupNameFont(BehaviorContext&) {}
 
 static void init(BehaviorContext& ctx) {
     auto* state = BehaviorStateManager::Instance().GetOrCreate<BehaviorState>(ctx.goose->id, "nametag");
@@ -52,21 +35,18 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
 }
 
 static void render(Goose* goose, BehaviorContext& ctx, IRenderer* irenderer) {
-#ifdef __APPLE__
-    CGContextRef cg = (CGContextRef)(irenderer ? irenderer->nativeContext() : nullptr);
-    if (!cg) return;
-
-    if (goose->name.empty()) return;
-
-    CGRenderer renderer(cg);
+    if (!irenderer || goose->name.empty()) return;
+    IRenderer& renderer = *irenderer;
     renderer.SaveState();
 
     Vector2 headPos = goose->rig.neckHead;
 
     const char* name = goose->name.c_str();
     size_t nameLen = strlen(name);
+    float fontSize = g_config.behaviors.nametag.size;
 
-    float nameWidth = (float)nameLen * kNametagCharWidth;
+    float measured = renderer.MeasureText(name, fontSize);
+    float nameWidth = measured > 0.0f ? measured : (float)nameLen * kNametagCharWidth;
     float boxHeight = kNametagBoxHeight;
     float boxX = headPos.x - nameWidth / 2.0f - kNametagBoxXPad;
     float boxY = headPos.y - kNametagBoxYOffset;
@@ -80,38 +60,10 @@ static void render(Goose* goose, BehaviorContext& ctx, IRenderer* irenderer) {
                              kNametagHighlightCornerRadius,
                              RenderColor{1.0f, 1.0f, 1.0f, kNametagHighlightAlpha});
 
-    float fontSize = g_config.behaviors.nametag.size;
-    ensureNameFont(fontSize);
-    if (s_nameFont && s_nameWhite) {
-        CFTypeRef keys[] = { kCTFontAttributeName, kCTForegroundColorAttributeName };
-        CFTypeRef values[] = { s_nameFont, s_nameWhite };
-        CFDictionaryRef attributes = CFDictionaryCreate(NULL, (const void**)keys, (const void**)values, 2, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
-
-        CGContextSetTextMatrix(cg, CGAffineTransformMakeScale(1.0, -1.0));
-
-        CFStringRef string = CFStringCreateWithBytes(NULL, (const UInt8*)name, nameLen, kCFStringEncodingUTF8, false);
-        CFAttributedStringRef attrStr = CFAttributedStringCreate(NULL, string, attributes);
-        CTLineRef line = CTLineCreateWithAttributedString(attrStr);
-
-        if (line) {
-            // Get actual text width for precise centering
-            CFIndex stringLength = CTLineGetStringRange(line).length;
-            double textWidth = CTLineGetOffsetForStringIndex(line, stringLength, NULL);
-
-            float boxCenterX = headPos.x;
-            float textX = boxCenterX - (float)textWidth / 2.0f;
-            CGContextSetTextPosition(cg, textX, headPos.y - kNametagTextYOffset);
-            CTLineDraw(line, cg);
-            CFRelease(line);
-        }
-
-        CFRelease(attrStr);
-        CFRelease(string);
-        CFRelease(attributes);
-    }
+    float textX = headPos.x - nameWidth / 2.0f;
+    renderer.DrawText(name, {textX, headPos.y - kNametagTextYOffset}, RenderColor::White(), fontSize);
 
     renderer.RestoreState();
-#endif
 }
 
 static Behavior g_nametagBehavior = BEHAVIOR_DEF_CUSTOM(

@@ -51,12 +51,12 @@ While an `IRenderer` interface (`include/renderer_interface.h`) exists for cross
 **Opportunity:** Expand the `IRenderer` API to natively support the advanced drawing features needed by behaviors (like custom shaders, gradients, or primitive drawing) so that platform-specific code is completely isolated behind the interface. 
 
 ### Detailed Execution Plan:
-*   **Phase 1 [DONE — partial]:** Audit complete. Behaviors received a raw `void* renderCtx` (CGContextRef on macOS) and cast it back, then constructed a CGRenderer locally. Behavior `render` signatures and `BehaviorRegistry::RenderPass` now take `IRenderer*` directly. `BehaviorContext::renderer` is populated for each render pass. Behaviors that still need CG primitives call `renderer->nativeContext()` — an explicit, scoped breach rather than a parameter-level cast.
-*   **Phase 2 [TODO]:** The current `IRenderer` interface (DrawEllipse / DrawLine / DrawRect / DrawRoundedRect / DrawPolygon / DrawImage / DrawText / SaveState / Translate / Scale / Rotate / SetAlpha) covers most common cases. Remaining behaviors using `nativeContext()` for CG-specific work (gradients, blend modes, complex paths) should drive new virtual methods (`DrawGradientRect`, `SetBlendMode`, `DrawPath`).
-*   **Phase 3 [TODO]:** Implement new methods on `CGRenderer` (macOS) and the Linux `CairoRenderer`.
-*   **Phase 4 [TODO]:** Migrate remaining `(CGContextRef)irenderer->nativeContext()` call sites in behaviors to the new IRenderer methods.
+*   **Phase 1 [DONE]:** Behavior render signature and `BehaviorRegistry::RenderPass` take `IRenderer*` directly; `BehaviorContext::renderer` is populated each pass.
+*   **Phase 2 [DONE]:** Extended `IRenderer` API with `GetImageSize(image, w, h)` and `MeasureText(text, fontSize)` — covering the missing primitives behaviors were reaching past the abstraction for. Both implemented in `CGRenderer` (macOS) and `CairoRenderer` (Linux).
+*   **Phase 3 [DONE]:** Both platform backends implement the new methods.
+*   **Phase 4 [DONE]:** All ten behavior render functions that previously cast `irenderer->nativeContext()` to `CGContextRef` have been migrated to pure `IRenderer` calls. Removed: `behavior_boredom`, `behavior_peeking`, `behavior_health`, `behavior_anger` (no CG needed), `behavior_honcker` (uses `GetImageSize`), `behavior_hats` (uses `GetImageSize`; dropped its CGBitmap pre-scaled cache — `DrawImage` already does the scaling), `behavior_nametag` (uses `MeasureText` + `DrawText`; dropped local CTFont cache), `behavior_pomodoro` (uses `GetImageSize` + `MeasureText` + `DrawText`). All `#ifdef __APPLE__` guards inside behavior `render` bodies are gone.
 
-Net effect of partial work: every behavior `render` fn now sees `IRenderer*` as its declared dependency; the platform-specific cast is opt-in via `nativeContext()` rather than mandatory.
+The only remaining `nativeContext()` call in production code is in `Goose::render` itself, where it dispatches to the macOS-specific `DrawGoose` rig rendering — a legitimate platform-specific drawing path, not a behavior leak.
 
 ---
 

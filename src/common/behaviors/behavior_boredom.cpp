@@ -70,11 +70,8 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
 static void render(Goose* goose, BehaviorContext& ctx, IRenderer* irenderer) {
     auto* state = BehaviorStateManager::Instance().GetOrCreate<BoredomState>(goose->id, "boredom");
 
-#ifdef __APPLE__
-    CGContextRef cg = (CGContextRef)(irenderer ? irenderer->nativeContext() : nullptr);
-    if (!cg) return;
-
-    CGRenderer renderer(cg);
+    if (!irenderer) return;
+    IRenderer& renderer = *irenderer;
 
     if (state->isLyingDown) {
         renderer.SaveState();
@@ -109,7 +106,6 @@ static void render(Goose* goose, BehaviorContext& ctx, IRenderer* irenderer) {
 
         renderer.RestoreState();
     }
-#endif
 }
 
 static Behavior g_boredomBehavior = BEHAVIOR_DEF(
