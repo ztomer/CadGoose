@@ -1,4 +1,4 @@
-goose = ["Ethangoose", "goosling"]
+goose = ["Ethangoose"]
 
 [Debug]
 to_terminal = false
@@ -56,7 +56,7 @@ audio_enabled = false
 audio_muted = false
 dark_theme_role = "Canadian"
 memes_enabled = true
-appearance_mode = 0
+appearance_mode = 2
 light_theme_role = "Default"
 failsafe_hotkey = "cmd+shift+escape"
 
@@ -348,15 +348,15 @@ interactive_drops_puddle_lifetime = 30.0
 anger_enabled = false
 avoidance_enabled = false
 boredom_enabled = false
-breadcrumbs_enabled = true
+breadcrumbs_enabled = false
 peeking_enabled = false
 acid_enabled = false
-ball_enabled = true
+ball_enabled = false
 honcker_hotkey = "f"
-toys_enabled = false
+toys_enabled = true
 jail_enabled = false
-drag_enabled = false
-nametag_enabled = true
+drag_enabled = true
+nametag_enabled = false
 portal_hotkey_1 = "1"
 presence_enabled = false
 jail_hotkey_o = "o"

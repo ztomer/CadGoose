@@ -23,6 +23,7 @@ struct BehaviorStats {
 };
 
 struct BehaviorState {
+    bool wasEnabled = false;
     virtual ~BehaviorState() = default;
     virtual void Reset() {}
 };

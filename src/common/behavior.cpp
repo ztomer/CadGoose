@@ -99,12 +99,24 @@ void BehaviorRegistry::TickAll(Goose* goose, double dt, double time) {
     }
 
     for (auto* behavior : behaviors) {
-        if (behavior->enabledPtr && *behavior->enabledPtr) {
+        bool isEnabled = behavior->enabledPtr && *behavior->enabledPtr;
+        
+        auto* state = BehaviorStateManager::Instance().Get<BehaviorState>(goose->id, behavior->id);
+        bool wasEnabled = state ? state->wasEnabled : false;
+
+        if (isEnabled || wasEnabled) {
             try {
                 behavior->tick(goose, ctx, dt, time);
             } catch (const std::exception& e) {
                 fprintf(stderr, "[BEHAVIOR] Tick failed for %s: %s\n",
                         behavior->id, e.what());
+            }
+
+            if (!state) {
+                state = BehaviorStateManager::Instance().Get<BehaviorState>(goose->id, behavior->id);
+            }
+            if (state) {
+                state->wasEnabled = isEnabled;
             }
         }
     }
