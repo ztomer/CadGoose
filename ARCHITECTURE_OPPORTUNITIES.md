@@ -161,18 +161,18 @@ No code changes needed; this entry stays in the doc as a reference to the existi
 | N4 | excessive `[FETCH]` stderr noise | Wrapped 16 callsites in `FETCH_LOG` gated on `g_config.debug.toTerminal` |
 | N5 | `EventBus::Publish` iterating under shared_lock | Snapshot the handler list, drop the lock, then invoke — safe for re-entrant publish / (un)subscribe |
 | A1 | `coordinate_system.h` implicit `operator Vector2()` defeats typed coords | Made `explicit`; added `toVector2()` named accessor; fixed 9 leaf-level callers |
+| A2 | Public mutable Actor fields | Fields renamed to `m_position` / `m_radius` / `m_active` and made `protected`; added `position()` / `setPosition()` / `radius()` / `setRadius()` / `isActive()` / `setActive()` accessors; ~20 call sites updated; LeafPileActor's shadow of `m_radius` removed |
 | A3 | `getGeese()` allocated a vector every call | Cached behind a dirty flag invalidated by `add/remove/cleanup/destroyAllOfType` |
 | A4 | CMakeLists.txt duplicate `APPLICATIONSERVICES_LIBRARY` | Removed |
 | A5 | `stateNames[]` no bounds check | Both sites in goose.cpp now bounds-check before indexing |
+| A6 | world.h is a God header | Extracted `WorldCoord` → `world_coord.h` and `PomodoroBedInfo` → `pomodoro_bed.h`. `world.h` 198 → 88 lines |
+| A7 | ui_drawing.cpp / ui.cpp duplicate drawing | Resolved by C1 deletion |
+| A8 | 79 `rand() % N` modulo-biased callsites | Added `include/random_util.h` (`rng_util::RandRange` / `Rand01` / `RandBool` / etc. backed by per-thread `std::mt19937`); mechanically replaced 71 callsites across 17 files |
 
 ### Reviewed — stale or "preference, not bug"
 | # | Item | Resolution |
 |---|---|---|
-| C9 | "extern static" triggerHonk | Stale — wander's `extern triggerHonk` already links to the non-static def in `goose_behaviors_internal.cpp`; the static in `fetch.cpp` is `triggerHonkLocal` (different name) |
-| C10 | Dead structs in world.h | Stale — `InteractivePuddle`, `InteractiveFlower`, `Toy` are referenced by `interactive_drops_state.h` and `toys_state.h` |
-| A7 | ui_drawing.cpp / ui.cpp duplicate drawing | Resolved by C1 deletion |
-| A2 | Public mutable Actor fields | Direct field access is intentional POD-style; encapsulating would be ceremony without payoff (same justification as §2) |
-| A6 | world.h is a God header | Same content as §2 audit; deferred |
-| A8 | 79 `rand() % N` calls with modulo bias | Game RNG; the bias is irrelevant at game-scale Ns. Skipped |
-| N2 | `config.h` 517 lines | Cosmetic; large but readable single source of truth |
-| N3 | `item_window.mm` 4 responsibilities | Cosmetic; tightly coupled by intent (one window's lifecycle) |
+| C9 | "extern static" triggerHonk | Stale — wander's `extern triggerHonk` already links to the non-static def in `goose_behaviors_internal.cpp`; the static in `fetch.cpp` was `triggerHonkLocal` (different name), since merged into `triggerHonk` |
+| C10 | Dead structs in world.h | Stale — `InteractivePuddle`, `InteractiveFlower`, `Toy` are referenced by `interactive_drops_state.h` and `toys_state.h` (since moved into those state headers; no longer in world.h) |
+| N2 | `config.h` 517 lines | Skipped — large but cohesive; splitting fragments the single source of truth across many files without making any caller's life easier |
+| N3 | `item_window.mm` 4 responsibilities | Skipped — `ItemLog` / `ItemContentView` / `ItemWindow` / `ItemWindowManager` are tightly coupled parts of one window subsystem; splitting would add headers + indirection without simplifying anything |
