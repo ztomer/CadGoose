@@ -60,7 +60,7 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
     }
 }
 
-static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
+static void render(Goose* goose, BehaviorContext& ctx, IRenderer* irenderer) {
 }
 
 static Behavior g_dragBehavior = BEHAVIOR_DEF_STARTER(

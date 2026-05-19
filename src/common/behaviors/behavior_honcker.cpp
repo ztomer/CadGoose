@@ -58,11 +58,11 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
     }
 }
 
-static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
+static void render(Goose* goose, BehaviorContext& ctx, IRenderer* irenderer) {
     auto* state = BehaviorStateManager::Instance().Get<HonckerState>(goose->id, "honcker");
     if (!state || !state->visible) return;
 
-    CGContextRef cg = (CGContextRef)renderCtx;
+    CGContextRef cg = (CGContextRef)(irenderer ? irenderer->nativeContext() : nullptr);
     if (!cg) return;
 
     CGRenderer renderer(cg);

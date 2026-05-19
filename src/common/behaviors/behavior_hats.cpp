@@ -33,9 +33,9 @@ static void init(BehaviorContext& ctx) {}
 static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
 }
 
-static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
+static void render(Goose* goose, BehaviorContext& ctx, IRenderer* irenderer) {
 #ifdef __APPLE__
-    CGContextRef cg = (CGContextRef)renderCtx;
+    CGContextRef cg = (CGContextRef)(irenderer ? irenderer->nativeContext() : nullptr);
     if (!cg) return;
     if (!s_hatImage) return;
 

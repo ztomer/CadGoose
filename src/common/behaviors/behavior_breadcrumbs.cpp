@@ -143,8 +143,8 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
     }
 }
 
-static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
-    (void)goose; (void)ctx; (void)renderCtx;
+static void render(Goose* goose, BehaviorContext& ctx, IRenderer* irenderer) {
+    (void)goose; (void)ctx; (void)irenderer;
 }
 
 static Behavior g_breadcrumbBehavior = BEHAVIOR_DEF(

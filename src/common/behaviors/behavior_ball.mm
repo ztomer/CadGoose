@@ -65,10 +65,10 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
     s_ballActor->tick(*ctx.world, dt, time);
 }
 
-static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
+static void render(Goose* goose, BehaviorContext& ctx, IRenderer* irenderer) {
     if (!s_ballActor || !s_ballActor->active) return;
     // Ball renders via its own BehaviorElementWindow
-    (void)goose; (void)ctx; (void)renderCtx;
+    (void)goose; (void)ctx; (void)irenderer;
 }
 
 static void cleanup(BehaviorContext& ctx) {
