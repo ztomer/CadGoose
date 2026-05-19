@@ -43,29 +43,9 @@ struct Crumbs {
     bool eaten = false;
 };
 
-struct Leaf {
-    Vector2 curPosPlanar;
-    float curPosZ;
-    Vector2 velPlanar;
-    float velZ;
-    int colorIndex;
-    
-    Vector2 GetScreenOffset(float zScale = 1.0f) const {
-        return curPosPlanar + Vector2{0.0f, -curPosZ * zScale * 0.6f};
-    }
-};
-
-struct LeafPile {
-    Vector2 pos;
-    float rad;
-    float timeSinceKicked = -1.0f;
-    float timeCreated = 0.0f;
-    std::vector<Leaf> leaves;
-    
-    void Init(Vector2 position, float radius, float height, double currentTime);
-    void Kick(Vector2 kickVelocity, double currentTime, float gooseSpeedPercentage);
-    void Tick(Goose* g, double currentTime, float dt);
-};
+// Leaf / LeafPile types now live in actor_leafpile.h (LeafParticle) — the
+// LeafPileActor owns particle simulation; world.h no longer carries the legacy
+// value-type Leaf / LeafPile.
 
 constexpr size_t kMaxFootprints = 500;
 constexpr size_t kMaxCrumbs = 200;
