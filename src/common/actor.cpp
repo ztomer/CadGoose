@@ -2,8 +2,8 @@
 // ActorManager implementation.
 
 #include "actor.h"
-#include "actor_dropped_item.h"
 #include "goose.h"
+#include "world.h"
 #include <algorithm>
 
 ActorManager& ActorManager::Instance() {
@@ -14,39 +14,44 @@ ActorManager& ActorManager::Instance() {
 void ActorManager::add(Actor* actor) {
     if (!actor) return;
     actors.push_back(actor);
+    invalidateCaches();
 }
 
 void ActorManager::remove(Actor* actor) {
     actors.erase(std::remove(actors.begin(), actors.end(), actor), actors.end());
+    invalidateCaches();
 }
 
-void ActorManager::tickAll(double dt, double time) {
+void ActorManager::tickAll(WorldContext& ctx, double dt, double time) {
     for (auto* actor : actors) {
-        if (actor->active) {
-            actor->tick(dt, time);
+        if (actor->isActive()) {
+            actor->tick(ctx, dt, time);
         }
     }
 }
 
 void ActorManager::renderAll(IRenderer* renderer) {
     for (auto* actor : actors) {
-        if (actor->active && actor->isAlive()) {
+        if (actor->isActive() && actor->isAlive()) {
             actor->render(renderer);
         }
     }
 }
 
 void ActorManager::cleanup() {
-    actors.erase(
-        std::remove_if(actors.begin(), actors.end(),
-            [](Actor* a) { return !a->isAlive(); }),
-        actors.end()
-    );
+    auto partition = std::stable_partition(actors.begin(), actors.end(),
+        [](Actor* a) { return a->isAlive(); });
+    bool changed = (partition != actors.end());
+    for (auto it = partition; it != actors.end(); ++it) {
+        delete *it;
+    }
+    actors.erase(partition, actors.end());
+    if (changed) invalidateCaches();
 }
 
 Actor* ActorManager::findByType(const char* type, int id) {
     for (auto* actor : actors) {
-        if (actor->active && strcmp(actor->type(), type) == 0) {
+        if (actor->isActive() && strcmp(actor->type(), type) == 0) {
             if (id < 0 || actor->id() == id) {
                 return actor;
             }
@@ -58,40 +63,37 @@ Actor* ActorManager::findByType(const char* type, int id) {
 int ActorManager::countByType(const char* type) const {
     int count = 0;
     for (auto* actor : actors) {
-        if (actor->active && strcmp(actor->type(), type) == 0) {
+        if (actor->isActive() && strcmp(actor->type(), type) == 0) {
             count++;
         }
     }
     return count;
 }
 
-std::vector<Goose*> ActorManager::getGeese() const {
-    std::vector<Goose*> geese;
-    for (auto* actor : actors) {
-        if (actor->active && strcmp(actor->type(), "goose") == 0) {
-            geese.push_back(static_cast<Goose*>(actor));
-        }
-    }
-    return geese;
+void ActorManager::destroyAllOfType(const char* type) {
+    auto newEnd = std::remove_if(actors.begin(), actors.end(),
+        [type](Actor* a) {
+            if (a && strcmp(a->type(), type) == 0) {
+                delete a;
+                return true;
+            }
+            return false;
+        });
+    bool changed = (newEnd != actors.end());
+    actors.erase(newEnd, actors.end());
+    if (changed) invalidateCaches();
 }
 
-std::vector<DroppedItemActor*> ActorManager::getDroppedItems() const {
-    std::vector<DroppedItemActor*> items;
-    for (auto* actor : actors) {
-        if (actor->active && strcmp(actor->type(), "dropped_item") == 0) {
-            items.push_back(static_cast<DroppedItemActor*>(actor));
+const std::vector<Goose*>& ActorManager::getGeese() const {
+    if (geeseCacheDirty) {
+        geeseCache.clear();
+        geeseCache.reserve(actors.size());
+        for (auto* actor : actors) {
+            if (actor->isActive() && strcmp(actor->type(), "goose") == 0) {
+                geeseCache.push_back(static_cast<Goose*>(actor));
+            }
         }
+        geeseCacheDirty = false;
     }
-    return items;
-}
-
-void ActorManager::removeAllDroppedItems() {
-    for (auto it = actors.begin(); it != actors.end(); ) {
-        if ((*it)->active && strcmp((*it)->type(), "dropped_item") == 0) {
-            delete *it;
-            it = actors.erase(it);
-        } else {
-            ++it;
-        }
-    }
+    return geeseCache;
 }

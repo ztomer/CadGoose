@@ -2,13 +2,15 @@
 #include <toml.hpp>
 #include "config_helpers.h"
 #include "world.h"
+#include "actor.h"
+#include "goose.h"
 
 namespace fs = std::filesystem;
 
 void Config_SaveGooseNames() {
     g_config.gooseNames.clear();
-    for (const auto& g : g_world.geese) {
-        g_config.gooseNames.push(g.name);
+    for (const auto* g : ActorManager::Instance().getGeese()) {
+        g_config.gooseNames.push(g->name);
     }
     Config_SaveAll();
 }

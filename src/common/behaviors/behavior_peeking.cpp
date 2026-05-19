@@ -1,4 +1,6 @@
 #include "behavior.h"
+#include "random_util.h"
+#include "behaviors/states/peeking_state.h"
 #include "goose.h"
 #include "config.h"
 #include "world.h"
@@ -29,7 +31,7 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
         double peekDuration = time - state->peekStartTime;
         if (peekDuration > kPeekMaxDuration) {
             state->isPeeking = false;
-            state->nextPeekTime = time + kPeekIntervalMin + (rand() % kPeekIntervalMax);
+            state->nextPeekTime = time + kPeekIntervalMin + (rng_util::RandRange(kPeekIntervalMax));
         }
         return;
     }
@@ -45,7 +47,7 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
     else if (posDev.x > screenW - margin) { atEdge = true; state->peekSide = 1; }
     else { state->peekSide = 0; }
 
-    if (atEdge && (rand() % kPeekProbabilityDivisor) == 0) {
+    if (atEdge && (rng_util::RandRange(kPeekProbabilityDivisor)) == 0) {
         state->isPeeking = true;
         state->peekStartTime = time;
     }
@@ -55,15 +57,12 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
     }
 }
 
-static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
+static void render(Goose* goose, BehaviorContext& ctx, IRenderer* irenderer) {
     auto* state = BehaviorStateManager::Instance().GetOrCreate<PeekingState>(goose->id, "peeking");
     if (!state->isPeeking) return;
 
-#ifdef __APPLE__
-    CGContextRef cg = (CGContextRef)renderCtx;
-    if (!cg) return;
-
-    CGRenderer renderer(cg);
+    if (!irenderer) return;
+    IRenderer& renderer = *irenderer;
 
     Vector2 headPos = goose->rig.neckHead;
     float peekDir = (float)state->peekSide;
@@ -73,7 +72,6 @@ static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
     renderer.DrawEllipse({ex, ey}, 5.0f, 4.0f, MakePeekEyeSkin(0.8f));
     renderer.DrawEllipse({ex + peekDir * 2.0f - 1.5f, ey - 1.0f}, 1.5f, 1.5f,
                         RenderColor{0.1f, 0.1f, 0.1f, 0.9f});
-#endif
 }
 
 static Behavior g_peekingBehavior = BEHAVIOR_DEF(

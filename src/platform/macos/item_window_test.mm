@@ -2,8 +2,7 @@
 #import "world.h"
 #import "config.h"
 #import "coordinate_system.h"
-#import "actor.h"
-#import "actor_dropped_item.h"
+
 
 
 #include <cstdio>
@@ -33,8 +32,7 @@ static DevicePoint RotatedBoundsSize(float width, float height, float rotation, 
 #import <ApplicationServices/ApplicationServices.h>
 
 void ItemWindow_DragTest(float targetX, float targetY) {
-    auto items = ActorManager::Instance().getDroppedItems();
-    if (items.empty() || !items.front()->item().data) {
+    if (g_world.droppedItems.empty() || !g_world.droppedItems.front().data) {
         ItemLog("DRAG_TEST: no items to drag");
         return;
     }
@@ -47,8 +45,7 @@ void ItemWindow_DragTest(float targetX, float targetY) {
         return;
     }
 
-    DroppedItemActor* actor = items.front();
-    DroppedItem& item = actor->item();
+    DroppedItem& item = g_world.droppedItems.front();
     float scale = g_config.general.globalScale;
     DevicePoint itemCenter = ItemCoords::Center({item.pos.x, item.pos.y},
                                                  item.data->w, item.data->h, scale);

@@ -2,6 +2,7 @@
 // Leaf pile actor implementation — autumn leaves that scatter when goose approaches.
 
 #include "actor_leafpile.h"
+#include "random_util.h"
 #include "config.h"
 #include "world.h"
 #include "renderer_interface.h"
@@ -30,28 +31,28 @@ static RenderColor LeafColors[4] = {
 };
 
 LeafPileActor::LeafPileActor(const Vector2& pos, float radius, float height, double currentTime)
-    : Actor(), m_radius(radius), m_height(height), m_timeCreated(currentTime), m_timeSinceKicked(-1.0f)
+    : Actor(), m_height(height), m_timeCreated(currentTime), m_timeSinceKicked(-1.0f)
 #ifdef __APPLE__
     , m_window(nullptr), m_windowKey(nullptr)
 #endif
 {
-    position = {pos.x, pos.y};
-    active = true;
-    this->radius = radius;
+    m_position = {pos.x, pos.y};
+    m_active = true;
+    m_radius = radius;
 
     m_leaves.resize(LEAVES_PER_PILE);
     for (int i = 0; i < LEAVES_PER_PILE; i++) {
-        float angle = (rand() % 360) * (float)M_PI / 180.0f;
-        float r = ((rand() % 1000) / 1000.0f);
+        float angle = (rng_util::RandRange(360)) * (float)M_PI / 180.0f;
+        float r = ((rng_util::RandRange(1000)) / 1000.0f);
         Vector2 val = Vector2{r * cosf(angle), r * sinf(angle)};
-        float num = (rand() % 1000) / 1000.0f;
+        float num = (rng_util::RandRange(1000)) / 1000.0f;
         num *= num;
         m_leaves[i].curPosZ = num * height;
-        m_leaves[i].curPosPlanar = val * radius * (1.0f - num);
+        m_leaves[i].curPosPlanar = val * m_radius * (1.0f - num);
         m_leaves[i].curPosPlanar.y *= 0.6f;
         m_leaves[i].velPlanar = Vector2{0.0f, 0.0f};
         m_leaves[i].velZ = 0.0f;
-        m_leaves[i].colorIndex = rand() % 4;
+        m_leaves[i].colorIndex = rng_util::RandRange(4);
     }
 }
 
@@ -76,19 +77,19 @@ void LeafPileActor::kick(Vector2 kickVelocity, double currentTime, float gooseSp
         Vector2 val = Vector2::Normalize(m_leaves[i].curPosPlanar);
         float dot = Dot(val, Vector2::Normalize(kickVelocity));
         float num2 = 1.0f - std::abs(dot);
-        float randSpeed = (rand() % kLeafRandomSpeed);
+        float randSpeed = (rng_util::RandRange(kLeafRandomSpeed));
         Vector2 val2 = val * randSpeed;
         val2 = val2 + val * num2 * kLeafSpeedMultiplier * kLeafSpeedFactor;
         val2 = val2 + (kickVelocity - val2) * 0.3f;
-        float num3 = kLeafVelZMin + (rand() % (int)kLeafVelZRange);
+        float num3 = kLeafVelZMin + (rng_util::RandRange((int)kLeafVelZRange));
         num3 *= Lerp(0.9f, 1.1f, num2);
         m_leaves[i].velPlanar = val2 * num;
         m_leaves[i].velZ = num3 * num;
     }
 }
 
-void LeafPileActor::tick(double dt, double time) {
-    if (!active) return;
+void LeafPileActor::tick(WorldContext& ctx, double dt, double time) {
+    if (!m_active) return;
 
     if (m_timeSinceKicked > 0.0f) {
         for (size_t i = 0; i < m_leaves.size(); i++) {
@@ -105,12 +106,12 @@ void LeafPileActor::tick(double dt, double time) {
 }
 
 void LeafPileActor::render(IRenderer* renderer) {
-    if (!active) return;
+    if (!m_active) return;
 
 #ifdef __APPLE__
     float winSize = m_radius * 2.0f + 20.0f;
-    float winX = position.x - winSize / 2.0f;
-    float winY = position.y - winSize / 2.0f;
+    float winX = m_position.x - winSize / 2.0f;
+    float winY = m_position.y - winSize / 2.0f;
 
     if (!m_window) {
         m_window = (void*)CFBridgingRetain([[BehaviorElementWindow alloc]

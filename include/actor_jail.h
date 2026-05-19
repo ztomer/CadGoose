@@ -4,6 +4,7 @@
 
 #pragma once
 
+struct WorldContext;
 #include "actor.h"
 
 class JailActor : public Actor {
@@ -12,9 +13,9 @@ public:
     ~JailActor() override;
 
     const char* type() const override { return "jail"; }
-    void tick(double dt, double time) override;
+    void tick(WorldContext& ctx, double dt, double time) override;
     void render(IRenderer* renderer) override;
-    bool isAlive() const override { return active; }
+    bool isAlive() const override { return m_active; }
 
 private:
     static constexpr float JAIL_SIZE = 40.0f;

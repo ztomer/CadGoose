@@ -3,6 +3,8 @@
 // Health System - Goose health bar
 // ===========================
 #include "behavior.h"
+#include "behaviors/states/health_state.h"
+#include "event_bus.h"
 #include "goose.h"
 #include "config.h"
 #include "renderer_interface.h"
@@ -33,22 +35,21 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
     }
 
     if (time - state->lastDamageTime > g_config.behaviors.health.damageCooldown && goose->currentSpeed > 200.0f) {
-        state->currentHealth -= 5.0f;
+        constexpr float kDamagePerHit = 5.0f;
+        state->currentHealth -= kDamagePerHit;
         state->lastDamageTime = time;
+        EventBus::Instance().Publish(GooseDamagedEvent{goose->id, kDamagePerHit, time});
         if (state->currentHealth <= 0) {
             state->isDead = true;
         }
     }
 }
 
-static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
+static void render(Goose* goose, BehaviorContext& ctx, IRenderer* irenderer) {
     auto* state = BehaviorStateManager::Instance().GetOrCreate<HealthState>(goose->id, "health");
 
-#ifdef __APPLE__
-    CGContextRef cg = (CGContextRef)renderCtx;
-    if (!cg) return;
-
-    CGRenderer renderer(cg);
+    if (!irenderer) return;
+    IRenderer& renderer = *irenderer;
 
     float barWidth = kHealthBarWidth;
     float barHeight = kHealthBarHeight;
@@ -60,7 +61,6 @@ static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
     float healthPct = state->currentHealth / state->maxHealth;
     renderer.DrawRect({x, y, barWidth * healthPct, barHeight},
                      RenderColor{1.0f - healthPct, healthPct, 0.0f, 1.0f});
-#endif
 }
 
 void Health_Damage(Goose* goose, float amount, double time) {

@@ -270,41 +270,6 @@ void DrawFootprints(CGContextRef ctx, const RingBuffer<Footprint, kMaxFootprints
     }
 }
 
-void DrawLeaves(CGContextRef ctx, const std::list<LeafPile>& leafPiles, double currentTime) {
-    if (!g_config.behaviors.fun.autumnLeaves) return;
-#ifdef __APPLE__
-    struct ColorRGB { float r, g, b; };
-    ColorRGB colors[4] = {
-        {208/255.0f, 122/255.0f, 45/255.0f},
-        {234/255.0f, 198/255.0f, 54/255.0f},
-        {172/255.0f, 193/255.0f, 79/255.0f},
-        {208/255.0f, 87/255.0f,  64/255.0f}
-    };
-
-    for (const auto& pile : leafPiles) {
-        float tKicked = pile.timeSinceKicked;
-        float alpha = 1.0f;
-        if (tKicked > 0.0f) {
-            float age = currentTime - tKicked;
-            if (age > kLeafFadeStart) {
-                alpha = std::max(0.0f, 1.0f - (age - kLeafFadeStart) / kLeafFadeDuration);
-            }
-        }
-        if (alpha <= 0.0f) continue;
-
-        for (int i = 0; i < pile.leaves.size(); i++) {
-            const Leaf& leaf = pile.leaves[i];
-            Vector2 p = leaf.GetScreenOffset(1.0f) + pile.pos;
-            float sz = kLeafSizeBase + kLeafSizeScale * (leaf.curPosZ / kLeafZScale);
-            sz *= kLeafScaleFactor;
-            ColorRGB c = colors[leaf.colorIndex % kLeafColorCount];
-            CGContextSetRGBFillColor(ctx, c.r, c.g, c.b, alpha);
-            CGContextFillEllipseInRect(ctx, CGRectMake(p.x - sz/2.0f, p.y - (sz*kLeafHeightFactor)/2.0f, sz, sz*kLeafHeightFactor));
-        }
-    }
-#endif
-}
-
 void DrawDroppedItem(CGContextRef ctx, const DroppedItem& item, float viewHeight) {
     CGContextSaveGState(ctx);
     CGContextTranslateCTM(ctx, item.pos.x, item.pos.y);

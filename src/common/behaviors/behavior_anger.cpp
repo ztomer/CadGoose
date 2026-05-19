@@ -1,4 +1,5 @@
 #include "behavior.h"
+#include "behaviors/states/anger_state.h"
 #include "goose.h"
 #include "config.h"
 #include "world.h"
@@ -96,12 +97,9 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
     }
 }
 
-static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
-#ifdef __APPLE__
-    CGContextRef cg = (CGContextRef)renderCtx;
-    if (!cg) return;
-
-    CGRenderer renderer(cg);
+static void render(Goose* goose, BehaviorContext& ctx, IRenderer* irenderer) {
+    if (!irenderer) return;
+    IRenderer& renderer = *irenderer;
 
     auto* state = BehaviorStateManager::Instance().GetOrCreate<AngerState>(goose->id, "anger");
     if (state->angerLevel < 10.0f) return;
@@ -120,7 +118,6 @@ static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
     float auraRadius = kAngerAuraBaseRadius + intensity * kAngerAuraRadiusAmp;
     renderer.DrawEllipse({goose->pos.x, goose->pos.y}, auraRadius, auraRadius,
                         RenderColor{1.0f, 0.1f, 0.0f, auraAlpha});
-#endif
 }
 
 static void cleanup(BehaviorContext& ctx) {

@@ -21,7 +21,7 @@ void AppActions_SetApplication(void* app) {}
 Goose* AppActions_SpawnGoose(const std::string& requestedName) {
     std::string name = requestedName;
     if (name.empty()) {
-        size_t idx = g_world.geese.size();
+        size_t idx = ActorManager::Instance().getGeese().size();
         if (idx < g_config.gooseNames.size() && !g_config.gooseNames[idx].empty()) {
             name = g_config.gooseNames[idx];
         } else {
@@ -29,8 +29,7 @@ Goose* AppActions_SpawnGoose(const std::string& requestedName) {
         }
     }
 
-    g_world.geese.emplace_back(g_world.nextId++, name, g_world.screenWidth, g_world.screenHeight);
-    Goose* goose = &g_world.geese.back();
+    Goose* goose = new Goose(g_world.nextId++, name, g_world.screenWidth, g_world.screenHeight);
     ActorManager::Instance().add(goose);
     BehaviorRegistry::Instance().InitAll(goose);
 
@@ -41,7 +40,7 @@ Goose* AppActions_SpawnGoose(const std::string& requestedName) {
 }
 
 void AppActions_EnsureInitialGoose() {
-    if (!g_world.geese.empty()) return;
+    if (!ActorManager::Instance().getGeese().empty()) return;
     AppActions_SpawnGoose("");
 }
 
@@ -51,16 +50,8 @@ void AppActions_ClearGeese() {
 
     Config_SaveGooseNames();
 
-    // Remove all goose actors from ActorManager
-    auto& mgr = ActorManager::Instance();
-    for (int i = mgr.totalCount() - 1; i >= 0; i--) {
-        Actor* a = mgr.getByIndex(i);
-        if (a && strcmp(a->type(), "goose") == 0) {
-            mgr.remove(a);
-        }
-    }
+    ActorManager::Instance().destroyAllOfType("goose");
 
-    g_world.geese.clear();
     g_world.cursorGrabberId = -1;
     g_world.selectedGooseId = 0;
     g_world.nextId = 0;
@@ -124,12 +115,13 @@ std::string AppActions_GetStatus() {
     std::ostringstream out;
     out << std::fixed << std::setprecision(1);
     out << "running=1\n";
-    out << "goose_count=" << g_world.geese.size() << "\n";
+    auto geese = ActorManager::Instance().getGeese();
+    out << "goose_count=" << geese.size() << "\n";
     out << "config_path=" << Config_GetPath() << "\n";
     out << GetRamUsageReport();
 
-    if (!g_world.geese.empty()) {
-        const auto& g = g_world.geese.front();
+    if (!geese.empty()) {
+        const auto& g = *geese.front();
         out << "goose_pos=" << g.pos.x << "," << g.pos.y << "\n";
         out << "goose_state=";
         switch (g.state) {
@@ -196,15 +188,16 @@ std::string AppActions_HandleCommand(const std::vector<std::string>& args) {
     }
 
     if (command == "fetch") {
-        if (g_world.geese.empty()) return "error no goose\n";
+        auto geese = ActorManager::Instance().getGeese();
+        if (geese.empty()) return "error no goose\n";
         int type = 0;
         if (args.size() > 1) {
             if (args[1] == "text") type = 1;
             else if (args[1] == "meme") type = 0;
         }
-        fprintf(stderr, "[CLI] fetch type=%d g_world.geese.size=%zu\n", type, g_world.geese.size());
-        g_world.geese.front().ForceFetch(type, g_world.screenWidth, g_world.screenHeight);
-        fprintf(stderr, "[CLI] after ForceFetch state=%d heldItem=%p\n", (int)g_world.geese.front().state, (void*)g_world.geese.front().heldItem);
+        fprintf(stderr, "[CLI] fetch type=%d geese.size=%zu\n", type, geese.size());
+        geese.front()->ForceFetch(type, g_world.screenWidth, g_world.screenHeight);
+        fprintf(stderr, "[CLI] after ForceFetch state=%d heldItem=%p\n", (int)geese.front()->state, (void*)geese.front()->heldItem);
         return "ok force_fetch type=" + std::to_string(type) + "\n";
     }
 

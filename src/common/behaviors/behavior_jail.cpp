@@ -4,6 +4,8 @@
 // Based on GooseJail by WackyModer
 // ===========================
 #include "behavior.h"
+#include "behaviors/states/jail_state.h"
+#include "event_bus.h"
 #include "goose.h"
 #include "config.h"
 #include "world.h"
@@ -110,8 +112,15 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
         s_pWasKeyDown = pDown;
     }
 
+    bool wasJailed = state->isJailed;
     state->isJailed = s_jailsActive && !s_jails.empty();
     ctx.isJailed = state->isJailed;
+
+    if (!wasJailed && state->isJailed) {
+        EventBus::Instance().Publish(GooseJailedEvent{goose->id, goose->pos.x, goose->pos.y});
+    } else if (wasJailed && !state->isJailed) {
+        EventBus::Instance().Publish(GooseFreedEvent{goose->id});
+    }
 
     if (state->isJailed) {
         Vector2 nearest = s_jails[0];
@@ -131,8 +140,8 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
     }
 }
 
-static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
-    (void)goose; (void)ctx; (void)renderCtx;
+static void render(Goose* goose, BehaviorContext& ctx, IRenderer* irenderer) {
+    (void)goose; (void)ctx; (void)irenderer;
 }
 
 static Behavior g_jailBehavior = BEHAVIOR_DEF_CUSTOM(

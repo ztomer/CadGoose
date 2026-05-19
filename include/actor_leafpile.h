@@ -4,6 +4,7 @@
 
 #pragma once
 
+struct WorldContext;
 #include "actor.h"
 #include <vector>
 
@@ -21,9 +22,9 @@ public:
     ~LeafPileActor() override;
 
     const char* type() const override { return "leafpile"; }
-    void tick(double dt, double time) override;
+    void tick(WorldContext& ctx, double dt, double time) override;
     void render(IRenderer* renderer) override;
-    bool isAlive() const override { return active; }
+    bool isAlive() const override { return m_active; }
 
     void kick(Vector2 kickVelocity, double currentTime, float gooseSpeedPercentage);
 
@@ -31,7 +32,7 @@ private:
     static constexpr int LEAVES_PER_PILE = 128;
     static constexpr float LEAF_PILE_SIZE = 60.0f;
 
-    float m_radius;
+    // radius is inherited from Actor (m_radius / radius() / setRadius())
     float m_height;
     double m_timeCreated;
     double m_timeSinceKicked;

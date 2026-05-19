@@ -50,10 +50,9 @@ public:
     void RemoveForGoose(int gooseId) {
         std::unique_lock<std::shared_mutex> lock(mutex_);
 
-        uint16_t targetId = static_cast<uint16_t>(gooseId);
         for (auto it = states.begin(); it != states.end(); ) {
-            uint16_t storedId = static_cast<uint16_t>(it->first >> 48);
-            if (storedId == targetId) {
+            int storedId = static_cast<int>(it->first >> 32);
+            if (storedId == gooseId) {
                 it = states.erase(it);
             } else {
                 ++it;
@@ -75,19 +74,8 @@ private:
     BehaviorStateManager() = default;
 
     uint64_t MakeKey(int gooseId, const char* behaviorId) {
-        // 16 bits for gooseId (supports up to 65535), 48 bits for behavior hash.
-        // FNV-1a 64-bit hash truncated to 48 bits — far lower collision risk than 32-bit.
-        uint64_t hash = Fnv1a64(behaviorId);
-        return (static_cast<uint64_t>(static_cast<uint16_t>(gooseId)) << 48) | (hash & 0xFFFFFFFFFFFFULL);
-    }
-
-    static uint64_t Fnv1a64(const char* str) {
-        uint64_t hash = 0xCBF29CE484222325ULL; // FNV-1a 64-bit basis
-        while (*str) {
-            hash ^= static_cast<uint64_t>(static_cast<unsigned char>(*str++));
-            hash *= 0x100000001B3ULL; // FNV-1a 64-bit prime
-        }
-        return hash;
+        size_t hash = std::hash<std::string>{}(behaviorId);
+        return (static_cast<uint64_t>(gooseId) << 32) | static_cast<uint32_t>(hash);
     }
 
     mutable std::shared_mutex mutex_;

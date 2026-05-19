@@ -2,6 +2,7 @@
 // test_behaviors_fun.cpp
 // Tests for fun behaviors: toys, boredom, peeking, interactive_drops
 // ===========================
+#include "behaviors/states/all.h"
 #include "gtest/gtest.h"
 #include <cmath>
 #include <string>

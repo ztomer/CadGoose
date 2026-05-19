@@ -2,6 +2,7 @@
 // test_behavior_states.cpp
 // Verifies all behavior states can be created
 // ===========================
+#include "behaviors/states/all.h"
 #include <gtest/gtest.h>
 #include <string>
 #include <vector>

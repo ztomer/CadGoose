@@ -20,9 +20,9 @@ FlowerActor::FlowerActor(const Vector2& pos, float hue, double spawnTime)
     , m_window(nullptr), m_windowKey(nullptr)
 #endif
 {
-    position = {pos.x, pos.y};
-    active = true;
-    radius = MAX_PETAL_SIZE + 5.0f;
+    m_position = {pos.x, pos.y};
+    m_active = true;
+    m_radius = MAX_PETAL_SIZE + 5.0f;
 }
 
 FlowerActor::~FlowerActor() {
@@ -39,14 +39,14 @@ FlowerActor::~FlowerActor() {
 #endif
 }
 
-void FlowerActor::tick(double dt, double time) {
-    if (!active) return;
+void FlowerActor::tick(WorldContext& ctx, double dt, double time) {
+    if (!m_active) return;
 
     double age = time - m_spawnTime;
     float growTime = g_config.behaviors.interactiveDrops.flowerGrowTime;
 
     if (age > FLOWER_LIFETIME) {
-        active = false;
+        m_active = false;
         return;
     }
 
@@ -63,12 +63,12 @@ void FlowerActor::tick(double dt, double time) {
 }
 
 void FlowerActor::render(IRenderer* renderer) {
-    if (!active || m_growth < GROWTH_THRESHOLD) return;
+    if (!m_active || m_growth < GROWTH_THRESHOLD) return;
 
 #ifdef __APPLE__
     float winSize = m_stemHeight + m_petalSize * 2.0f + 10.0f;
-    float winX = position.x - winSize / 2.0f;
-    float winY = position.y - m_stemHeight - m_petalSize * 2.0f;
+    float winX = m_position.x - winSize / 2.0f;
+    float winY = m_position.y - m_stemHeight - m_petalSize * 2.0f;
 
     if (!m_window) {
         m_window = (void*)CFBridgingRetain([[BehaviorElementWindow alloc]

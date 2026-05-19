@@ -4,6 +4,7 @@
 
 #pragma once
 
+struct WorldContext;
 #include "actor.h"
 
 class BreadcrumbActor : public Actor {
@@ -12,9 +13,9 @@ public:
     ~BreadcrumbActor() override;
 
     const char* type() const override { return "breadcrumb"; }
-    void tick(double dt, double time) override;
+    void tick(WorldContext& ctx, double dt, double time) override;
     void render(IRenderer* renderer) override;
-    bool isAlive() const override { return active; }
+    bool isAlive() const override { return m_active; }
 
     double spawnTime() const { return m_spawnTime; }
     float lifetime() const { return m_lifetime; }

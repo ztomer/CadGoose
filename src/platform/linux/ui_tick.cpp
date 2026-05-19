@@ -26,8 +26,11 @@ gboolean on_tick(gpointer data) {
         g_cursorProvider->Execute(action);
     }
 
-    // DroppedItemActor::isAlive() checks isExpired(), cleanup() removes them
-    ActorManager::Instance().cleanup();
+    g_world.droppedItems.remove_if([](DroppedItem& i) {
+        bool exp = i.isExpired(g_time);
+        if (exp) delete i.data;
+        return exp;
+    });
 
     while (!g_world.footprints.empty()) {
         Footprint& fp = g_world.footprints.front();
@@ -39,15 +42,21 @@ gboolean on_tick(gpointer data) {
         }
     }
 
-    // Queue draw on this monitor's canvas
+    // We pass a window to setup_overlay, but we need to update ALL overlays.
+    // However, on_tick is associated with a specific canvas.
+    // To keep it simple, we queue draw on all monitors.
+    // This is handled by setup_overlay_window which spawns timers or we can use a global signal.
     gtk_widget_queue_draw(GTK_WIDGET(data));
     
-    // Update input region using the stored monitor index
-    int monitorIndex = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(data), "monitor-index"));
-    if (monitorIndex >= 0 && monitorIndex < (int)g_world.monitors.size()) {
+    // Find matching MonitorInfo for this canvas to update its input region
+    for (auto& mi : g_world.monitors) {
+        // This is a bit hacky but works: find window that contains this canvas
         GtkRoot* root = gtk_widget_get_root(GTK_WIDGET(data));
         if (root && GTK_IS_WINDOW(root)) {
-            UpdateInputRegion(GTK_WINDOW(root), g_world.monitors[monitorIndex]);
+            // Need to match monitor to window. Let's store window in MonitorInfo.
+            // Simplified: just update input region for this specific window.
+            UpdateInputRegion(GTK_WINDOW(root), mi);
+            break; 
         }
     }
 

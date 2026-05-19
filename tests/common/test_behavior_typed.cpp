@@ -1,3 +1,4 @@
+#include "behaviors/states/all.h"
 #include <gtest/gtest.h>
 #include <cmath>
 #include <vector>

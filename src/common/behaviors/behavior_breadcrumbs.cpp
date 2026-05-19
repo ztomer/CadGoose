@@ -1,4 +1,6 @@
 #include "behavior.h"
+#include "behaviors/states/breadcrumb_state.h"
+#include "event_bus.h"
 #include "goose.h"
 #include "config.h"
 #include "world.h"
@@ -92,6 +94,7 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
         // Create BreadcrumbActor
         BreadcrumbActor* actor = new BreadcrumbActor(cursorPos, time, crumb.lifetime);
         ActorManager::Instance().add(actor);
+        EventBus::Instance().Publish(BreadcrumbDroppedEvent{cursorPos.x, cursorPos.y});
         LogCrumb("first crumb dropped");
         g_assets.Honk();
     } else if (!keyDown) {
@@ -111,6 +114,7 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
             // Create BreadcrumbActor
             BreadcrumbActor* actor = new BreadcrumbActor(cursorPos, time, crumb.lifetime);
             ActorManager::Instance().add(actor);
+            EventBus::Instance().Publish(BreadcrumbDroppedEvent{cursorPos.x, cursorPos.y});
         }
     }
 
@@ -130,6 +134,7 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
         float dist = std::hypot(goose->pos.x - crumb.pos.x, goose->pos.y - crumb.pos.y);
         if (dist < eatRadius) {
             crumb.eaten = true;
+            EventBus::Instance().Publish(ItemEatenEvent{goose->id, crumb.pos.x, crumb.pos.y, "breadcrumb"});
             g_assets.Bite();
             goose->isChewing = true;
             goose->chewingStartTime = time;
@@ -142,8 +147,8 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
     }
 }
 
-static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
-    (void)goose; (void)ctx; (void)renderCtx;
+static void render(Goose* goose, BehaviorContext& ctx, IRenderer* irenderer) {
+    (void)goose; (void)ctx; (void)irenderer;
 }
 
 static Behavior g_breadcrumbBehavior = BEHAVIOR_DEF(
