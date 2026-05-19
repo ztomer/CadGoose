@@ -58,20 +58,21 @@ void JailActor::render(IRenderer* renderer) {
                 CGRenderer r(cgCtx);
                 r.SaveState();
 
-                // Jail cage - rectangle with bars
-                float half = winSize * 0.5f;
-                r.DrawRectOutline({-half, -half, winSize, winSize}, {0.3f, 0.3f, 0.3f, 0.9f}, 2.0f);
+                // Jail cage drawn in window-local coords (0..winSize), so it stays
+                // inside the BehaviorElementWindow's content view instead of clipping
+                // against negative-coord top/left edges.
+                r.DrawRectOutline({0, 0, winSize, winSize}, {0.3f, 0.3f, 0.3f, 0.9f}, 2.0f);
 
                 // Vertical bars
                 for (int i = 1; i < 4; i++) {
-                    float x = -half + (winSize / 4.0f) * i;
-                    r.DrawLine({x, -half}, {x, half}, {0.3f, 0.3f, 0.3f, 0.6f}, 1.5f);
+                    float x = (winSize / 4.0f) * i;
+                    r.DrawLine({x, 0}, {x, winSize}, {0.3f, 0.3f, 0.3f, 0.6f}, 1.5f);
                 }
 
                 // Horizontal bars
                 for (int i = 1; i < 4; i++) {
-                    float y = -half + (winSize / 4.0f) * i;
-                    r.DrawLine({-half, y}, {half, y}, {0.3f, 0.3f, 0.3f, 0.6f}, 1.5f);
+                    float y = (winSize / 4.0f) * i;
+                    r.DrawLine({0, y}, {winSize, y}, {0.3f, 0.3f, 0.3f, 0.6f}, 1.5f);
                 }
 
                 r.RestoreState();

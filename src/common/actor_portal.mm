@@ -68,10 +68,14 @@ void PortalActor::render(IRenderer* renderer) {
                     CGImageRef img = (CGImageRef)m_image;
                     float w = (float)CGImageGetWidth(img);
                     float h = (float)CGImageGetHeight(img);
-                    float scale = winSize / w;
-                    r.Translate(-w * 0.5f * scale, -h * 0.5f * scale);
-                    r.Scale(scale, scale);
-                    r.DrawImage(img, {0, 0, w, h});
+                    // Window already enclosing the portal; fill it with the image.
+                    // Aspect-preserve so non-square portal art stays centered.
+                    float scale = winSize / std::max(w, h);
+                    float drawW = w * scale;
+                    float drawH = h * scale;
+                    float offX = (winSize - drawW) * 0.5f;
+                    float offY = (winSize - drawH) * 0.5f;
+                    r.DrawImage(img, {offX, offY, drawW, drawH});
                 }
 
                 r.RestoreState();

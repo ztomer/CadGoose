@@ -133,8 +133,16 @@ public:
         CTLineRef line = CTLineCreateWithAttributedString(attrStr);
 
         if (line) {
+            // The goose view's CTM is set up so positive Y goes down (top-left origin).
+            // CoreText's default text matrix renders glyphs with positive Y up, which
+            // produces upside-down text. Save the existing text matrix, flip Y for the
+            // draw, then restore so we don't surprise callers that draw text outside
+            // IRenderer.
+            CGAffineTransform savedTextMatrix = CGContextGetTextMatrix(m_ctx);
+            CGContextSetTextMatrix(m_ctx, CGAffineTransformMakeScale(1.0, -1.0));
             CGContextSetTextPosition(m_ctx, position.x, position.y);
             CTLineDraw(line, m_ctx);
+            CGContextSetTextMatrix(m_ctx, savedTextMatrix);
             CFRelease(line);
         }
 

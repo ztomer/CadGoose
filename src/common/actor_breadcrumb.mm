@@ -75,11 +75,14 @@ void BreadcrumbActor::render(IRenderer* renderer) {
                     CGImageRef img = (CGImageRef)m_image;
                     float w = (float)CGImageGetWidth(img);
                     float h = (float)CGImageGetHeight(img);
-                    float scale = winSize / w;
-                    r.Translate(-w * 0.5f * scale, -h * 0.5f * scale);
-                    r.Scale(scale, scale);
+                    // Aspect-preserve into the centered crumb window.
+                    float scale = winSize / std::max(w, h);
+                    float drawW = w * scale;
+                    float drawH = h * scale;
+                    float offX = (winSize - drawW) * 0.5f;
+                    float offY = (winSize - drawH) * 0.5f;
                     r.SetAlpha(alpha);
-                    r.DrawImage(img, {0, 0, w, h});
+                    r.DrawImage(img, {offX, offY, drawW, drawH});
                 }
 
                 r.RestoreState();
