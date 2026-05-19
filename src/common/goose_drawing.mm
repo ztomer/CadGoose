@@ -339,12 +339,12 @@ void DrawDroppedItem(CGContextRef ctx, const DroppedItem& item, float viewHeight
     CGContextRestoreGState(ctx);
 }
 
-void DrawDebugOverlay(CGContextRef ctx, const std::list<Goose>& geese) {
+void DrawDebugOverlay(CGContextRef ctx, const std::vector<Goose*>& geese) {
     if (!g_config.debug.visuals) return;
 
     CGContextSetRGBStrokeColor(ctx, 1, 0, 0, 1);
     CGContextSetLineWidth(ctx, 1);
-    for (const auto& g : geese) {
-        CGContextStrokeRect(ctx, CGRectMake(g.pos.x - kDebugOverlayBoxSize, g.pos.y - kDebugOverlayBoxSize, kDebugOverlayBoxSize * 2, kDebugOverlayBoxSize * 2));
+    for (const auto* g : geese) {
+        CGContextStrokeRect(ctx, CGRectMake(g->pos.x - kDebugOverlayBoxSize, g->pos.y - kDebugOverlayBoxSize, kDebugOverlayBoxSize * 2, kDebugOverlayBoxSize * 2));
     }
 }

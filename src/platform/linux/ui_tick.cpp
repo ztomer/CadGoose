@@ -26,15 +26,12 @@ gboolean on_tick(gpointer data) {
         g_cursorProvider->Execute(action);
     }
 
-    g_world.droppedItems.remove_if([](DroppedItem& i) {
-        bool exp = i.isExpired(g_time);
-        if (exp) delete i.data;
-        return exp;
-    });
+    // DroppedItemActor::isAlive() checks isExpired(), cleanup() removes them
+    ActorManager::Instance().cleanup();
 
     while (!g_world.footprints.empty()) {
         Footprint& fp = g_world.footprints.front();
-        float life = (fp.lifetime > 0.0f) ? fp.lifetime : g_config.mudLifetime;
+        float life = (fp.lifetime > 0.0f) ? fp.lifetime : g_config.mud.lifetime;
         if ((g_time - fp.timeSpawned) > life) {
             g_world.footprints.pop();
         } else {

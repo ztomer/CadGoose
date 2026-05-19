@@ -3,6 +3,7 @@
 #include "world.h"
 #include "behavior.h"
 #include "actor.h"
+#include "actor_dropped_item.h"
 
 #include <fstream>
 #include <iomanip>
@@ -45,10 +46,7 @@ void AppActions_EnsureInitialGoose() {
 }
 
 void AppActions_ClearGeese() {
-    for (auto& item : g_world.droppedItems) {
-        delete item.data;
-    }
-    g_world.droppedItems.clear();
+    ActorManager::Instance().removeAllDroppedItems();
     g_world.footprints.clear();
 
     Config_SaveGooseNames();
@@ -145,8 +143,10 @@ std::string AppActions_GetStatus() {
         out << "goose_heldItem=" << (g.heldItem ? "yes" : "no") << "\n";
     }
 
-    out << "dropped_items=" << g_world.droppedItems.size() << "\n";
-    for (const auto& item : g_world.droppedItems) {
+    auto droppedItems = ActorManager::Instance().getDroppedItems();
+    out << "dropped_items=" << droppedItems.size() << "\n";
+    for (auto* actor : droppedItems) {
+        DroppedItem& item = actor->item();
         if (!item.data) {
             out << "item_null\n";
             continue;

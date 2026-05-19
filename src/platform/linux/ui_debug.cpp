@@ -3,6 +3,7 @@
 #include "config.h"
 #include "goose.h"
 #include "actor.h"
+#include "actor_dropped_item.h"
 #include <cmath>
 #include <vector>
 #include <cstdio>
@@ -14,7 +15,7 @@ void UiLogTrim();
 const char* GetGooseStateStr(GooseState s);
 
 void draw_debug_overlay(cairo_t* cr, int width, int height, bool verbose, bool selectedOnly) {
-    if (!g_config.debugToTerminal) return;
+    if (!g_config.debug.toTerminal) return;
 
     UiLogTrim();
 
@@ -34,17 +35,17 @@ void draw_debug_overlay(cairo_t* cr, int width, int height, bool verbose, bool s
     CursorState curState = g_cursorProvider ? g_cursorProvider->Read() : CursorState{};
     Vector2 cursorPos = (curState.caps & CAP_GET_POS) ? curState.position : Vector2{-1, -1};
 
-    snprintf(buf, sizeof(buf), "Goose Debug | geese:%zu  items:%zu  t:%.2f", ActorManager::Instance().getGeese().size(), g_world.droppedItems.size(), g_time);
+    snprintf(buf, sizeof(buf), "Goose Debug | geese:%zu  items:%zu  t:%.2f", ActorManager::Instance().getGeese().size(), ActorManager::Instance().getDroppedItems().size(), g_time);
     lines.emplace_back(buf);
 
     snprintf(buf, sizeof(buf), "Config | scale:%.2f  walk:%.0f  run:%.0f  memes:%s  cursorDefaults:%s (%d%%)  snatch:%.1fs",
-             g_config.globalScale,
-             g_config.baseWalkSpeed,
-             g_config.baseRunSpeed,
-             g_config.memesEnabled ? "on" : "off",
-             g_config.cursorChaseEnabled ? "on" : "off",
-             g_config.cursorChaseChance,
-             g_config.snatchDuration);
+             g_config.general.globalScale,
+             g_config.movement.baseWalkSpeed,
+             g_config.movement.baseRunSpeed,
+             g_config.general.memesEnabled ? "on" : "off",
+             g_config.cursor.chaseEnabled ? "on" : "off",
+             g_config.cursor.chaseChance,
+             g_config.snatch.duration);
     lines.emplace_back(buf);
 
     snprintf(buf, sizeof(buf), "Cursor | %s  pos:(%.0f,%.0f)  grabber:%d  selected:%d",
@@ -121,7 +122,7 @@ void draw_debug_overlay(cairo_t* cr, int width, int height, bool verbose, bool s
         }
     }
 
-    snprintf(buf, sizeof(buf), "Render | screen:%dx%d  droppedItems:%zu", g_world.screenWidth, g_world.screenHeight, g_world.droppedItems.size());
+    snprintf(buf, sizeof(buf), "Render | screen:%dx%d  droppedItems:%zu", g_world.screenWidth, g_world.screenHeight, ActorManager::Instance().getDroppedItems().size());
     lines.emplace_back(buf);
 
     for (const auto& l : g_world.uiLog) lines.emplace_back(l);

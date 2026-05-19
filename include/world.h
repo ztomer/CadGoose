@@ -74,7 +74,6 @@ constexpr size_t kMaxJails = 10;
 struct WorldContext {
     std::list<Goose> geese;
     std::list<MonitorInfo> monitors;
-    std::list<DroppedItem> droppedItems;
     RingBuffer<Footprint, kMaxFootprints> footprints;
     RingBuffer<Crumbs, kMaxCrumbs> crumbs;
     std::list<LeafPile> leafPiles;

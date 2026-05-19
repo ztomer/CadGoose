@@ -3,6 +3,7 @@
 #include "config.h"
 #include "goose.h"
 #include "actor.h"
+#include "actor_dropped_item.h"
 #include <cmath>
 
 static constexpr double ESC_KILL_HOLD_SECONDS = 1.0;
@@ -91,10 +92,7 @@ static void UpdateEscapeHoldHud() {
 }
 
 void ClearAllGooseState() {
-    for (auto& item : g_world.droppedItems) {
-        delete item.data;
-    }
-    g_world.droppedItems.clear();
+    ActorManager::Instance().removeAllDroppedItems();
     g_world.footprints.clear();
     g_world.geese.clear();
     g_world.cursorGrabberId = -1;

@@ -294,6 +294,7 @@ if(APPLE)
         src/common/actor_portal.mm
         src/common/actor_breadcrumb.mm
         src/common/actor_leafpile.mm
+        src/common/actor_dropped_item.mm
         src/common/world.cpp
         src/common/behaviors/behavior_honcker.cpp
         src/common/behaviors/behavior_rainbow.cpp

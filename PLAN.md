@@ -26,11 +26,12 @@
 23. **behavior.h split** — Split into 4 files: `behavior_state.h`, `behavior_manager.h`, `behavior_registry.h`, `behavior_api.h`.
 24. **Goose monolith deconstructed** — `Update()` split into `UpdatePhysics()`, `UpdateDetection()`, `UpdateAnimation()`, `UpdateDebug()`.
 25. **State includes fixed** — 25 source/test files updated with missing behavior state header includes.
+26. **g_world.droppedItems → DroppedItemActor** — Removed `droppedItems` from `WorldContext`. All 20+ files migrated to `ActorManager::getDroppedItems()` / `ActorManager::removeAllDroppedItems()`. Zero references remaining.
 
 ## Pending
 
 ### High Priority
-1. **Migrate g_world.droppedItems to DroppedItemActor** — 127 references across 20+ files. Requires coordinated changes to: item creation (`world_utils.mm`, `goose_behaviors_fetch.cpp`), iteration (`world_utils.mm`, `goose_behaviors_wander.cpp`, `ui_drawing.cpp`, `ui.cpp`), cleanup (`ui_tick.cpp`, `world_utils.mm`), socket commands (`app_actions.cpp`), tests (`test_headless_rendering.mm`, `test_dragging_integration.mm`). `DroppedItemActor` scaffold ready.
+(none)
 
 ## New Files
 - `include/actor.h` — Actor base class + ActorManager

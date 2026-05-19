@@ -2,6 +2,7 @@
 // ActorManager implementation.
 
 #include "actor.h"
+#include "actor_dropped_item.h"
 #include "goose.h"
 #include <algorithm>
 
@@ -72,4 +73,25 @@ std::vector<Goose*> ActorManager::getGeese() const {
         }
     }
     return geese;
+}
+
+std::vector<DroppedItemActor*> ActorManager::getDroppedItems() const {
+    std::vector<DroppedItemActor*> items;
+    for (auto* actor : actors) {
+        if (actor->active && strcmp(actor->type(), "dropped_item") == 0) {
+            items.push_back(static_cast<DroppedItemActor*>(actor));
+        }
+    }
+    return items;
+}
+
+void ActorManager::removeAllDroppedItems() {
+    for (auto it = actors.begin(); it != actors.end(); ) {
+        if ((*it)->active && strcmp((*it)->type(), "dropped_item") == 0) {
+            delete *it;
+            it = actors.erase(it);
+        } else {
+            ++it;
+        }
+    }
 }

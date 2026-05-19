@@ -7,6 +7,8 @@
 #include "assets.h"
 #include "ai_text_meme.h"
 #include "goose_behaviors.h"
+#include "actor.h"
+#include "actor_dropped_item.h"
 #include <cmath>
 #include <cstdio>
 #include <algorithm>
@@ -81,22 +83,24 @@ static bool canPickupItem(double timeSinceDropped) {
 void tryPickupItem(Goose& g, double time, int w, int h) {
     if (!shouldPickupItem(g)) return;
 
-    if (g_world.droppedItems.empty()) return;
+    auto items = ActorManager::Instance().getDroppedItems();
+    if (items.empty()) return;
 
     Vector2 btPoint = g.GetBeakTipDevice();
 
-    for (auto it = g_world.droppedItems.begin(); it != g_world.droppedItems.end(); ++it) {
-        if (it->pinned) continue;
-        Vector2 itemCenter = WorldCoord::ItemCenter(*it);
+    for (auto* actor : items) {
+        DroppedItem& item = actor->item();
+        if (item.pinned) continue;
+        Vector2 itemCenter = WorldCoord::ItemCenter(item);
         float dist = Vector2::Distance(btPoint, itemCenter);
         float pickupDist = WorldCoord::Scale(g_config.spawn.itemPickupDistance);
         if (dist < pickupDist) {
-            if (!canPickupItem(time - it->timeDropped)) continue;
+            if (!canPickupItem(time - item.timeDropped)) continue;
 
             fprintf(stderr, "[FETCH] tryPickupItem g%d picking up item at (%.0f,%.0f) dist=%.0f\n",
                     g.id, itemCenter.x, itemCenter.y, dist);
-            g.heldItem = it->data;
-            g_world.droppedItems.erase(it);
+            g.heldItem = item.data;
+            ActorManager::Instance().remove(actor);
             g.state = GooseState::RETURNING;
             g.target = {static_cast<float>(rand() % (std::max(1, (int)(w - g_config.spawn.itemDropMarginX * 2)) + (int)g_config.spawn.itemDropMarginX)),
                         static_cast<float>(rand() % (std::max(1, (int)(h - g_config.spawn.itemDropMarginY * 2)) + (int)g_config.spawn.itemDropMarginY))};
@@ -182,8 +186,7 @@ void handleReturning(Goose& g, double time, int w, int h) {
             if (drop.pos.x > maxX) drop.pos.x = maxX;
             if (drop.pos.y > maxY) drop.pos.y = maxY;
 
-
-            g_world.droppedItems.push_back(drop);
+            new DroppedItemActor(drop);
             fprintf(stderr, "[FETCH] handleReturning g%d dropped item at (%.0f,%.0f) rot=%.1f\n",
                     g.id, drop.pos.x, drop.pos.y, drop.rotation);
         } else {

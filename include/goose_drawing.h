@@ -17,7 +17,7 @@ void DrawHeldItem(Goose* g, CGContextRef ctx);
 void DrawFootprints(CGContextRef ctx, const RingBuffer<Footprint, kMaxFootprints>& footprints, double currentTime);
 void DrawLeaves(CGContextRef ctx, const std::list<LeafPile>& leafPiles, double currentTime);
 void DrawDroppedItem(CGContextRef ctx, const DroppedItem& item, float viewHeight);
-void DrawDebugOverlay(CGContextRef ctx, const std::list<Goose>& geese);
+void DrawDebugOverlay(CGContextRef ctx, const std::vector<Goose*>& geese);
 
 // Anger tint - defined in behavior_anger.cpp
 float Anger_GetLevel(int gooseId);
