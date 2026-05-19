@@ -566,7 +566,7 @@ void Goose::render(IRenderer* renderer) {
     CGContextTranslateCTM(ctx, pos.x, pos.y);
     CGContextScaleCTM(ctx, g_config.general.globalScale, g_config.general.globalScale);
     CGContextTranslateCTM(ctx, -pos.x, -pos.y);
-    BehaviorRegistry::Instance().RenderPass(this, ctx, true);
+    BehaviorRegistry::Instance().RenderPass(this, renderer, true);
     CGContextRestoreGState(ctx);
 
     DrawGoose(this, ctx);
@@ -578,7 +578,7 @@ void Goose::render(IRenderer* renderer) {
     CGContextTranslateCTM(ctx, pos.x, pos.y);
     CGContextScaleCTM(ctx, g_config.general.globalScale, g_config.general.globalScale);
     CGContextTranslateCTM(ctx, -pos.x, -pos.y);
-    BehaviorRegistry::Instance().RenderPass(this, ctx, false);
+    BehaviorRegistry::Instance().RenderPass(this, renderer, false);
     CGContextRestoreGState(ctx);
 #else
     (void)renderer;

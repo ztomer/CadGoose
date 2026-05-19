@@ -36,10 +36,12 @@ While an `IRenderer` interface (`include/renderer_interface.h`) exists for cross
 **Opportunity:** Expand the `IRenderer` API to natively support the advanced drawing features needed by behaviors (like custom shaders, gradients, or primitive drawing) so that platform-specific code is completely isolated behind the interface. 
 
 ### Detailed Execution Plan:
-*   **Phase 1: Audit Abstraction Leaks:** Search the codebase for any casting of `IRenderer` to platform-specific types, or direct inclusions of platform rendering APIs (like CoreGraphics or GDI+) within common behavior code.
-*   **Phase 2: Extend API:** Identify the specific visual effects being achieved by these leaks (e.g., gradient drawing, custom blending). Add virtual methods to `IRenderer` to support these natively (e.g., `DrawGradientRect`, `SetBlendMode`).
-*   **Phase 3: Platform Implementation:** Implement the newly added `IRenderer` methods in all platform-specific backend classes (macOS, Windows, Linux).
-*   **Phase 4: Behavior Refactoring:** Update the behaviors to use the new `IRenderer` methods, removing all platform-specific casts and includes from the common code.
+*   **Phase 1 [DONE — partial]:** Audit complete. Behaviors received a raw `void* renderCtx` (CGContextRef on macOS) and cast it back, then constructed a CGRenderer locally. Behavior `render` signatures and `BehaviorRegistry::RenderPass` now take `IRenderer*` directly. `BehaviorContext::renderer` is populated for each render pass. Behaviors that still need CG primitives call `renderer->nativeContext()` — an explicit, scoped breach rather than a parameter-level cast.
+*   **Phase 2 [TODO]:** The current `IRenderer` interface (DrawEllipse / DrawLine / DrawRect / DrawRoundedRect / DrawPolygon / DrawImage / DrawText / SaveState / Translate / Scale / Rotate / SetAlpha) covers most common cases. Remaining behaviors using `nativeContext()` for CG-specific work (gradients, blend modes, complex paths) should drive new virtual methods (`DrawGradientRect`, `SetBlendMode`, `DrawPath`).
+*   **Phase 3 [TODO]:** Implement new methods on `CGRenderer` (macOS) and the Linux `CairoRenderer`.
+*   **Phase 4 [TODO]:** Migrate remaining `(CGContextRef)irenderer->nativeContext()` call sites in behaviors to the new IRenderer methods.
+
+Net effect of partial work: every behavior `render` fn now sees `IRenderer*` as its declared dependency; the platform-specific cast is opt-in via `nativeContext()` rather than mandatory.
 
 ---
 

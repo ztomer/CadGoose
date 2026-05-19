@@ -247,9 +247,9 @@ static void ensurePomoFont() {
     if (!s_pomoWhite) s_pomoWhite = CGColorCreateGenericRGB(1.0f, 1.0f, 1.0f, 1.0f);
 }
 
-static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
+static void render(Goose* goose, BehaviorContext& ctx, IRenderer* irenderer) {
 #ifdef __APPLE__
-    CGContextRef cg = (CGContextRef)renderCtx;
+    CGContextRef cg = (CGContextRef)(irenderer ? irenderer->nativeContext() : nullptr);
     if (!cg) return;
 
     auto* state = BehaviorStateManager::Instance().Get<PomodoroState>(goose->id, "pomodoro");
