@@ -9,7 +9,7 @@
 
 
 // Pomodoro bed accessor from behavior_pomodoro.cpp
-extern PomodoroBedInfo Pomodoro_GetBedInfo(int gooseId);
+#import "pomodoro_bed.h"
 
 static constexpr size_t kMaxEffectWindows = 50;
 static constexpr float kEffectWindowMinSize = 40.0f;

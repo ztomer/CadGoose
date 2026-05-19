@@ -3,10 +3,9 @@
 // Registers PomodoroBed effect type with EffectWindowManager.
 
 #import "effect_registration.h"
+#import "pomodoro_bed.h"
 #import "world.h"
 #import "actor.h"
-
-extern PomodoroBedInfo Pomodoro_GetBedInfo(int gooseId);
 
 static std::vector<Vector2> PomodoroBed_GetPositions() {
     std::vector<Vector2> positions;

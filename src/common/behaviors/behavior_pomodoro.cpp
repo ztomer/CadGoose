@@ -6,6 +6,7 @@
 #include "behavior.h"
 #include "behaviors/states/pomodoro_state.h"
 #include "event_bus.h"
+#include "pomodoro_bed.h"
 #include "goose.h"
 #include "config.h"
 #include "world.h"
