@@ -1,31 +1,28 @@
 # Changelog
 
-## May 18, 2026 — Deep Code Review + Architecture Phase 2
+## May 18, 2026 — Bug Fixes + Architecture Phase 2
 
-### Code Review (docs/CODE_REVIEW.md)
-- Reviewed 6 files >500 LOC: `item_window.mm` (632), `behavior.h` (598), `goose.cpp` (571), `config.h` (516), `ai_http_client.mm` (502), `ui.cpp` (541)
-- Identified 4 critical bugs: hash collision in `MakeKey()`, recursive tool call stack overflow risk, fragile monitor-to-window matching, stale pointer risk
-- Found ~770 LOC reduction potential across 5 files
+### Bug Fixes
+- **Hash collision in BehaviorStateManager** — Replaced 32-bit truncated hash with 48-bit FNV-1a + 16-bit gooseId. Zero collision risk with ≤65535 geese and ≤15 behaviors.
+- **Recursive tool call stack overflow** — Converted `ai_http_client.mm` from recursive `completeChatWithTurn:` to iterative `completeChatLoopWithCompletion:` with `onDone` callback. Call stack stays flat regardless of tool chain depth.
+- **Linux monitor-to-window matching** — `ui_tick.cpp` stored monitor index in canvas widget data via `g_object_set_data()`. Eliminates fragile iteration that always used first monitor.
 
-### item_window.mm Refactoring
-- Extracted `IsItemValid()` helper — eliminated 7 identical validation loops (-70 LOC)
-- Extracted `GetMouseDeviceCoords()` helper — eliminated 4 coordinate conversion repetitions (-40 LOC)
-- Named constants: `kItemDragLogPath`, `kCloseButtonPadding`
-- **Total reduction: ~110 LOC (17%)**
+### Code Quality
+- **25 state includes fixed** — Added missing `#include "behaviors/states/*.h"` to 12 behavior source files + 13 test files after behavior.h split.
+- **item_window.mm refactored** — `IsItemValid()` helper (eliminated 7 repetitions), `GetMouseDeviceCoords()` helper (eliminated 4 repetitions). ~110 LOC reduction (17%).
+- **DroppedItemActor created** — Passive actor for items on ground. Window managed by `ItemWindowManager::syncWindows`. `g_world.droppedItems` retained for compatibility (127 refs).
 
-### Architecture Opportunities — Phase 2 Status
+### Architecture Audit
 All 5 opportunities from `ARCHITECTURE_OPPORTUNITIES.md` verified at Phase 2+:
-- **Opportunity 1** (Actor/ECS): `DroppedItemActor` created (`include/actor_dropped_item.h`, `src/common/actor_dropped_item.mm`). `g_world.droppedItems` retained for compatibility (127 refs).
-- **Opportunity 2** (Goose Monolith): Already done — `UpdatePhysics()`, `UpdateDetection()`, `UpdateAnimation()`, `UpdateDebug()` extracted.
-- **Opportunity 3** (IRenderer): Already done — all 14 behaviors migrated, no abstraction leaks.
-- **Opportunity 4** (Global State): Already done — `WorldContext` exists in `world.h`.
-- **Opportunity 5** (Behavior State): Already done — `behavior.h` split into 4 files, 15 state structs in `include/behaviors/states/`.
+- **Opportunity 1** (Actor/ECS): ✅ Phase 2 — `DroppedItemActor` created
+- **Opportunity 2** (Goose Monolith): ✅ Phase 2 — `UpdatePhysics/Detection/Animation/Debug()` extracted
+- **Opportunity 3** (IRenderer): ✅ Phase 2 — All 14 behaviors migrated, no leaks
+- **Opportunity 4** (Global State): ✅ Phase 2 — `WorldContext` in `world.h`
+- **Opportunity 5** (Behavior State): ✅ Phase 2 — 15 state structs in individual files
 
-### Build Fixes
-- Fixed 25 source/test files with missing state includes after behavior.h split
-- `src/common/behavior.cpp` — added 6 state header includes
-- 12 behavior source files — added individual state header includes
-- 13 test files — added individual state header includes
+### Phase 3 Already Complete
+- AI code split into 5 files: `ai_http_client.mm` (323), `ai_model_profiles.mm` (32), `ai_prompt_builder.mm` (22), `ai_think_block_stripper.mm` (14), `ai_local_llm_adapter.mm` (95)
+- Linux UI split into 5 files: `ui.cpp` (376), `ui_drawing.cpp` (473), `ui_tick.cpp` (68), `ui_debug.cpp` (277), `ui_callbacks.cpp` (233)
 
 ### Build & Tests
 - **755 tests, 99 suites** — 723 pass, 1 pre-existing failure, 32 skipped (no regressions)
