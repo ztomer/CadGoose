@@ -74,6 +74,7 @@ void World_CleanupExpired(double currentTime) {
 
 void World_TickLeafPiles(double currentTime, float dt, Goose* nearestGoose) {
     if (!g_config.behaviors.fun.autumnLeaves) return;
+    (void)dt; (void)currentTime; // tick is done via ActorManager::tickAll
 
     auto& mgr = ActorManager::Instance();
     for (int i = 0; i < mgr.totalCount(); i++) {
@@ -83,7 +84,8 @@ void World_TickLeafPiles(double currentTime, float dt, Goose* nearestGoose) {
         LeafPileActor* pile = static_cast<LeafPileActor*>(a);
         if (!pile->isAlive()) continue;
 
-        // Check if goose is near to kick the pile
+        // Check if goose is near to kick the pile (the per-frame leaf-particle
+        // simulation itself runs from the actor's tick via ActorManager::tickAll).
         if (nearestGoose && Vector2::Distance(nearestGoose->pos, pile->position.toVector2()) < pile->radius + g_config.render.footSize) {
             float walkSpeed = g_config.movement.baseWalkSpeed;
             float chargeSpeed = g_config.movement.baseRunSpeed;
@@ -93,8 +95,6 @@ void World_TickLeafPiles(double currentTime, float dt, Goose* nearestGoose) {
             if (gooseSpeedPercentage > 1.0f) gooseSpeedPercentage = 1.0f;
             pile->kick(nearestGoose->vel, currentTime, gooseSpeedPercentage);
         }
-
-        pile->tick(g_world, dt, currentTime);
     }
 }
 
