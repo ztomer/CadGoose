@@ -83,14 +83,23 @@ PomodoroBedInfo Pomodoro_GetBedInfo(int gooseId) {
     return {state->bedPosition, state->isSleeping, (void*)s_bedImage};
 }
 
+// Bed anchor: bottom-right corner with a fixed margin. Defers reading
+// screen dims until they're non-zero — at init() the renderer hasn't
+// always assigned g_world.screenWidth/Height yet, which historically
+// stuck the bed at the top-left corner of the screen and stopped the
+// sleep trigger from ever firing.
+static Vector2 ComputeBedPosition() {
+    float w = (float)g_world.screenWidth;
+    float h = (float)g_world.screenHeight;
+    if (w <= 0 || h <= 0) return {-1.0f, -1.0f};
+    return { w - kBedMarginX, h - kBedMarginY };
+}
+
 static void init(BehaviorContext& ctx) {
     auto* state = BehaviorStateManager::Instance().GetOrCreate<PomodoroState>(ctx.goose->id, "pomodoro");
     state->Reset();
     state->phaseStartTime = ctx.time;
-    state->bedPosition = {
-        (float)g_world.screenWidth - kBedMarginX,
-        (float)g_world.screenHeight - kBedMarginY
-    };
+    state->bedPosition = ComputeBedPosition();
 
 #ifdef __APPLE__
     if (!s_bedImage) {
@@ -116,6 +125,16 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
     auto* state = BehaviorStateManager::Instance().GetOrCreate<PomodoroState>(goose->id, "pomodoro");
     const auto& cfg = g_config.behaviors.pomodoro;
 
+    // Catch up on the bed position if init() ran before the renderer
+    // populated screen dims, or if the screen was resized since.
+    Vector2 expectedBed = ComputeBedPosition();
+    if (expectedBed.x > 0 && expectedBed.y > 0 &&
+        (state->bedPosition.x <= 0 || state->bedPosition.y <= 0 ||
+         std::abs(state->bedPosition.x - expectedBed.x) > 1.0f ||
+         std::abs(state->bedPosition.y - expectedBed.y) > 1.0f)) {
+        state->bedPosition = expectedBed;
+    }
+
     double elapsed = time - state->phaseStartTime;
     double phaseDuration = GetPhaseDuration(state->phase);
 
@@ -135,10 +154,7 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
             state->phase = PomodoroPhase::Work;
             state->isAggressive = false;
             state->isSleeping = false;
-            state->bedPosition = {
-                (float)g_world.screenWidth - kBedMarginX,
-                (float)g_world.screenHeight - kBedMarginY
-            };
+            state->bedPosition = ComputeBedPosition();
         }
         state->phaseStartTime = time;
         elapsed = 0;

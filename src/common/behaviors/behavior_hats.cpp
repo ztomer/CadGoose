@@ -38,26 +38,28 @@ static void render(Goose* goose, BehaviorContext& ctx, IRenderer* irenderer) {
     float drawW = imgWidth * scale;
     float drawH = imgHeight * scale;
 
-    Vector2 headDevice = goose->rig.neckHead;
-    float screenX = headDevice.x + offsetX;
-    float screenY = headDevice.y + offsetY;
-
-    renderer.SaveState();
-    renderer.Translate(screenX, screenY);
+    // Position the hat centered above the goose's head.
+    // The renderer's coordinate system has +Y going down (top-left origin via
+    // the goose view's flipped CTM), so "above" means subtracting halfH from
+    // the head Y. offsetY is applied as-is (config-author's convention).
+    DevicePoint headDevice = WorldCoord::RigNeckHead(*goose);
+    float halfW = drawW / 2.0f;
+    float halfH = drawH / 2.0f;
+    float drawX = headDevice.x + offsetX - halfW;
+    float drawY = headDevice.y + offsetY - halfH;
 
     bool facingLeft = (dir > kFacingLeftMin && dir < kFacingLeftMax);
     if (facingLeft) {
+        // Mirror around the hat's vertical center so the hat itself flips,
+        // not just its position on screen.
+        renderer.SaveState();
+        renderer.Translate(headDevice.x + offsetX, 0);
         renderer.Scale(-1.0f, 1.0f);
+        renderer.DrawImage(s_hatImage, RenderRect{-halfW, drawY, drawW, drawH});
+        renderer.RestoreState();
+    } else {
+        renderer.DrawImage(s_hatImage, RenderRect{drawX, drawY, drawW, drawH});
     }
-
-    float halfW = drawW / 2.0f;
-    float halfH = drawH / 2.0f;
-
-    renderer.Translate(-halfW, halfH);
-    renderer.Scale(1.0f, -1.0f);
-    renderer.DrawImage(s_hatImage, RenderRect{0, 0, drawW, drawH});
-
-    renderer.RestoreState();
 }
 
 static Behavior g_hatsBehavior = BEHAVIOR_DEF_CUSTOM(
