@@ -110,6 +110,14 @@ public:
         CGContextDrawImage(m_ctx, CGRectMake(destRect.x, destRect.y, destRect.w, destRect.h), img);
     }
 
+    bool GetImageSize(void* image, float* outWidth, float* outHeight) override {
+        CGImageRef img = static_cast<CGImageRef>(image);
+        if (!img) return false;
+        if (outWidth)  *outWidth  = (float)CGImageGetWidth(img);
+        if (outHeight) *outHeight = (float)CGImageGetHeight(img);
+        return true;
+    }
+
     void DrawText(const char* text, RenderPoint position, RenderColor color, float fontSize) override {
         CTFontRef font = CTFontCreateWithName(CFSTR("Helvetica"), fontSize, NULL);
         if (!font) return;
@@ -139,6 +147,30 @@ public:
 
     void SetAlpha(float alpha) override {
         CGContextSetAlpha(m_ctx, alpha);
+    }
+
+    float MeasureText(const char* text, float fontSize) override {
+        if (!text || !*text) return 0.0f;
+        CTFontRef font = CTFontCreateWithName(CFSTR("Helvetica"), fontSize, NULL);
+        if (!font) return 0.0f;
+        CFStringRef string = CFStringCreateWithCString(NULL, text, kCFStringEncodingUTF8);
+        CFTypeRef keys[] = { kCTFontAttributeName };
+        CFTypeRef values[] = { font };
+        CFDictionaryRef attrs = CFDictionaryCreate(NULL, (const void**)keys, (const void**)values, 1,
+            &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
+        CFAttributedStringRef attrStr = CFAttributedStringCreate(NULL, string, attrs);
+        CTLineRef line = CTLineCreateWithAttributedString(attrStr);
+        double width = 0;
+        if (line) {
+            CFIndex len = CTLineGetStringRange(line).length;
+            width = CTLineGetOffsetForStringIndex(line, len, NULL);
+            CFRelease(line);
+        }
+        CFRelease(attrStr);
+        CFRelease(string);
+        CFRelease(attrs);
+        CFRelease(font);
+        return (float)width;
     }
 
     void* nativeContext() const override {

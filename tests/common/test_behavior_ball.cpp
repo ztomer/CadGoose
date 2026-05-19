@@ -2,6 +2,7 @@
 // test_behavior_ball.cpp
 // Unit tests for Ball behavior
 // ===========================
+#include "behaviors/states/all.h"
 #include "gtest/gtest.h"
 #include <cmath>
 

@@ -10,6 +10,7 @@
 #import <QuartzCore/CADisplayLink.h>
 
 #include "goose.h"
+#include "random_util.h"
 #include "goose_drawing.h"
 #include "world.h"
 #include "config.h"
@@ -184,7 +185,7 @@ static BOOL s_hasPrimary = NO;
 
     if (self.isPrimary) {
         // Tick all actors (geese, toys, flowers, etc.)
-        ActorManager::Instance().tickAll(dt, self.currentTime);
+        ActorManager::Instance().tickAll(g_world, dt, self.currentTime);
 
         // Update window positions for geese
         auto geese = ActorManager::Instance().getGeese();
@@ -197,7 +198,7 @@ static BOOL s_hasPrimary = NO;
     }
 
     if (g_config.behaviors.fun.autumnLeaves) {
-        if (rand() % kLeafSpawnProbabilityDenominator == 0) {
+        if (rng_util::RandRange(kLeafSpawnProbabilityDenominator) == 0) {
             World_SpawnRandomLeafPile(g_world.screenWidth, g_world.screenHeight, self.currentTime);
         }
         auto geese = ActorManager::Instance().getGeese();
@@ -207,7 +208,7 @@ static BOOL s_hasPrimary = NO;
 
     // Sync effect windows (leaves, mud, etc.)
     [[EffectWindowManager shared] syncWindows];
-    if (!g_world.leafPiles.empty()) self.needsRedraw = YES;
+    if (ActorManager::Instance().countByType("leafpile") > 0) self.needsRedraw = YES;
 
     // Always sync item windows — needed to clean up orphaned windows when goose picks up last item
     [[ItemWindowManager shared] syncWindows];
@@ -246,12 +247,7 @@ static BOOL s_hasPrimary = NO;
     ActorManager::Instance().renderAll(&renderer);
 
     // Draw debug overlay
-    auto geese = ActorManager::Instance().getGeese();
-    std::list<Goose> gooseList;
-    for (auto* g : geese) {
-        gooseList.push_back(*g);
-    }
-    DrawDebugOverlay(ctx, gooseList);
+    DrawDebugOverlay(ctx, ActorManager::Instance().getGeese());
     CGContextRestoreGState(ctx);
 }
 

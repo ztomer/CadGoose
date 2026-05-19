@@ -179,12 +179,21 @@ SubscriptionId EventBus::Subscribe(std::function<void(const T&)> handler) {
 template<typename T>
 void EventBus::Publish(const T& event) {
     constexpr EventType type = detail::EventTypeInfo<T>::type;
-    std::shared_lock<std::shared_mutex> lock(mutex_);
 
-    auto it = handlers_.find(type);
-    if (it == handlers_.end()) return;
-
-    for (const auto& [id, handler] : it->second) {
+    // Snapshot the handler list under the lock, then invoke unlocked so
+    // a handler that re-publishes or (un)subscribes can't deadlock or
+    // mutate the vector under our iterator.
+    std::vector<std::function<void(const void*)>> snapshot;
+    {
+        std::shared_lock<std::shared_mutex> lock(mutex_);
+        auto it = handlers_.find(type);
+        if (it == handlers_.end()) return;
+        snapshot.reserve(it->second.size());
+        for (const auto& [id, handler] : it->second) {
+            snapshot.push_back(handler);
+        }
+    }
+    for (const auto& handler : snapshot) {
         handler(&event);
     }
 }

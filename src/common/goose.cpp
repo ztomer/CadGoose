@@ -1,7 +1,10 @@
 #include <cstdarg>
+#include "random_util.h"
 #include "goose.h"
 #include "assets.h"
 #include "behavior.h"
+#include "behaviors/states/jail_state.h"
+#include "event_bus.h"
 #include "config.h"
 #include "goose_math.h"
 #include "world.h"
@@ -85,8 +88,10 @@ static void LogTick(double time, const CursorState &cursor) {
     fprintf(f, " c(-,-)");
   fprintf(f, " geese:");
   for (auto* g : ActorManager::Instance().getGeese()) {
-    const char* stateNames[] = {"W", "F", "R", "C", "S"};
-    fprintf(f, " %d%s@(%d,%d)d%dv(%d,%d)s%d", g->id, stateNames[static_cast<int>(g->state)], (int)g->pos.x,
+    static constexpr const char* stateNames[] = {"W", "F", "R", "C", "S"};
+    int si = static_cast<int>(g->state);
+    const char* sn = (si >= 0 && si < (int)(sizeof(stateNames)/sizeof(stateNames[0]))) ? stateNames[si] : "?";
+    fprintf(f, " %d%s@(%d,%d)d%dv(%d,%d)s%d", g->id, sn, (int)g->pos.x,
             (int)g->pos.y, (int)g->dir, (int)g->vel.x, (int)g->vel.y,
             (int)g->currentSpeed);
     if (g->state == GooseState::SNATCH_CURSOR)
@@ -107,17 +112,17 @@ static void CloseDebugLog() {
 
 Goose::Goose(int id_, const std::string &name_, int screenW, int screenH)
     : id(id_), name(name_) {
-  pos = {(float)(rand() % (int)(screenW - g_config.spawn.marginX * 2) +
+  pos = {(float)(rng_util::RandRange((int)(screenW - g_config.spawn.marginX * 2)) +
                  g_config.spawn.marginX),
-         (float)(rand() % (int)(screenH - g_config.spawn.marginY * 2) +
+         (float)(rng_util::RandRange((int)(screenH - g_config.spawn.marginY * 2)) +
                  g_config.spawn.marginY)};
   target = pos;
-  dir = (float)(rand() % (int)g_config.movement.initDirectionMax);
+  dir = (float)(rng_util::RandRange((int)g_config.movement.initDirectionMax));
   currentSpeed = g_config.movement.baseWalkSpeed;
 
   attackMouseBias = 0;
-  memeFetchBias = rand() % g_config.item.memeFetchBiasMax;
-  noteFetchBias = rand() % g_config.item.noteFetchBiasMax;
+  memeFetchBias = rng_util::RandRange(g_config.item.memeFetchBiasMax);
+  noteFetchBias = rng_util::RandRange(g_config.item.noteFetchBiasMax);
 
   cursorChaseEnabled = g_config.cursor.chaseEnabled;
   cursorChaseChance = 5;
@@ -137,7 +142,7 @@ Vector2 Goose::GetBeakTipDevice() {
   Vector2 rawFwd = Vector2::FromAngleDegrees(dir);
   Vector2 fwd{rawFwd.x * ISO_SCALE.x, rawFwd.y * ISO_SCALE.y};
 
-  Vector2 neckHeadDev = WorldCoord::RigNeckHead(*this);
+  Vector2 neckHeadDev = WorldCoord::RigNeckHead(*this).toVector2();
   float totalBeakOffset =
       WorldCoord::Scale(g_config.rig.beakBaseOffset + g_config.rig.beakLen);
   Vector2 beakTipDevice = neckHeadDev + fwd * totalBeakOffset;
@@ -256,7 +261,7 @@ void Goose::SolveFeet(double time) {
         f.currentPos = home;
         f.moveStartTime = -1;
 
-        if (mudEnabled && (rand() % 100) < mudChance) {
+        if (mudEnabled && (rng_util::RandRange(100)) < mudChance) {
           Footprint fp;
           fp.pos = home; // already device coords (GetFootHome returns pos + offset)
           fp.dir = dir + ((&f == &rig.lFoot) ? g_config.step.leftFootAngle
@@ -383,7 +388,8 @@ void Goose::UpdateDetection(double time, int w, int h) {
       // Goose is stuck, pick new wander target
       DebugLog("[STUCK] t=%.1f g%d pos(%.0f,%.0f) state=%d vel(%.1f,%.1f)\n",
               time, id, pos.x, pos.y, (int)state, vel.x, vel.y);
-      target = Vector2((float)(rand() % (int)w), (float)(rand() % (int)h));
+      EventBus::Instance().Publish(GooseStuckEvent{id, pos.x, pos.y, time - stuckCheckTime});
+      target = Vector2((float)(rng_util::RandRange((int)w)), (float)(rng_util::RandRange((int)h)));
       stuckCheckPos = pos;
       stuckCheckTime = time;
     }
@@ -420,9 +426,14 @@ CursorAction Goose::Update(double dt, double time, int w, int h,
                            const CursorState &cursor) {
   lastUpdateTime = time;
   if (state != prevState) {
-    const char *stateNames[] = {"W", "F", "R", "C", "S"};
+    static constexpr const char* stateNames[] = {"W", "F", "R", "C", "S"};
+    constexpr int kStateCount = (int)(sizeof(stateNames)/sizeof(stateNames[0]));
+    int pi = static_cast<int>(prevState);
+    int ci = static_cast<int>(state);
+    const char* prevSn = (pi >= 0 && pi < kStateCount) ? stateNames[pi] : "?";
+    const char* curSn  = (ci >= 0 && ci < kStateCount) ? stateNames[ci] : "?";
     DebugLog("!! t=%.1f g%d %s->%s tgt(%.0f,%.0f) c(%.0f,%.0f)\n", time, id,
-            stateNames[static_cast<int>(prevState)], stateNames[static_cast<int>(state)], target.x, target.y, cursor.position.x,
+            prevSn, curSn, target.x, target.y, cursor.position.x,
             cursor.position.y);
     prevState = state;
     s_stateChanged = true;
@@ -470,24 +481,24 @@ void Goose::StartFetch(int w, int h, double time) {
   state = GooseState::FETCHING;
   if (time > 0) fetchStartTime = time;
 
-  int side = rand() % 4;
+  int side = rng_util::RandRange(4);
   float edgeMargin = g_config.spawn.fetchEdgeMargin;
   switch (side) {
   case 0:
-    target = {-edgeMargin, (float)(rand() % h)};
+    target = {-edgeMargin, (float)(rng_util::RandRange(h))};
     break;
   case 1:
-    target = {(float)w + edgeMargin, (float)(rand() % h)};
+    target = {(float)w + edgeMargin, (float)(rng_util::RandRange(h))};
     break;
   case 2:
-    target = {(float)(rand() % w), -edgeMargin};
+    target = {(float)(rng_util::RandRange(w)), -edgeMargin};
     break;
   case 3:
-    target = {(float)(rand() % w), (float)h + edgeMargin};
+    target = {(float)(rng_util::RandRange(w)), (float)h + edgeMargin};
     break;
   }
 
-  parabolicCurvature = ((rand() % (int)kFetchCurvatureRange) - (int)kFetchCurvatureCenter) / kFetchCurvatureDivisor;
+  parabolicCurvature = ((rng_util::RandRange((int)kFetchCurvatureRange)) - (int)kFetchCurvatureCenter) / kFetchCurvatureDivisor;
 }
 
 void Goose::PickNewTarget(int w, int h) {
@@ -497,8 +508,8 @@ void Goose::PickNewTarget(int w, int h) {
   parabolicCurvature = 0;
 
   float margin = g_config.spawn.marginX;
-  target = {(float)(rand() % (int)(w - margin * 2) + margin),
-            (float)(rand() % (int)(h - margin * 2) + margin)};
+  target = {(float)(rng_util::RandRange((int)(w - margin * 2)) + margin),
+            (float)(rng_util::RandRange((int)(h - margin * 2)) + margin)};
 }
 
 void Goose::UpdateDrag(double dt) {
@@ -537,13 +548,13 @@ void Goose::UpdateDrag(double dt) {
   }
 }
 
-void Goose::tick(double dt, double time) {
+void Goose::tick(WorldContext& world, double dt, double time) {
     CursorState cursor = {};
     if (g_cursorProvider) {
         cursor = g_cursorProvider->Read();
     }
 
-    CursorAction action = Update(dt, time, g_world.screenWidth, g_world.screenHeight, cursor);
+    CursorAction action = Update(dt, time, world.screenWidth, world.screenHeight, cursor);
 
     if (g_cursorProvider && !action.isNone()) {
         g_cursorProvider->Execute(action);
@@ -553,6 +564,7 @@ void Goose::tick(double dt, double time) {
     ctx.goose = this;
     ctx.time = time;
     ctx.isJailed = false;
+    ctx.world = &world;
     BehaviorRegistry::Instance().TickAll(this, dt, time);
 }
 
@@ -565,7 +577,7 @@ void Goose::render(IRenderer* renderer) {
     CGContextTranslateCTM(ctx, pos.x, pos.y);
     CGContextScaleCTM(ctx, g_config.general.globalScale, g_config.general.globalScale);
     CGContextTranslateCTM(ctx, -pos.x, -pos.y);
-    BehaviorRegistry::Instance().RenderPass(this, ctx, true);
+    BehaviorRegistry::Instance().RenderPass(this, renderer, true);
     CGContextRestoreGState(ctx);
 
     DrawGoose(this, ctx);
@@ -577,7 +589,7 @@ void Goose::render(IRenderer* renderer) {
     CGContextTranslateCTM(ctx, pos.x, pos.y);
     CGContextScaleCTM(ctx, g_config.general.globalScale, g_config.general.globalScale);
     CGContextTranslateCTM(ctx, -pos.x, -pos.y);
-    BehaviorRegistry::Instance().RenderPass(this, ctx, false);
+    BehaviorRegistry::Instance().RenderPass(this, renderer, false);
     CGContextRestoreGState(ctx);
 #else
     (void)renderer;

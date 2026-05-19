@@ -20,9 +20,9 @@ JailActor::JailActor(const Vector2& pos)
     , m_window(nullptr), m_windowKey(nullptr)
 #endif
 {
-    position = {pos.x, pos.y};
-    active = true;
-    radius = JAIL_SIZE * 0.5f;
+    m_position = {pos.x, pos.y};
+    m_active = true;
+    m_radius = JAIL_SIZE * 0.5f;
 }
 
 JailActor::~JailActor() {
@@ -39,18 +39,18 @@ JailActor::~JailActor() {
 #endif
 }
 
-void JailActor::tick(double dt, double time) {
+void JailActor::tick(WorldContext& ctx, double dt, double time) {
     (void)dt; (void)time;
-    // Jail stays at its position until explicitly removed
+    // Jail stays at its m_position until explicitly removed
 }
 
 void JailActor::render(IRenderer* renderer) {
-    if (!active) return;
+    if (!m_active) return;
 
 #ifdef __APPLE__
     float winSize = JAIL_SIZE;
-    float winX = position.x - winSize / 2.0f;
-    float winY = position.y - winSize / 2.0f;
+    float winX = m_position.x - winSize / 2.0f;
+    float winY = m_position.y - winSize / 2.0f;
 
     if (!m_window) {
         m_window = (void*)CFBridgingRetain([[BehaviorElementWindow alloc]

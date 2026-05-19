@@ -1,4 +1,5 @@
 #include "assets.h"
+#include "random_util.h"
 #include "config.h"
 #include <SDL.h>
 #include <fstream>
@@ -54,7 +55,7 @@ void AssetManager::Init() {
 
 ItemData* AssetManager::GetRandomMeme(int screenWidth, int screenHeight, float maxSizeFraction) {
     if(memePaths.empty()) return nullptr;
-    std::string p = memePaths[rand() % memePaths.size()];
+    std::string p = memePaths[rng_util::RandRange((int)memePaths.size())];
     GdkPixbuf* pb = nullptr;
 
     auto cached = memeCache.find(p);
@@ -103,7 +104,7 @@ ItemData* AssetManager::GetRandomMeme(int screenWidth, int screenHeight, float m
 
 ItemData* AssetManager::GetRandomText() {
     if(textPaths.empty()) return nullptr;
-    std::string p = textPaths[rand() % textPaths.size()];
+    std::string p = textPaths[rng_util::RandRange((int)textPaths.size())];
     std::shared_ptr<const std::string> text;
 
     auto cached = textCache.find(p);
@@ -165,8 +166,8 @@ ItemData* AssetManager::CreateToyItem(bool isStick) {
     return item;
 }
 
-void AssetManager::Honk() { if(g_config.audioEnabled && !honks.empty()) Mix_PlayChannel(-1, honks[rand()%honks.size()], 0); }
-void AssetManager::Pat()  { if(g_config.audioEnabled && !pats.empty())  Mix_PlayChannel(-1, pats[rand()%pats.size()], 0); }
+void AssetManager::Honk() { if(g_config.audioEnabled && !honks.empty()) Mix_PlayChannel(-1, honks[rng_util::RandRange((int)honks.size())], 0); }
+void AssetManager::Pat()  { if(g_config.audioEnabled && !pats.empty())  Mix_PlayChannel(-1, pats[rng_util::RandRange((int)pats.size())], 0); }
 
 void* AssetManager::GetBehaviorImage(const std::string& name) {
     fs::path path = ASSET_ROOT / name;

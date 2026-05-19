@@ -3,6 +3,7 @@
 // World maintenance utilities
 // ===========================
 #include "world.h"
+#include "random_util.h"
 #include "config.h"
 #include "actor.h"
 #include "actor_dropped_item.h"
@@ -68,6 +69,7 @@ void World_CleanupExpired(double currentTime) {
 
 void World_TickLeafPiles(double currentTime, float dt, Goose* nearestGoose) {
     if (!g_config.behaviors.fun.autumnLeaves) return;
+    (void)dt; (void)currentTime; // tick is done via ActorManager::tickAll
 
     auto& mgr = ActorManager::Instance();
     for (int i = 0; i < mgr.totalCount(); i++) {
@@ -77,8 +79,9 @@ void World_TickLeafPiles(double currentTime, float dt, Goose* nearestGoose) {
         LeafPileActor* pile = static_cast<LeafPileActor*>(a);
         if (!pile->isAlive()) continue;
 
-        // Check if goose is near to kick the pile
-        if (nearestGoose && Vector2::Distance(nearestGoose->pos, pile->position) < pile->radius + g_config.render.footSize) {
+        // Check if goose is near to kick the pile (the per-frame leaf-particle
+        // simulation itself runs from the actor's tick via ActorManager::tickAll).
+        if (nearestGoose && Vector2::Distance(nearestGoose->pos, pile->position().toVector2()) < pile->radius() + g_config.render.footSize) {
             float walkSpeed = g_config.movement.baseWalkSpeed;
             float chargeSpeed = g_config.movement.baseRunSpeed;
             float currentSpeed = nearestGoose->currentSpeed;
@@ -87,8 +90,6 @@ void World_TickLeafPiles(double currentTime, float dt, Goose* nearestGoose) {
             if (gooseSpeedPercentage > 1.0f) gooseSpeedPercentage = 1.0f;
             pile->kick(nearestGoose->vel, currentTime, gooseSpeedPercentage);
         }
-
-        pile->tick(dt, currentTime);
     }
 }
 
@@ -100,10 +101,10 @@ void World_SpawnRandomLeafPile(float screenWidth, float screenHeight, double cur
     if (activeCount >= kMaxLeafPiles) return;
 
     Vector2 pos{
-        (float)(rand() % (int)std::max(1.0f, screenWidth)),
-        (float)(rand() % (int)std::max(1.0f, screenHeight))
+        (float)(rng_util::RandRange((int)std::max(1.0f, screenWidth))),
+        (float)(rng_util::RandRange((int)std::max(1.0f, screenHeight)))
     };
-    float radius = kLeafPileSizeMin + (rand() % (int)(kLeafPileSizeMax - kLeafPileSizeMin));
+    float radius = kLeafPileSizeMin + (rng_util::RandRange((int)(kLeafPileSizeMax - kLeafPileSizeMin)));
     LeafPileActor* pile = new LeafPileActor(pos, radius, kLeafPileSizeMax, currentTime);
     mgr.add(pile);
 }

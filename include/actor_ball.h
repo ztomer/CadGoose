@@ -4,6 +4,7 @@
 
 #pragma once
 
+struct WorldContext;
 #include "actor.h"
 
 #ifdef __APPLE__
@@ -17,9 +18,9 @@ public:
     ~BallActor() override;
 
     const char* type() const override { return "ball"; }
-    void tick(double dt, double time) override;
+    void tick(WorldContext& ctx, double dt, double time) override;
     void render(IRenderer* renderer) override;
-    bool isAlive() const override { return active; }
+    bool isAlive() const override { return m_active; }
 
     // Physics state
     Vector2 velocity;

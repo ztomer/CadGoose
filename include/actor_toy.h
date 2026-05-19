@@ -4,6 +4,7 @@
 
 #pragma once
 
+struct WorldContext;
 #include "actor.h"
 
 class ToyActor : public Actor {
@@ -15,9 +16,9 @@ public:
 
     const char* type() const override { return "toy"; }
     int id() const override { return m_instanceId; }
-    void tick(double dt, double time) override;
+    void tick(WorldContext& ctx, double dt, double time) override;
     void render(IRenderer* renderer) override;
-    bool isAlive() const override { return active; }
+    bool isAlive() const override { return m_active; }
 
     Type toyType() const { return m_type; }
     float angle() const { return m_angle; }

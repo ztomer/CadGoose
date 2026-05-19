@@ -2,6 +2,7 @@
 // test_behavior_breadcrumbs.cpp
 // Unit tests for BreadCrumbs behavior
 // ===========================
+#include "behaviors/states/all.h"
 #include "gtest/gtest.h"
 
 #include "behavior.h"

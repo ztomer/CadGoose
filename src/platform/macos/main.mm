@@ -152,8 +152,9 @@ bool Config_IsSystemDarkTheme();
 }
 
 - (void)openAIChat:(id)sender {
-    if (!g_world.geese.empty()) {
-        AI_OpenChat(g_world.geese.front().name.c_str());
+    auto geese = ActorManager::Instance().getGeese();
+    if (!geese.empty()) {
+        AI_OpenChat(geese.front()->name.c_str());
     } else {
         AI_OpenChat("Goose");
     }
@@ -364,18 +365,19 @@ bool Config_IsSystemDarkTheme();
     DEBUG_LOG("Screen: %dx%d", g_world.screenWidth, g_world.screenHeight);
 
     AppActions_EnsureInitialGoose();
-    DEBUG_LOG("Geese spawned: %zu", g_world.geese.size());
+    auto initialGeese = ActorManager::Instance().getGeese();
+    DEBUG_LOG("Geese spawned: %zu", initialGeese.size());
 
-    for (auto& g : g_world.geese) {
-        DEBUG_LOG("Goose %d at %.1f,%.1f", g.id, g.pos.x, g.pos.y);
+    for (auto* g : initialGeese) {
+        DEBUG_LOG("Goose %d at %.1f,%.1f", g->id, g->pos.x, g->pos.y);
     }
 
     [[NSApplication sharedApplication] setActivationPolicy:NSApplicationActivationPolicyRegular];
     [self setupMenubar];
     DEBUG_LOG("App ready, entering run loop...");
 
-    if (g_config.behaviors.info.presence && !g_world.geese.empty()) {
-        auto& goose = g_world.geese.front();
+    if (g_config.behaviors.info.presence && !initialGeese.empty()) {
+        auto& goose = *initialGeese.front();
         const char* stateStr = "?";
         switch (goose.state) {
             case GooseState::WANDER: stateStr = "W"; break;

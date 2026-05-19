@@ -3,6 +3,7 @@
 // Rainbow Behavior - Cycle through rainbow colors
 // ===========================
 #include "behavior.h"
+#include "behaviors/states/rainbow_state.h"
 #include "goose.h"
 #include "config.h"
 #include "behaviors/states/rainbow_state.h"
@@ -23,7 +24,7 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
     state->lastUpdate = time;
 }
 
-static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
+static void render(Goose* goose, BehaviorContext& ctx, IRenderer* irenderer) {
 }
 
 float Rainbow_GetHue(int gooseId) {

@@ -4,6 +4,7 @@
 #include <vector>
 #include <functional>
 #include "behavior_state.h"
+#include "renderer_interface.h"
 
 struct Behavior {
     const char* id;
@@ -15,7 +16,7 @@ struct Behavior {
 
     using InitFunc = std::function<void(BehaviorContext&)>;
     using TickFunc = std::function<void(Goose*, BehaviorContext&, double dt, double time)>;
-    using RenderFunc = std::function<void(Goose*, BehaviorContext&, void* ctx)>;
+    using RenderFunc = std::function<void(Goose*, BehaviorContext&, IRenderer* renderer)>;
     using CleanupFunc = std::function<void(BehaviorContext&)>;
 
     InitFunc init;
@@ -45,8 +46,8 @@ public:
 
     void InitAll(Goose* goose);
     void TickAll(Goose* goose, double dt, double time);
-    void RenderAll(Goose* goose, void* ctx);
-    void RenderPass(Goose* goose, void* ctx, bool groundPass);
+    void RenderAll(Goose* goose, IRenderer* renderer);
+    void RenderPass(Goose* goose, IRenderer* renderer, bool groundPass);
     void CleanupAll(Goose* goose);
 
     Behavior* Get(const char* id);

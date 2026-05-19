@@ -3,6 +3,7 @@
 // The actual ball logic lives in actor_ball.mm (Actor, not Behavior).
 
 #include "behavior.h"
+#include "behaviors/states/ball_state.h"
 #include "goose.h"
 #include "config.h"
 #include "world.h"
@@ -19,13 +20,13 @@ static void init(BehaviorContext& ctx) {
         ActorManager::Instance().add(s_ballActor);
     }
     // Reset ball position on goose init
-    s_ballActor->position = {300.0f, 300.0f};
+    s_ballActor->setPosition({300.0f, 300.0f});
     s_ballActor->velocity = {0, 0};
     s_ballActor->speed = 0.0f;
 }
 
 static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
-    if (!s_ballActor || !s_ballActor->active) return;
+    if (!s_ballActor || !s_ballActor->isActive()) return;
 
     // Check goose kick
     float gooseFootSize = g_config.render.footSize;
@@ -35,7 +36,7 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
     if (s_ballActor->wasKicked()) {
         s_ballActor->clearKickedFlag();
         if (goose->state == GooseState::WANDER) {
-            goose->target = s_ballActor->position;
+            goose->target = s_ballActor->position().toVector2();
             goose->currentSpeed = g_config.movement.baseWalkSpeed * 0.7f;
         }
     }
@@ -57,17 +58,17 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
 
     // Chase ball if it's moving
     if (goose->state == GooseState::CHASE_CURSOR && s_ballActor->speed > 5.0f) {
-        goose->target = s_ballActor->position;
+        goose->target = s_ballActor->position().toVector2();
     }
 
     // Tick ball physics (position, velocity, animation, bounds)
-    s_ballActor->tick(dt, time);
+    s_ballActor->tick(*ctx.world, dt, time);
 }
 
-static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
-    if (!s_ballActor || !s_ballActor->active) return;
+static void render(Goose* goose, BehaviorContext& ctx, IRenderer* irenderer) {
+    if (!s_ballActor || !s_ballActor->isActive()) return;
     // Ball renders via its own BehaviorElementWindow
-    (void)goose; (void)ctx; (void)renderCtx;
+    (void)goose; (void)ctx; (void)irenderer;
 }
 
 static void cleanup(BehaviorContext& ctx) {

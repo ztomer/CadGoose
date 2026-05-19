@@ -4,6 +4,12 @@
 // ===========================
 
 #include "behavior.h"
+#include "behaviors/states/jail_state.h"
+#include "behaviors/states/ball_state.h"
+#include "behaviors/states/breadcrumb_state.h"
+#include "behaviors/states/health_state.h"
+#include "behaviors/states/anger_state.h"
+#include "behaviors/states/portal_state.h"
 #include "world.h"
 #include "config.h"
 #include "goose_math.h"
@@ -104,22 +110,23 @@ void BehaviorRegistry::TickAll(Goose* goose, double dt, double time) {
     }
 }
 
-void BehaviorRegistry::RenderAll(Goose* goose, void* ctx) {
-    RenderPass(goose, ctx, false);
+void BehaviorRegistry::RenderAll(Goose* goose, IRenderer* renderer) {
+    RenderPass(goose, renderer, false);
 }
 
-void BehaviorRegistry::RenderPass(Goose* goose, void* ctx, bool groundPass) {
+void BehaviorRegistry::RenderPass(Goose* goose, IRenderer* renderer, bool groundPass) {
     if (!goose) return;
 
     BehaviorContext behaviorCtx{};
     behaviorCtx.goose = goose;
     behaviorCtx.time = g_time;
     behaviorCtx.globalScale = g_config.general.globalScale;
+    behaviorCtx.renderer = renderer;
 
     for (auto* behavior : behaviors) {
         if (behavior->enabledPtr && *behavior->enabledPtr && behavior->renderOnGround == groundPass) {
             try {
-                behavior->render(goose, behaviorCtx, ctx);
+                behavior->render(goose, behaviorCtx, renderer);
             } catch (const std::exception& e) {
                 fprintf(stderr, "[BEHAVIOR] Render failed for %s: %s\n",
                         behavior->id, e.what());

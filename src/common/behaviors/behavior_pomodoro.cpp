@@ -4,6 +4,9 @@
 // Work for 25 minutes, break for 5, long break after 4 sessions
 // ===========================
 #include "behavior.h"
+#include "behaviors/states/pomodoro_state.h"
+#include "event_bus.h"
+#include "pomodoro_bed.h"
 #include "goose.h"
 #include "config.h"
 #include "world.h"
@@ -139,6 +142,7 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
         }
         state->phaseStartTime = time;
         elapsed = 0;
+        EventBus::Instance().Publish(PomodoroPhaseChangedEvent{goose->id, static_cast<int>(state->phase), time});
     }
 
     if (state->phase == PomodoroPhase::Work) {
@@ -232,28 +236,15 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
     }
 }
 
-static CTFontRef s_pomoFont = nullptr;
-static CGColorRef s_pomoWhite = nullptr;
+static void cleanupPomoFont(BehaviorContext&) {}
 
-static void cleanupPomoFont(BehaviorContext&) {
-    if (s_pomoFont) { CFRelease(s_pomoFont); s_pomoFont = nullptr; }
-    if (s_pomoWhite) { CGColorRelease(s_pomoWhite); s_pomoWhite = nullptr; }
-}
-
-static void ensurePomoFont() {
-    if (!s_pomoFont) s_pomoFont = CTFontCreateWithName(CFSTR("Helvetica-Bold"), kPomoFontsize, NULL);
-    if (!s_pomoWhite) s_pomoWhite = CGColorCreateGenericRGB(1.0f, 1.0f, 1.0f, 1.0f);
-}
-
-static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
-#ifdef __APPLE__
-    CGContextRef cg = (CGContextRef)renderCtx;
-    if (!cg) return;
+static void render(Goose* goose, BehaviorContext& ctx, IRenderer* irenderer) {
+    if (!irenderer) return;
 
     auto* state = BehaviorStateManager::Instance().Get<PomodoroState>(goose->id, "pomodoro");
     if (!state) return;
 
-    CGRenderer renderer(cg);
+    IRenderer& renderer = *irenderer;
 
     double elapsed = ctx.time - state->phaseStartTime;
     double remaining = GetPhaseDuration(state->phase) - elapsed;
@@ -295,32 +286,10 @@ static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
                              6.0f,
                              RenderColor{1.0f, 1.0f, 1.0f, 0.06f});
 
-    ensurePomoFont();
-    if (s_pomoFont && s_pomoWhite) {
-        CFTypeRef keys[] = { kCTFontAttributeName, kCTForegroundColorAttributeName };
-        CFTypeRef values[] = { s_pomoFont, s_pomoWhite };
-        CFDictionaryRef attributes = CFDictionaryCreate(NULL, (const void**)keys, (const void**)values, 2, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
-
-        CFStringRef string = CFStringCreateWithBytes(NULL, (const UInt8*)timerText, strlen(timerText), kCFStringEncodingUTF8, false);
-        CFAttributedStringRef attrStr = CFAttributedStringCreate(NULL, string, attributes);
-        CTLineRef line = CTLineCreateWithAttributedString(attrStr);
-
-    if (line) {
-        // Get actual text width for precise centering (like nametag)
-        CFIndex stringLength = CTLineGetStringRange(line).length;
-        double textWidth = CTLineGetOffsetForStringIndex(line, stringLength, NULL);
-
-        float boxCenterX = headPos.x;
-        float textX = boxCenterX - (float)textWidth / 2.0f;
-        CGContextSetTextMatrix(cg, CGAffineTransformMakeScale(1.0, -1.0));
-        CGContextSetTextPosition(cg, textX, headPos.y - kTimerTextDrawYOffset);
-        CTLineDraw(line, cg);
-        CFRelease(line);
-    }
-
-        CFRelease(attrStr);
-        CFRelease(string);
-        CFRelease(attributes);
+    {
+        float measured = renderer.MeasureText(timerText, kPomoFontsize);
+        float textX = headPos.x - measured / 2.0f;
+        renderer.DrawText(timerText, {textX, headPos.y - kTimerTextDrawYOffset}, RenderColor::White(), kPomoFontsize);
     }
 
     if (state->isSleeping) {
@@ -336,10 +305,9 @@ static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
         float zzzY = headPos.y - kZzzBaseYOffset - (float)(state->zzzAnimTime / kZzzAnimInterval) * kZzzFloatHeight;
         float zzzAlpha = 1.0f - (float)(state->zzzAnimTime / kZzzAnimInterval) * kZzzAlphaFadeStart;
 
-        CGImageRef zzzImg = s_zzzImages[state->zzzFrame];
-        if (zzzImg) {
-            float imgW = (float)CGImageGetWidth(zzzImg);
-            float imgH = (float)CGImageGetHeight(zzzImg);
+        void* zzzImg = (void*)s_zzzImages[state->zzzFrame];
+        float imgW = 0, imgH = 0;
+        if (zzzImg && renderer.GetImageSize(zzzImg, &imgW, &imgH) && imgW > 0) {
             renderer.SetAlpha(zzzAlpha);
             renderer.SaveState();
             renderer.Translate(zzzX, zzzY);
@@ -347,32 +315,13 @@ static void render(Goose* goose, BehaviorContext& ctx, void* renderCtx) {
             renderer.DrawImage(zzzImg, RenderRect{-imgW/2, -imgH/2, imgW, imgH});
             renderer.RestoreState();
         } else {
-            CTFontRef zzzFont = CTFontCreateWithName(CFSTR("Helvetica-Bold"), kZzzFontsize, NULL);
-            CGColorRef zzzColor = CGColorCreateGenericRGB(kZzzFallbackR, kZzzFallbackG, kZzzFallbackB, zzzAlpha);
-            CFTypeRef zzzKeys[] = { kCTFontAttributeName, kCTForegroundColorAttributeName };
-            CFTypeRef zzzValues[] = { zzzFont, zzzColor };
-            CFDictionaryRef zzzAttrs = CFDictionaryCreate(NULL, (const void**)zzzKeys, (const void**)zzzValues, 2, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
-
-            CFStringRef zzzString = CFStringCreateWithCString(NULL, zzzStr, kCFStringEncodingUTF8);
-            CFAttributedStringRef zzzAttrStr = CFAttributedStringCreate(NULL, zzzString, zzzAttrs);
-            CTLineRef zzzLine = CTLineCreateWithAttributedString(zzzAttrStr);
-
-            if (zzzLine) {
-                CGContextSetTextPosition(cg, zzzX, zzzY);
-                CTLineDraw(zzzLine, cg);
-                CFRelease(zzzLine);
-            }
-
-            CFRelease(zzzAttrStr);
-            CFRelease(zzzString);
-            CFRelease(zzzAttrs);
-            CFRelease(zzzColor);
-            CFRelease(zzzFont);
+            renderer.DrawText(zzzStr, {zzzX, zzzY},
+                              RenderColor{kZzzFallbackR, kZzzFallbackG, kZzzFallbackB, zzzAlpha},
+                              kZzzFontsize);
         }
     }
 
     renderer.RestoreState();
-#endif
 }
 
 static Behavior g_pomodoroBehavior = BEHAVIOR_DEF_CUSTOM(

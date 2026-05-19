@@ -1,4 +1,4 @@
-#include "ui_drawing.h"
+
 #include "ui_tick.h"
 #include "ui_debug.h"
 // ui.cpp
@@ -113,6 +113,191 @@ void UpdateInputRegion(GtkWindow* window, const MonitorInfo& m) {
         gdk_surface_set_input_region(s, region);
     }
     cairo_region_destroy(region);
+}
+
+void draw_overlay(GtkDrawingArea* area, cairo_t* cr, int width, int height, gpointer data) {
+    MonitorInfo* m = (MonitorInfo*)data;
+    if (!m || cairo_status(cr) != CAIRO_STATUS_SUCCESS) return;
+
+    if (!g_config.cursor.multiMonitorEnabled && (m->x != 0 || m->y != 0)) {
+        cairo_save(cr);
+        cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
+        cairo_paint(cr);
+        cairo_restore(cr);
+        return;
+    }
+
+    cairo_save(cr); 
+    cairo_translate(cr, -m->x, -m->y);
+
+    DrawFootprints(cr);
+    DrawDroppedItems(cr);
+
+    // Draw Geese
+    for (auto* gp : ActorManager::Instance().getGeese()) {
+        if (cairo_status(cr) != CAIRO_STATUS_SUCCESS) break;
+        Goose& g = *gp;
+        g.Draw(cr);
+
+        // Minecraft-style name tag
+        if (!g.name.empty()) {
+            cairo_save(cr);
+            PangoLayout* layout = pango_cairo_create_layout(cr);
+            std::string tagText = "[#" + std::to_string(g.id) + "] " + g.name;
+            pango_layout_set_text(layout, tagText.c_str(), -1);
+            
+            PangoFontDescription* desc = pango_font_description_from_string("Sans Bold 10");
+            pango_layout_set_font_description(layout, desc);
+            pango_font_description_free(desc);
+
+            int tw, th;
+            pango_layout_get_pixel_size(layout, &tw, &th);
+
+            float tagX = g.pos.x - tw / 2.0f;
+            float tagY = g.pos.y - kLinuxNametagYOffset * g_config.general.globalScale; // Position above head
+
+            // Background rectangle (translucent dark)
+            cairo_set_source_rgba(cr, 0, 0, 0, 0.4);
+            cairo_rectangle(cr, tagX - kLinuxNametagPadX, tagY - kLinuxNametagPadY, tw + kLinuxNametagPadW, th + kLinuxNametagPadH);
+            cairo_fill(cr);
+
+            // White text
+            cairo_set_source_rgb(cr, 1, 1, 1);
+            cairo_move_to(cr, tagX, tagY);
+            pango_cairo_show_layout(cr, layout);
+
+            g_object_unref(layout);
+            cairo_restore(cr);
+        }
+
+        // Visual debug: highlight all geese when enabled
+        if (g_config.debug.visuals) {
+            cairo_save(cr);
+            
+            // 1. Highlight circle around goose
+            cairo_set_source_rgba(cr, 1, 1, 0, 0.15);
+            cairo_set_line_width(cr, 2.0);
+            cairo_arc(cr, g.pos.x, g.pos.y, kDebugCircleRadius, 0, G_PI * 2);
+            cairo_fill_preserve(cr);
+            cairo_set_source_rgba(cr, 1, 1, 0, 0.4);
+            cairo_stroke(cr);
+
+            // 2. ID label near goose
+            char idBuf[16];
+            snprintf(idBuf, sizeof(idBuf), "ID %d", g.id);
+            cairo_set_source_rgba(cr, 1, 1, 0, 0.9);
+            cairo_move_to(cr, g.pos.x + kDebugIdLabelOffsetX, g.pos.y + kDebugIdLabelOffsetY);
+            PangoLayout* idLayout = pango_cairo_create_layout(cr);
+            pango_layout_set_text(idLayout, idBuf, -1);
+            pango_cairo_show_layout(cr, idLayout);
+            g_object_unref(idLayout);
+
+            // 3. Target point and line to target
+            // Note: Use btPoint if we're in a beak-targeting state, otherwise pos
+            Vector2 origin = g.pos;
+            if (g.state == GooseState::FETCHING || g.state == GooseState::RETURNING || g.state == GooseState::CHASE_CURSOR) {
+                origin = g.GetBeakTipDevice();
+            }
+
+            // Draw line to target (dashed)
+            cairo_set_source_rgba(cr, 0, 1, 0, 0.5);
+            cairo_set_line_width(cr, 1.5);
+            double dashes[] = {kDebugDashPattern1, kDebugDashPattern2};
+            cairo_set_dash(cr, dashes, 2, 0);
+            cairo_move_to(cr, origin.x, origin.y);
+            cairo_line_to(cr, g.target.x, g.target.y);
+            cairo_stroke(cr);
+            cairo_set_dash(cr, NULL, 0, 0); // reset dash
+
+            // Draw target dot
+            cairo_set_source_rgba(cr, 0, 1, 0, 0.8);
+            if (g.state == GooseState::RETURNING) cairo_set_source_rgba(cr, 1, 0, 1, 0.8); // Purple for drop point
+            if (g.state == GooseState::FETCHING) cairo_set_source_rgba(cr, 0, 1, 1, 0.8);  // Cyan for fetch point
+            
+            cairo_arc(cr, g.target.x, g.target.y, kDebugTargetDotRadius, 0, G_PI * 2);
+            cairo_fill(cr);
+
+            // 4. Threshold circle (Drop Zone / Catch Zone)
+            float threshold = std::max(30.0f * g_config.general.globalScale, 25.0f);
+            if (g.state == GooseState::RETURNING) threshold = std::max(50.0f * g_config.general.globalScale, 40.0f);
+            if (g.state == GooseState::CHASE_CURSOR) threshold = std::max(22.0f * g_config.general.globalScale, 15.0f);
+
+            cairo_set_source_rgba(cr, 1, 1, 1, 0.2); // Faint white circle
+            cairo_set_line_width(cr, 1.0);
+            cairo_arc(cr, g.target.x, g.target.y, threshold, 0, G_PI * 2);
+            cairo_stroke(cr);
+
+            // 5. Text info under ID
+            const char* stateName = "UNKNOWN";
+            switch(g.state) {
+                case GooseState::WANDER: stateName = "WANDER"; break;
+                case GooseState::FETCHING: stateName = "FETCHING"; break;
+                case GooseState::RETURNING: stateName = "RETURNING"; break;
+                case GooseState::CHASE_CURSOR: stateName = "CHASE"; break;
+                case GooseState::SNATCH_CURSOR: stateName = "SNATCH"; break;
+            }
+            float dist = Vector2::Distance(origin, g.target);
+            char infoBuf[64];
+            snprintf(infoBuf, sizeof(infoBuf), "%s (d:%.0f/%.0f)", stateName, dist, threshold);
+            
+            cairo_set_source_rgba(cr, 1, 1, 1, 0.7);
+            cairo_move_to(cr, g.pos.x + 15, g.pos.y - 10);
+            PangoLayout* infoLayout = pango_cairo_create_layout(cr);
+            pango_layout_set_text(infoLayout, infoBuf, -1);
+            pango_cairo_show_layout(cr, infoLayout);
+            g_object_unref(infoLayout);
+
+            // 6. Draw Beak Tip (btPoint) clearly
+            Vector2 bt = g.GetBeakTipDevice();
+            cairo_set_source_rgba(cr, kDebugOrangeR, kDebugOrangeG, kDebugOrangeB, kDebugOrangeAlpha);
+            cairo_arc(cr, bt.x, bt.y, 4, 0, G_PI * 2);
+            cairo_fill(cr);
+
+            // Enhanced Path Visualization: Predictive Curve Simulation
+            Vector2 simPos = origin;
+            Vector2 simVel = (Vector2::Length(g.vel) < 1.0f) ? (Vector2::Normalize(g.target - origin) * g.currentSpeed) : g.vel;
+            float simDt = kSimDt; // Simulation step
+            
+            cairo_set_source_rgba(cr, 1, 1, 1, 0.3);
+            for (int i = 0; i < kSimSteps; i++) {
+                Vector2 toTarget = g.target - simPos;
+                float d = Vector2::Length(toTarget);
+                if (d < kSimBreakDist) break;
+
+                Vector2 desired = Vector2::Normalize(toTarget) * g.currentSpeed;
+                Vector2 seek = (desired - simVel) * 2.0f;
+                
+                Vector2 tangent{ -Vector2::Normalize(simVel).y, Vector2::Normalize(simVel).x };
+                float curveFade = std::min(1.0f, d / 200.0f);
+                Vector2 curve = tangent * (g.parabolicCurvature * g.currentSpeed * 0.8f * curveFade);
+                
+                Vector2 force = seek + curve;
+                simVel = simVel + force * simDt;
+                // Limit speed
+                float s = Vector2::Length(simVel);
+                if (s > g.currentSpeed) simVel = simVel * (g.currentSpeed / s);
+                
+                Vector2 nextSimPos = simPos + simVel * simDt;
+                cairo_move_to(cr, simPos.x, simPos.y);
+                cairo_line_to(cr, nextSimPos.x, nextSimPos.y);
+                cairo_stroke(cr);
+                
+                simPos = nextSimPos;
+                
+                // Avoid infinite simulation if something goes wrong
+                if (Vector2::Distance(simPos, origin) > kSimMaxDist) break;
+            }
+
+            cairo_restore(cr);
+        }
+    }
+
+    cairo_restore(cr); 
+
+    // Debug overlay (only on the primary monitor window)
+    if (m->x == 0 && m->y == 0) {
+        draw_debug_overlay(cr);
+    }
 }
 
 void setup_overlay_window(GtkApplication* app) {

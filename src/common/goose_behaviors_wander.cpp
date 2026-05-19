@@ -1,6 +1,7 @@
 // goose_behaviors_wander.cpp
 // Wander behavior logic
 #include "goose.h"
+#include "random_util.h"
 #include "world.h"
 #include "config.h"
 #include "goose_math.h"
@@ -51,8 +52,8 @@ CursorAction handleChaseCursor(Goose& g, double time, const CursorState& cursor,
     float catchThreshold = std::max(WorldCoord::Scale(22.0f), 15.0f);
     float dist = Vector2::Distance(btPoint, g.target);
     FILE* f = GetDebugLog();
-    Vector2 bodyDev = WorldCoord::RigBody(g);
-    Vector2 neckDev = WorldCoord::RigNeckHead(g);
+    Vector2 bodyDev = WorldCoord::RigBody(g).toVector2();
+    Vector2 neckDev = WorldCoord::RigNeckHead(g).toVector2();
     fprintf(f, "[CHASE] t=%.1f g%d: dir=%.0f body=(%.0f,%.0f) neck=(%.0f,%.0f) beak=(%.0f,%.0f) cursor=(%.0f,%.0f) dist=%.1f thr=%.1f grab=%d\n",
             time, g.id, g.dir, bodyDev.x, bodyDev.y, neckDev.x, neckDev.y,
             btPoint.x, btPoint.y, g.target.x, g.target.y, dist, catchThreshold, g_world.cursorGrabberId);
@@ -76,7 +77,7 @@ void handleWander(Goose& g, double time, const CursorState& cursor, int w, int h
     bool cursorValid = cursor.hasPos();
     if (canChase && chaseEnabled && cursorValid) {
         int totalChance = g_config.cursor.chaseChance + g.attackMouseBias;
-        int roll = rand() % 100;
+        int roll = rng_util::RandRange(100);
         FILE* f = GetDebugLog();
         fprintf(f, "[WALKER] t=%.1f g%d: grab=-%d ena=%d valid=%d chance=%d roll=%d\n",
                 time, g.id, g_world.cursorGrabberId, chaseEnabled, cursorValid, totalChance, roll);
@@ -85,8 +86,8 @@ void handleWander(Goose& g, double time, const CursorState& cursor, int w, int h
             g.state = GooseState::CHASE_CURSOR;
             g.chaseStartTime = time;
             g.target = cursor.position;
-            extern void triggerHonk(Goose::HonkState& hs, double time, double cd, double& lastBucket);
-            triggerHonk(g.honkState, time, g_config.honk.chaseCooldown, g.honkState.lastChase);
+            extern void triggerHonk(Goose& g, double time, double cd, double& lastBucket);
+            triggerHonk(g, time, g_config.honk.chaseCooldown, g.honkState.lastChase);
             chased = true;
         }
     }
@@ -105,13 +106,13 @@ void handleWander(Goose& g, double time, const CursorState& cursor, int w, int h
         int fetchCount = 0;
         for (auto* other : ActorManager::Instance().getGeese()) if (other->state == GooseState::FETCHING) fetchCount++;
 
-        int fetchRoll = rand() % 100;
+        int fetchRoll = rng_util::RandRange(100);
         fprintf(f, "[FETCH] t=%.1f g%d: trigger=%d roll=%d fetchCount=%d maxGeese=%d\n",
                 time, g.id, trigger, fetchRoll, fetchCount, g_config.item.maxFetchGeese);
 
         if (canFetch && fetchCount < g_config.item.maxFetchGeese && fetchRoll < trigger) {
             int fetchType;
-            if (g_config.general.memesEnabled && rand() % 100 < kWanderMemeProbability) {
+            if (g_config.general.memesEnabled && rng_util::RandRange(100) < kWanderMemeProbability) {
                 fetchType = 0;
                 fprintf(f, "[FETCH] t=%.1f g%d: TRIGGERED fetch type=MEME\n", time, g.id);
                 g.ForceFetch(fetchType, w, h, time);
@@ -126,16 +127,14 @@ void handleWander(Goose& g, double time, const CursorState& cursor, int w, int h
             else if (fetchRoll >= trigger) fprintf(f, "[FETCH] g%d: skipped (roll=%d >= trigger=%d)\n", g.id, fetchRoll, trigger);
             g.PickNewTarget(w, h);
 
-            if (g_config.general.memesEnabled && (rand() % 100) < g_config.item.heistChancePercent) {
-                auto items = ActorManager::Instance().getDroppedItems();
-                std::vector<DroppedItemActor*> validItems;
-                for (auto* actor : items) {
-                    if (!actor->pinned()) validItems.push_back(actor);
+            if (g_config.general.memesEnabled && (rng_util::RandRange(100)) < g_config.item.heistChancePercent && !g_world.droppedItems.empty()) {
+                std::vector<std::list<DroppedItem>::iterator> validItems;
+                for (auto it = g_world.droppedItems.begin(); it != g_world.droppedItems.end(); ++it) {
+                    if (!it->pinned) validItems.push_back(it);
                 }
                 if (!validItems.empty()) {
-                    auto* actor = validItems[rand() % validItems.size()];
-                    DroppedItem& it = actor->item();
-                    Vector2 centerDevice = WorldCoord::ItemCenter(it);
+                    auto it = validItems[rng_util::RandRange((int)validItems.size())];
+                    Vector2 centerDevice = WorldCoord::ItemCenter(*it).toVector2();
                     Vector2 gooseScreen = g.pos;
                     Vector2 toCenter = centerDevice - gooseScreen;
                     float len = Vector2::Length(toCenter);
@@ -147,9 +146,9 @@ void handleWander(Goose& g, double time, const CursorState& cursor, int w, int h
                 }
             }
 
-            if ((rand() % g_config.honk.wanderHonkDivisor) == 0) {
-                extern void triggerHonk(Goose::HonkState& hs, double time, double cd, double& lastBucket);
-                triggerHonk(g.honkState, time, g_config.honk.genericCooldown, g.honkState.lastGeneric);
+            if ((rng_util::RandRange(g_config.honk.wanderHonkDivisor)) == 0) {
+                extern void triggerHonk(Goose& g, double time, double cd, double& lastBucket);
+                triggerHonk(g, time, g_config.honk.genericCooldown, g.honkState.lastGeneric);
             }
         }
     }

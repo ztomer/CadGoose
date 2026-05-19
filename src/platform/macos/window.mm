@@ -40,7 +40,7 @@ static float CalculateGooseWindowSize(const Goose* goose) {
         float itemH = goose->heldItem->h * scale;
 
         // Distance from goose center to beak tip (approximate)
-        Vector2 neckHeadDev = WorldCoord::RigNeckHead(*goose);
+        Vector2 neckHeadDev = WorldCoord::RigNeckHead(*goose).toVector2();
         float distToBeak = Vector2::Distance({goose->pos.x, goose->pos.y}, neckHeadDev);
 
         // Item extends behind the beak by itemW + beak offset
@@ -209,6 +209,7 @@ static float CalculateGooseWindowSize(const Goose* goose) {
 
     for (GooseWindow* window in self.windows) {
         const Goose* primaryGoose = geese.front();
+        if (!primaryGoose) continue;
         DevicePoint devicePt = {primaryGoose->pos.x, primaryGoose->pos.y};
         [window updateSizeForGoose:primaryGoose];
         [window centerOnDevicePoint:devicePt];

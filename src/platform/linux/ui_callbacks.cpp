@@ -1,4 +1,5 @@
 #include "ui.h"
+#include "random_util.h"
 #include "ui_controls.h"
 #include "ui_escape.h"
 #include "world.h"
@@ -36,11 +37,11 @@ void ClearAllGooseState();
 static void ApplyDefaultsToGoose(Goose* g) {
     if (!g) return;
     g->mudEnabled = g_config.mud.enabled;
-    g->mudChance = g_config.mud.chance;
+    g->mudChance = g_config.mudChance;
     g->mudLifetime = g_config.mud.lifetime;
-    g->cursorChaseEnabled = g_config.cursor.chaseEnabled;
-    g->cursorChaseChance = g_config.cursor.chaseChance;
-    g->snatchDuration = g_config.snatch.duration;
+    g->cursorChaseEnabled = g_config.cursorChaseEnabled;
+    g->cursorChaseChance = g_config.cursorChaseChance;
+    g->snatchDuration = g_config.snatchDuration;
 }
 
 void cb_goose_copy_defaults(GtkButton*, gpointer) {
@@ -72,14 +73,15 @@ void cb_spawn(GtkButton*, gpointer) {
         gtk_editable_set_text(GTK_EDITABLE(g_entryGooseName), "");
     }
     if (name.empty()) name = "Goose " + std::to_string(g_world.nextId);
-    g_world.geese.emplace_back(g_world.nextId++, name, g_world.screenWidth, g_world.screenHeight);
-    Goose& g = g_world.geese.back();
+    Goose* gptr = new Goose(g_world.nextId++, name, g_world.screenWidth, g_world.screenHeight);
+    ActorManager::Instance().add(gptr);
+    Goose& g = *gptr;
     bool randize = true;
     if (g_chkRandomizeBias) randize = gtk_check_button_get_active(GTK_CHECK_BUTTON(g_chkRandomizeBias));
     if (randize) {
-        g.attackMouseBias = rand() % 51;
-        g.memeFetchBias = rand() % 61;
-        g.noteFetchBias = rand() % 41;
+        g.attackMouseBias = rng_util::RandRange(51);
+        g.memeFetchBias = rng_util::RandRange(61);
+        g.noteFetchBias = rng_util::RandRange(41);
     } else {
         g.attackMouseBias = 0;
         g.memeFetchBias = 0;
@@ -189,16 +191,16 @@ void cb_goose_snatch_dur(GtkRange* r, gpointer) { Goose* g = GetGooseById(g_worl
 
 void cb_debug(GtkCheckButton* b, gpointer) { bool v = gtk_check_button_get_active(b); g_config.debug.toTerminal = v; g_config.debug.visuals = v; }
 void cb_multi_monitor(GtkCheckButton* b, gpointer) { g_config.cursor.multiMonitorEnabled = gtk_check_button_get_active(b); }
-void cb_memes(GtkCheckButton* b, gpointer) { g_config.general.memesEnabled = gtk_check_button_get_active(b); }
+void cb_memes(GtkCheckButton* b, gpointer) { g_config.memesEnabled = gtk_check_button_get_active(b); }
 void cb_scale(GtkRange* r, gpointer) { g_config.general.globalScale = (float)gtk_range_get_value(r); if (g_labelScaleVal) { char buf[32]; snprintf(buf, sizeof(buf), "%.2f", g_config.general.globalScale); gtk_label_set_text(GTK_LABEL(g_labelScaleVal), buf); } }
-void cb_walk(GtkRange* r, gpointer) { g_config.movement.baseWalkSpeed = (float)gtk_range_get_value(r); if (g_labelWalkVal) { char buf[32]; snprintf(buf, sizeof(buf), "%.0f", g_config.movement.baseWalkSpeed); gtk_label_set_text(GTK_LABEL(g_labelWalkVal), buf); } }
-void cb_run(GtkRange* r, gpointer) { g_config.movement.baseRunSpeed = (float)gtk_range_get_value(r); if (g_labelRunVal) { char buf[32]; snprintf(buf, sizeof(buf), "%.0f", g_config.movement.baseRunSpeed); gtk_label_set_text(GTK_LABEL(g_labelRunVal), buf); } }
-void cb_cursor_toggle(GtkCheckButton* b, gpointer) { g_config.cursor.chaseEnabled = gtk_check_button_get_active(b); }
-void cb_cursor_chance(GtkSpinButton* spin, gpointer) { g_config.cursor.chaseChance = (int)gtk_spin_button_get_value(spin); }
-void cb_snatch_duration(GtkRange* r, gpointer) { g_config.snatch.duration = (float)gtk_range_get_value(r); if (g_labelSnatchVal) { char buf[32]; snprintf(buf, sizeof(buf), "%.1fs", g_config.snatch.duration); gtk_label_set_text(GTK_LABEL(g_labelSnatchVal), buf); } }
-void cb_audio(GtkCheckButton* b, gpointer) { g_config.general.audioEnabled = gtk_check_button_get_active(b); }
+void cb_walk(GtkRange* r, gpointer) { g_config.baseWalkSpeed = (float)gtk_range_get_value(r); if (g_labelWalkVal) { char buf[32]; snprintf(buf, sizeof(buf), "%.0f", g_config.baseWalkSpeed); gtk_label_set_text(GTK_LABEL(g_labelWalkVal), buf); } }
+void cb_run(GtkRange* r, gpointer) { g_config.baseRunSpeed = (float)gtk_range_get_value(r); if (g_labelRunVal) { char buf[32]; snprintf(buf, sizeof(buf), "%.0f", g_config.baseRunSpeed); gtk_label_set_text(GTK_LABEL(g_labelRunVal), buf); } }
+void cb_cursor_toggle(GtkCheckButton* b, gpointer) { g_config.cursorChaseEnabled = gtk_check_button_get_active(b); }
+void cb_cursor_chance(GtkSpinButton* spin, gpointer) { g_config.cursorChaseChance = (int)gtk_spin_button_get_value(spin); }
+void cb_snatch_duration(GtkRange* r, gpointer) { g_config.snatchDuration = (float)gtk_range_get_value(r); if (g_labelSnatchVal) { char buf[32]; snprintf(buf, sizeof(buf), "%.1fs", g_config.snatchDuration); gtk_label_set_text(GTK_LABEL(g_labelSnatchVal), buf); } }
+void cb_audio(GtkCheckButton* b, gpointer) { g_config.audioEnabled = gtk_check_button_get_active(b); }
 void cb_mud_toggle(GtkCheckButton* b, gpointer) { g_config.mud.enabled = gtk_check_button_get_active(b); }
-void cb_mud_chance(GtkRange* r, gpointer) { g_config.mud.chance = (int)gtk_range_get_value(r); if (g_labelMudChanceVal) { char buf[32]; snprintf(buf, sizeof(buf), "%d%%", g_config.mud.chance); gtk_label_set_text(GTK_LABEL(g_labelMudChanceVal), buf); } }
+void cb_mud_chance(GtkRange* r, gpointer) { g_config.mudChance = (int)gtk_range_get_value(r); if (g_labelMudChanceVal) { char buf[32]; snprintf(buf, sizeof(buf), "%d%%", g_config.mudChance); gtk_label_set_text(GTK_LABEL(g_labelMudChanceVal), buf); } }
 void cb_mud_lifetime(GtkRange* r, gpointer) { g_config.mud.lifetime = (float)gtk_range_get_value(r); if (g_labelMudLifetimeVal) { char buf[32]; snprintf(buf, sizeof(buf), "%.1fs", g_config.mud.lifetime); gtk_label_set_text(GTK_LABEL(g_labelMudLifetimeVal), buf); } }
 void cb_debug_overlay_verbose(GtkCheckButton* b, gpointer) { g_debugOverlayVerbose = gtk_check_button_get_active(b); }
 void cb_debug_overlay_selected_only(GtkCheckButton* b, gpointer) { g_debugOverlaySelectedOnly = gtk_check_button_get_active(b); }
@@ -215,20 +217,28 @@ static void cb_reset_biases_selected(GtkButton*, gpointer) {
 static void cb_randomize_biases_selected(GtkButton*, gpointer) {
     Goose* g = GetGooseById(g_world.selectedGooseId);
     if (!g) return;
-    g->attackMouseBias = rand() % 101;
-    g->noteFetchBias = rand() % 101;
-    g->memeFetchBias = rand() % 101;
-    g->mudEnabled = (rand() % 2) == 0;
-    g->mudChance = rand() % 101;
-    g->mudLifetime = 5.0f + (float)(rand() % 56);
-    g->cursorChaseEnabled = (rand() % 2) == 0;
-    g->cursorChaseChance = rand() % 26;
-    g->snatchDuration = 1.0f + (float)(rand() % 10);
+    g->attackMouseBias = rng_util::RandRange(101);
+    g->noteFetchBias = rng_util::RandRange(101);
+    g->memeFetchBias = rng_util::RandRange(101);
+    g->mudEnabled = (rng_util::RandRange(2)) == 0;
+    g->mudChance = rng_util::RandRange(101);
+    g->mudLifetime = 5.0f + (float)(rng_util::RandRange(56));
+    g->cursorChaseEnabled = (rng_util::RandRange(2)) == 0;
+    g->cursorChaseChance = rng_util::RandRange(26);
+    g->snatchDuration = 1.0f + (float)(rng_util::RandRange(10));
     RefreshSelectedGooseUi();
 }
 void cb_attack_cursor(GtkButton*, gpointer) {
     Goose* g = GetGooseById(g_world.selectedGooseId);
-    if (!g) { if (g_world.geese.empty()) g_world.geese.emplace_back(g_world.nextId++, "", g_world.screenWidth, g_world.screenHeight); g = &g_world.geese.front(); }
+    if (!g) {
+        auto geese = ActorManager::Instance().getGeese();
+        if (geese.empty()) {
+            g = new Goose(g_world.nextId++, "", g_world.screenWidth, g_world.screenHeight);
+            ActorManager::Instance().add(g);
+        } else {
+            g = geese.front();
+        }
+    }
     g->state = CHASE_CURSOR;
     if (g_cursorProvider) { CursorState cs = g_cursorProvider->Read(); if (cs.caps & CAP_GET_POS && cs.position.x >= 0) g->target = cs.position; }
 }

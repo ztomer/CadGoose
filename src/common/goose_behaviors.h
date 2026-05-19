@@ -7,9 +7,9 @@
 #include "cursor_io.h"
 
 // Internal helpers (goose_behaviors_internal.cpp)
-void triggerHonk(Goose::HonkState& hs, double time, double cd, double& lastBucket);
+void triggerHonk(Goose& g, double time, double cd, double& lastBucket);
 void initHonkState(Goose::HonkState& hs, double time);
-void updateIdleHonk(Goose::HonkState& hs, double time, double cd, double& lastGeneric);
+void updateIdleHonk(Goose& g, double time, double cd, double& lastGeneric);
 Vector2 GetSnatchForward(float dir, const Vector2& isoScale);
 
 // Wander behaviors (goose_behaviors_wander.cpp)

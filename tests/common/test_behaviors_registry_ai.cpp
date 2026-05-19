@@ -2,6 +2,7 @@
 // test_behaviors_registry_ai.cpp
 // Tests for behavior registry, state manager, AI endpoints, pomodoro timing, portal persistence
 // ===========================
+#include "behaviors/states/all.h"
 #include "gtest/gtest.h"
 #include <cmath>
 #include <string>

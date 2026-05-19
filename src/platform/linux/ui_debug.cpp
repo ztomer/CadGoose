@@ -40,12 +40,12 @@ void draw_debug_overlay(cairo_t* cr, int width, int height, bool verbose, bool s
 
     snprintf(buf, sizeof(buf), "Config | scale:%.2f  walk:%.0f  run:%.0f  memes:%s  cursorDefaults:%s (%d%%)  snatch:%.1fs",
              g_config.general.globalScale,
-             g_config.movement.baseWalkSpeed,
-             g_config.movement.baseRunSpeed,
-             g_config.general.memesEnabled ? "on" : "off",
-             g_config.cursor.chaseEnabled ? "on" : "off",
-             g_config.cursor.chaseChance,
-             g_config.snatch.duration);
+             g_config.baseWalkSpeed,
+             g_config.baseRunSpeed,
+             g_config.memesEnabled ? "on" : "off",
+             g_config.cursorChaseEnabled ? "on" : "off",
+             g_config.cursorChaseChance,
+             g_config.snatchDuration);
     lines.emplace_back(buf);
 
     snprintf(buf, sizeof(buf), "Cursor | %s  pos:(%.0f,%.0f)  grabber:%d  selected:%d",
