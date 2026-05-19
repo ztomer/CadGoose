@@ -14,9 +14,9 @@ public:
     ~DroppedItemActor() override;
 
     const char* type() const override { return "dropped_item"; }
-    void tick(double dt, double time) override;
+    void tick(WorldContext& ctx, double dt, double time) override;
     void render(IRenderer* renderer) override;
-    bool isAlive() const override { return active && !isExpired(); }
+    bool isAlive() const override { return m_active && !isExpired(); }
 
     DroppedItem& item() { return m_item; }
     const DroppedItem& item() const { return m_item; }

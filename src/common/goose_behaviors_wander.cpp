@@ -127,19 +127,22 @@ void handleWander(Goose& g, double time, const CursorState& cursor, int w, int h
             else if (fetchRoll >= trigger) fprintf(f, "[FETCH] g%d: skipped (roll=%d >= trigger=%d)\n", g.id, fetchRoll, trigger);
             g.PickNewTarget(w, h);
 
-            if (g_config.general.memesEnabled && (rng_util::RandRange(100)) < g_config.item.heistChancePercent && !g_world.droppedItems.empty()) {
-                std::vector<std::list<DroppedItem>::iterator> validItems;
-                for (auto it = g_world.droppedItems.begin(); it != g_world.droppedItems.end(); ++it) {
-                    if (!it->pinned) validItems.push_back(it);
+            const auto& allItems = ActorManager::Instance().getDroppedItems();
+            if (g_config.general.memesEnabled && (rng_util::RandRange(100)) < g_config.item.heistChancePercent && !allItems.empty()) {
+                std::vector<DroppedItemActor*> validItems;
+                validItems.reserve(allItems.size());
+                for (auto* a : allItems) {
+                    if (a && !a->pinned()) validItems.push_back(a);
                 }
                 if (!validItems.empty()) {
-                    auto it = validItems[rng_util::RandRange((int)validItems.size())];
-                    Vector2 centerDevice = WorldCoord::ItemCenter(*it).toVector2();
+                    auto* actor = validItems[rng_util::RandRange((int)validItems.size())];
+                    const DroppedItem& item = actor->item();
+                    Vector2 centerDevice = WorldCoord::ItemCenter(item).toVector2();
                     Vector2 gooseScreen = g.pos;
                     Vector2 toCenter = centerDevice - gooseScreen;
                     float len = Vector2::Length(toCenter);
                     Vector2 approachDir = (len < 1e-4f) ? Vector2{0.0f, -1.0f} : Vector2{toCenter.x / len, toCenter.y / len};
-                    float halfDim = std::max(WorldCoord::ItemSize(it.data).x, WorldCoord::ItemSize(it.data).y) * 0.5f;
+                    float halfDim = std::max(WorldCoord::ItemSize(item.data).x, WorldCoord::ItemSize(item.data).y) * 0.5f;
                     float margin = WorldCoord::Scale((float)g_config.item.heistApproachMargin);
                     Vector2 approachDevice = centerDevice - approachDir * (halfDim + margin);
                     g.target = approachDevice;

@@ -11,6 +11,7 @@
 #include "goose_behaviors.h"
 #include "actor.h"
 #include "actor_dropped_item.h"
+#include "actor_dropped_item.h"
 #include <cmath>
 #include <cstdio>
 #include <algorithm>
@@ -86,9 +87,10 @@ void tryPickupItem(Goose& g, double time, int w, int h) {
 
     Vector2 btPoint = g.GetBeakTipDevice();
 
-    for (auto it = g_world.droppedItems.begin(); it != g_world.droppedItems.end(); ++it) {
-        if (it->pinned) continue;
-        Vector2 itemCenter = WorldCoord::ItemCenter(*it).toVector2();
+    for (auto* actor : items) {
+        if (!actor || actor->pinned()) continue;
+        const DroppedItem& item = actor->item();
+        Vector2 itemCenter = WorldCoord::ItemCenter(item).toVector2();
         float dist = Vector2::Distance(btPoint, itemCenter);
         float pickupDist = WorldCoord::Scale(g_config.spawn.itemPickupDistance);
         if (dist < pickupDist) {
@@ -97,7 +99,10 @@ void tryPickupItem(Goose& g, double time, int w, int h) {
             FETCH_LOG("[FETCH] tryPickupItem g%d picking up item at (%.0f,%.0f) dist=%.0f\n",
                     g.id, itemCenter.x, itemCenter.y, dist);
             g.heldItem = item.data;
+            // Hand ownership of ItemData to the goose so the actor doesn't delete it
+            actor->item().data = nullptr;
             ActorManager::Instance().remove(actor);
+            delete actor;
             g.state = GooseState::RETURNING;
             g.target = {static_cast<float>(rng_util::RandRange(std::max(1, (int)(w - g_config.spawn.itemDropMarginX * 2)) + (int)g_config.spawn.itemDropMarginX)),
                         static_cast<float>(rng_util::RandRange(std::max(1, (int)(h - g_config.spawn.itemDropMarginY * 2)) + (int)g_config.spawn.itemDropMarginY))};
@@ -184,7 +189,9 @@ void handleReturning(Goose& g, double time, int w, int h) {
             if (drop.pos.y > maxY) drop.pos.y = maxY;
 
 
-            g_world.droppedItems.push_back(drop);
+            // Actor takes ownership of drop.data
+            new DroppedItemActor(drop);
+            g.heldItem = nullptr;
             const char* itemType = "unknown";
             if (drop.data) {
                 switch (drop.data->type) {
