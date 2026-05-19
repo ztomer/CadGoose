@@ -125,6 +125,19 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
     auto* state = BehaviorStateManager::Instance().GetOrCreate<PomodoroState>(goose->id, "pomodoro");
     const auto& cfg = g_config.behaviors.pomodoro;
 
+    if (!g_config.behaviors.systems.pomodoro) {
+        goose->isResting = false;
+        if (state->accumulatedRotation > 0) {
+            goose->dir -= state->accumulatedRotation;
+            state->accumulatedRotation = 0;
+        }
+        if (state->speedMultiplierApplied) {
+            goose->currentSpeed = g_config.movement.baseWalkSpeed;
+            state->speedMultiplierApplied = false;
+        }
+        return;
+    }
+
     // Catch up on the bed position if init() ran before the renderer
     // populated screen dims, or if the screen was resized since.
     Vector2 expectedBed = ComputeBedPosition();
