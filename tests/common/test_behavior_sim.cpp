@@ -11,6 +11,12 @@
 #include "goose.h"
 #include "config.h"
 #include "world.h"
+#include "behaviors/states/pomodoro_state.h"
+#include "behaviors/states/ball_state.h"
+#include "behaviors/states/breadcrumb_state.h"
+#include "behaviors/states/health_state.h"
+#include "behaviors/states/anger_state.h"
+#include "behaviors/states/portal_state.h"
 
 #define TEST_DT_SCALED_ROTATION(current, degPerSec, dt) (current + (degPerSec) * (dt))
 

@@ -11,6 +11,8 @@
 #include "config.h"
 #include "goose.h"
 #include "world.h"
+#include "behaviors/states/pomodoro_state.h"
+#include "behaviors/states/portal_state.h"
 
 static void ResetBehaviorState() {
     BehaviorStateManager::Instance().ClearAll();

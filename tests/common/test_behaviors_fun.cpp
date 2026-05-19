@@ -11,6 +11,10 @@
 #include "config.h"
 #include "goose.h"
 #include "world.h"
+#include "behaviors/states/toys_state.h"
+#include "behaviors/states/boredom_state.h"
+#include "behaviors/states/peeking_state.h"
+#include "behaviors/states/interactive_drops_state.h"
 
 static void ResetBehaviorState() {
     BehaviorStateManager::Instance().ClearAll();

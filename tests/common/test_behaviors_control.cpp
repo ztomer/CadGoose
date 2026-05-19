@@ -11,6 +11,9 @@
 #include "config.h"
 #include "goose.h"
 #include "world.h"
+#include "behaviors/states/honcker_state.h"
+#include "behaviors/states/jail_state.h"
+#include "behaviors/states/drag_state.h"
 
 static void ResetBehaviorState() {
     BehaviorStateManager::Instance().ClearAll();

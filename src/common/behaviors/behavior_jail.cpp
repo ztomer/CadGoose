@@ -11,6 +11,7 @@
 #include "ring_buffer.h"
 #include "actor.h"
 #include "actor_jail.h"
+#include "behaviors/states/jail_state.h"
 
 #ifdef __APPLE__
 #include <ApplicationServices/ApplicationServices.h>

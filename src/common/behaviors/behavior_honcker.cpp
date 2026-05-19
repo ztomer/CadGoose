@@ -10,6 +10,7 @@
 #include "world.h"
 #include "assets.h"
 #include "hotkey.h"
+#include "behaviors/states/honcker_state.h"
 
 static constexpr float kHonkYOffset = 20.0f;
 static constexpr float kHonkBubbleRadius = 15.0f;

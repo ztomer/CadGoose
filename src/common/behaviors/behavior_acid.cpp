@@ -6,6 +6,7 @@
 #include "behavior.h"
 #include "goose.h"
 #include "config.h"
+#include "behaviors/states/acid_state.h"
 
 #ifdef __APPLE__
 extern void Audio_PlayHonk();

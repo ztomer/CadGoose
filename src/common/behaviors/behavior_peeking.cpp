@@ -6,6 +6,7 @@
 #include "renderer_interface.h"
 #include "render_colors.h"
 #include "cg_renderer.h"
+#include "behaviors/states/peeking_state.h"
 #include <cmath>
 
 static constexpr float kPeekMaxDuration = 1.5f;

@@ -6,6 +6,7 @@
 #include "goose_math.h"
 #include "world.h"
 #include "cursor_backend.h"
+#include "behaviors/states/jail_state.h"
 #include <cmath>
 #include <cstdio>
 

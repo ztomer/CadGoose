@@ -8,6 +8,7 @@
 #include "renderer_interface.h"
 #include "render_colors.h"
 #include "cg_renderer.h"
+#include "behaviors/states/health_state.h"
 
 static constexpr float kHealthBarWidth = 40.0f;
 static constexpr float kHealthBarHeight = 4.0f;
