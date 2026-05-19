@@ -1,30 +1,43 @@
 # CadGoose Architecture: Opportunities for Improvement
 
-Based on a deep scan of the CadGoose codebase, the project is currently in a transitional state—moving from a monolithic, global-state-heavy architecture towards a more modular, Actor-based system. While solid foundations exist (like `EventBus`, `IRenderer`, and `ActorManager`), there are several high-impact opportunities to improve the structure and build robust systems.
+This document tracked a planned migration away from a global-state-heavy, "god-object" design toward a modular Actor-based system built on `EventBus`, `IRenderer`, and `ActorManager`. As of 2026-05-18, four of the five sections are complete; one is intentionally deferred with rationale.
 
-## 1. Complete the Actor/ECS Migration
-The codebase currently suffers from "dual-tracking" and fragmented logic. For example, `world.h` still maintains legacy global lists like `g_geese` and `g_droppedItems`, while an `ActorManager` (`include/actor.h`) is being introduced. 
+## Status summary
 
-**Opportunity:** Fully migrate all entities (Geese, Items, Particles) into a unified Entity-Component-System (ECS) or complete the Actor model. This would eliminate the parallel tracking systems and centralize lifecycle management.
+| §  | Topic                                  | Status                                                  |
+|---:|----------------------------------------|---------------------------------------------------------|
+| 1  | Complete Actor/ECS migration (geese)   | ✅ Done                                                  |
+| 2  | Deconstruct the `Goose` monolith       | ⏸ Deferred — impl already file-decomposed; see §2 audit |
+| 3  | Strictly enforce `IRenderer`           | ✅ Done                                                  |
+| 4  | Overhaul global state (`world.h`)      | ✅ Done (partial-DI policy documented)                   |
+| 5  | Decouple behavior state                | ✅ Done (pre-existing; verified by audit)                |
 
-### Detailed Execution Plan:
-*   **Phase 1 [DONE]:** Audit complete — `ActorManager` supports typed iteration via `getGeese()`, generic add/remove, and a new `destroyAllOfType(type)` for owning cleanup. Each game entity has an Actor subclass (BallActor, ToyActor, FlowerActor, JailActor, BreadcrumbActor, LeafPileActor, PortalActor).
-*   **Phase 2 [DONE]:** Goose instantiation goes through `ActorManager::Instance().add(new Goose(...))` — call sites in app_actions.cpp, ui_callbacks.cpp, and tests updated. Other actor types already used this pattern.
-*   **Phase 3 [DONE]:** All systems / call sites that iterated `g_world.geese` now query `ActorManager::Instance().getGeese()` — app_actions, config_save, config_gui_detail, main.mm, ui_callbacks, ui_escape, tests.
-*   **Phase 4 [DONE]:** `std::list<Goose> geese` removed from `WorldContext`. `destroyAllOfType("goose")` deletes the heap-allocated Goose instances on clear. 722 tests pass.
-
-Remaining dual-tracking in WorldContext (smaller scope, lower urgency): `droppedItems`, `footprints`, `crumbs`, `leafPiles` are still WorldContext-owned. LeafPile already has an Actor mirror (`actor_leafpile.mm`); the others are simpler value collections and may not need Actor wrapping.
+Tests: 722 passing, 32 GUI-only skipped, 1 pre-existing flaky LLM test (`LocalLLMTest.GenerateWithHighTemperatureDoesNotCrash`) — same as baseline.
 
 ---
 
-## 2. Deconstruct the `Goose` Monolith
-The `Goose` class (`src/common/goose.cpp`) is currently acting as a "God object" that handles physics, animation, state logic, and rendering updates all at once.
+## 1. Complete the Actor/ECS Migration
 
-**Opportunity:** Break `Goose` down into distinct components (e.g., `PhysicsComponent`, `AnimationComponent`, `AIStateComponent`). If you move towards an ECS, the "Goose" simply becomes an entity ID with these components attached to it, drastically improving testability and maintainability.
+**Was:** `world.h` owned legacy lists (`g_geese`, `g_droppedItems`) while an `ActorManager` was being introduced — both tracking the same Geese in parallel.
 
-### Detailed Execution Plan:
+**Now:** `ActorManager` owns every Goose. `g_world.geese` is gone.
 
-**Audit (current state, 2026-05-18):** The `Goose` class declaration is still wide (~140 lines, ~50 members) but the *implementation* is already split by responsibility across 8 translation units totalling ~1700 lines:
+- [actor.h](include/actor.h) supports typed iteration (`getGeese()`), generic add/remove, and `destroyAllOfType(type)` for owning cleanup.
+- Each game entity has an Actor subclass: BallActor, ToyActor, FlowerActor, JailActor, BreadcrumbActor, LeafPileActor, PortalActor.
+- Spawn sites (`app_actions.cpp`, `ui_callbacks.cpp`, tests) heap-allocate Goose via `new` and register with `ActorManager::add`.
+- Clear sites (`app_actions.cpp`, `ui_escape.cpp`, tests) call `destroyAllOfType("goose")`.
+- Read sites (app_actions, config_save, config_gui_detail, main.mm, ui_callbacks, ui_escape, tests) query `ActorManager::Instance().getGeese()`.
+- `std::list<Goose> geese` removed from `WorldContext`.
+
+**Remaining dual-tracking in `WorldContext`** (smaller scope, lower urgency): `droppedItems`, `footprints`, `crumbs`, `leafPiles` are still WorldContext-owned. `LeafPile` already has an Actor mirror (`actor_leafpile.mm`); the others are simpler value collections and may not need Actor wrapping. Migrate opportunistically.
+
+---
+
+## 2. Deconstruct the `Goose` Monolith — ⏸ DEFERRED
+
+**Original framing:** `Goose` is a "God object" handling physics, animation, state logic, and rendering all at once.
+
+**Audit (2026-05-18):** The `Goose` *class* declaration is still wide (~140 lines, ~50 members) but the *implementation* is already split by responsibility across 8 translation units totalling ~1700 lines:
 
 | File | LOC | Responsibility |
 |---|---:|---|
@@ -37,52 +50,77 @@ The `Goose` class (`src/common/goose.cpp`) is currently acting as a "God object"
 | [goose_behaviors_internal.cpp](src/common/goose_behaviors_internal.cpp) | 51 | Honk helpers, rig forward |
 | [goose_debug.cpp](src/common/goose_debug.cpp) | 41 | Debug logging |
 
-So "the implementation is a monolith" is already largely false — the file split matches the proposed component domains (physics ≈ forces+behaviors_*; rendering ≈ drawing; AI ≈ behaviors_*).
+The file split already matches the proposed component domains (physics ≈ `goose_forces.cpp` + `goose_behaviors_*`; rendering ≈ `goose_drawing.mm`; AI ≈ `goose_behaviors_*`).
 
-**What's *not* done:** the class-level decomposition (Phase 1's `Transform` / `Physics` / `Animation` structs). Doing that means changing every `goose->pos` to `goose->transform.pos`, `goose->vel` to `goose->physics.vel`, `goose->rig` to `goose->animation.rig`, etc. across all 8 impl files, the platform layer, behaviors, and tests. That's hundreds of edits for a structural change with no immediate functional payoff.
+**What's *not* done:** the class-level field decomposition into `Transform` / `Physics` / `Animation` structs. Doing that means renaming `goose->pos` → `goose->transform.pos`, `goose->vel` → `goose->physics.vel`, `goose->rig` → `goose->animation.rig` across all 8 impl files, the platform layer, every behavior, and tests — hundreds of edits for a structural change with no immediate functional payoff.
 
-**Recommendation [DEFERRED]:** Hold Section 2 until there's a concrete motivating need — e.g., wanting to share components with non-Goose entities, or building a true ECS where systems iterate over component arrays. Otherwise the churn doesn't earn its keep. The implementation-level decomposition is already in place.
+**Recommendation:** Hold §2 until there's a concrete motivating need — wanting to share components across non-Goose entities, or building a true ECS where systems iterate over component arrays. Until then, the churn doesn't earn its keep; the implementation-level decomposition is already in place.
 
 ---
 
 ## 3. Strictly Enforce the `IRenderer` Abstraction
-While an `IRenderer` interface (`include/renderer_interface.h`) exists for cross-platform rendering, the scan revealed that it's being bypassed in certain behaviors (like `behavior_rainbow.cpp`), where code casts down to native platform contexts (e.g., macOS-specific contexts in `goose_drawing.mm`).
 
-**Opportunity:** Expand the `IRenderer` API to natively support the advanced drawing features needed by behaviors (like custom shaders, gradients, or primitive drawing) so that platform-specific code is completely isolated behind the interface. 
+**Was:** Behaviors received a raw `void* renderCtx` (a `CGContextRef` on macOS), cast it back, and constructed a `CGRenderer` locally — the abstraction was bypassed at the behavior boundary. Several behaviors then reached past `IRenderer` into CoreGraphics directly (image size queries, CoreText positioning) wrapped in `#ifdef __APPLE__`.
 
-### Detailed Execution Plan:
-*   **Phase 1 [DONE]:** Behavior render signature and `BehaviorRegistry::RenderPass` take `IRenderer*` directly; `BehaviorContext::renderer` is populated each pass.
-*   **Phase 2 [DONE]:** Extended `IRenderer` API with `GetImageSize(image, w, h)` and `MeasureText(text, fontSize)` — covering the missing primitives behaviors were reaching past the abstraction for. Both implemented in `CGRenderer` (macOS) and `CairoRenderer` (Linux).
-*   **Phase 3 [DONE]:** Both platform backends implement the new methods.
-*   **Phase 4 [DONE]:** All ten behavior render functions that previously cast `irenderer->nativeContext()` to `CGContextRef` have been migrated to pure `IRenderer` calls. Removed: `behavior_boredom`, `behavior_peeking`, `behavior_health`, `behavior_anger` (no CG needed), `behavior_honcker` (uses `GetImageSize`), `behavior_hats` (uses `GetImageSize`; dropped its CGBitmap pre-scaled cache — `DrawImage` already does the scaling), `behavior_nametag` (uses `MeasureText` + `DrawText`; dropped local CTFont cache), `behavior_pomodoro` (uses `GetImageSize` + `MeasureText` + `DrawText`). All `#ifdef __APPLE__` guards inside behavior `render` bodies are gone.
+**Now:** Every behavior `render` function takes `IRenderer*` and uses it directly; no production behavior calls `nativeContext()`.
 
-The only remaining `nativeContext()` call in production code is in `Goose::render` itself, where it dispatches to the macOS-specific `DrawGoose` rig rendering — a legitimate platform-specific drawing path, not a behavior leak.
+### API extensions
+Added to [renderer_interface.h](include/renderer_interface.h):
+- `GetImageSize(image, *w, *h)` — query loaded image dimensions
+- `MeasureText(text, fontSize)` — measure text width for centering
+
+Implemented in `CGRenderer` (CoreGraphics/CoreText) and `CairoRenderer` (`cairo_image_surface_get_*` / Pango).
+
+### Migrations
+| Behavior | Method |
+|---|---|
+| boredom, peeking, health, anger | Dropped CG cast; pure IRenderer was already sufficient |
+| honcker | Uses `GetImageSize` for honk-bubble PNG sizing |
+| hats | Uses `GetImageSize`; dropped its `CGBitmapContextCreate` pre-scaled cache (`DrawImage` destRect already handles scaling) |
+| nametag | Uses `MeasureText` + `DrawText`; dropped local `CTFontRef` / `CGColorRef` cache and manual `CGContextSetTextMatrix` flip |
+| pomodoro | Uses `MeasureText` + `DrawText` for the phase timer; `GetImageSize` for Zzz frame images; same font-cache cleanup |
+
+All `#ifdef __APPLE__` guards inside behavior `render` bodies are gone.
+
+**Remaining `nativeContext()` callers (intentional):** `Goose::render` itself dispatches to the macOS-specific `DrawGoose` rig — a legitimate platform-specific drawing path implementing the Goose sprite, not a behavior leak.
 
 ---
 
 ## 4. Overhaul Global State (`world.h`)
-The `world.h` file acts as a dumping ground for global variables and tight coupling.
 
-**Opportunity:** Encapsulate the global state into a `WorldContext` or `EngineState` object that is passed down to systems via dependency injection, or managed strictly by the `EventBus`. This eliminates hidden dependencies and makes unit testing significantly easier.
+**Was:** `world.h` held loose `extern` globals (`g_geese`, `g_droppedItems`, monitors, footprints, crumbs, leaf piles, screen dims, id counters, ui log) — hidden dependencies and untestable systems.
 
-### Detailed Execution Plan:
-*   **Phase 1 [DONE]:** `WorldContext` struct defined in [world.h](include/world.h); legacy globals (`g_geese`, `g_droppedItems`, monitors, footprints, crumbs, leaf piles, screen dims, id counters, ui log) moved inside as members.
-*   **Phase 2 [DONE]:** Single `g_world` instance instantiated in [world.cpp](src/common/world.cpp); all 239 call sites updated to `g_world.X`.
-*   **Phase 2.5 [DONE]:** Restored build — committed previously-untracked Actor/behavior_manager/state files and added missing per-behavior state-header includes ([fix commit](#)). 723 tests pass.
-*   **Phase 3 [DONE — partial]:** Dependency Injection — `Actor::tick` virtual now takes `WorldContext&`; `ActorManager::tickAll` forwards it; `Goose::tick` stashes it on `BehaviorContext::world` for behaviors. Leaf-level `g_world.X` reads in deep helpers are deferred — they migrate opportunistically as touched.
-*   **Phase 4 [DONE — partial]:** Event-Driven Refactoring — first publishers wired up: `GooseHonkedEvent` (triggerHonk + behavior_honcker), `GooseJailedEvent` / `GooseFreedEvent` (behavior_jail edge detect), `PomodoroPhaseChangedEvent` (behavior_pomodoro). Remaining events left for opportunistic follow-up: `ItemDropped`, `ItemEaten`, `ToySpawned`, `BallKicked`, `BreadcrumbDropped`, `GooseStuck`, `CursorFastMove`, `GooseTeleported`.
+**Now:** Encapsulated in [WorldContext](include/world.h), instantiated once as `g_world`, threaded into systems via dependency injection at entry points.
+
+### What landed
+
+- **Context struct + single instance:** `WorldContext` defined in [world.h](include/world.h); single `g_world` in [world.cpp](src/common/world.cpp); all 239 call sites updated to `g_world.X`.
+- **Build restored:** the original §4 commit had referenced 38 previously-untracked Actor/behavior-manager/state files; those are now committed and per-behavior state headers are correctly included.
+- **Dependency injection:** `Actor::tick` virtual takes `WorldContext&`; `ActorManager::tickAll` receives `g_world` from the renderer-side caller and forwards to every actor. `Goose::tick` stashes it on `BehaviorContext::world` so behaviors can read context without a global.
+- **Event-driven side effects:** First EventBus publishers wired up.
+  - `GooseHonkedEvent` — `triggerHonk` (chase/wander/idle) + `behavior_honcker` (F-key, programmatic)
+  - `GooseJailedEvent` / `GooseFreedEvent` — `behavior_jail` edge-detected on the `isJailed` transition
+  - `PomodoroPhaseChangedEvent` — `behavior_pomodoro` on phase rotation
+
+### Partial-DI policy
+
+The original plan called for refactoring "all systems, update functions, and behavior ticks" to take `WorldContext&`. That's 239 call sites; full mechanical conversion of leaf-level reads has low ROI vs. structural risk. Adopted policy: **top-level system entry points take `WorldContext&` explicitly; deep helpers continue reading `g_world` and migrate opportunistically as they get touched**. This keeps the DI value (testability of system entry points, no hidden tick-time mutation) while avoiding gratuitous churn.
+
+### Remaining event candidates
+
+Event types defined in `event_bus.h` but not yet published in production code (opportunistic follow-up): `ItemDropped`, `ItemEaten`, `ToySpawned`, `BallKicked`, `BreadcrumbDropped`, `GooseStuck`, `CursorFastMove`, `GooseTeleported`.
 
 ---
 
 ## 5. Decouple Behavior State
-The behavior system (`include/behavior_state.h`) contains tightly coupled state structs for every possible behavior loaded into memory.
 
-**Opportunity:** Implement a more flexible, data-driven Behavior Tree or State Machine system where behaviors allocate their specific state dynamically or manage it within their own isolated memory pools, rather than bloating a central header file.
+**Original framing:** A single `behavior_state.h` was suspected to be a god-struct/union holding state for every possible behavior at once.
 
-### Detailed Execution Plan:
-*   **Phase 1 [DONE]:** [behavior_state.h](include/behavior_state.h) is now a lightweight base — `BehaviorState` is just `{ virtual ~BehaviorState(); virtual void Reset(); }`. No union/bloat.
-*   **Phase 2 [DONE]:** Concrete states live in their own headers under [include/behaviors/states/](include/behaviors/states/) (one per behavior: honcker, jail, pomodoro, portal, anger, ball, breadcrumb, drag, health, peeking, rainbow, acid, toys, boredom, interactive_drops).
-*   **Phase 3 [DONE]:** [BehaviorStateManager](include/behavior_manager.h) holds `unordered_map<key, unique_ptr<BehaviorState>>`; concrete states are allocated on first `GetOrCreate<T>(gooseId, behaviorId)`.
-*   **Phase 4 [DONE]:** Behaviors access their state via the templated `GetOrCreate<T>` / `Get<T>` which internally `dynamic_cast`s — see e.g. behavior_honcker.cpp, behavior_jail.cpp.
+**Audit:** The refactor was already complete before this work began.
 
-Section 5 was effectively complete before this audit pass; no code changes needed.
+- [behavior_state.h](include/behavior_state.h) is a lightweight base: `BehaviorState { virtual ~BehaviorState(); virtual void Reset(); }`. No union, no per-behavior bloat.
+- Concrete states live in dedicated headers under [include/behaviors/states/](include/behaviors/states/) — one per behavior: honcker, jail, pomodoro, portal, anger, ball, breadcrumb, drag, health, peeking, rainbow, acid, toys, boredom, interactive_drops.
+- [BehaviorStateManager](include/behavior_manager.h) holds `unordered_map<key, unique_ptr<BehaviorState>>`; concrete states are heap-allocated on first `GetOrCreate<T>(gooseId, behaviorId)`.
+- Behaviors access their state via the templated `GetOrCreate<T>` / `Get<T>` which internally `dynamic_cast`s.
+
+No code changes needed; this entry stays in the doc as a reference to the existing design.
