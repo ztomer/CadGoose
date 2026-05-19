@@ -1,4 +1,5 @@
 #include "ui.h"
+#include "random_util.h"
 #include "ui_controls.h"
 #include "ui_escape.h"
 #include "world.h"
@@ -78,9 +79,9 @@ void cb_spawn(GtkButton*, gpointer) {
     bool randize = true;
     if (g_chkRandomizeBias) randize = gtk_check_button_get_active(GTK_CHECK_BUTTON(g_chkRandomizeBias));
     if (randize) {
-        g.attackMouseBias = rand() % 51;
-        g.memeFetchBias = rand() % 61;
-        g.noteFetchBias = rand() % 41;
+        g.attackMouseBias = rng_util::RandRange(51);
+        g.memeFetchBias = rng_util::RandRange(61);
+        g.noteFetchBias = rng_util::RandRange(41);
     } else {
         g.attackMouseBias = 0;
         g.memeFetchBias = 0;
@@ -216,15 +217,15 @@ static void cb_reset_biases_selected(GtkButton*, gpointer) {
 static void cb_randomize_biases_selected(GtkButton*, gpointer) {
     Goose* g = GetGooseById(g_world.selectedGooseId);
     if (!g) return;
-    g->attackMouseBias = rand() % 101;
-    g->noteFetchBias = rand() % 101;
-    g->memeFetchBias = rand() % 101;
-    g->mudEnabled = (rand() % 2) == 0;
-    g->mudChance = rand() % 101;
-    g->mudLifetime = 5.0f + (float)(rand() % 56);
-    g->cursorChaseEnabled = (rand() % 2) == 0;
-    g->cursorChaseChance = rand() % 26;
-    g->snatchDuration = 1.0f + (float)(rand() % 10);
+    g->attackMouseBias = rng_util::RandRange(101);
+    g->noteFetchBias = rng_util::RandRange(101);
+    g->memeFetchBias = rng_util::RandRange(101);
+    g->mudEnabled = (rng_util::RandRange(2)) == 0;
+    g->mudChance = rng_util::RandRange(101);
+    g->mudLifetime = 5.0f + (float)(rng_util::RandRange(56));
+    g->cursorChaseEnabled = (rng_util::RandRange(2)) == 0;
+    g->cursorChaseChance = rng_util::RandRange(26);
+    g->snatchDuration = 1.0f + (float)(rng_util::RandRange(10));
     RefreshSelectedGooseUi();
 }
 void cb_attack_cursor(GtkButton*, gpointer) {

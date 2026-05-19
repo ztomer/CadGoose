@@ -3,6 +3,7 @@
 // World maintenance utilities
 // ===========================
 #include "world.h"
+#include "random_util.h"
 #include "config.h"
 #include "actor.h"
 #include "actor_leafpile.h"
@@ -106,10 +107,10 @@ void World_SpawnRandomLeafPile(float screenWidth, float screenHeight, double cur
     if (activeCount >= kMaxLeafPiles) return;
 
     Vector2 pos{
-        (float)(rand() % (int)std::max(1.0f, screenWidth)),
-        (float)(rand() % (int)std::max(1.0f, screenHeight))
+        (float)(rng_util::RandRange((int)std::max(1.0f, screenWidth))),
+        (float)(rng_util::RandRange((int)std::max(1.0f, screenHeight)))
     };
-    float radius = kLeafPileSizeMin + (rand() % (int)(kLeafPileSizeMax - kLeafPileSizeMin));
+    float radius = kLeafPileSizeMin + (rng_util::RandRange((int)(kLeafPileSizeMax - kLeafPileSizeMin)));
     LeafPileActor* pile = new LeafPileActor(pos, radius, kLeafPileSizeMax, currentTime);
     mgr.add(pile);
 }

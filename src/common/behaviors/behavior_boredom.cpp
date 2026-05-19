@@ -1,4 +1,5 @@
 #include "behavior.h"
+#include "random_util.h"
 #include "behaviors/states/boredom_state.h"
 #include "goose.h"
 #include "config.h"
@@ -41,7 +42,7 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
         if (!state->isSighing) {
             if (state->idleStartTime == 0) {
                 state->idleStartTime = time;
-            } else if (time - state->idleStartTime > kBoredomIdleStartTime && (rand() % kBoredomSighProbability) == 0) {
+            } else if (time - state->idleStartTime > kBoredomIdleStartTime && (rng_util::RandRange(kBoredomSighProbability)) == 0) {
                 state->isSighing = true;
                 state->sighStartTime = time;
                 g_assets.Honk();
