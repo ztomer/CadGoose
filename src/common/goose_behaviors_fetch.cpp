@@ -29,14 +29,6 @@ static FILE* GetDebugLog() {
 
 static inline double Rand01() { return static_cast<double>(rand() % 1000) / 1000.0; }
 
-static void triggerHonkLocal(Goose::HonkState& hs, double time, double cd, double& lastBucket) {
-    if ((time - hs.lastAny) < g_config.honk.minGap) return;
-    if ((time - lastBucket) < cd) return;
-    g_assets.Honk();
-    hs.lastAny = time;
-    lastBucket = time;
-}
-
 void Goose::StartSnatch(double time, const Vector2& cursorPos) {
 
     g_world.cursorGrabberId = id;
@@ -57,7 +49,7 @@ void Goose::StartSnatch(double time, const Vector2& cursorPos) {
     stepTime = g_config.step.timeSnatch;
 
     g_assets.Bite();
-    triggerHonkLocal(honkState, time, g_config.honk.chaseCooldown, honkState.lastChase);
+    triggerHonk(*this, time, g_config.honk.chaseCooldown, honkState.lastChase);
 }
 
 void Goose::EndSnatch(double time, int w, int h) {
@@ -72,7 +64,7 @@ void Goose::EndSnatch(double time, int w, int h) {
     state = GooseState::WANDER;
     fprintf(f, "[ENDSNATCH] g%d: now state=%d\n", id, state);
     PickNewTarget(w, h);
-    triggerHonkLocal(honkState, time, g_config.honk.genericCooldown, honkState.lastGeneric);
+    triggerHonk(*this, time, g_config.honk.genericCooldown, honkState.lastGeneric);
 }
 
 static bool shouldPickupItem(Goose& g) {
@@ -106,7 +98,7 @@ void tryPickupItem(Goose& g, double time, int w, int h) {
             g.target = {static_cast<float>(rand() % (std::max(1, (int)(w - g_config.spawn.itemDropMarginX * 2)) + (int)g_config.spawn.itemDropMarginX)),
                         static_cast<float>(rand() % (std::max(1, (int)(h - g_config.spawn.itemDropMarginY * 2)) + (int)g_config.spawn.itemDropMarginY))};
             g_assets.Bite();
-            triggerHonkLocal(g.honkState, time, g_config.honk.fetchCooldown, g.honkState.lastFetch);
+            triggerHonk(g, time, g_config.honk.fetchCooldown, g.honkState.lastFetch);
             return;
         }
     }
@@ -154,7 +146,7 @@ void handleFetching(Goose& g, double time, int w, int h) {
         FETCH_LOG("[FETCH] handleFetching g%d -> RETURNING, dragPos=(%.1f,%.1f) dragInit=%d\n", g.id, g.dragPos.x, g.dragPos.y, g.dragInit);
         g.target = {static_cast<float>(rand() % (std::max(1, w - (int)g_config.spawn.wanderTargetMargin)) + (int)g_config.spawn.wanderTargetOffset),
                     static_cast<float>(rand() % (std::max(1, h - (int)g_config.spawn.wanderTargetMargin)) + (int)g_config.spawn.wanderTargetOffset)};
-        triggerHonkLocal(g.honkState, time, g_config.honk.fetchCooldown, g.honkState.lastFetch);
+        triggerHonk(g, time, g_config.honk.fetchCooldown, g.honkState.lastFetch);
     } else {
         FETCH_LOG("[FETCH] handleFetching g%d heldItem=null, -> WANDER\n", g.id);
         g.state = GooseState::WANDER;
@@ -216,5 +208,5 @@ void handleReturning(Goose& g, double time, int w, int h) {
     g.PickNewTarget(w, h);
     g.stepTime = g_config.step.timeWander;
     FETCH_LOG("[FETCH] handleReturning g%d -> WANDER lastDrop=%.1f\n", g.id, g.lastDropTime);
-    triggerHonkLocal(g.honkState, time, g_config.honk.fetchCooldown, g.honkState.lastFetch);
+    triggerHonk(g, time, g_config.honk.fetchCooldown, g.honkState.lastFetch);
 }
