@@ -30,21 +30,15 @@
 ## Pending (from CODE_REVIEW.md)
 
 ### High Priority
-1. **Fix hash collision in BehaviorStateManager** — `MakeKey()` uses 32-bit hash (gooseId << 32 | hash). Change to 64-bit FNV-1a or std::hash for behavior string.
-2. **Fix recursive tool call stack overflow** — `ai_http_client.mm:completeChatWithTurn()` recurses on tool calls. Convert to iterative loop with explicit turn counter.
-3. **Fix fragile monitor-to-window matching (Linux)** — `ui.cpp:on_tick()` iterates `g_monitors` to find matching window. Store window pointer in `MonitorInfo`.
-4. **Migrate g_world.droppedItems to DroppedItemActor** — 127 references across codebase. Replace iteration with `ActorManager` query. Delete `g_world.droppedItems`.
-5. **Move DragTest to separate test file** — `item_window.mm:523-632` is test code mixed with production code. Move to `tests/platform/macos/test_item_window_drag.mm`.
+1. **Migrate g_world.droppedItems to DroppedItemActor** — 127 references across codebase. Replace iteration with `ActorManager` query. Delete `g_world.droppedItems`.
 
 ### Medium Priority
-6. **Split ai_http_client.mm (502 LOC)** — Into 5 focused files: `ai_http_client.mm` (HTTP), `ai_local_llm_adapter.mm` (CoreML), `ai_prompt_builder.mm` (prompts), `ai_model_profiles.mm` (matching), `ai_think_block_stripper.mm` (regex).
-7. **Extract debug logging helper from goose.cpp** — `DebugLog(fmt, ...)` variadic helper to eliminate 5+ repetitions of `FILE *f = GetDebugLog(); if (f) { fprintf... }`.
-8. **Move ui.cpp drawing/debug code to separate files** — `draw_overlay()` is 183 LOC. Move footprint/item rendering to `ui_drawing.cpp`, debug overlay to `ui_debug.cpp`, tick logic to `ui_tick.cpp`.
-9. **Consolidate BEHAVIOR_DEF* macros** — 4 variants share 80% identical field initialization. Single macro with variadic optional parameters.
+2. **Move DragTest to separate test file** — `item_window_test.mm` already contains the function. Remove declaration from `item_window.h` (it's a debug socket hook, not production test code).
+3. **Consolidate BEHAVIOR_DEF* macros** — Already done: `BEHAVIOR_DEF_FULL` is single source, 4 variants are thin wrappers.
 
 ### Low Priority
-10. **Fix config generator** — `tools/generate_config.py` produces incorrect code. Rewrite or remove.
-11. **Remove stale pointer risk in item_window.mm** — `_item` pointer can become dangling if `g_droppedItems` reallocates. Use index-based lookup or weak reference.
+4. **Fix config generator** — `tools/generate_config.py` produces incorrect code. Rewrite or remove.
+5. **Remove stale pointer risk in item_window.mm** — `_item` pointer can become dangling. Use index-based lookup or weak reference.
 
 ## New Files
 - `include/actor.h` — Actor base class + ActorManager
