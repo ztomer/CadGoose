@@ -4,6 +4,7 @@
 // ===========================
 #include "behavior.h"
 #include "behaviors/states/health_state.h"
+#include "event_bus.h"
 #include "goose.h"
 #include "config.h"
 #include "renderer_interface.h"
@@ -33,8 +34,10 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
     }
 
     if (time - state->lastDamageTime > g_config.behaviors.health.damageCooldown && goose->currentSpeed > 200.0f) {
-        state->currentHealth -= 5.0f;
+        constexpr float kDamagePerHit = 5.0f;
+        state->currentHealth -= kDamagePerHit;
         state->lastDamageTime = time;
+        EventBus::Instance().Publish(GooseDamagedEvent{goose->id, kDamagePerHit, time});
         if (state->currentHealth <= 0) {
             state->isDead = true;
         }

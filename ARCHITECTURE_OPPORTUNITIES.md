@@ -115,7 +115,7 @@ All EventBus types defined in `event_bus.h` now have at least one production pub
 | Event | Publisher |
 |---|---|
 | `GooseHonkedEvent` | `triggerHonk` (chase/wander/idle), `behavior_honcker` (F-key + programmatic) |
-| `GooseDamagedEvent` | _no publisher yet — damage system TBD_ |
+| `GooseDamagedEvent` | `behavior_health` when the high-speed-motion damage rule fires |
 | `ItemDroppedEvent` | `goose_behaviors_fetch.cpp` `handleReturning` |
 | `ItemEatenEvent` | `behavior_breadcrumbs` (when a crumb is eaten) |
 | `GooseJailedEvent` / `GooseFreedEvent` | `behavior_jail` (rising/falling edge of `isJailed`) |
