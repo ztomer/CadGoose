@@ -23,10 +23,25 @@ The `Goose` class (`src/common/goose.cpp`) is currently acting as a "God object"
 **Opportunity:** Break `Goose` down into distinct components (e.g., `PhysicsComponent`, `AnimationComponent`, `AIStateComponent`). If you move towards an ECS, the "Goose" simply becomes an entity ID with these components attached to it, drastically improving testability and maintainability.
 
 ### Detailed Execution Plan:
-*   **Phase 1: Component Definition:** Define clean structs/classes for isolated domains: `Transform` (position, rotation, scale), `Physics` (velocity, acceleration, mass), and `Animation` (current frame, sprite sheet, state).
-*   **Phase 2: Extract Physics & Movement:** Move the physics tick logic out of `Goose::tick` and into a dedicated `PhysicsSystem` or external update function that operates on the `Physics` and `Transform` components.
-*   **Phase 3: Extract Rendering:** Move the drawing logic out of `Goose::render` into a dedicated `RenderSystem` that uses the `Animation` and `Transform` components to interface with the `IRenderer`.
-*   **Phase 4: Refactor Goose:** Reduce the `Goose` class to a simple container of these components, or fully convert it into an Entity ID within the new Actor/ECS system.
+
+**Audit (current state, 2026-05-18):** The `Goose` class declaration is still wide (~140 lines, ~50 members) but the *implementation* is already split by responsibility across 8 translation units totalling ~1700 lines:
+
+| File | LOC | Responsibility |
+|---|---:|---|
+| [goose.cpp](src/common/goose.cpp) | 585 | Lifecycle, tick orchestration, drag, render entry |
+| [goose_drawing.mm](src/common/goose_drawing.mm) | 349 | Rendering (rig, held items, eyes) |
+| [goose_behaviors_fetch.cpp](src/common/goose_behaviors_fetch.cpp) | 206 | Fetch/return AI |
+| [goose_behaviors_interact.cpp](src/common/goose_behaviors_interact.cpp) | 206 | Cursor chase/snatch, joy dodge |
+| [goose_behaviors_wander.cpp](src/common/goose_behaviors_wander.cpp) | 153 | Wander/target picking |
+| [goose_forces.cpp](src/common/goose_forces.cpp) | 120 | Seek/separation/curve forces |
+| [goose_behaviors_internal.cpp](src/common/goose_behaviors_internal.cpp) | 51 | Honk helpers, rig forward |
+| [goose_debug.cpp](src/common/goose_debug.cpp) | 41 | Debug logging |
+
+So "the implementation is a monolith" is already largely false — the file split matches the proposed component domains (physics ≈ forces+behaviors_*; rendering ≈ drawing; AI ≈ behaviors_*).
+
+**What's *not* done:** the class-level decomposition (Phase 1's `Transform` / `Physics` / `Animation` structs). Doing that means changing every `goose->pos` to `goose->transform.pos`, `goose->vel` to `goose->physics.vel`, `goose->rig` to `goose->animation.rig`, etc. across all 8 impl files, the platform layer, behaviors, and tests. That's hundreds of edits for a structural change with no immediate functional payoff.
+
+**Recommendation [DEFERRED]:** Hold Section 2 until there's a concrete motivating need — e.g., wanting to share components with non-Goose entities, or building a true ECS where systems iterate over component arrays. Otherwise the churn doesn't earn its keep. The implementation-level decomposition is already in place.
 
 ---
 
