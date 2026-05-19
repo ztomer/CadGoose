@@ -5,6 +5,7 @@
 // ===========================
 #include "behavior.h"
 #include "behaviors/states/toys_state.h"
+#include "event_bus.h"
 #include "goose.h"
 #include "config.h"
 #include "world.h"
@@ -50,6 +51,7 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
         ToyActor::Type type = (rand() % 2 == 0) ? ToyActor::Stick : ToyActor::Ball;
         ToyActor* toy = new ToyActor(type, spawnPos, s_nextToyId++);
         mgr.add(toy);
+        EventBus::Instance().Publish(ToySpawnedEvent{spawnPos.x, spawnPos.y, static_cast<int>(type)});
         lastSpawnTime = time;
     }
 

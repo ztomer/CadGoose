@@ -6,6 +6,7 @@
 #include "goose_math.h"
 #include "assets.h"
 #include "ai_text_meme.h"
+#include "event_bus.h"
 #include "goose_behaviors.h"
 #include <cmath>
 #include <cstdio>
@@ -188,6 +189,15 @@ void handleReturning(Goose& g, double time, int w, int h) {
 
 
             g_world.droppedItems.push_back(drop);
+            const char* itemType = "unknown";
+            if (drop.data) {
+                switch (drop.data->type) {
+                    case ItemData::MEME: itemType = "meme"; break;
+                    case ItemData::TEXT: itemType = "text"; break;
+                    case ItemData::TOY:  itemType = "toy"; break;
+                }
+            }
+            EventBus::Instance().Publish(ItemDroppedEvent{g.id, drop.pos.x, drop.pos.y, itemType});
             FETCH_LOG("[FETCH] handleReturning g%d dropped item at (%.0f,%.0f) rot=%.1f\n",
                     g.id, drop.pos.x, drop.pos.y, drop.rotation);
         } else {

@@ -5,6 +5,7 @@
 // ===========================
 #include "behavior.h"
 #include "behaviors/states/portal_state.h"
+#include "event_bus.h"
 #include "goose.h"
 #include "config.h"
 #include "world.h"
@@ -58,18 +59,22 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
         }
     } else if (s_portalsOn) {
         if (inP1 && state->portalB.active) {
+            float fromX = goose->pos.x, fromY = goose->pos.y;
             goose->pos.x = state->portalB.x;
             goose->pos.y = state->portalB.y;
             goose->vel = {0, 0};
             g_assets.Honk();
             state->justTeleported = true;
+            EventBus::Instance().Publish(GooseTeleportedEvent{goose->id, 0, fromX, fromY, state->portalB.x, state->portalB.y});
             fprintf(stderr, "[Portal] g%d teleported A->B at (%.0f,%.0f)\n", goose->id, state->portalB.x, state->portalB.y);
         } else if (inP2 && state->portalA.active) {
+            float fromX = goose->pos.x, fromY = goose->pos.y;
             goose->pos.x = state->portalA.x;
             goose->pos.y = state->portalA.y;
             goose->vel = {0, 0};
             g_assets.Honk();
             state->justTeleported = true;
+            EventBus::Instance().Publish(GooseTeleportedEvent{goose->id, 1, fromX, fromY, state->portalA.x, state->portalA.y});
             fprintf(stderr, "[Portal] g%d teleported B->A at (%.0f,%.0f)\n", goose->id, state->portalA.x, state->portalA.y);
         }
     }

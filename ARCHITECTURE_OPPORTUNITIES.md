@@ -108,9 +108,24 @@ All `#ifdef __APPLE__` guards inside behavior `render` bodies are gone.
 
 The original plan called for refactoring "all systems, update functions, and behavior ticks" to take `WorldContext&`. That's 239 call sites; full mechanical conversion of leaf-level reads has low ROI vs. structural risk. Adopted policy: **top-level system entry points take `WorldContext&` explicitly; deep helpers continue reading `g_world` and migrate opportunistically as they get touched**. This keeps the DI value (testability of system entry points, no hidden tick-time mutation) while avoiding gratuitous churn.
 
-### Remaining event candidates
+### Event publishers — all 13 wired
 
-Event types defined in `event_bus.h` but not yet published in production code (opportunistic follow-up): `ItemDropped`, `ItemEaten`, `ToySpawned`, `BallKicked`, `BreadcrumbDropped`, `GooseStuck`, `CursorFastMove`, `GooseTeleported`.
+All EventBus types defined in `event_bus.h` now have at least one production publisher:
+
+| Event | Publisher |
+|---|---|
+| `GooseHonkedEvent` | `triggerHonk` (chase/wander/idle), `behavior_honcker` (F-key + programmatic) |
+| `GooseDamagedEvent` | _no publisher yet — damage system TBD_ |
+| `ItemDroppedEvent` | `goose_behaviors_fetch.cpp` `handleReturning` |
+| `ItemEatenEvent` | `behavior_breadcrumbs` (when a crumb is eaten) |
+| `GooseJailedEvent` / `GooseFreedEvent` | `behavior_jail` (rising/falling edge of `isJailed`) |
+| `PomodoroPhaseChangedEvent` | `behavior_pomodoro` on phase rotation |
+| `GooseStuckEvent` | `Goose::Update` stuck detector |
+| `CursorFastMoveEvent` | `goose_behaviors_interact.cpp` avoidance check |
+| `ToySpawnedEvent` | `behavior_toys.cpp` on `new ToyActor` |
+| `BallKickedEvent` | `actor_ball.mm` `onGooseKick` / `onCursorKick` |
+| `BreadcrumbDroppedEvent` | `behavior_breadcrumbs` on each drop |
+| `GooseTeleportedEvent` | `behavior_portal.cpp` after position swap |
 
 ---
 

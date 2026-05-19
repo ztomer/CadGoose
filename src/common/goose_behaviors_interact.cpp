@@ -5,6 +5,7 @@
 #include "config.h"
 #include "goose_math.h"
 #include "assets.h"
+#include "event_bus.h"
 #include "goose_behaviors.h"
 #include <cmath>
 #include <cstdio>
@@ -57,6 +58,7 @@ CursorAction Goose::UpdateBehaviors(double dt, double time, int w, int h, const 
                     surprisedTime = time;
                     target = pos + Vector2::Normalize(pos - cursor.position) * WorldCoord::Scale(kAvoidanceFleeDistance);
                     state = GooseState::WANDER;
+                    EventBus::Instance().Publish(CursorFastMoveEvent{cursorVel.x, cursorVel.y, cursor.position.x, cursor.position.y});
                 }
             }
         }

@@ -5,6 +5,7 @@
 #include "actor.h"
 #include "config.h"
 #include "world.h"
+#include "event_bus.h"
 #include "assets.h"
 #include "goose_math.h"
 #include "cursor_backend.h"
@@ -65,6 +66,8 @@ void BallActor::onGooseKick(const Vector2& goosePos, float gooseFootSize, double
         lastAnimateTime = time;
         animationGap = ANIM_GAP_MIN;
         m_wasKicked = true;
+        // gooseId is unknown here (the actor doesn't track who kicked it), so -1 means "goose"
+        EventBus::Instance().Publish(BallKickedEvent{-1, position.x, position.y, velocity.x, velocity.y});
         g_assets.Honk();
     }
 }
@@ -79,6 +82,7 @@ void BallActor::onCursorKick(const Vector2& cursorPos, double time) {
         lastAnimateTime = time;
         animationGap = ANIM_GAP_MIN;
         m_wasKicked = true;
+        EventBus::Instance().Publish(BallKickedEvent{0, position.x, position.y, velocity.x, velocity.y});
         g_assets.Honk();
     }
 }
