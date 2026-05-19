@@ -27,18 +27,10 @@
 24. **Goose monolith deconstructed** — `Update()` split into `UpdatePhysics()`, `UpdateDetection()`, `UpdateAnimation()`, `UpdateDebug()`.
 25. **State includes fixed** — 25 source/test files updated with missing behavior state header includes.
 
-## Pending (from CODE_REVIEW.md)
+## Pending
 
 ### High Priority
-1. **Migrate g_world.droppedItems to DroppedItemActor** — 127 references across codebase. Replace iteration with `ActorManager` query. Delete `g_world.droppedItems`.
-
-### Medium Priority
-2. **Move DragTest to separate test file** — `item_window_test.mm` already contains the function. Remove declaration from `item_window.h` (it's a debug socket hook, not production test code).
-3. **Consolidate BEHAVIOR_DEF* macros** — Already done: `BEHAVIOR_DEF_FULL` is single source, 4 variants are thin wrappers.
-
-### Low Priority
-4. **Fix config generator** — `tools/generate_config.py` produces incorrect code. Rewrite or remove.
-5. **Remove stale pointer risk in item_window.mm** — `_item` pointer can become dangling. Use index-based lookup or weak reference.
+1. **Migrate g_world.droppedItems to DroppedItemActor** — 127 references across 20+ files. Requires coordinated changes to: item creation (`world_utils.mm`, `goose_behaviors_fetch.cpp`), iteration (`world_utils.mm`, `goose_behaviors_wander.cpp`, `ui_drawing.cpp`, `ui.cpp`), cleanup (`ui_tick.cpp`, `world_utils.mm`), socket commands (`app_actions.cpp`), tests (`test_headless_rendering.mm`, `test_dragging_integration.mm`). `DroppedItemActor` scaffold ready.
 
 ## New Files
 - `include/actor.h` — Actor base class + ActorManager
