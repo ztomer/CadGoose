@@ -347,6 +347,10 @@ void setup_overlay_window(GtkApplication* app) {
         gtk_window_set_child(overlay, canvas);
         g_world.overlayCanvases.push_back(canvas);
 
+        // Store monitor index in canvas for on_tick to use
+        int monitorIndex = (int)g_world.monitors.size() - 1;
+        g_object_set_data(G_OBJECT(canvas), "monitor-index", GINT_TO_POINTER(monitorIndex));
+
         g_timeout_add(16, on_tick, canvas);
         gtk_window_present(overlay);
     }

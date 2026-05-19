@@ -44,7 +44,8 @@ static NSString* GetModelsEndpoint() {
 - (NSString*)currentModel;
 - (const struct BuiltinProfile*)currentProfile;
 - (void)sendMessage:(NSString*)message completion:(void(^)(NSString* response, NSError* error))completion;
-- (void)completeChatWithTurn:(int)turn completion:(void(^)(NSString* response, NSError* error))completion;
+- (void)completeChatLoopWithCompletion:(void(^)(NSString* response, NSError* error))completion;
+- (void)completeChatWithTurn:(int)turn completion:(void(^)(NSString* response, NSError* error))completion onDone:(void(^)(BOOL needsAnotherTurn))onDone;
 - (void)checkConnectionWithCompletion:(void(^)(BOOL connected, NSString* message))completion;
 - (void)refreshConnection;
 @end
@@ -82,14 +83,34 @@ static NSString* GetModelsEndpoint() {
 
 - (void)sendMessage:(NSString*)message completion:(void(^)(NSString*, NSError*))completion {
     [self addToHistory:@{@"role": @"user", @"content": message}];
-    [self completeChatWithTurn:0 completion:completion];
+    [self completeChatLoopWithCompletion:completion];
 }
 
-- (void)completeChatWithTurn:(int)turn completion:(void(^)(NSString*, NSError*))completion {
+// Iterative chat loop — replaces recursive completeChatWithTurn to eliminate
+// stack overflow risk from tool call chains. Uses dispatch_async to yield
+// between turns, keeping the call stack flat.
+- (void)completeChatLoopWithCompletion:(void(^)(NSString*, NSError*))completion {
+    __weak AIHTTPClient* weakSelf = self;
+    void (^nextTurn)(int) = ^(int turn) {
+        AIHTTPClient* strongSelf = weakSelf;
+        if (!strongSelf) return;
+        [strongSelf completeChatWithTurn:turn completion:completion onDone:^(BOOL needsAnotherTurn) {
+            if (needsAnotherTurn) {
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    nextTurn(turn + 1);
+                });
+            }
+        }];
+    };
+    nextTurn(0);
+}
+
+- (void)completeChatWithTurn:(int)turn completion:(void(^)(NSString*, NSError*))completion onDone:(void(^)(BOOL needsAnotherTurn))onDone {
     if (g_config.ai.providerType == 0) {
         completeWithLocalLLM(self.history, g_config.ai.evilLevel, ^(NSString* resp, NSError* err) {
             if (resp && !err) [self addToHistory:@{@"role": @"assistant", @"content": resp}];
             if (completion) completion(resp, err);
+            if (onDone) onDone(NO);
         }, ^(BOOL conn) {
             self.connected = conn;
         });
@@ -99,6 +120,7 @@ static NSString* GetModelsEndpoint() {
     if (turn > 5) {
         self.connected = NO;
         if (completion) completion(@"HONK! The goose got tangled in too many tools.", nil);
+        if (onDone) onDone(NO);
         return;
     }
 
@@ -107,6 +129,7 @@ static NSString* GetModelsEndpoint() {
     NSURL* url = [NSURL URLWithString:cfg.endpoint];
     if (!url) {
         if (completion) completion(@"HONK! Can't reach the brain.", nil);
+        if (onDone) onDone(NO);
         return;
     }
 
@@ -144,6 +167,7 @@ static NSString* GetModelsEndpoint() {
     NSData* jsonData = [NSJSONSerialization dataWithJSONObject:body options:0 error:&jsonError];
     if (jsonError) {
         if (completion) completion(@"HONK! Brain scrambled.", jsonError);
+        if (onDone) onDone(NO);
         return;
     }
     [request setHTTPBody:jsonData];
@@ -157,6 +181,7 @@ static NSString* GetModelsEndpoint() {
         if (error) {
             self.connected = NO;
             if (completion) completion(@"🦆 HONK! The brain is sleeping. Check if your AI server is running.", error);
+            if (onDone) onDone(NO);
             return;
         }
 
@@ -165,6 +190,7 @@ static NSString* GetModelsEndpoint() {
             NSError* httpError = [NSError errorWithDomain:@"HTTP" code:httpResp.statusCode userInfo:@{NSLocalizedDescriptionKey: @"Non-200 response from AI server"}];
             self.connected = NO;
             if (completion) completion(@"🦆 HONK! The goose can't reach its brain. Check provider/port in settings.", httpError);
+            if (onDone) onDone(NO);
             return;
         }
 
@@ -173,6 +199,7 @@ static NSString* GetModelsEndpoint() {
         if (parseError) {
             self.connected = NO;
             if (completion) completion(@"🦆 HONK! The goose speaks nonsense. Try a different model.", parseError);
+            if (onDone) onDone(NO);
             return;
         }
 
@@ -180,6 +207,7 @@ static NSString* GetModelsEndpoint() {
         if (!choices || choices.count == 0) {
             self.connected = NO;
             if (completion) completion(@"HONK! No answer from brain.", nil);
+            if (onDone) onDone(NO);
             return;
         }
 
@@ -221,10 +249,7 @@ static NSString* GetModelsEndpoint() {
             }
 
             self.connected = YES;
-            // Fix bug risk: dispatch to prevent stack overflow from deep synchronous recursion
-            dispatch_async(dispatch_get_main_queue(), ^{
-                [self completeChatWithTurn:turn + 1 completion:completion];
-            });
+            if (onDone) onDone(YES);
             return;
         }
 
@@ -234,6 +259,7 @@ static NSString* GetModelsEndpoint() {
             self.connected = YES;
             [self addToHistory:@{@"role": @"assistant", @"content": content}];
             if (completion) completion(content, nil);
+            if (onDone) onDone(NO);
             return;
         }
 
@@ -243,12 +269,14 @@ static NSString* GetModelsEndpoint() {
                 self.connected = YES;
                 [self addToHistory:@{@"role": @"assistant", @"content": reasoning}];
                 if (completion) completion(reasoning, nil);
+                if (onDone) onDone(NO);
                 return;
             }
         }
 
         self.connected = NO;
         if (completion) completion(@"HONK! No answer from brain.", nil);
+        if (onDone) onDone(NO);
     }];
     [task resume];
 }
