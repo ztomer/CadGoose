@@ -168,31 +168,4 @@ struct PomodoroBedInfo {
 PomodoroBedInfo Pomodoro_GetBedInfo(int gooseId);
 
 
-struct InteractivePuddle {
-    Vector2 pos{0, 0};
-    Vector2 vel{0, 0};
-    float radius = 15.0f;
-    double spawnTime = 0;
-    bool splashed = false;
-    float maxRadius = 40.0f;
-    float alpha = 0.6f;
-};
-
-struct InteractiveFlower {
-    Vector2 pos{0, 0};
-    double spawnTime = 0;
-    float growth = 0.0f;
-    float stemHeight = 0.0f;
-    float petalSize = 0.0f;
-    float hue = 0.0f;
-};
-
-struct Toy {
-    Vector2 pos{0, 0};
-    float angle = 0;
-    double time{0};
-    bool active = false;
-    enum class Type : int { Stick = 0, Ball = 1 } type = Type::Stick;
-};
-
 #endif // WORLD_H
