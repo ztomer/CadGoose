@@ -77,8 +77,9 @@ struct WorldContext {
     std::list<DroppedItem> droppedItems;
     RingBuffer<Footprint, kMaxFootprints> footprints;
     RingBuffer<Crumbs, kMaxCrumbs> crumbs;
-    std::list<LeafPile> leafPiles;
-    
+    // LeafPiles are owned by ActorManager (LeafPileActor) — query via countByType("leafpile") etc.
+
+
     int nextId = 0;
     int screenWidth = 0;
     int screenHeight = 0;

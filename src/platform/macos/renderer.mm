@@ -207,7 +207,7 @@ static BOOL s_hasPrimary = NO;
 
     // Sync effect windows (leaves, mud, etc.)
     [[EffectWindowManager shared] syncWindows];
-    if (!g_world.leafPiles.empty()) self.needsRedraw = YES;
+    if (ActorManager::Instance().countByType("leafpile") > 0) self.needsRedraw = YES;
 
     // Always sync item windows — needed to clean up orphaned windows when goose picks up last item
     [[ItemWindowManager shared] syncWindows];
