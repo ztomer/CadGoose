@@ -122,6 +122,14 @@ public:
         cairo_restore(m_cr);
     }
 
+    bool GetImageSize(void* image, float* outWidth, float* outHeight) override {
+        cairo_surface_t* surface = static_cast<cairo_surface_t*>(image);
+        if (!surface) return false;
+        if (outWidth)  *outWidth  = (float)cairo_image_surface_get_width(surface);
+        if (outHeight) *outHeight = (float)cairo_image_surface_get_height(surface);
+        return true;
+    }
+
     void DrawText(const char* text, RenderPoint position, RenderColor color, float fontSize) override {
         cairo_save(m_cr);
         cairo_set_source_rgba(m_cr, color.r, color.g, color.b, color.a * m_alpha);
@@ -144,6 +152,21 @@ public:
 
     void SetAlpha(float alpha) override {
         m_alpha = alpha;
+    }
+
+    float MeasureText(const char* text, float fontSize) override {
+        if (!text || !*text) return 0.0f;
+        PangoLayout* layout = pango_cairo_create_layout(m_cr);
+        PangoFontDescription* desc = pango_font_description_new();
+        pango_font_description_set_family(desc, "Sans");
+        pango_font_description_set_absolute_size(desc, fontSize * PANGO_SCALE);
+        pango_layout_set_font_description(layout, desc);
+        pango_layout_set_text(layout, text, -1);
+        int w_pix = 0, h_pix = 0;
+        pango_layout_get_pixel_size(layout, &w_pix, &h_pix);
+        pango_font_description_free(desc);
+        g_object_unref(layout);
+        return (float)w_pix;
     }
 
 private:

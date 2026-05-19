@@ -62,17 +62,14 @@ static void render(Goose* goose, BehaviorContext& ctx, IRenderer* irenderer) {
     auto* state = BehaviorStateManager::Instance().Get<HonckerState>(goose->id, "honcker");
     if (!state || !state->visible) return;
 
-    CGContextRef cg = (CGContextRef)(irenderer ? irenderer->nativeContext() : nullptr);
-    if (!cg) return;
-
-    CGRenderer renderer(cg);
+    if (!irenderer) return;
+    IRenderer& renderer = *irenderer;
 
     Vector2 headPos = goose->rig.neckHead;
     float size = g_config.behaviors.honcker.size;
 
-    if (s_honkImage) {
-        float imgW = (float)CGImageGetWidth(s_honkImage);
-        float imgH = (float)CGImageGetHeight(s_honkImage);
+    float imgW = 0, imgH = 0;
+    if (s_honkImage && renderer.GetImageSize(s_honkImage, &imgW, &imgH) && imgW > 0) {
         float scale = size / imgW;
         float drawW = imgW * scale;
         float drawH = imgH * scale;

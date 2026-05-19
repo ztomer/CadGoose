@@ -59,11 +59,8 @@ static void render(Goose* goose, BehaviorContext& ctx, IRenderer* irenderer) {
     auto* state = BehaviorStateManager::Instance().GetOrCreate<PeekingState>(goose->id, "peeking");
     if (!state->isPeeking) return;
 
-#ifdef __APPLE__
-    CGContextRef cg = (CGContextRef)(irenderer ? irenderer->nativeContext() : nullptr);
-    if (!cg) return;
-
-    CGRenderer renderer(cg);
+    if (!irenderer) return;
+    IRenderer& renderer = *irenderer;
 
     Vector2 headPos = goose->rig.neckHead;
     float peekDir = (float)state->peekSide;
@@ -73,7 +70,6 @@ static void render(Goose* goose, BehaviorContext& ctx, IRenderer* irenderer) {
     renderer.DrawEllipse({ex, ey}, 5.0f, 4.0f, MakePeekEyeSkin(0.8f));
     renderer.DrawEllipse({ex + peekDir * 2.0f - 1.5f, ey - 1.0f}, 1.5f, 1.5f,
                         RenderColor{0.1f, 0.1f, 0.1f, 0.9f});
-#endif
 }
 
 static Behavior g_peekingBehavior = BEHAVIOR_DEF(

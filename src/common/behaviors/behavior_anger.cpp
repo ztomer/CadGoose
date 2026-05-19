@@ -97,11 +97,8 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
 }
 
 static void render(Goose* goose, BehaviorContext& ctx, IRenderer* irenderer) {
-#ifdef __APPLE__
-    CGContextRef cg = (CGContextRef)(irenderer ? irenderer->nativeContext() : nullptr);
-    if (!cg) return;
-
-    CGRenderer renderer(cg);
+    if (!irenderer) return;
+    IRenderer& renderer = *irenderer;
 
     auto* state = BehaviorStateManager::Instance().GetOrCreate<AngerState>(goose->id, "anger");
     if (state->angerLevel < 10.0f) return;
@@ -120,7 +117,6 @@ static void render(Goose* goose, BehaviorContext& ctx, IRenderer* irenderer) {
     float auraRadius = kAngerAuraBaseRadius + intensity * kAngerAuraRadiusAmp;
     renderer.DrawEllipse({goose->pos.x, goose->pos.y}, auraRadius, auraRadius,
                         RenderColor{1.0f, 0.1f, 0.0f, auraAlpha});
-#endif
 }
 
 static void cleanup(BehaviorContext& ctx) {
