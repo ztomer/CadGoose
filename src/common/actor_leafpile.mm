@@ -109,10 +109,14 @@ void LeafPileActor::render(IRenderer* renderer) {
     if (!m_active) return;
 
 #ifdef __APPLE__
+    float scale = g_config.general.globalScale;
+    float scaledRadius = m_radius * scale;
+    float scaledHeight = m_height * scale;
+
     // Pad the window vertically enough to fit kicked leaves rising by
     // up to m_height * 0.6 above the pile center.
-    float vertPad = m_height * 0.6f + 20.0f;
-    float winSize = std::max(m_radius * 2.0f + 20.0f, m_radius * 2.0f + 2.0f * vertPad);
+    float vertPad = scaledHeight * 0.6f + 20.0f;
+    float winSize = std::max(scaledRadius * 2.0f + 20.0f, scaledRadius * 2.0f + 2.0f * vertPad);
     float winX = m_position.x - winSize / 2.0f;
     float winY = m_position.y - winSize / 2.0f;
 
@@ -132,15 +136,15 @@ void LeafPileActor::render(IRenderer* renderer) {
                 // to lift kicked leaves visually (was computed but unused).
                 for (size_t i = 0; i < m_leaves.size(); i++) {
                     const auto& leaf = m_leaves[i];
-                    float x = leaf.curPosPlanar.x;
-                    float y = leaf.curPosPlanar.y - leaf.curPosZ * 0.6f;
-                    float z = leaf.curPosZ;
-                    float alpha = 1.0f - (z / m_height) * 0.5f;
+                    float x = leaf.curPosPlanar.x * scale;
+                    float y = leaf.curPosPlanar.y * scale - leaf.curPosZ * scale * 0.6f;
+                    float z = leaf.curPosZ * scale;
+                    float alpha = 1.0f - (z / scaledHeight) * 0.5f;
                     if (alpha < 0.2f) alpha = 0.2f;
 
                     RenderColor color = LeafColors[leaf.colorIndex];
                     color.a = alpha;
-                    r.DrawEllipse({x, y}, 2.0f, 1.5f, color);
+                    r.DrawEllipse({x, y}, 2.0f * scale, 1.5f * scale, color);
                 }
 
                 r.RestoreState();
