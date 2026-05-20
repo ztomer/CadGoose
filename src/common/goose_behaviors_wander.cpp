@@ -93,7 +93,7 @@ void handleWander(Goose& g, double time, const CursorState& cursor, int w, int h
     }
 
     if (!chased) {
-        bool canFetch = (time - g.lastDropTime) > g_config.item.fetchCooldown && !g.isResting;
+        bool canFetch = (time - g.lastDropTime) > (g_config.item.fetchCooldown + g.randomOffset) && !g.isResting;
         FILE* f = GetDebugLog();
         fprintf(f, "[FETCH] t=%.1f g%d: lastDrop=%.1f cooldown=%.1f canFetch=%d resting=%d\n",
                 time, g.id, g.lastDropTime, g_config.item.fetchCooldown, canFetch, g.isResting);

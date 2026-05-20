@@ -123,6 +123,7 @@ Goose::Goose(int id_, const std::string &name_, int screenW, int screenH)
   attackMouseBias = 0;
   memeFetchBias = rng_util::RandRange(g_config.item.memeFetchBiasMax);
   noteFetchBias = rng_util::RandRange(g_config.item.noteFetchBiasMax);
+  randomOffset = rng_util::RandFloatRange(0.0f, 3.0f);
 
   cursorChaseEnabled = g_config.cursor.chaseEnabled;
   cursorChaseChance = 5;

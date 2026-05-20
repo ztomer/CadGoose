@@ -35,19 +35,20 @@ void triggerHonk(Goose& g, double time, double cd, double& lastBucket) {
     EventBus::Instance().Publish(GooseHonkedEvent{g.id, g.pos.x, g.pos.y, time});
 }
 
-void initHonkState(Goose::HonkState& hs, double time) {
+void initHonkState(Goose& g, double time) {
+    auto& hs = g.honkState;
     if (hs.init) return;
     hs.init = true;
     hs.lastAny = -1e9;
     hs.lastChase = -1e9;
     hs.lastFetch = -1e9;
     hs.lastGeneric = -1e9;
-    hs.nextIdleHonk = time + g_config.honk.idleMin + Rand01() * (g_config.honk.idleMax - g_config.honk.idleMin);
+    hs.nextIdleHonk = time + g_config.honk.idleMin + Rand01() * (g_config.honk.idleMax - g_config.honk.idleMin) + g.randomOffset;
 }
 
 void updateIdleHonk(Goose& g, double time, double cd, double& lastGeneric) {
     auto& hs = g.honkState;
     if (hs.nextIdleHonk > time + g_config.honk.idleCheckAhead) return;
     triggerHonk(g, time, cd, lastGeneric);
-    hs.nextIdleHonk = time + g_config.honk.idleMin + Rand01() * (g_config.honk.idleMax - g_config.honk.idleMin);
+    hs.nextIdleHonk = time + g_config.honk.idleMin + Rand01() * (g_config.honk.idleMax - g_config.honk.idleMin) + g.randomOffset;
 }

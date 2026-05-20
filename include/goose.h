@@ -81,6 +81,11 @@ public:
     int noteFetchBias = 0;   // increases chance to fetch notes
     int memeFetchBias = 0;   // increases chance to fetch memes
 
+    // Per-goose random offset (0-3s) — desynchronizes geese so they don't
+    // all do the same thing at the same time. Applied to fetch cooldowns,
+    // wander target selection, state transitions, and honk timing.
+    float randomOffset = 0.0f;
+
     // Per-goose dynamic settings
     bool cursorChaseEnabled = true;
     int  cursorChaseChance = 5;

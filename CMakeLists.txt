@@ -248,6 +248,7 @@ if(APPLE)
         tests/common/test_footprint_registration.cpp
         tests/common/test_behavior_toggle.cpp
         tests/common/test_pomodoro_quiet.cpp
+        tests/common/test_goose_sync.cpp
         tests/common/test_behavior_hats.cpp
         tests/common/test_timer.cpp
         tests/common/test_behaviors_fun.cpp
