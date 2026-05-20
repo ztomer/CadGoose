@@ -1,13 +1,15 @@
 # CadGoose Agent Guide
 
 ## Documentation Rules
-- **PLAN.md** — Forward-looking only. Contains pending work, never completed items.
-- **CHANGELOG.md** — Completed items only. Organized by date with detailed descriptions.
+
+- **docs/PLAN.md** — Forward-looking only. Contains pending work, never completed items.
+- **docs/CHANGELOG.md** — Completed items only. Organized by date with detailed descriptions.
 - **AGENTS.md** — Current project state. Updated after each session.
 - When completing work: move item from PLAN.md → CHANGELOG.md, update AGENTS.md.
 - Remove obsolete documents when their content is superseded.
 
 ## Build & Run
+
 ```bash
 cd /Users/ztomer/Projects/CadGoose
 mkdir -p build && cd build && cmake .. -DCMAKE_BUILD_TYPE=Release && make -j$(sysctl -n hw.logicalcpu)
@@ -15,8 +17,10 @@ mkdir -p build && cd build && cmake .. -DCMAKE_BUILD_TYPE=Release && make -j$(sy
 ./build/CadGooseTests
 ```
 
-## Project State (May 18, 2026)
-- **755 tests, 99 suites** — 723 pass, 1 pre-existing failure (`LocalLLMTest.GenerateWithHighTemperatureDoesNotCrash` — FoundationModels timeout), 32 skipped (31 AX + 1 drag test)
+## Project State (May 19, 2026)
+
+- **760 tests, 100 suites** — 728 pass, 1 pre-existing failure (`LocalLLMTest.GenerateWithHighTemperatureDoesNotCrash` — FoundationModels timeout), 32 skipped (31 AX + 1 drag test)
+- **Leaf pile scaling fixed** — `actor_leafpile.mm` now applies `g_config.general.globalScale` to window size, leaf positions (`curPosPlanar`, `curPosZ`), and leaf ellipse dimensions. Meme images were already correctly scaled via `item_window.mm`. 3 new unit tests added (`tests/common/test_leafpile_scaling.cpp`).
 - **Actor System (R1)** — All world entities migrated to Actor pattern. `Actor` base class (`include/actor.h`) with `ActorManager` singleton. 9 actor types: `BallActor`, `ToyActor`, `FlowerActor`, `JailActor`, `PortalActor`, `BreadcrumbActor`, `LeafPileActor`, `Goose`, `DroppedItemActor`. Each actor has its own window, lifecycle (tick/render/cleanup), managed by `ActorManager`. `Goose` extends `Actor`. `renderer.mm` uses `ActorManager::tickAll()` and `ActorManager::renderAll()`. All `g_geese` iteration code migrated to `ActorManager::getGeese()`. `g_geese` retained for lifecycle management only (spawn, clear, config save/load).
 - **DroppedItemActor** — Created (`include/actor_dropped_item.h`, `src/common/actor_dropped_item.mm`). Passive actor for memes/text/toys on ground. Window managed by `ItemWindowManager::syncWindows`. `g_world.droppedItems` retained for compatibility (127 refs across codebase).
 - **EffectWindow Registration (R2)** — Each effect type self-registers via `EffectRegister()` with callbacks. `EffectWindowManager::syncWindows` is generic — iterates registrations instead of monolithic switch statements. Files: `include/effect_registration.h`, `src/platform/macos/effect_registration.mm`, `src/platform/macos/effect_reg_footprint.mm`, `src/platform/macos/effect_reg_pomodorobed.mm`. Only 2 effect types remain: `Footprint`, `PomodoroBed`. All other effects migrated to Actors. `effect_window.h` enum cleaned to only active types.
@@ -72,6 +76,7 @@ mkdir -p build && cd build && cmake .. -DCMAKE_BUILD_TYPE=Release && make -j$(sy
 - **WorldContext** — Exists in `world.h` with all global state encapsulated: `geese`, `monitors`, `droppedItems`, `footprints`, `crumbs`, `leafPiles`, screen dimensions, cursor state.
 
 ## Known Bugs (May 18, 2026)
+
 - **Config generator** — Works correctly for registry generation. GUI generation intentionally skipped (incompatible with `config_gui.mm` key-based lookup architecture).
 - **g_world.droppedItems** — 127 references across codebase. `DroppedItemActor` scaffold ready for future migration.
 - **Stale pointer risk in item_window.mm** — Mitigated by `IsItemValid()` check before every use + `std::list` pointer stability guarantees.
