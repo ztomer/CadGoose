@@ -113,10 +113,12 @@ void LeafPileActor::render(IRenderer* renderer) {
     float scaledRadius = m_radius * scale;
     float scaledHeight = m_height * scale;
 
-    // Pad the window vertically enough to fit kicked leaves rising by
-    // up to m_height * 0.6 above the pile center.
-    float vertPad = scaledHeight * 0.6f + 20.0f;
-    float winSize = std::max(scaledRadius * 2.0f + 20.0f, scaledRadius * 2.0f + 2.0f * vertPad);
+    // Window must fit both the pile and kicked leaves that can fly up to
+    // scaledHeight * 0.6 above center and spread beyond the pile radius.
+    // Add extra padding for leaf scatter when kicked.
+    static constexpr float kKickScatterPad = 40.0f;
+    float vertPad = scaledHeight * 0.6f + kKickScatterPad;
+    float winSize = std::max(scaledRadius * 2.0f + kKickScatterPad * 2.0f, scaledRadius * 2.0f + 2.0f * vertPad);
     float winX = m_position.x - winSize / 2.0f;
     float winY = m_position.y - winSize / 2.0f;
 
@@ -127,13 +129,6 @@ void LeafPileActor::render(IRenderer* renderer) {
                 r.SaveState();
                 r.Translate(winSize * 0.5f, winSize * 0.5f);
 
-                // The content view is isFlipped=YES (+Y down). The old code
-                // negated curPosPlanar.y which pushed leaves *upward* in flipped
-                // space when curPosPlanar.y was positive, leaving the bottom
-                // half of the pile (positive planar y) above the center and
-                // clipped against the top of the window. Drop the negation so
-                // leaves sit symmetrically around the center, and use curPosZ
-                // to lift kicked leaves visually (was computed but unused).
                 for (size_t i = 0; i < m_leaves.size(); i++) {
                     const auto& leaf = m_leaves[i];
                     float x = leaf.curPosPlanar.x * scale;
