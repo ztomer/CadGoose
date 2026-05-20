@@ -9,7 +9,12 @@ static constexpr float kWindowHeight = 520.0f;
 static constexpr float kAppbarHeight = 44.0f;
 static constexpr float kTableHeight = kWindowHeight - kAppbarHeight;
 static constexpr float kRowHeight = 48.0f;
-static constexpr float kHeaderRowHeight = 40.0f;
+static constexpr float kHeaderRowHeight = 28.0f;
+// Pixels of empty space ABOVE the header label (visually: gap between the
+// previous group's last item and this category title). Below the label we
+// leave just enough room to clear the text descenders.
+static constexpr float kHeaderTopMargin = 12.0f;
+static constexpr float kHeaderBottomMargin = 2.0f;
 static constexpr float kRowPaddingX = 16.0f;
 static constexpr float kRowIconX = kRowPaddingX;
 static constexpr float kRowIconWidth = 24.0f;
@@ -344,9 +349,14 @@ void s_setBoolValue(const std::string& key, bool value) {
             label.font = [NSFont fontWithName:@"Maple Mono" size:kNameFontSize] ?: [NSFont systemFontOfSize:kNameFontSize weight:NSFontWeightSemibold];
             label.textColor = [NSColor colorWithRed:0.9 green:0.1 blue:0.1 alpha:1.0];
         }
-        // Position header label near bottom of header row — more space above
-        // (separation from previous group) and less space below (closer to items).
-        label.frame = NSMakeRect(kRowPaddingX, 18, self.listWidth - kRowPaddingX * 2, kHeaderRowHeight - 22);
+        // Row views are non-flipped (y=0 at the row's BOTTOM edge, which is
+        // visually adjacent to the next row down — i.e. the first item under
+        // this header). To put the title close to that next row we anchor the
+        // label to LOW y; the empty space ends up at the TOP of the row,
+        // separating this group from the previous group's last item.
+        float labelH = kHeaderRowHeight - kHeaderTopMargin - kHeaderBottomMargin;
+        label.frame = NSMakeRect(kRowPaddingX, kHeaderBottomMargin,
+                                 self.listWidth - kRowPaddingX * 2, labelH);
         label.stringValue = item[@"name"];
         return label;
     }
