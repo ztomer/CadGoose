@@ -17,7 +17,7 @@ bool ItemDragController::OnMouseDown(DevicePoint mousePt) {
             if (item.data->type != ItemData::TOY) {
                 if (HitTest::PointInCloseButton(mousePt, itemCenter, item.data->w, item.data->h,
                                                 item.rotation, g_config.render.closeButtonSize, g_config.general.globalScale)) {
-                    ActorManager::Instance().remove(actor);
+                    actor->setActive(false);
                     return true;
                 }
             }

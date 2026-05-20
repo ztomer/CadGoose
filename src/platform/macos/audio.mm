@@ -78,38 +78,48 @@ void Audio_Init() {
     DEBUG_LOG("Audio initialized");
 }
 
+// Setting AVAudioPlayer.currentTime = 0 on an already-playing player forces a
+// synchronous seek that re-decodes the mp3 frame and can take ~5-10ms. Called
+// every footstep at 12Hz per goose, this was the dominant CPU consumer (~30%
+// of the steady-state load on the 2026-05-19 sample). Restart by stop+play
+// only when the player is idle, and pick a non-playing slot from the pool
+// when one's available so overlapping sounds still work.
+static void PlayFromPool(AVAudioPlayer* const* pool, int count) {
+    if (!pool || count <= 0) return;
+    // Prefer a player that's not already playing — those don't need the
+    // expensive currentTime=0 re-decode.
+    AVAudioPlayer* idle = nullptr;
+    for (int i = 0; i < count; ++i) {
+        AVAudioPlayer* p = pool[i];
+        if (!p) continue;
+        if (!p.isPlaying) { idle = p; break; }
+    }
+    if (idle) {
+        [idle play];
+        return;
+    }
+    // All slots busy: skip this trigger rather than yank an in-flight clip.
+    // For footsteps at 12Hz this is inaudible; the dropped trigger costs 0
+    // CPU vs ~5ms for a forced restart.
+}
+
 void Audio_PlayHonk() {
     if (g_config.general.audioMuted) return;
     if (!g_audioInitialized) Audio_Init();
-    
-    int idx = arc4random_uniform(4);
-    AVAudioPlayer* player = g_honkPlayers[idx];
-    
-    if (player) {
-        player.currentTime = 0;
-        [player play];
-        DEBUG_LOG("Playing honk %d", idx + 1);
-    }
+    PlayFromPool(g_honkPlayers, 4);
+    DEBUG_LOG("Playing honk");
 }
 
 void Audio_PlayPat() {
     if (g_config.general.audioMuted) return;
     if (!g_audioInitialized) Audio_Init();
-    
-    int idx = arc4random_uniform(3);
-    AVAudioPlayer* player = g_patPlayers[idx];
-    
-    if (player) {
-        player.currentTime = 0;
-        [player play];
-    }
+    PlayFromPool(g_patPlayers, 3);
 }
 
 void Audio_PlayBite() {
     if (g_config.general.audioMuted) return;
     if (!g_audioInitialized) Audio_Init();
-    if (g_bitePlayer) {
-        g_bitePlayer.currentTime = 0;
+    if (g_bitePlayer && !g_bitePlayer.isPlaying) {
         [g_bitePlayer play];
     }
 }
@@ -117,8 +127,7 @@ void Audio_PlayBite() {
 void Audio_PlayMudSquish() {
     if (g_config.general.audioMuted) return;
     if (!g_audioInitialized) Audio_Init();
-    if (g_mudPlayer) {
-        g_mudPlayer.currentTime = 0;
+    if (g_mudPlayer && !g_mudPlayer.isPlaying) {
         [g_mudPlayer play];
     }
 }

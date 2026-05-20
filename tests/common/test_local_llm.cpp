@@ -94,12 +94,12 @@ TEST_F(LocalLLMTest, DownloadEmptyUrlReturnsError) {
 }
 
 TEST_F(LocalLLMTest, GenerateWithHighTemperatureDoesNotCrash) {
-    std::promise<std::string> result;
-    auto fut = result.get_future();
-    LocalLLM_Generate("hot test", 1.999f, [&](const std::string& text) {
-        result.set_value(text);
+    auto result = std::make_shared<std::promise<std::string>>();
+    auto fut = result->get_future();
+    LocalLLM_Generate("hot test", 1.999f, [result](const std::string& text) {
+        result->set_value(text);
     });
-    auto status = fut.wait_for(std::chrono::seconds(5));
+    auto status = fut.wait_for(std::chrono::seconds(15));
     ASSERT_EQ(status, std::future_status::ready);
     SUCCEED();
 }

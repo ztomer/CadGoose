@@ -291,7 +291,7 @@ if(APPLE)
         src/common/goose_behaviors_fetch.cpp
         src/common/goose_behaviors_interact.cpp
         src/common/items.cpp
-        src/common/actor.cpp
+        src/common/actor.mm
         src/common/actor_ball.mm
         src/common/actor_toy.mm
         src/common/actor_flower.mm

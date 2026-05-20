@@ -333,6 +333,8 @@ TEST(HeadlessRendering, DragController_CloseButtonDeletes) {
     DevicePoint mouseDown{455, 365};
     EXPECT_TRUE(controller.OnMouseDown(mouseDown));
     EXPECT_EQ(controller.GetDraggedItem(), nullptr); // Item deleted, no drag
+    
+    ActorManager::Instance().cleanup();
     EXPECT_EQ(ActorManager::Instance().getDroppedItems().size(), 0u);
 
     ActorManager::Instance().removeAllDroppedItems();

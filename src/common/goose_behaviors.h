@@ -8,7 +8,7 @@
 
 // Internal helpers (goose_behaviors_internal.cpp)
 void triggerHonk(Goose& g, double time, double cd, double& lastBucket);
-void initHonkState(Goose::HonkState& hs, double time);
+void initHonkState(Goose& g, double time);
 void updateIdleHonk(Goose& g, double time, double cd, double& lastGeneric);
 Vector2 GetSnatchForward(float dir, const Vector2& isoScale);
 

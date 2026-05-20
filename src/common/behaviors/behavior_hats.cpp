@@ -51,14 +51,18 @@ static void render(Goose* goose, BehaviorContext& ctx, IRenderer* irenderer) {
     bool facingLeft = (dir > kFacingLeftMin && dir < kFacingLeftMax);
     if (facingLeft) {
         // Mirror around the hat's vertical center so the hat itself flips,
-        // not just its position on screen.
+        // not just its position on screen. Also Y-flip for CoreGraphics.
         renderer.SaveState();
-        renderer.Translate(headDevice.x + offsetX, 0);
-        renderer.Scale(-1.0f, 1.0f);
-        renderer.DrawImage(s_hatImage, RenderRect{-halfW, drawY, drawW, drawH});
+        renderer.Translate(headDevice.x + offsetX, drawY + drawH);
+        renderer.Scale(-1.0f, -1.0f);
+        renderer.DrawImage(s_hatImage, RenderRect{-halfW, 0, drawW, drawH});
         renderer.RestoreState();
     } else {
-        renderer.DrawImage(s_hatImage, RenderRect{drawX, drawY, drawW, drawH});
+        renderer.SaveState();
+        renderer.Translate(drawX, drawY + drawH);
+        renderer.Scale(1.0f, -1.0f);
+        renderer.DrawImage(s_hatImage, RenderRect{0, 0, drawW, drawH});
+        renderer.RestoreState();
     }
 }
 

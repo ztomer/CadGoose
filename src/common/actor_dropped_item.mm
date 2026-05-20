@@ -26,13 +26,14 @@ DroppedItemActor::DroppedItemActor(const DroppedItem& item)
 
 DroppedItemActor::~DroppedItemActor() {
 #ifdef __APPLE__
-    if (m_window) {
-        ItemWindowManager* manager = [ItemWindowManager shared];
-        [manager.windows removeObjectForKey:(__bridge NSNumber*)m_windowKey];
-        [(__bridge ItemWindow*)m_window close];
-        m_window = nullptr;
-        m_windowKey = nullptr;
-    }
+    ItemWindow* win = (__bridge_transfer ItemWindow*)m_window;
+    NSNumber* key = (__bridge_transfer NSNumber*)m_windowKey;
+    m_window = nullptr;
+    m_windowKey = nullptr;
+    closeWindowOnMainThread(^{
+        [[ItemWindowManager shared].windows removeObjectForKey:key];
+        [win close];
+    });
 #endif
     if (m_item.data) {
         delete m_item.data;

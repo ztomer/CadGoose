@@ -3,6 +3,8 @@
 !README.md
 
 build/
+build_asan/
+build-nomalloc/
 test_logs/
 CMakeFiles/
 CMakeCache.txt

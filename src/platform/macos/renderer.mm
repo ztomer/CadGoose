@@ -192,6 +192,7 @@ static BOOL s_hasPrimary = NO;
     if (self.isPrimary) {
         // Tick all actors (geese, toys, flowers, etc.)
         ActorManager::Instance().tickAll(g_world, dt, self.currentTime);
+        ActorManager::Instance().cleanup();
 
         // Update window positions for geese
         auto geese = ActorManager::Instance().getGeese();

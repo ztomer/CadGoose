@@ -85,6 +85,7 @@ static void BELog(const char* fmt, ...) {
         self.acceptsMouseMovedEvents = NO;
         self.level = NSStatusWindowLevel; // Below goose window
         self.hasShadow = NO;
+        self.releasedWhenClosed = NO;
         self.collectionBehavior = NSWindowCollectionBehaviorCanJoinAllSpaces |
                                   NSWindowCollectionBehaviorIgnoresCycle;
 
