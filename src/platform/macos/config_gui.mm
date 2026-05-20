@@ -8,8 +8,8 @@
 static constexpr float kWindowHeight = 520.0f;
 static constexpr float kAppbarHeight = 44.0f;
 static constexpr float kTableHeight = kWindowHeight - kAppbarHeight;
-static constexpr float kRowHeight = 52.0f;
-static constexpr float kHeaderRowHeight = 36.0f;
+static constexpr float kRowHeight = 48.0f;
+static constexpr float kHeaderRowHeight = 28.0f;
 static constexpr float kRowPaddingX = 16.0f;
 static constexpr float kRowIconX = kRowPaddingX;
 static constexpr float kRowIconWidth = 24.0f;
@@ -344,9 +344,9 @@ void s_setBoolValue(const std::string& key, bool value) {
             label.font = [NSFont fontWithName:@"Maple Mono" size:kNameFontSize] ?: [NSFont systemFontOfSize:kNameFontSize weight:NSFontWeightSemibold];
             label.textColor = [NSColor colorWithRed:0.9 green:0.1 blue:0.1 alpha:1.0];
         }
-        // Position label near bottom of header row to create more space above (group separation)
-        // and less space below (closer to its own group)
-        label.frame = NSMakeRect(kRowPaddingX, 2, self.listWidth - kRowPaddingX * 2, kHeaderRowHeight - 4);
+        // Position header label with more space above (group separation)
+        // and less space below (closer to its own group items)
+        label.frame = NSMakeRect(kRowPaddingX, 8, self.listWidth - kRowPaddingX * 2, kHeaderRowHeight - 8);
         label.stringValue = item[@"name"];
         return label;
     }
