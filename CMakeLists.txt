@@ -157,7 +157,7 @@ elseif(LINUX)
         "${CMAKE_CURRENT_BINARY_DIR}/wlr-virtual-pointer-unstable-v1-client-protocol.h"
     )
 
-    file(GLOB_RECURSE COMMON_SOURCES "src/common/*.cpp" "src/common/*.mm")
+    file(GLOB_RECURSE COMMON_SOURCES "src/common/*.cpp")
     file(GLOB_RECURSE PLATFORM_SOURCES "src/platform/linux/*.cpp")
     set(SOURCES ${COMMON_SOURCES} ${PLATFORM_SOURCES} ${GENERATED_SOURCES})
 
