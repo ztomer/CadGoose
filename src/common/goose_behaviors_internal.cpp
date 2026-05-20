@@ -25,6 +25,7 @@ Vector2 GetSnatchForward(float dir, const Vector2& isoScale) {
 }
 
 void triggerHonk(Goose& g, double time, double cd, double& lastBucket) {
+    if (g.isResting) return;
     auto& hs = g.honkState;
     if ((time - hs.lastAny) < g_config.honk.minGap) return;
     if ((time - lastBucket) < cd) return;
