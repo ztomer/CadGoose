@@ -16,7 +16,7 @@
 @class EffectContentView;
 
 struct EffectRegistration {
-    int type;  // EffectType enum value
+    int type;
 
     // Returns all active effect positions for this type
     std::vector<Vector2> (*getPositions)();

@@ -57,7 +57,7 @@ static void PomodoroBed_ConfigureWindow(EffectWindow* win, const Vector2& pos) {
 static struct PomodoroBedRegistration {
     PomodoroBedRegistration() {
         EffectRegister({
-            (int)EffectTypePomodoroBed,
+            EffectTypePomodoroBed,
             PomodoroBed_GetPositions,
             PomodoroBed_GetRadius,
             PomodoroBed_ExistsAt,
