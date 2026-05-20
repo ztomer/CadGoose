@@ -40,9 +40,9 @@ bool isTargetReached(Goose& g, float threshold) {
 }
 
 CursorAction Goose::UpdateBehaviors(double dt, double time, int w, int h, const CursorState& cursor) {
-    extern void initHonkState(Goose::HonkState& hs, double time);
+    extern void initHonkState(Goose& g, double time);
     extern void updateIdleHonk(Goose& g, double time, double cd, double& lastGeneric);
-    initHonkState(honkState, time);
+    initHonkState(*this, time);
 
     // --- Joy Suggestions (Dodging) ---
     if (cursor.hasPos() && state != GooseState::SNATCH_CURSOR) {
