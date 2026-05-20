@@ -42,6 +42,7 @@ if(MACOS)
     find_library(AVFOUNDATION_LIBRARY AVFoundation)
     find_library(COREGRAPHICS_LIBRARY CoreGraphics)
     find_library(COREAUDIO_LIBRARY CoreAudio)
+    find_library(AUDIOTOOLBOX_LIBRARY AudioToolbox)
     find_library(APPLICATIONSERVICES_LIBRARY ApplicationServices)
     find_library(CURL_LIBRARY curl)
     find_library(COREML_LIBRARY CoreML)
@@ -75,6 +76,7 @@ if(MACOS)
         ${AVFOUNDATION_LIBRARY}
         ${COREGRAPHICS_LIBRARY}
         ${COREAUDIO_LIBRARY}
+        ${AUDIOTOOLBOX_LIBRARY}
         ${APPLICATIONSERVICES_LIBRARY}
         ${CURL_LIBRARY}
         ${COREML_LIBRARY}
@@ -401,6 +403,7 @@ if(APPLE)
         ${AVFOUNDATION_LIBRARY}
         ${COREGRAPHICS_LIBRARY}
         ${COREAUDIO_LIBRARY}
+        ${AUDIOTOOLBOX_LIBRARY}
         ${APPLICATIONSERVICES_LIBRARY}
         ${CURL_LIBRARY}
         ${COREML_LIBRARY}
