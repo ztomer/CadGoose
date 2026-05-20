@@ -104,6 +104,26 @@ void BehaviorRegistry::TickAll(Goose* goose, double dt, double time) {
         auto* state = BehaviorStateManager::Instance().Get<BehaviorState>(goose->id, behavior->id);
         bool wasEnabled = state ? state->wasEnabled : false;
 
+        // Detect enabled→disabled transition and run cleanup
+        if (wasEnabled && !isEnabled && behavior->cleanup) {
+            try {
+                behavior->cleanup(ctx);
+            } catch (const std::exception& e) {
+                fprintf(stderr, "[BEHAVIOR] Cleanup failed for %s: %s\n",
+                        behavior->id, e.what());
+            }
+        }
+
+        // Detect disabled→enabled transition and run init
+        if (!wasEnabled && isEnabled && behavior->init) {
+            try {
+                behavior->init(ctx);
+            } catch (const std::exception& e) {
+                fprintf(stderr, "[BEHAVIOR] Init failed for %s: %s\n",
+                        behavior->id, e.what());
+            }
+        }
+
         if (isEnabled || wasEnabled) {
             try {
                 behavior->tick(goose, ctx, dt, time);
