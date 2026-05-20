@@ -256,7 +256,7 @@ static constexpr float kEffectWindowMinSize = 40.0f;
 
         // Find the registration for this effect type
         for (const auto& reg : regs) {
-            if (reg.type == (int)win.effectType) {
+            if (reg.type == win.effectType) {
                 Vector2 pos = {win.posX, win.posY};
                 if (reg.existsAt(pos)) {
                     effectStillExists = YES;
@@ -283,7 +283,7 @@ static constexpr float kEffectWindowMinSize = 40.0f;
                 if (![obj isKindOfClass:[EffectWindow class]]) continue;
 
                 EffectWindow* win = (EffectWindow*)obj;
-                if ((int)win.effectType == reg.type &&
+                if (win.effectType == reg.type &&
                     std::abs(pos.x - win.posX) < 1.0f &&
                     std::abs(pos.y - win.posY) < 1.0f) {
                     exists = YES;
@@ -320,13 +320,13 @@ static constexpr float kEffectWindowMinSize = 40.0f;
 
         // Find registration for this effect type to configure content view
         for (const auto& reg : regs) {
-            if (reg.type == (int)win.effectType) {
+            if (reg.type == win.effectType) {
                 if (reg.configureContentView) {
                     Vector2 pos = {win.posX, win.posY};
                     reg.configureContentView((EffectContentView*)win.contentView, pos);
                 }
                 // Force redraw for effects that need time-based updates (footprint fading)
-                if (reg.type == (int)EffectTypeFootprint) {
+                if (reg.type == EffectTypeFootprint) {
                     EffectContentView* cv = (EffectContentView*)win.contentView;
                     cv.currentTime = now;
                     [cv setNeedsDisplay:YES];
