@@ -214,14 +214,56 @@ static float CalculateGooseWindowSize(const Goose* goose) {
 }
 
 - (void)updateWindowPositionsForGeese:(const std::vector<Goose*>&)geese {
-    // The goose windows are screen-sized and stationary now; each tick all we
-    // need is to mark the views dirty so they redraw the actors at their
-    // current device coords. No per-frame frame reshaping or recentering on
-    // the front goose (which used to leave secondary geese clipped outside
-    // a 600x600 window).
+    // The goose windows are screen-sized and stationary now; we only need to
+    // invalidate the *rects* around each goose that actually moved. Calling
+    // setNeedsDisplay:YES on a 4K screen-sized view at 60Hz was burning
+    // ~40% CPU repainting empty pixels every frame.
+    //
+    // Track the last position drawn per goose per window. If a goose moved
+    // since the last frame, we invalidate the union of its prev + current
+    // sprite rect (so the trail behind the old pos clears). If nothing
+    // moved, we skip setNeedsDisplay entirely and the OS keeps the prior
+    // pixels.
     if (geese.empty()) return;
+
+    // Per-goose-id -> last device point. NSValue boxes DevicePoint via
+    // CGPoint storage since DevicePoint is layout-compatible with two floats.
+    static NSMutableDictionary<NSNumber*, NSValue*>* s_lastPositions = nil;
+    if (!s_lastPositions) s_lastPositions = [NSMutableDictionary dictionary];
+
+    constexpr float kSpriteHalfExtent = 90.0f; // goose sprite + nametag + hat fits in ~180px
+    constexpr float kMoveThreshold    = 0.5f;
+
     for (GooseWindow* window in self.windows) {
-        [window.gooseView setNeedsDisplay:YES];
+        NSView* view = window.gooseView;
+        // Window's content view is in device coords (the GooseView's CTM is
+        // translated by -viewOriginDevice on each drawRect). We can pass
+        // device-coord rects directly to setNeedsDisplayInRect.
+        bool anyMoved = false;
+        for (const Goose* g : geese) {
+            if (!g) continue;
+            NSNumber* key = @(g->id);
+            NSValue* prev = s_lastPositions[key];
+            CGPoint prevPt = prev ? [prev pointValue] : CGPointMake(NAN, NAN);
+            CGPoint curPt  = CGPointMake(g->pos.x, g->pos.y);
+            if (std::isnan(prevPt.x) ||
+                std::abs(prevPt.x - curPt.x) >= kMoveThreshold ||
+                std::abs(prevPt.y - curPt.y) >= kMoveThreshold) {
+                anyMoved = true;
+                if (!std::isnan(prevPt.x)) {
+                    [view setNeedsDisplayInRect:NSMakeRect(prevPt.x - kSpriteHalfExtent,
+                                                            prevPt.y - kSpriteHalfExtent,
+                                                            kSpriteHalfExtent * 2,
+                                                            kSpriteHalfExtent * 2)];
+                }
+                [view setNeedsDisplayInRect:NSMakeRect(curPt.x - kSpriteHalfExtent,
+                                                        curPt.y - kSpriteHalfExtent,
+                                                        kSpriteHalfExtent * 2,
+                                                        kSpriteHalfExtent * 2)];
+                s_lastPositions[key] = [NSValue valueWithPoint:curPt];
+            }
+        }
+        (void)anyMoved;
     }
 }
 
