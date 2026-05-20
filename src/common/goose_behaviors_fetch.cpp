@@ -101,8 +101,7 @@ void tryPickupItem(Goose& g, double time, int w, int h) {
             g.heldItem = item.data;
             // Hand ownership of ItemData to the goose so the actor doesn't delete it
             actor->item().data = nullptr;
-            ActorManager::Instance().remove(actor);
-            delete actor;
+            actor->setActive(false);
             g.state = GooseState::RETURNING;
             g.target = {static_cast<float>(rng_util::RandRange(std::max(1, (int)(w - g_config.spawn.itemDropMarginX * 2)) + (int)g_config.spawn.itemDropMarginX)),
                         static_cast<float>(rng_util::RandRange(std::max(1, (int)(h - g_config.spawn.itemDropMarginY * 2)) + (int)g_config.spawn.itemDropMarginY))};

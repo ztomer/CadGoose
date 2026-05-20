@@ -19,10 +19,9 @@ static void init(BehaviorContext& ctx) {
         s_ballActor = new BallActor();
         ActorManager::Instance().add(s_ballActor);
     }
-    // Reset ball position on goose init
-    s_ballActor->setPosition({300.0f, 300.0f});
-    s_ballActor->velocity = {0, 0};
-    s_ballActor->speed = 0.0f;
+    // Only reset position on first creation, not on subsequent goose spawns.
+    // The ball is a singleton shared across all geese — resetting it on each
+    // goose init causes the ball to snap back to origin when a new goose appears.
 }
 
 static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {

@@ -54,8 +54,8 @@ private:
     bool m_wasKicked;
 
 #ifdef __APPLE__
-    BehaviorElementWindow* m_window;
-    NSNumber* m_windowKey;
+    void* m_window;  // BehaviorElementWindow* as opaque pointer
+    void* m_windowKey;  // NSNumber* as opaque pointer
     void* m_images[3];
     void initWindow();
     void updateWindow();

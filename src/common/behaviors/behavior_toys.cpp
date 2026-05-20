@@ -82,8 +82,7 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
     if (nearestDist < TOY_FETCH_DISTANCE) {
         bool isStick = (nearestToy->toyType() == ToyActor::Stick);
 
-        mgr.remove(nearestToy);
-        delete nearestToy;
+        nearestToy->setActive(false);
 
         if (!goose->heldItem) {
             goose->heldItem = g_assets.CreateToyItem(isStick);

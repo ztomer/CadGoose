@@ -28,7 +28,7 @@ BallActor::BallActor()
     : Actor(), velocity{0, 0}, speed(0), lastKickTime(0),
       lastAnimateTime(0), animationGap(0), currentFrame(0), m_wasKicked(false)
 #ifdef __APPLE__
-    , m_window(nil), m_windowKey(nil)
+    , m_window(nullptr), m_windowKey(nullptr)
 #endif
 {
     m_position = {BALL_INIT_X, BALL_INIT_Y};
@@ -44,14 +44,16 @@ BallActor::BallActor()
 
 BallActor::~BallActor() {
 #ifdef __APPLE__
-    if (m_window) {
-        [m_window closeAndRemove];
-        if (m_windowKey) {
-            [[BehaviorElementWindowManager shared] unregisterWindow:m_windowKey];
+    BehaviorElementWindow* win = (__bridge_transfer BehaviorElementWindow*)m_window;
+    NSNumber* key = (__bridge_transfer NSNumber*)m_windowKey;
+    m_window = nullptr;
+    m_windowKey = nullptr;
+    closeWindowOnMainThread(^{
+        [win closeAndRemove];
+        if (key) {
+            [[BehaviorElementWindowManager shared] unregisterWindow:key];
         }
-        m_window = nil;
-        m_windowKey = nil;
-    }
+    });
 #endif
 }
 
@@ -144,7 +146,7 @@ void BallActor::render(IRenderer* renderer) {
     float imgOffsetY = (winH - imgDrawH) * 0.5f;
 
     if (!m_window) {
-        m_window = [[BehaviorElementWindow alloc]
+        BehaviorElementWindow* newWin = [[BehaviorElementWindow alloc]
             initWithDrawBlock:^(CGContextRef cgCtx) {
                 CGImageRef ballImg = (CGImageRef)m_images[currentFrame % ANIM_FRAME_COUNT];
                 if (ballImg) {
@@ -160,10 +162,12 @@ void BallActor::render(IRenderer* renderer) {
                 }
             }
             deviceX:winX deviceY:winY width:winW height:winH];
-        m_windowKey = [[BehaviorElementWindowManager shared] registerWindow:m_window];
+        m_window = (__bridge_retained void*)newWin;
+        m_windowKey = (__bridge_retained void*)[[BehaviorElementWindowManager shared] registerWindow:newWin];
     } else {
-        [m_window updatePosition:winX y:winY width:winW height:winH];
-        [(BehaviorElementContentView*)m_window.contentView setNeedsDisplay:YES];
+        BehaviorElementWindow* win = (__bridge BehaviorElementWindow*)m_window;
+        [win updatePosition:winX y:winY width:winW height:winH];
+        [(BehaviorElementContentView*)win.contentView setNeedsDisplay:YES];
     }
 #endif
 }

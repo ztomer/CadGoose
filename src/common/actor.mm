@@ -1,4 +1,4 @@
-// actor.cpp
+// actor.mm
 // ActorManager implementation.
 
 #include "actor.h"
@@ -6,6 +6,20 @@
 #include "goose.h"
 #include "world.h"
 #include <algorithm>
+
+#ifdef __APPLE__
+#import <Foundation/Foundation.h>
+#endif
+
+void Actor::closeWindowOnMainThread(void (^closeBlock)()) {
+#ifdef __APPLE__
+    if (!closeBlock) return;
+    // dispatch_async copies the block under ARC — just dispatch it.
+    dispatch_async(dispatch_get_main_queue(), closeBlock);
+#else
+    (void)closeBlock;
+#endif
+}
 
 ActorManager& ActorManager::Instance() {
     static ActorManager instance;
@@ -24,16 +38,27 @@ void ActorManager::remove(Actor* actor) {
 }
 
 void ActorManager::tickAll(WorldContext& ctx, double dt, double time) {
-    for (auto* actor : actors) {
-        if (actor->isActive()) {
+    // Snapshot the actor pointers before iterating. Several behavior ticks
+    // call ActorManager::add (jail, flower, portal, breadcrumb, dropped-item,
+    // leafpile) which is a std::vector::push_back; if the vector reallocates
+    // mid-iteration the range-for iterator is invalidated and the next deref
+    // crashes (`ActorManager::tickAll` was the top frame in the
+    // EXC_BAD_ACCESS crash report from 2026-05-19 22:01).
+    std::vector<Actor*> snapshot = actors;
+    for (auto* actor : snapshot) {
+        if (actor && actor->isActive()) {
             actor->tick(ctx, dt, time);
         }
     }
 }
 
 void ActorManager::renderAll(IRenderer* renderer) {
-    for (auto* actor : actors) {
-        if (actor->isActive() && actor->isAlive()) {
+    // Same snapshot pattern as tickAll — defensive against reentrant
+    // add/remove (less critical here since render() shouldn't mutate the
+    // actor set, but cheap insurance).
+    std::vector<Actor*> snapshot = actors;
+    for (auto* actor : snapshot) {
+        if (actor && actor->isActive() && actor->isAlive()) {
             actor->render(renderer);
         }
     }

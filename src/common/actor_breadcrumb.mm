@@ -32,15 +32,16 @@ BreadcrumbActor::BreadcrumbActor(const Vector2& pos, double spawnTime, float lif
 
 BreadcrumbActor::~BreadcrumbActor() {
 #ifdef __APPLE__
-    if (m_window) {
-        BehaviorElementWindow* win = (__bridge BehaviorElementWindow*)m_window;
+    BehaviorElementWindow* win = (__bridge_transfer BehaviorElementWindow*)m_window;
+    NSNumber* key = (__bridge_transfer NSNumber*)m_windowKey;
+    m_window = nullptr;
+    m_windowKey = nullptr;
+    closeWindowOnMainThread(^{
         [win closeAndRemove];
-        if (m_windowKey) {
-            [[BehaviorElementWindowManager shared] unregisterWindow:(__bridge NSNumber*)m_windowKey];
+        if (key) {
+            [[BehaviorElementWindowManager shared] unregisterWindow:key];
         }
-        m_window = nullptr;
-        m_windowKey = nullptr;
-    }
+    });
 #endif
 }
 

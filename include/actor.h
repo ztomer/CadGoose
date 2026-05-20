@@ -40,6 +40,10 @@ public:
 protected:
     Actor() : m_position{0, 0}, m_radius(0), m_active(true) {}
 
+    // Safely close an NSWindow on the main thread (call from destructor).
+    // The block captures window/key by value — no manual memory management needed.
+    void closeWindowOnMainThread(void (^closeBlock)());
+
     DevicePoint m_position;
     float m_radius;
     bool m_active;
