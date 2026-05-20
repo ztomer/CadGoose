@@ -42,7 +42,7 @@ static bool Footprint_ExistsAt(const Vector2& pos) {
 static struct FootprintRegistration {
     FootprintRegistration() {
         EffectRegister({
-            1, // EffectTypeFootprint
+            (int)EffectTypeFootprint,
             Footprint_GetPositions,
             Footprint_GetRadius,
             Footprint_ExistsAt
