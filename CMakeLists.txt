@@ -245,6 +245,7 @@ if(APPLE)
         tests/common/test_behavior_ball.cpp
         tests/common/test_behavior_breadcrumbs.cpp
         tests/common/test_leafpile_scaling.cpp
+        tests/common/test_footprint_registration.cpp
         tests/common/test_behavior_hats.cpp
         tests/common/test_timer.cpp
         tests/common/test_behaviors_fun.cpp
