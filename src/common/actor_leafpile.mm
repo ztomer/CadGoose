@@ -8,6 +8,7 @@
 #include "renderer_interface.h"
 #include "cg_renderer.h"
 #include "render_colors.h"
+#include <algorithm>
 #include <cmath>
 
 #ifdef __APPLE__
@@ -22,12 +23,13 @@ static constexpr float kLeafSpeedFactor = 0.2f;
 static constexpr float kLeafVelZMin = 10.0f;
 static constexpr float kLeafVelZRange = 490;
 static constexpr float kLeafGravity = -900.0f;
-static constexpr float kLeafWidth = 20.0f;
-static constexpr float kLeafHeight = 15.0f;
+static constexpr float kLeafWidth = 7.5f;
+static constexpr float kLeafHeight = 4.5f;
 static constexpr float kLeafZCompression = 0.6f;
 static constexpr float kLeafAlphaFadeRate = 0.5f;
 static constexpr float kLeafAlphaMin = 0.2f;
 static constexpr float kLeafVertPadRatio = 0.6f;
+static constexpr float kLeafWindowPadding = 10.0f;
 
 static RenderColor LeafColors[4] = {
     {0.8f, 0.4f, 0.1f, 1.0f}, // orange
@@ -122,14 +124,21 @@ void LeafPileActor::render(IRenderer* renderer) {
     float scaledRadius = m_radius * scale;
     float scaledHeight = m_height * scale;
 
-    // Window must fit both the pile and kicked leaves that can fly up to
-    // scaledHeight * 0.6 above center and spread beyond the pile radius.
-    // Add extra padding for leaf scatter when kicked.
-    static constexpr float kKickScatterPad = 40.0f;
-    float vertPad = scaledHeight * kLeafVertPadRatio + kKickScatterPad;
-    float winSize = std::max(scaledRadius * 2.0f + kKickScatterPad * 2.0f, scaledRadius * 2.0f + 2.0f * vertPad);
-    float winX = m_position.x - winSize / 2.0f;
-    float winY = m_position.y - winSize / 2.0f;
+    // Compute bounding box of all leaves (in scaled coords) to size the window
+    // dynamically. Kicked leaves can fly far beyond the initial pile radius.
+    // Window stays centered on pile center, so size must cover the farthest leaf
+    // in any direction.
+    float maxExtent = scaledRadius;
+    for (size_t i = 0; i < m_leaves.size(); i++) {
+        const auto& leaf = m_leaves[i];
+        float x = leaf.curPosPlanar.x * scale;
+        float y = leaf.curPosPlanar.y * scale - leaf.curPosZ * scale * kLeafZCompression;
+        maxExtent = std::max({maxExtent, std::abs(x), std::abs(y)});
+    }
+
+    float winSize = maxExtent * 2.0f + kLeafWindowPadding * 2.0f;
+    float winX = m_position.x - winSize * 0.5f;
+    float winY = m_position.y - winSize * 0.5f;
 
     if (!m_window) {
         m_window = (void*)CFBridgingRetain([[BehaviorElementWindow alloc]
@@ -148,7 +157,7 @@ void LeafPileActor::render(IRenderer* renderer) {
 
                     RenderColor color = LeafColors[leaf.colorIndex];
                     color.a = alpha;
-                    r.DrawEllipse({x, y}, kLeafWidth * scale, kLeafHeight * scale, color);
+                    r.DrawEllipse({x, y}, kLeafWidth, kLeafHeight, color);
                 }
 
                 r.RestoreState();
