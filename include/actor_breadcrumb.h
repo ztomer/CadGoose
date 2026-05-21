@@ -21,7 +21,7 @@ public:
     float lifetime() const { return m_lifetime; }
 
 private:
-    static constexpr float CRUMB_SIZE = 10.0f;
+    static constexpr float CRUMB_SIZE = 85.0f;
 
     double m_spawnTime;
     float m_lifetime;

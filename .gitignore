@@ -3,8 +3,10 @@
 !README.md
 
 build/
+build-debug/
 build_asan/
 build-nomalloc/
+release-build/
 test_logs/
 CMakeFiles/
 CMakeCache.txt
@@ -17,4 +19,5 @@ CadGoose
 gemini_client_test
 wlr-virtual-pointer-unstable-v1-client-protocol.h
 wlr-virtual-pointer-unstable-v1-protocol.c
+FoundationLLM.*
 !PLAN.md
