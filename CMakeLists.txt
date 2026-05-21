@@ -5,7 +5,15 @@ set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-option(ENABLE_ASAN "Enable AddressSanitizer" OFF)
+# ASan is disabled by default — it conflicts with the Objective-C runtime on macOS 26.x
+# (crash: "realized class ... has corrupt data pointer: malloc_size(...) = 0").
+# Use MallocScribble instead for memory debugging:
+#   MallocScribble=YES MallocPreScribble=YES ./CadGooseTests
+# To force-enable ASan anyway (C++ only, ObjC files will crash at startup):
+#   cmake .. -DCMAKE_BUILD_TYPE=Debug -DENABLE_ASAN=ON
+set(ENABLE_ASAN_DEFAULT OFF)
+
+option(ENABLE_ASAN "Enable AddressSanitizer (Debug builds only)" ${ENABLE_ASAN_DEFAULT})
 if(ENABLE_ASAN AND APPLE)
     message(STATUS "AddressSanitizer enabled")
     add_compile_options(-fsanitize=address -fno-omit-frame-pointer)
@@ -42,7 +50,6 @@ if(MACOS)
     find_library(AVFOUNDATION_LIBRARY AVFoundation)
     find_library(COREGRAPHICS_LIBRARY CoreGraphics)
     find_library(COREAUDIO_LIBRARY CoreAudio)
-    find_library(AUDIOTOOLBOX_LIBRARY AudioToolbox)
     find_library(APPLICATIONSERVICES_LIBRARY ApplicationServices)
     find_library(CURL_LIBRARY curl)
     find_library(COREML_LIBRARY CoreML)
@@ -76,7 +83,6 @@ if(MACOS)
         ${AVFOUNDATION_LIBRARY}
         ${COREGRAPHICS_LIBRARY}
         ${COREAUDIO_LIBRARY}
-        ${AUDIOTOOLBOX_LIBRARY}
         ${APPLICATIONSERVICES_LIBRARY}
         ${CURL_LIBRARY}
         ${COREML_LIBRARY}
@@ -403,7 +409,6 @@ if(APPLE)
         ${AVFOUNDATION_LIBRARY}
         ${COREGRAPHICS_LIBRARY}
         ${COREAUDIO_LIBRARY}
-        ${AUDIOTOOLBOX_LIBRARY}
         ${APPLICATIONSERVICES_LIBRARY}
         ${CURL_LIBRARY}
         ${COREML_LIBRARY}

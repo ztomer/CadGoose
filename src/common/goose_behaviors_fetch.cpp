@@ -127,7 +127,11 @@ void handleFetching(Goose& g, double time, int w, int h) {
         g.heldItem = g_assets.CreateTextItem(g.forcedText);
     } else if (g.forceItemFetch == 0) {
         FETCH_LOG("[FETCH] handleFetching g%d getting random meme\n", g.id);
-        g.heldItem = g_assets.GetRandomMeme(w, h, 0.1f);
+        // 0.2 of screen-points: macOS `frame.size` is in points (post-Retina),
+        // so 0.1 yielded memes ~half the original DesktopGoose size on
+        // modern displays. 0.2 brings them back to the original perceived
+        // scale on the M4 Max 14" (1512pt wide -> ~300pt max meme).
+        g.heldItem = g_assets.GetRandomMeme(w, h, 0.2f);
     } else if (g.forceItemFetch == 1) {
         FETCH_LOG("[FETCH] handleFetching g%d dequeuing AI text\n", g.id);
         std::string text = AI_TextMeme_Dequeue();

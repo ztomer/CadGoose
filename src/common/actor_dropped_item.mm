@@ -26,14 +26,18 @@ DroppedItemActor::DroppedItemActor(const DroppedItem& item)
 
 DroppedItemActor::~DroppedItemActor() {
 #ifdef __APPLE__
-    ItemWindow* win = (__bridge_transfer ItemWindow*)m_window;
-    NSNumber* key = (__bridge_transfer NSNumber*)m_windowKey;
-    m_window = nullptr;
-    m_windowKey = nullptr;
-    closeWindowOnMainThread(^{
-        [[ItemWindowManager shared].windows removeObjectForKey:key];
-        [win close];
-    });
+    if (m_window) {
+        void* windowPtr = m_window;
+        void* keyPtr = m_windowKey;
+        m_window = nullptr;
+        m_windowKey = nullptr;
+        dispatch_async(dispatch_get_main_queue(), ^{
+            ItemWindow* win = (__bridge_transfer ItemWindow*)windowPtr;
+            NSNumber* key = (__bridge_transfer NSNumber*)keyPtr;
+            [[ItemWindowManager shared].windows removeObjectForKey:key];
+            [win close];
+        });
+    }
 #endif
     if (m_item.data) {
         delete m_item.data;
@@ -66,10 +70,10 @@ void DroppedItemActor::render(IRenderer* renderer) {
 void DroppedItemActor::initWindow() {
     ItemWindowManager* manager = [ItemWindowManager shared];
     ItemWindow* win = [[ItemWindow alloc] initWithItem:&m_item];
-    m_window = (__bridge void*)win;
+    m_window = (__bridge_retained void*)win;
 
     static NSInteger s_nextKey = 1000;
-    m_windowKey = (__bridge void*)@(s_nextKey++);
+    m_windowKey = (__bridge_retained void*)@(s_nextKey++);
     manager.windows[(__bridge NSNumber*)m_windowKey] = win;
 }
 

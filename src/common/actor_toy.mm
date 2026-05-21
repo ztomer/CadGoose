@@ -39,16 +39,18 @@ ToyActor::ToyActor(Type type, const Vector2& pos, int instanceId)
 
 ToyActor::~ToyActor() {
 #ifdef __APPLE__
-    BehaviorElementWindow* win = (__bridge_transfer BehaviorElementWindow*)m_window;
-    NSNumber* key = (__bridge_transfer NSNumber*)m_windowKey;
-    m_window = nullptr;
-    m_windowKey = nullptr;
-    closeWindowOnMainThread(^{
-        [win closeAndRemove];
-        if (key) {
+    if (m_window) {
+        void* windowPtr = m_window;
+        void* keyPtr = m_windowKey;
+        m_window = nullptr;
+        m_windowKey = nullptr;
+        dispatch_async(dispatch_get_main_queue(), ^{
+            BehaviorElementWindow* win = (__bridge_transfer BehaviorElementWindow*)windowPtr;
+            NSNumber* key = (__bridge_transfer NSNumber*)keyPtr;
             [[BehaviorElementWindowManager shared] unregisterWindow:key];
-        }
-    });
+            [win closeAndRemove];
+        });
+    }
 #endif
 }
 

@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Extractor")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+19c3bf7d3473acd25fb58e5f5a1c86d6fb349e7c")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+1b4aa7a5166fad51366d37b6f191195b634afb95")]
 [assembly: System.Reflection.AssemblyProductAttribute("Extractor")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Extractor")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
