@@ -50,7 +50,7 @@ extern bool g_debugMode;
 
 // --- Timer and rendering constants ---
 static constexpr int kWorldCleanupTickInterval = 60;
-static constexpr int kLeafSpawnProbabilityDenominator = 600;
+static constexpr int kLeafSpawnProbabilityDenominator = 3600;
 static constexpr float kDisplayLinkMinFps = 30;
 static constexpr float kDisplayLinkMaxFps = 60;
 static constexpr float kDisplayLinkDefaultFps = 60;

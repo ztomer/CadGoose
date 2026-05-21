@@ -90,8 +90,6 @@ static DevicePoint RotatedBoundsSize(float width, float height, float rotation, 
     self = [super initWithFrame:frame];
     if (self) {
         _item = item;
-        self.wantsLayer = YES;
-        self.layer.backgroundColor = [[NSColor clearColor] CGColor];
     }
     return self;
 }
@@ -384,7 +382,7 @@ static DevicePoint RotatedBoundsSize(float width, float height, float rotation, 
             winSize.x, winSize.y,
             screenOrigin.x, screenOrigin.y);
 
-    [self setFrame:newFrame display:YES];
+    [self setFrameOrigin:NSMakePoint(screenOrigin.x, screenOrigin.y)];
 }
 
 - (void)closeAndRemove {

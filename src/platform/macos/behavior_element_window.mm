@@ -29,8 +29,6 @@ static void BELog(const char* fmt, ...) {
     self = [super initWithFrame:frame];
     if (self) {
         _drawBlock = [block copy];
-        self.wantsLayer = YES;
-        self.layer.backgroundColor = [[NSColor clearColor] CGColor];
     }
     return self;
 }
