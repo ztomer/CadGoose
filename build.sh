@@ -4,13 +4,23 @@ set -e
 
 cd "$(dirname "$0")"
 
-echo "Building Desktop Goose for macOS..."
+BUILD_TYPE="${1:-Release}"
 
-mkdir -p build
-cd build
+if [ "${BUILD_TYPE}" = "Release" ]; then
+    BUILD_DIR="release-build"
+elif [ "${BUILD_TYPE}" = "Debug" ]; then
+    BUILD_DIR="debug-build"
+else
+    BUILD_DIR="${BUILD_TYPE}-build"
+fi
 
-cmake .. -DCMAKE_BUILD_TYPE=Release
-cmake --build . --config Release
+echo "Building Desktop Goose for macOS (${BUILD_TYPE})..."
+
+mkdir -p "${BUILD_DIR}"
+cd "${BUILD_DIR}"
+
+cmake -G Ninja .. -DCMAKE_BUILD_TYPE="${BUILD_TYPE}"
+ninja
 
 echo ""
-echo "Build complete! Binary: build/CadGoose"
+echo "Build complete! Binary: ${BUILD_DIR}/CadGoose"

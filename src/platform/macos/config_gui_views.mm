@@ -3,6 +3,32 @@
 #import "config_gui_helpers.h"
 #include "config.h"
 
+// BehaviorRowView layout constants
+static constexpr float kToggleX = 10.0f;
+static constexpr float kToggleY = 6.0f;
+static constexpr float kToggleSize = 20.0f;
+static constexpr float kIconLabelX = 34.0f;
+static constexpr float kIconLabelY = 5.0f;
+static constexpr float kIconLabelWidth = 28.0f;
+static constexpr float kIconLabelHeight = 22.0f;
+static constexpr float kIconFontSize = 16.0f;
+static constexpr float kNameLabelX = 64.0f;
+static constexpr float kNameLabelY = 7.0f;
+static constexpr float kNameLabelWidth = 140.0f;
+static constexpr float kNameLabelHeight = 18.0f;
+static constexpr float kNameFontSize = 14.0f;
+static constexpr float kDescLabelX = 230.0f;
+static constexpr float kDescLabelY = 9.0f;
+static constexpr float kDescLabelWidth = 200.0f;
+static constexpr float kDescLabelHeight = 14.0f;
+static constexpr float kDescFontSize = 11.0f;
+static constexpr float kSeparatorX = 8.0f;
+static constexpr float kSeparatorWidth = 1.0f;
+static constexpr float kSeparatorInset = 16.0f;
+static constexpr float kHighlightInset = 4.0f;
+static constexpr float kHighlightRadius = 6.0f;
+static constexpr float kHighlightAlpha = 0.08f;
+
 @implementation BehaviorRowView
 
 + (NSString*)iconForConfigKey:(NSString*)key {
@@ -33,31 +59,31 @@
 - (instancetype)initWithFrame:(NSRect)frame {
     self = [super initWithFrame:frame];
     if (self) {
-        _toggle = [[NSButton alloc] initWithFrame:NSMakeRect(10, 6, 20, 20)];
+        _toggle = [[NSButton alloc] initWithFrame:NSMakeRect(kToggleX, kToggleY, kToggleSize, kToggleSize)];
         _toggle.buttonType = NSButtonTypeSwitch;
         _toggle.title = @"";
         _toggle.target = self;
         _toggle.action = @selector(toggled:);
         [self addSubview:_toggle];
 
-        _iconLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(34, 4, 28, 22)];
-        _iconLabel.font = [NSFont systemFontOfSize:16];
+        _iconLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(kIconLabelX, kIconLabelY, kIconLabelWidth, kIconLabelHeight)];
+        _iconLabel.font = [NSFont systemFontOfSize:kIconFontSize];
         _iconLabel.backgroundColor = [NSColor clearColor];
         _iconLabel.bordered = NO;
         _iconLabel.editable = NO;
         _iconLabel.alignment = NSTextAlignmentCenter;
         [self addSubview:_iconLabel];
 
-        _nameLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(64, 7, 140, 18)];
-        _nameLabel.font = [NSFont fontWithName:@"Maple Mono" size:14] ?: [NSFont systemFontOfSize:14 weight:NSFontWeightSemibold];
+        _nameLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(kNameLabelX, kNameLabelY, kNameLabelWidth, kNameLabelHeight)];
+        _nameLabel.font = [NSFont fontWithName:@"Maple Mono" size:kNameFontSize] ?: [NSFont systemFontOfSize:kNameFontSize weight:NSFontWeightSemibold];
         _nameLabel.textColor = [NSColor whiteColor];
         _nameLabel.backgroundColor = [NSColor clearColor];
         _nameLabel.bordered = NO;
         _nameLabel.editable = NO;
         [self addSubview:_nameLabel];
 
-        _descLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(230, 8, 200, 14)];
-        _descLabel.font = [NSFont fontWithName:@"Maple Mono" size:11] ?: [NSFont systemFontOfSize:11];
+        _descLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(kDescLabelX, kDescLabelY, kDescLabelWidth, kDescLabelHeight)];
+        _descLabel.font = [NSFont fontWithName:@"Maple Mono" size:kDescFontSize] ?: [NSFont systemFontOfSize:kDescFontSize];
         _descLabel.textColor = [NSColor colorWithWhite:0.85 alpha:1.0];
         _descLabel.backgroundColor = [NSColor clearColor];
         _descLabel.bordered = NO;
@@ -65,7 +91,7 @@
         _descLabel.lineBreakMode = NSLineBreakByTruncatingTail;
         [self addSubview:_descLabel];
 
-        NSView* separator = [[AppBarBorderView alloc] initWithFrame:NSMakeRect(8, 0, self.bounds.size.width - 16, 1)];
+        NSView* separator = [[AppBarBorderView alloc] initWithFrame:NSMakeRect(kSeparatorX, 0, self.bounds.size.width - kSeparatorInset, kSeparatorWidth)];
         separator.autoresizingMask = NSViewWidthSizable | NSViewMaxYMargin;
         [self addSubview:separator];
     }
@@ -74,8 +100,10 @@
 
 - (void)drawRect:(NSRect)dirtyRect {
     if (_selected) {
-        [[NSColor colorWithWhite:1.0 alpha:0.08] setFill];
-        NSRectFill(self.bounds);
+        NSRect highlightRect = NSInsetRect(self.bounds, kHighlightInset, 0);
+        NSBezierPath* path = [NSBezierPath bezierPathWithRoundedRect:highlightRect xRadius:kHighlightRadius yRadius:kHighlightRadius];
+        [[NSColor colorWithWhite:1.0 alpha:kHighlightAlpha] setFill];
+        [path fill];
     }
     [super drawRect:dirtyRect];
 }
@@ -108,7 +136,10 @@
 
 - (void)openDetail {
     if (_target && _detailAction) {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Warc-performSelector-leaks"
         [_target performSelector:_detailAction withObject:self.configKey];
+#pragma clang diagnostic pop
     }
 }
 

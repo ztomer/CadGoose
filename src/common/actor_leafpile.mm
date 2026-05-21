@@ -22,6 +22,12 @@ static constexpr float kLeafSpeedFactor = 0.2f;
 static constexpr float kLeafVelZMin = 10.0f;
 static constexpr float kLeafVelZRange = 490;
 static constexpr float kLeafGravity = -900.0f;
+static constexpr float kLeafWidth = 20.0f;
+static constexpr float kLeafHeight = 15.0f;
+static constexpr float kLeafZCompression = 0.6f;
+static constexpr float kLeafAlphaFadeRate = 0.5f;
+static constexpr float kLeafAlphaMin = 0.2f;
+static constexpr float kLeafVertPadRatio = 0.6f;
 
 static RenderColor LeafColors[4] = {
     {0.8f, 0.4f, 0.1f, 1.0f}, // orange
@@ -58,16 +64,18 @@ LeafPileActor::LeafPileActor(const Vector2& pos, float radius, float height, dou
 
 LeafPileActor::~LeafPileActor() {
 #ifdef __APPLE__
-    BehaviorElementWindow* win = (__bridge_transfer BehaviorElementWindow*)m_window;
-    NSNumber* key = (__bridge_transfer NSNumber*)m_windowKey;
-    m_window = nullptr;
-    m_windowKey = nullptr;
-    closeWindowOnMainThread(^{
-        [win closeAndRemove];
-        if (key) {
+    if (m_window) {
+        void* windowPtr = m_window;
+        void* keyPtr = m_windowKey;
+        m_window = nullptr;
+        m_windowKey = nullptr;
+        dispatch_async(dispatch_get_main_queue(), ^{
+            BehaviorElementWindow* win = (__bridge_transfer BehaviorElementWindow*)windowPtr;
+            NSNumber* key = (__bridge_transfer NSNumber*)keyPtr;
             [[BehaviorElementWindowManager shared] unregisterWindow:key];
-        }
-    });
+            [win closeAndRemove];
+        });
+    }
 #endif
 }
 
@@ -118,7 +126,7 @@ void LeafPileActor::render(IRenderer* renderer) {
     // scaledHeight * 0.6 above center and spread beyond the pile radius.
     // Add extra padding for leaf scatter when kicked.
     static constexpr float kKickScatterPad = 40.0f;
-    float vertPad = scaledHeight * 0.6f + kKickScatterPad;
+    float vertPad = scaledHeight * kLeafVertPadRatio + kKickScatterPad;
     float winSize = std::max(scaledRadius * 2.0f + kKickScatterPad * 2.0f, scaledRadius * 2.0f + 2.0f * vertPad);
     float winX = m_position.x - winSize / 2.0f;
     float winY = m_position.y - winSize / 2.0f;
@@ -133,14 +141,14 @@ void LeafPileActor::render(IRenderer* renderer) {
                 for (size_t i = 0; i < m_leaves.size(); i++) {
                     const auto& leaf = m_leaves[i];
                     float x = leaf.curPosPlanar.x * scale;
-                    float y = leaf.curPosPlanar.y * scale - leaf.curPosZ * scale * 0.6f;
+                    float y = leaf.curPosPlanar.y * scale - leaf.curPosZ * scale * kLeafZCompression;
                     float z = leaf.curPosZ * scale;
-                    float alpha = 1.0f - (z / scaledHeight) * 0.5f;
-                    if (alpha < 0.2f) alpha = 0.2f;
+                    float alpha = 1.0f - (z / scaledHeight) * kLeafAlphaFadeRate;
+                    if (alpha < kLeafAlphaMin) alpha = kLeafAlphaMin;
 
                     RenderColor color = LeafColors[leaf.colorIndex];
                     color.a = alpha;
-                    r.DrawEllipse({x, y}, 2.0f * scale, 1.5f * scale, color);
+                    r.DrawEllipse({x, y}, kLeafWidth * scale, kLeafHeight * scale, color);
                 }
 
                 r.RestoreState();

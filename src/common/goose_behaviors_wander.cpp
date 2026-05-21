@@ -12,8 +12,6 @@
 #include <cmath>
 #include <cstdio>
 
-static constexpr int kWanderMemeProbability = 70;
-
 static FILE* GetDebugLog() {
     static FILE* f = nullptr;
     if (!f) {
@@ -100,7 +98,8 @@ void handleWander(Goose& g, double time, const CursorState& cursor, int w, int h
 
         int memeProb = g_config.general.memesEnabled ? g.memeFetchBias : 0;
         int noteProb = g.noteFetchBias;
-        int trigger = g_config.item.fetchBaseChance + memeProb + noteProb;
+        int totalBias = memeProb + noteProb;
+        int trigger = g_config.item.fetchBaseChance + totalBias;
         if (trigger > g_config.item.maxFetchBias) trigger = g_config.item.maxFetchBias;
 
         int fetchCount = 0;
@@ -112,15 +111,14 @@ void handleWander(Goose& g, double time, const CursorState& cursor, int w, int h
 
         if (canFetch && fetchCount < g_config.item.maxFetchGeese && fetchRoll < trigger) {
             int fetchType;
-            if (g_config.general.memesEnabled && rng_util::RandRange(100) < kWanderMemeProbability) {
-                fetchType = 0;
-                fprintf(f, "[FETCH] t=%.1f g%d: TRIGGERED fetch type=MEME\n", time, g.id);
-                g.ForceFetch(fetchType, w, h, time);
+            if (g_config.general.memesEnabled && totalBias > 0) {
+                int memeShare = memeProb * 100 / (totalBias + 1);
+                fetchType = (rng_util::RandRange(100) < memeShare) ? 0 : 1;
             } else {
                 fetchType = 1;
-                fprintf(f, "[FETCH] t=%.1f g%d: TRIGGERED fetch type=TEXT\n", time, g.id);
-                g.ForceFetch(fetchType, w, h, time);
             }
+            fprintf(f, "[FETCH] t=%.1f g%d: TRIGGERED fetch type=%s\n", time, g.id, fetchType == 0 ? "MEME" : "TEXT");
+            g.ForceFetch(fetchType, w, h, time);
         } else {
             if (!canFetch) fprintf(f, "[FETCH] g%d: skipped (cooldown, lastDrop=%.1f)\n", g.id, g.lastDropTime);
             else if (fetchCount >= g_config.item.maxFetchGeese) fprintf(f, "[FETCH] g%d: skipped (max geese fetching=%d)\n", g.id, fetchCount);

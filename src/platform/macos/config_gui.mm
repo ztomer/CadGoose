@@ -8,7 +8,7 @@
 static constexpr float kWindowHeight = 520.0f;
 static constexpr float kAppbarHeight = 44.0f;
 static constexpr float kTableHeight = kWindowHeight - kAppbarHeight;
-static constexpr float kRowHeight = 48.0f;
+static constexpr float kRowHeight = 28.0f;
 static constexpr float kHeaderRowHeight = 28.0f;
 // Pixels of empty space ABOVE the header label (visually: gap between the
 // previous group's last item and this category title). Below the label we
@@ -37,6 +37,7 @@ static constexpr float kNameFontSize = 14.0f;
 static constexpr float kDescFontSize = 11.0f;
 static constexpr float kDetailLabelFontSize = 12.0f;
 static constexpr float kDetailValueFontSize = 11.0f;
+static constexpr float kDescLabelVerticalOffset = 2.0f;
 
 bool s_getBoolForKey(const std::string& key) {
     const ConfigOption* opt = Config_FindOptionByKey(key);
@@ -376,7 +377,7 @@ void s_setBoolValue(const std::string& key, bool value) {
         NSFont* df = rowView.descLabel.font;
         CGFloat descAvailableWidth = self.listWidth - self.descLabelX - kRowDescPaddingX;
         CGFloat dw = MIN([descText sizeWithAttributes:@{NSFontAttributeName: df}].width + kRowDescPaddingX, descAvailableWidth);
-        rowView.descLabel.frame = NSMakeRect(self.descLabelX, (kRowHeight - kDescFontSize) / 2 - 2, dw, kDescFontSize + 2);
+        rowView.descLabel.frame = NSMakeRect(self.descLabelX, (kRowHeight - kDescFontSize) / 2 - kDescLabelVerticalOffset, dw, kDescFontSize + kDescLabelVerticalOffset);
         rowView.iconLabel.stringValue = [BehaviorRowView iconForConfigKey:item[@"key"]];
         rowView.target = self;
         rowView.detailAction = @selector(showDetailForBehavior:);

@@ -15,8 +15,10 @@
 
 static constexpr float kLeafPileExpiry = 10.0f;
 static constexpr int kMaxLeafPiles = 10;
-static constexpr float kLeafPileSizeMin = 50.0f;
-static constexpr float kLeafPileSizeMax = 100.0f;
+// Leaf piles in points. Original DesktopGoose used 50-100 *pixels*; on a
+// Retina display (1pt = 2px) those appeared half-size. Doubled.
+static constexpr float kLeafPileSizeMin = 100.0f;
+static constexpr float kLeafPileSizeMax = 200.0f;
 
 void World_CleanupExpired(double currentTime) {
     // DroppedItemActor::isAlive() checks isExpired(), so cleanup() removes them

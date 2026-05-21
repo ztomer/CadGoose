@@ -37,7 +37,7 @@ public:
 
     void Init();
     ~AssetManager();
-    ItemData* GetRandomMeme(int screenWidth = 1920, int screenHeight = 1080, float maxSizeFraction = 0.1f);
+    ItemData* GetRandomMeme(int screenWidth = 1920, int screenHeight = 1080, float maxSizeFraction = 0.2f);
     ItemData* GetRandomText();
     ItemData* CreateTextItem(const std::string& text);
     ItemData* CreateToyItem(bool isStick);

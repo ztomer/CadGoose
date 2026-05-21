@@ -1,20 +1,26 @@
 #import "audio.h"
 #import <AVFoundation/AVFoundation.h>
-#import <AudioToolbox/AudioToolbox.h>
 #import <Foundation/Foundation.h>
 #import "config.h"
 
 extern bool g_debugMode;
 
-// AVAudioPlayer is fine for "play this once, in a while" sounds, but each
-// [AVAudioPlayer play] costs ~5ms of main-thread work setting up an audio
-// node — too expensive for sounds we trigger 12 times/sec per goose
-// (footsteps, honks). For those we use AudioServicesPlaySystemSound, which
-// is the OS's purpose-built path for short sound effects and is essentially
-// free at the call site.
-static SystemSoundID g_patSounds[3] = {0, 0, 0};
-static SystemSoundID g_honkSounds[4] = {0, 0, 0, 0};
+// For footsteps and honks we want overlapping playback without the per-call
+// expense of [player play] on a busy player (which triggers a synchronous
+// audio-graph setup ~5ms long). Strategy: keep a deep pool of pre-prepared
+// AVAudioPlayers per sound; when triggered, pick the first idle player. If
+// they're all playing, we drop the trigger rather than yank an in-flight
+// clip (cheaper, and inaudible at footstep cadence).
+//
+// AudioServicesPlaySystemSound is tempting (constant-time) but it respects
+// the system "play user interface sound effects" toggle and ignores the
+// app's volume — so users with UI sounds off get a silent goose, which
+// happened on 2026-05-19.
+static constexpr int kPatPoolDepth   = 6;  // ~25Hz peak (2 feet x 12Hz) needs room
+static constexpr int kHonkPoolDepth  = 4;
 
+static AVAudioPlayer* g_patPool[kPatPoolDepth]   = {nullptr};
+static AVAudioPlayer* g_honkPool[kHonkPoolDepth] = {nullptr};
 static AVAudioPlayer* g_bitePlayer = nullptr;
 static AVAudioPlayer* g_mudPlayer = nullptr;
 static bool g_audioInitialized = false;
@@ -30,17 +36,19 @@ static NSString* GetAssetsPath() {
     return [projectDir stringByAppendingPathComponent:@"Assets"];
 }
 
-static SystemSoundID LoadSystemSound(NSString* path) {
-    if (![[NSFileManager defaultManager] fileExistsAtPath:path]) return 0;
-    SystemSoundID sid = 0;
-    OSStatus status = AudioServicesCreateSystemSoundID(
-        (__bridge CFURLRef)[NSURL fileURLWithPath:path], &sid);
-    if (status != 0) {
-        DEBUG_LOG("AudioServicesCreateSystemSoundID failed (%d) for %s",
-                  (int)status, [path UTF8String]);
-        return 0;
+static AVAudioPlayer* MakePlayer(NSString* path) {
+    if (![[NSFileManager defaultManager] fileExistsAtPath:path]) return nullptr;
+    NSError* err = nil;
+    AVAudioPlayer* p = [[AVAudioPlayer alloc]
+        initWithContentsOfURL:[NSURL fileURLWithPath:path] error:&err];
+    if (!p) {
+        DEBUG_LOG("AVAudioPlayer init failed: %s err=%s",
+                  [path UTF8String], [[err localizedDescription] UTF8String]);
+        return nullptr;
     }
-    return sid;
+    p.numberOfLoops = 0;
+    [p prepareToPlay];
+    return p;
 }
 
 void Audio_Init() {
@@ -49,48 +57,53 @@ void Audio_Init() {
     NSString* assetsPath = GetAssetsPath();
     DEBUG_LOG("Assets path: %s", [assetsPath UTF8String]);
 
-    // Footsteps and honks fire frequently — use SystemSound (cheap path).
+    // Fill pat pool by cycling through the 3 source files. Pool depth >
+    // expected simultaneous footsteps so we always find an idle slot.
     NSArray* patFiles  = @[@"Pat1",  @"Pat2",  @"Pat3"];
-    for (int i = 0; i < 3; i++) {
-        g_patSounds[i] = LoadSystemSound([assetsPath stringByAppendingPathComponent:
-            [NSString stringWithFormat:@"Sound/NotEmbedded/%@.wav", patFiles[i]]]);
+    for (int i = 0; i < kPatPoolDepth; i++) {
+        NSString* path = [assetsPath stringByAppendingPathComponent:
+            [NSString stringWithFormat:@"Sound/NotEmbedded/%@.wav",
+                                       patFiles[i % patFiles.count]]];
+        g_patPool[i] = MakePlayer(path);
     }
 
     NSArray* honkFiles = @[@"Honk1", @"Honk2", @"Honk3", @"Honk4"];
-    for (int i = 0; i < 4; i++) {
-        g_honkSounds[i] = LoadSystemSound([assetsPath stringByAppendingPathComponent:
-            [NSString stringWithFormat:@"Sound/NotEmbedded/%@.mp3", honkFiles[i]]]);
+    for (int i = 0; i < kHonkPoolDepth; i++) {
+        NSString* path = [assetsPath stringByAppendingPathComponent:
+            [NSString stringWithFormat:@"Sound/NotEmbedded/%@.mp3",
+                                       honkFiles[i % honkFiles.count]]];
+        g_honkPool[i] = MakePlayer(path);
     }
 
-    // Bite and mud are infrequent — keep AVAudioPlayer for simplicity.
-    NSString* bitePath = [assetsPath stringByAppendingPathComponent:@"Sound/NotEmbedded/BITE.mp3"];
-    if ([[NSFileManager defaultManager] fileExistsAtPath:bitePath]) {
-        g_bitePlayer = [[AVAudioPlayer alloc] initWithContentsOfURL:[NSURL fileURLWithPath:bitePath] error:nil];
-        [g_bitePlayer prepareToPlay];
-    }
-
-    NSString* mudPath = [assetsPath stringByAppendingPathComponent:@"Sound/NotEmbedded/MudSquith.mp3"];
-    if ([[NSFileManager defaultManager] fileExistsAtPath:mudPath]) {
-        g_mudPlayer = [[AVAudioPlayer alloc] initWithContentsOfURL:[NSURL fileURLWithPath:mudPath] error:nil];
-        [g_mudPlayer prepareToPlay];
-    }
+    g_bitePlayer = MakePlayer([assetsPath stringByAppendingPathComponent:
+                               @"Sound/NotEmbedded/BITE.mp3"]);
+    g_mudPlayer  = MakePlayer([assetsPath stringByAppendingPathComponent:
+                               @"Sound/NotEmbedded/MudSquith.mp3"]);
 
     g_audioInitialized = true;
     DEBUG_LOG("Audio initialized");
 }
 
+// Find the first idle player in the pool and call [play] on it. No
+// currentTime=0 seek (that's the expensive step). If everything's busy,
+// drop the trigger — sub-perceptible at the cadences we fire at.
+static void PlayFromPool(AVAudioPlayer* const* pool, int count) {
+    for (int i = 0; i < count; ++i) {
+        AVAudioPlayer* p = pool[i];
+        if (p && !p.isPlaying) { [p play]; return; }
+    }
+}
+
 void Audio_PlayHonk() {
     if (g_config.general.audioMuted) return;
     if (!g_audioInitialized) Audio_Init();
-    SystemSoundID sid = g_honkSounds[arc4random_uniform(4)];
-    if (sid) AudioServicesPlaySystemSound(sid);
+    PlayFromPool(g_honkPool, kHonkPoolDepth);
 }
 
 void Audio_PlayPat() {
     if (g_config.general.audioMuted) return;
     if (!g_audioInitialized) Audio_Init();
-    SystemSoundID sid = g_patSounds[arc4random_uniform(3)];
-    if (sid) AudioServicesPlaySystemSound(sid);
+    PlayFromPool(g_patPool, kPatPoolDepth);
 }
 
 void Audio_PlayBite() {

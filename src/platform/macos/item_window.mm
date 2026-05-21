@@ -195,6 +195,7 @@ static DevicePoint RotatedBoundsSize(float width, float height, float rotation, 
     ScreenPoint screenOrigin = CoordTransform::DeviceToScreenMacOS({windowTopLeft.x, windowTopLeft.y + winSize.y}, screenH);
 
     [self.window setFrameOrigin:NSMakePoint(screenOrigin.x, screenOrigin.y)];
+    [self setNeedsDisplay:YES];
 }
 
 - (void)mouseUp:(NSEvent *)event {
