@@ -29,7 +29,7 @@ static constexpr float kLeafZCompression = 0.6f;
 static constexpr float kLeafAlphaFadeRate = 0.5f;
 static constexpr float kLeafAlphaMin = 0.2f;
 static constexpr float kLeafVertPadRatio = 0.6f;
-static constexpr float kLeafWindowPadding = 10.0f;
+static constexpr float kLeafWindowPadding = 20.0f;
 
 static RenderColor LeafColors[4] = {
     {0.8f, 0.4f, 0.1f, 1.0f}, // orange
@@ -102,6 +102,19 @@ void LeafPileActor::kick(Vector2 kickVelocity, double currentTime, float gooseSp
 void LeafPileActor::tick(WorldContext& ctx, double dt, double time) {
     if (!m_active) return;
 
+    float age = (float)(time - m_timeCreated);
+    constexpr float kLifetime = 120.0f;
+    constexpr float kFadeTime = 10.0f;
+
+    if (age > kLifetime) {
+        m_active = false;
+        return;
+    } else if (age > kLifetime - kFadeTime) {
+        m_alphaMult = 1.0f - (age - (kLifetime - kFadeTime)) / kFadeTime;
+    } else {
+        m_alphaMult = 1.0f;
+    }
+
     if (m_timeSinceKicked > 0.0f) {
         for (size_t i = 0; i < m_leaves.size(); i++) {
             m_leaves[i].curPosPlanar = m_leaves[i].curPosPlanar + m_leaves[i].velPlanar * dt;
@@ -127,33 +140,64 @@ void LeafPileActor::render(IRenderer* renderer) {
     // Compute bounding box of all leaves (in scaled coords) to size the window
     // dynamically. Kicked leaves can fly far beyond the initial pile radius.
     // Window stays centered on pile center, so size must cover the farthest leaf
-    // in any direction.
-    float maxExtent = scaledRadius;
+    // edge (position + half-size) in any direction.
+    float leafHalfW = kLeafWidth * 0.5f;
+    float leafHalfH = kLeafHeight * 0.5f;
+    float minX = -scaledRadius - leafHalfW, maxX = scaledRadius + leafHalfW;
+    float minY = -scaledRadius - leafHalfH, maxY = scaledRadius + leafHalfH;
     for (size_t i = 0; i < m_leaves.size(); i++) {
         const auto& leaf = m_leaves[i];
         float x = leaf.curPosPlanar.x * scale;
         float y = leaf.curPosPlanar.y * scale - leaf.curPosZ * scale * kLeafZCompression;
-        maxExtent = std::max({maxExtent, std::abs(x), std::abs(y)});
+        minX = std::min(minX, x - leafHalfW);
+        maxX = std::max(maxX, x + leafHalfW);
+        minY = std::min(minY, y - leafHalfH);
+        maxY = std::max(maxY, y + leafHalfH);
     }
 
-    float winSize = maxExtent * 2.0f + kLeafWindowPadding * 2.0f;
-    float winX = m_position.x - winSize * 0.5f;
-    float winY = m_position.y - winSize * 0.5f;
+    // Window size covers the full bounding box of all leaves plus padding.
+    // Window is centered on the pile, so we need enough room for leaves in all directions.
+    float maxDim = std::max(maxX - minX, maxY - minY);
+    float winSize = maxDim + kLeafWindowPadding * 2.0f;
+    // Center the window on the bounding box center (which may shift when leaves scatter)
+    float bboxCenterX = (minX + maxX) * 0.5f;
+    float bboxCenterY = (minY + maxY) * 0.5f;
+    float winX = m_position.x + bboxCenterX - winSize * 0.5f;
+    float winY = m_position.y + bboxCenterY - winSize * 0.5f;
 
     if (!m_window) {
         m_window = (void*)CFBridgingRetain([[BehaviorElementWindow alloc]
             initWithDrawBlock:^(CGContextRef cgCtx) {
                 CGRenderer r(cgCtx);
                 r.SaveState();
-                r.Translate(winSize * 0.5f, winSize * 0.5f);
+
+                // Recompute everything inside the block — leaf positions change every frame
+                float bMinX = -scaledRadius - leafHalfW, bMaxX = scaledRadius + leafHalfW;
+                float bMinY = -scaledRadius - leafHalfH, bMaxY = scaledRadius + leafHalfH;
+                for (size_t i = 0; i < m_leaves.size(); i++) {
+                    const auto& leaf = m_leaves[i];
+                    float lx = leaf.curPosPlanar.x * scale;
+                    float ly = leaf.curPosPlanar.y * scale - leaf.curPosZ * scale * kLeafZCompression;
+                    bMinX = std::min(bMinX, lx - leafHalfW);
+                    bMaxX = std::max(bMaxX, lx + leafHalfW);
+                    bMinY = std::min(bMinY, ly - leafHalfH);
+                    bMaxY = std::max(bMaxY, ly + leafHalfH);
+                }
+                float bCenterX = (bMinX + bMaxX) * 0.5f;
+                float bCenterY = (bMinY + bMaxY) * 0.5f;
+                float bMaxDim = std::max(bMaxX - bMinX, bMaxY - bMinY);
+                float bWinSize = bMaxDim + kLeafWindowPadding * 2.0f;
+
+                r.Translate(bWinSize * 0.5f, bWinSize * 0.5f);
 
                 for (size_t i = 0; i < m_leaves.size(); i++) {
                     const auto& leaf = m_leaves[i];
-                    float x = leaf.curPosPlanar.x * scale;
-                    float y = leaf.curPosPlanar.y * scale - leaf.curPosZ * scale * kLeafZCompression;
+                    float x = leaf.curPosPlanar.x * scale - bCenterX;
+                    float y = leaf.curPosPlanar.y * scale - leaf.curPosZ * scale * kLeafZCompression - bCenterY;
                     float z = leaf.curPosZ * scale;
                     float alpha = 1.0f - (z / scaledHeight) * kLeafAlphaFadeRate;
                     if (alpha < kLeafAlphaMin) alpha = kLeafAlphaMin;
+                    alpha *= m_alphaMult;
 
                     RenderColor color = LeafColors[leaf.colorIndex];
                     color.a = alpha;

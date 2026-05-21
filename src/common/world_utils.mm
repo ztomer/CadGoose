@@ -13,8 +13,8 @@
 #import <AppKit/AppKit.h>
 #endif
 
-static constexpr float kLeafPileExpiry = 10.0f;
-static constexpr int kMaxLeafPiles = 10;
+static constexpr float kLeafPileExpiry = 120.0f; // Increase expiry if needed
+static constexpr int kMaxLeafPiles = 3;
 // Leaf piles in points. Original DesktopGoose used 50-100 *pixels*; on a
 // Retina display (1pt = 2px) those appeared half-size. Doubled.
 static constexpr float kLeafPileSizeMin = 50.0f;
@@ -100,7 +100,26 @@ void World_SpawnRandomLeafPile(float screenWidth, float screenHeight, double cur
 
     auto& mgr = ActorManager::Instance();
     int activeCount = mgr.countByType("leafpile");
-    if (activeCount >= kMaxLeafPiles) return;
+    while (activeCount >= kMaxLeafPiles) {
+        LeafPileActor* oldest = nullptr;
+        double oldestTime = 1e30;
+        for (int i = 0; i < mgr.totalCount(); i++) {
+            Actor* a = mgr.getByIndex(i);
+            if (a && strcmp(a->type(), "leafpile") == 0 && a->isActive()) {
+                LeafPileActor* lp = static_cast<LeafPileActor*>(a);
+                if (lp->timeCreated() < oldestTime) {
+                    oldestTime = lp->timeCreated();
+                    oldest = lp;
+                }
+            }
+        }
+        if (oldest) {
+            oldest->setActive(false);
+            activeCount--;
+        } else {
+            break; // Failsafe
+        }
+    }
 
     Vector2 pos{
         (float)(rng_util::RandRange((int)std::max(1.0f, screenWidth))),

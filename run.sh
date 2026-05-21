@@ -8,4 +8,5 @@ if [ ! -f "build/CadGoose" ]; then
 fi
 
 echo "Starting Desktop Goose..."
+codesign -d --entitlements :- ./build/CadGoose
 ./build/CadGoose "$@"

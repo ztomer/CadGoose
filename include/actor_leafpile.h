@@ -28,6 +28,8 @@ public:
 
     void kick(Vector2 kickVelocity, double currentTime, float gooseSpeedPercentage);
 
+    double timeCreated() const { return m_timeCreated; }
+
 private:
     static constexpr int LEAVES_PER_PILE = 128;
     static constexpr float LEAF_PILE_SIZE = 60.0f;
@@ -36,6 +38,7 @@ private:
     float m_height;
     double m_timeCreated;
     double m_timeSinceKicked;
+    float m_alphaMult = 1.0f;
     std::vector<LeafParticle> m_leaves;
 
 #ifdef __APPLE__
