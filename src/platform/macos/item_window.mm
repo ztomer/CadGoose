@@ -90,6 +90,8 @@ static DevicePoint RotatedBoundsSize(float width, float height, float rotation, 
     self = [super initWithFrame:frame];
     if (self) {
         _item = item;
+        self.wantsLayer = YES;
+        self.layer.backgroundColor = [[NSColor clearColor] CGColor];
     }
     return self;
 }
@@ -305,6 +307,7 @@ static DevicePoint RotatedBoundsSize(float width, float height, float rotation, 
                                 defer:NO];
     if (self) {
         self.backgroundColor = [NSColor clearColor];
+        [self setOpaque:NO];
         self.ignoresMouseEvents = YES; // Click-through by default
         self.acceptsMouseMovedEvents = YES;
         self.level = NSStatusWindowLevel;

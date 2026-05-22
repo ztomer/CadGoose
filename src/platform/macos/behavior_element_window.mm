@@ -29,6 +29,8 @@ static void BELog(const char* fmt, ...) {
     self = [super initWithFrame:frame];
     if (self) {
         _drawBlock = [block copy];
+        self.wantsLayer = YES;
+        self.layer.backgroundColor = [[NSColor clearColor] CGColor];
     }
     return self;
 }
@@ -39,6 +41,11 @@ static void BELog(const char* fmt, ...) {
 
 - (void)drawRect:(NSRect)dirtyRect {
     if (!_drawBlock) return;
+
+    static int frameCounter = 0;
+    if (frameCounter++ % 60 == 0) {
+        BELog("BehaviorElementContentView drawRect called (frame %d)\n", frameCounter);
+    }
 
     CGContextRef ctx = (CGContextRef)[[NSGraphicsContext currentContext] CGContext];
     if (!ctx) return;
@@ -79,6 +86,7 @@ static void BELog(const char* fmt, ...) {
                                 defer:NO];
     if (self) {
         self.backgroundColor = [NSColor clearColor];
+        [self setOpaque:NO];
         self.ignoresMouseEvents = YES;
         self.acceptsMouseMovedEvents = NO;
         self.level = NSStatusWindowLevel; // Below goose window
@@ -102,6 +110,8 @@ static void BELog(const char* fmt, ...) {
         return;
     }
 
+    bool sizeChanged = (!_hasLastPosition || std::abs(w - _lastW) >= 0.1f || std::abs(h - _lastH) >= 0.1f);
+
     _lastX = x; _lastY = y; _lastW = w; _lastH = h;
     _hasLastPosition = YES;
 
@@ -109,8 +119,12 @@ static void BELog(const char* fmt, ...) {
     float screenH = (float)mainScreen.frame.size.height;
     ScreenPoint screenOrigin = CoordTransform::DeviceToScreenMacOS({x, y + h}, screenH);
 
-    NSRect newFrame = NSMakeRect(screenOrigin.x, screenOrigin.y, w, h);
-    [self setFrame:newFrame display:YES];
+    if (sizeChanged) {
+        NSRect newFrame = NSMakeRect(screenOrigin.x, screenOrigin.y, w, h);
+        [self setFrame:newFrame display:YES];
+    } else {
+        [self setFrameOrigin:NSMakePoint(screenOrigin.x, screenOrigin.y)];
+    }
 }
 
 - (void)closeAndRemove {
