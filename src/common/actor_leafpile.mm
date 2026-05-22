@@ -103,8 +103,8 @@ void LeafPileActor::tick(WorldContext& ctx, double dt, double time) {
     if (!m_active) return;
 
     float age = (float)(time - m_timeCreated);
-    constexpr float kLifetime = 120.0f;
-    constexpr float kFadeTime = 10.0f;
+    constexpr float kLifetime = 180.0f;
+    constexpr float kFadeTime = 20.0f;
 
     if (age > kLifetime) {
         m_active = false;

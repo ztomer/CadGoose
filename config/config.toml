@@ -1,5 +1,3 @@
-goose = ["Ethangoose"]
-
 [Debug]
 to_terminal = false
 visuals = false
@@ -343,7 +341,7 @@ zero_velocity_threshold = 0.001
 [Behavior]
 interactive_drops_enabled = true
 autumn_leaves_enabled = true
-rainbow_enabled = false
+rainbow_enabled = true
 interactive_drops_puddle_lifetime = 30.0
 anger_enabled = false
 avoidance_enabled = false
