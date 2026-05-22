@@ -1,3 +1,5 @@
+goose = ["Goose 0"]
+
 [Debug]
 to_terminal = false
 visuals = false
