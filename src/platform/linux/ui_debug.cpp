@@ -100,12 +100,11 @@ void draw_debug_overlay(cairo_t* cr, int width, int height, bool verbose, bool s
                      goose->rig.neckLerp);
             lines.emplace_back(buf);
 
-            snprintf(buf, sizeof(buf), "    feet L:(%.1f,%.1f) move:%s  R:(%.1f,%.1f) move:%s  stepTime:%.2f",
+            snprintf(buf, sizeof(buf), "    feet L:(%.1f,%.1f) move:%s  R:(%.1f,%.1f) move:%s",
                      goose->rig.lFoot.currentPos.x, goose->rig.lFoot.currentPos.y,
                      goose->rig.lFoot.moveStartTime >= 0 ? "Y" : "N",
                      goose->rig.rFoot.currentPos.x, goose->rig.rFoot.currentPos.y,
-                     goose->rig.rFoot.moveStartTime >= 0 ? "Y" : "N",
-                     goose->stepTime);
+                     goose->rig.rFoot.moveStartTime >= 0 ? "Y" : "N");
             lines.emplace_back(buf);
 
             if (goose->state == GooseState::SNATCH_CURSOR) {

@@ -53,7 +53,6 @@ public:
     std::string forcedText;
 
     float currentSpeed = 0;
-    float stepTime = 0.2f;
     Rig rig;
 
     Vector2 ISO_SCALE;
@@ -180,7 +179,6 @@ private:
     void UpdateDrag(double dt);
     void StartFetch(int w, int h, double time = -1.0);
     CursorAction UpdateBehaviors(double dt, double time, int w, int h, const CursorState& cursor);
-    void UpdateChaseCursor(double time, const Vector2& cursorPos);
     void UpdatePhysics(double dt, int w, int h);
     void UpdateDetection(double time, int w, int h);
     void UpdateAnimation(double dt, double time);

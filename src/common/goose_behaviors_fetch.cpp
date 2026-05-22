@@ -50,7 +50,6 @@ void Goose::StartSnatch(double time, const Vector2& cursorPos) {
     snatchRadius = g_config.snatch.radiusBase + (rng_util::RandRange((int)g_config.snatch.radiusRange));
     snatchAngularSpeed = ((rng_util::RandRange(2)) ? 1.0f : -1.0f) * (g_config.snatch.angularSpeedBase + (rng_util::RandRange((int)g_config.snatch.angularSpeedRandomRange)) / kSnatchAngularSpeedDivisor);
     currentSpeed = g_config.movement.baseRunSpeed * g_config.snatch.speedMultiplier;
-    stepTime = g_config.step.timeSnatch;
 
     g_assets.Bite();
     triggerHonk(*this, time, g_config.honk.chaseCooldown, honkState.lastChase);
@@ -60,7 +59,6 @@ void Goose::EndSnatch(double time, int w, int h) {
 
     FILE* f = GetDebugLog();
     fprintf(f, "[ENDSNATCH] t=%.1f g%d: was state=%d grabId=%d\n", time, id, state, g_world.cursorGrabberId);
-    stepTime = g_config.step.timeWander;
     if (g_world.cursorGrabberId == id) {
         fprintf(f, "[ENDSNATCH] g%d: releasing cursor grab (was %d)\n", id, g_world.cursorGrabberId);
         g_world.cursorGrabberId = -1;
@@ -220,7 +218,6 @@ void handleReturning(Goose& g, double time, int w, int h) {
     g.lastDropTime = time;
     g.state = GooseState::WANDER;
     g.PickNewTarget(w, h);
-    g.stepTime = g_config.step.timeWander;
     FETCH_LOG("[FETCH] handleReturning g%d -> WANDER lastDrop=%.1f\n", g.id, g.lastDropTime);
     triggerHonk(g, time, g_config.honk.fetchCooldown, g.honkState.lastFetch);
 }

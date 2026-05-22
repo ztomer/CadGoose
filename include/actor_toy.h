@@ -39,7 +39,5 @@ private:
     void* m_window;  // BehaviorElementWindow* as opaque pointer
     void* m_windowKey;  // NSNumber* as opaque pointer
     void* m_images[2]; // stick image, ball image
-    void initWindow();
-    void updateWindow();
 #endif
 };
