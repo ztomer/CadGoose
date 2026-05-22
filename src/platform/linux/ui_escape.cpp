@@ -122,7 +122,6 @@ static gboolean cb_window_key_pressed(GtkEventControllerKey*, guint keyval, guin
                 UiLogPush("ESC pressed: ending snatch");
                 g->state = GooseState::WANDER;
                 g->PickNewTarget(g_config.screen.width, g_config.screen.height);
-                g->stepTime = g_config.step.timeWander;
                 g_world.cursorGrabberId = -1;
             }
         }

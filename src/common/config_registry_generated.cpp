@@ -180,8 +180,6 @@ void Config_InitRegistry() {
         &g_config.spawn.wanderTargetMargin, 0.0f, 500.0f, 1.0f, OnConfigChange));
     g_configRegistry.push_back(CONFIG_FLOAT("Spawn", "wander_target_offset", "Wander Target Offset",
         &g_config.spawn.wanderTargetOffset, 0.0f, 500.0f, 1.0f, OnConfigChange));
-    g_configRegistry.push_back(CONFIG_INT("Spawn", "max_fetching_geese", "Max Fetching Geese",
-        &g_config.spawn.maxFetchingGeese, 0, 100, OnConfigChange));
     g_configRegistry.push_back(CONFIG_FLOAT("Spawn", "separation_min_distance", "Separation Min Distance",
         &g_config.spawn.separationMinDistance, 1.0f, 200.0f, 1.0f, OnConfigChange));
 
@@ -196,10 +194,6 @@ void Config_InitRegistry() {
         &g_config.rig.beakLen, 0.0f, 30.0f, 1.0f, OnConfigChange));
     g_configRegistry.push_back(CONFIG_FLOAT("Rig", "beak_width", "Beak Width",
         &g_config.rig.beakWidth, 0.0f, 30.0f, 1.0f, OnConfigChange));
-    g_configRegistry.push_back(CONFIG_FLOAT("Rig", "stride_max", "Stride Max",
-        &g_config.rig.strideMax, 0.0f, 30.0f, 1.0f, OnConfigChange));
-    g_configRegistry.push_back(CONFIG_FLOAT("Rig", "step_lift_height", "Step Lift Height",
-        &g_config.rig.stepLiftHeight, 0.0f, 20.0f, 1.0f, OnConfigChange));
     g_configRegistry.push_back(CONFIG_FLOAT("Rig", "underbody_y", "Underbody Y",
         &g_config.rig.underbodyY, -100.0f, 100.0f, 0.5f, OnConfigChange));
     g_configRegistry.push_back(CONFIG_FLOAT("Rig", "neck_base_x", "Neck Base X",
@@ -208,10 +202,6 @@ void Config_InitRegistry() {
         &g_config.rig.neckExtIdle, 0.0f, 100.0f, 1.0f, OnConfigChange));
     g_configRegistry.push_back(CONFIG_FLOAT("Rig", "neck_ext_moving", "Neck Ext Moving",
         &g_config.rig.neckExtMoving, 0.0f, 100.0f, 1.0f, OnConfigChange));
-    g_configRegistry.push_back(CONFIG_FLOAT("Rig", "head_base_x", "Head Base X",
-        &g_config.rig.headBaseX, -50.0f, 50.0f, 0.5f, OnConfigChange));
-    g_configRegistry.push_back(CONFIG_FLOAT("Rig", "head_base_y", "Head Base Y",
-        &g_config.rig.headBaseY, -50.0f, 50.0f, 0.5f, OnConfigChange));
     g_configRegistry.push_back(CONFIG_FLOAT("Rig", "beak_base_offset", "Beak Base Offset",
         &g_config.rig.beakBaseOffset, 0.0f, 50.0f, 0.5f, OnConfigChange));
     g_configRegistry.push_back(CONFIG_FLOAT("Rig", "neck_lerp_rate", "Neck Lerp Rate",
@@ -352,8 +342,6 @@ void Config_InitRegistry() {
         &g_config.item.memeFetchBiasMax, 0, 1000, OnConfigChange));
     g_configRegistry.push_back(CONFIG_INT("Item", "note_fetch_bias_max", "Note Fetch Bias Max",
         &g_config.item.noteFetchBiasMax, 0, 1000, OnConfigChange));
-    g_configRegistry.push_back(CONFIG_INT("Item", "attack_mouse_bias_max", "Attack Mouse Bias Max",
-        &g_config.item.attackMouseBiasMax, 0, 1000, OnConfigChange));
     g_configRegistry.push_back(CONFIG_INT("Item", "heist_chance_percent", "Heist Chance Percent",
         &g_config.item.heistChancePercent, 0, 100, OnConfigChange));
     g_configRegistry.push_back(CONFIG_INT("Item", "heist_approach_margin", "Heist Approach Margin",

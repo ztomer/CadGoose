@@ -205,5 +205,3 @@ CursorAction Goose::UpdateBehaviors(double dt, double time, int w, int h, const 
     return {};
 }
 
-void Goose::UpdateChaseCursor(double time, const Vector2& cursorPos) {
-}

@@ -31,7 +31,7 @@ DroppedItemActor::~DroppedItemActor() {
         void* keyPtr = m_windowKey;
         m_window = nullptr;
         m_windowKey = nullptr;
-        dispatch_async(dispatch_get_main_queue(), ^{
+        closeWindowOnMainThread(^{
             ItemWindow* win = (__bridge_transfer ItemWindow*)windowPtr;
             NSNumber* key = (__bridge_transfer NSNumber*)keyPtr;
             [[ItemWindowManager shared].windows removeObjectForKey:key];

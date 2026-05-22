@@ -146,7 +146,6 @@ struct SpawnConfig {
   float wanderTargetMargin = 400.0f;
   float wanderTargetOffset = 200.0f;
   float fetchEdgeMargin = 80.0f;
-  float maxFetchingGeese = 3;
   float separationMaxDistance = 70.0f;
   float separationForceMultiplier = 1.5f;
   float separationMinDistance = 0.1f;
@@ -160,21 +159,14 @@ struct RigConfig {
   float neckHeightMoving = 10.0f;
   float neckExtIdle = 3.0f;
   float neckExtMoving = 16.0f;
-  float headBaseX = 3.0f;
-  float headBaseY = 2.0f;
   float head1OffsetX = 2.0f;
-  float head1OffsetY = 4.0f;
-  float head1OffsetZ = 3.0f;
   float head2OffsetX = 4.0f;
-  float head2OffsetY = -2.0f;
   float beakBaseOffset = 4.0f;
   float beakLen = 12.0f;
   float beakWidth = 16.0f;
   float neckLerpRate = 0.1f;
   float runSpeedThreshold = 150.0f;
-  float strideMax = 15.0f;
   float footSpacing = 8.0f;
-  float stepLiftHeight = 3.0f;
   float footOffsetY = 2.0f;
   float headForwardBias = 2.0f;
 };
@@ -258,7 +250,6 @@ struct ItemConfig {
   int maxFetchGeese = 3;
   int memeFetchBiasMax = 30;
   int noteFetchBiasMax = 20;
-  int attackMouseBiasMax = 25;
   int heistChancePercent = 10;
   int heistApproachMargin = 8;
   float fetchCooldown = 4.0f;

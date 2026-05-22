@@ -49,7 +49,7 @@ BallActor::~BallActor() {
         void* keyPtr = m_windowKey;
         m_window = nullptr;
         m_windowKey = nullptr;
-        dispatch_async(dispatch_get_main_queue(), ^{
+        closeWindowOnMainThread(^{
             BehaviorElementWindow* win = (__bridge_transfer BehaviorElementWindow*)windowPtr;
             NSNumber* key = (__bridge_transfer NSNumber*)keyPtr;
             [[BehaviorElementWindowManager shared] unregisterWindow:key];
