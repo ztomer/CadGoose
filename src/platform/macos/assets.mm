@@ -197,7 +197,7 @@ ItemData* AssetManager::GetRandomMeme(int screenWidth, int screenHeight, float m
             NSImage* resized = [[NSImage alloc] initWithSize:NSMakeSize(finalW, finalH)];
             [resized lockFocus];
             [[NSGraphicsContext currentContext] setImageInterpolation:NSImageInterpolationHigh];
-            [img drawInRect:NSMakeRect(0, 0, finalW, finalH) fromRect:NSMakeRect(0, 0, origW, origH) operation:NSCompositeSourceOver fraction:1.0];
+            [img drawInRect:NSMakeRect(0, 0, finalW, finalH) fromRect:NSMakeRect(0, 0, origW, origH) operation:NSCompositingOperationSourceOver fraction:1.0];
             [resized unlockFocus];
             img = resized;
         }

@@ -20,6 +20,7 @@
 @interface ItemWindow : NSWindow
 @property (nonatomic, assign) DroppedItem* item;
 @property (nonatomic, assign) BOOL isBeingDragged;
+@property (nonatomic, assign) BOOL shown;
 - (instancetype)initWithItem:(DroppedItem*)item;
 - (void)updatePosition;
 - (void)closeAndRemove;
@@ -32,6 +33,7 @@
 @interface ItemWindowManager : NSObject
 + (instancetype)shared;
 - (void)syncWindows;
+- (void)showPendingWindows;
 - (void)closeAll;
 @property (nonatomic, readonly) NSMutableDictionary<NSNumber*, ItemWindow*>* windows;
 @end

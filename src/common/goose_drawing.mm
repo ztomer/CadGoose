@@ -10,6 +10,7 @@
 #include "behavior.h"
 #include "item_renderer.h"
 #include "render_colors.h"
+#include <mach/mach_time.h>
 #include <cmath>
 
 #ifdef __APPLE__
@@ -224,15 +225,30 @@ void DrawGoose(Goose* g, CGContextRef ctx) {
         DrawEllipse(ctx, markPos + up * (-kSurpriseMarkLineSize * kSurpriseMarkLineOffset - kSurpriseMarkDotOffset), kSurpriseMarkDotRadius, kSurpriseMarkDotRadius, kSurpriseMarkR, kSurpriseMarkG, kSurpriseMarkB, 1.0f);
     }
 
+#ifndef __APPLE__
     if (g->heldItem && !facingBack) {
         DrawHeldItem(g, ctx);
     }
+#endif
 
     CGContextRestoreGState(ctx);
 }
 
 void DrawHeldItem(Goose* g, CGContextRef ctx) {
     if (!g->heldItem) return;
+
+    static mach_timebase_info_data_t info = {0};
+    if (info.denom == 0) mach_timebase_info(&info);
+    uint64_t now = mach_absolute_time();
+    double tMs = (double)now * (double)info.numer / (double)info.denom / 1e6;
+    static double s_lastDrawLog = 0;
+    if (tMs - s_lastDrawLog > 50.0) {
+        fprintf(stderr, "[DROP_TIMING] DrawHeldItem g%d beak=(%.0f,%.0f) type=%d t=%.6f\n",
+            g->id, g->GetBeakTipDevice().x, g->GetBeakTipDevice().y,
+            (int)g->heldItem->type, tMs);
+        s_lastDrawLog = tMs;
+    }
+
     CGContextSaveGState(ctx);
 
     Vector2 beak = g->GetBeakTipDevice();

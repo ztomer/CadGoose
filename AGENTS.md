@@ -15,9 +15,12 @@ cd /Users/ztomer/Projects/CadGoose
 mkdir -p build && cd build && cmake .. -DCMAKE_BUILD_TYPE=Release && make -j$(sysctl -n hw.logicalcpu)
 ./build/CadGoose [--debug]
 ./build/CadGooseTests
+# Trail detection test (run from GUI terminal with CadGoose running):
+mkdir -p build/release && cd build/release && cmake ../.. -DCMAKE_BUILD_TYPE=Release && make trail_detection_test
+./build/release/trail_detection_test
 ```
 
-## Project State (May 19, 2026)
+## Project State (May 23, 2026)
 
 - **773 tests, 102 suites** — 741 pass, 1 pre-existing failure (`LocalLLMTest.GenerateWithHighTemperatureDoesNotCrash` — FoundationModels timeout), 32 skipped (31 AX + 1 drag test)
 - **Leaf pile scaling fixed** — `actor_leafpile.mm` now applies `g_config.general.globalScale` to window size, leaf positions (`curPosPlanar`, `curPosZ`), and leaf ellipse dimensions. Meme images were already correctly scaled via `item_window.mm`. Window padding increased to 40px (`kKickScatterPad`) to prevent leaf clipping when kicked. 3 new unit tests added (`tests/common/test_leafpile_scaling.cpp`).
@@ -77,9 +80,11 @@ mkdir -p build && cd build && cmake .. -DCMAKE_BUILD_TYPE=Release && make -j$(sy
 - **behavior.h split** — Split into 4 focused headers: `behavior_state.h` (29 LOC), `behavior_manager.h` (86 LOC), `behavior_registry.h` (107 LOC), `behavior_api.h`. 15 behavior state structs in individual files under `include/behaviors/states/`.
 - **Goose monolith deconstructed** — `Update()` split into `UpdatePhysics()`, `UpdateDetection()`, `UpdateAnimation()`, `UpdateDebug()`. Each focused on single responsibility.
 - **WorldContext** — Exists in `world.h` with all global state encapsulated: `geese`, `monitors`, `droppedItems`, `footprints`, `crumbs`, `leafPiles`, screen dimensions, cursor state.
+- **Trail detection test (v2)** — Rewritten with 4-frame temporal comparison and `SCScreenshotManager captureImageInRect` (ScreenCaptureKit). Algorithm: trail pixels match baseline (stale pre-drop content through ItemWindow transparent padding) for exactly one post-drop frame, then resolve. Saves trail mask PNG (red pixels) and overlay PNG to `/tmp/trail_test_frames/`. Links `ScreenCaptureKit.framework`. Exit code 10 = trail suspected.
 
-## Known Bugs (May 18, 2026)
+## Known Bugs (May 23, 2026)
 
 - **Config generator** — Works correctly for registry generation. GUI generation intentionally skipped (incompatible with `config_gui.mm` key-based lookup architecture).
 - **g_world.droppedItems** — 127 references across codebase. `DroppedItemActor` scaffold ready for future migration.
 - **Stale pointer risk in item_window.mm** — Mitigated by `IsItemValid()` check before every use + `std::list` pointer stability guarantees.
+- **Window trail on dropped item** — When goose drops a held item, the compositor composites stale goose-window backing store (showing held item at beak) through the ItemWindow's transparent padding for 1-2 frames. Deferred `orderFront` does not fix it — root cause is vsync-aligned compositor reusing previous frame's goose window content. Fix candidate: separate held-item overlay `NSView`/`CALayer` hideable per-frame without `drawRect:` vsync wait.

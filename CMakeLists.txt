@@ -5,20 +5,31 @@ set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-# ASan is disabled by default — it conflicts with the Objective-C runtime on macOS 26.x
-# (crash: "realized class ... has corrupt data pointer: malloc_size(...) = 0").
-# Use MallocScribble instead for memory debugging:
+# ASan is applied per-language to avoid the macOS 26.x ObjC runtime crash
+# ("realized class ... has corrupt data pointer: malloc_size(...) = 0").
+# Only C++ (.cpp) files get instrumented; ObjC++ (.mm) files are excluded.
+# For full coverage including ObjC, use MallocScribble instead:
 #   MallocScribble=YES MallocPreScribble=YES ./CadGooseTests
-# To force-enable ASan anyway (C++ only, ObjC files will crash at startup):
+#
+# Enable via:
 #   cmake .. -DCMAKE_BUILD_TYPE=Debug -DENABLE_ASAN=ON
+#
+# Runtime flags for common macOS false positives:
+#   ASAN_OPTIONS=detect_odr_violation=0   suppress duplicate symbol warnings
+#   ASAN_OPTIONS=alloc_dealloc_mismatch=0  suppress ObjC ARC false positives
 set(ENABLE_ASAN_DEFAULT OFF)
+option(ENABLE_ASAN "Enable AddressSanitizer (Debug builds, C++ files only)" ${ENABLE_ASAN_DEFAULT})
 
-option(ENABLE_ASAN "Enable AddressSanitizer (Debug builds only)" ${ENABLE_ASAN_DEFAULT})
-if(ENABLE_ASAN AND APPLE)
-    message(STATUS "AddressSanitizer enabled")
-    add_compile_options(-fsanitize=address -fno-omit-frame-pointer)
-    add_link_options(-fsanitize=address)
-endif()
+# Helper macro: apply ASan flags to a target (C++ only, excludes ObjC++)
+macro(target_enable_asan TARGET)
+    if(ENABLE_ASAN AND APPLE AND CMAKE_BUILD_TYPE STREQUAL "Debug")
+        message(STATUS "ASan enabled for target ${TARGET} (C++ files only)")
+        target_compile_options(${TARGET} PRIVATE
+            $<$<COMPILE_LANGUAGE:CXX>:-fsanitize=address -fno-omit-frame-pointer>
+        )
+        target_link_options(${TARGET} PRIVATE -fsanitize=address)
+    endif()
+endmacro()
 
 find_program(CCACHE_PROGRAM ccache)
 if(CCACHE_PROGRAM)
@@ -56,6 +67,7 @@ if(MACOS)
     find_library(COREVIDEO_LIBRARY CoreVideo)
     find_library(QUARTZCORE_LIBRARY QuartzCore)
 
+
     if(NOT COCOA_LIBRARY)
         message(FATAL_ERROR "Cocoa framework not found")
     endif()
@@ -76,6 +88,7 @@ if(MACOS)
     endif()
 
     add_executable(CadGoose ${SOURCES})
+    target_enable_asan(CadGoose)
 
     target_link_libraries(CadGoose
         toml11
@@ -186,6 +199,7 @@ elseif(LINUX)
     endif()
 
     add_executable(CadGoose ${SOURCES})
+    target_enable_asan(CadGoose)
 
     target_link_libraries(CadGoose
         toml11
@@ -364,6 +378,7 @@ if(APPLE)
             tests/platform/macos/test_gui_accessibility.mm
             tests/platform/macos/test_dragging_integration.mm
             tests/platform/macos/test_headless_rendering.mm
+            tests/platform/macos/test_window_trail.mm
         )
     else()
         set(TEST_SOURCES_PLATFORM
@@ -377,6 +392,7 @@ if(APPLE)
     endif()
     
     add_executable(CadGooseTests ${TEST_SOURCES_COMMON} ${TEST_SOURCES_PLATFORM})
+    target_enable_asan(CadGooseTests)
     add_dependencies(CadGooseTests CompileSwiftFoundationLLM)
     
     if(APPLE)
@@ -402,6 +418,7 @@ if(APPLE)
             tests/platform/macos/test_gui_accessibility.mm
             tests/platform/macos/test_dragging_integration.mm
             tests/platform/macos/test_headless_rendering.mm
+            tests/platform/macos/test_window_trail.mm
         )
     target_link_libraries(CadGooseTests
         toml11
@@ -444,4 +461,34 @@ if(APPLE)
     endif()
     
     add_test(NAME CadGooseTests COMMAND CadGooseTests)
+
+    # Trail detection test — standalone binary, not a gtest.
+    # Connects to running CadGoose app via Unix socket, captures screenshots,
+    # and analyzes pixels for window trail artifacts.
+    add_executable(trail_detection_test
+        tests/platform/macos/test_window_trail_detection.mm
+        src/platform/macos/command_socket.cpp
+    )
+    target_enable_asan(trail_detection_test)
+    target_include_directories(trail_detection_test PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/include
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/platform/macos
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/common
+    )
+    if(APPLE)
+        find_library(SCREEN_CAPTURE_KIT_LIBRARY ScreenCaptureKit)
+        find_library(CORE_VIDEO_LIBRARY CoreVideo)
+        find_library(CORE_MEDIA_LIBRARY CoreMedia)
+        target_link_libraries(trail_detection_test PRIVATE
+            ${COCOA_LIBRARY}
+            ${COREGRAPHICS_LIBRARY}
+            ${SCREEN_CAPTURE_KIT_LIBRARY}
+            ${CORE_VIDEO_LIBRARY}
+            ${CORE_MEDIA_LIBRARY}
+            Threads::Threads
+        )
+        set_target_properties(trail_detection_test PROPERTIES
+            COMPILE_FLAGS "-fobjc-arc"
+        )
+    endif()
 endif()
