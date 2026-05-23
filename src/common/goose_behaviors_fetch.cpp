@@ -15,6 +15,16 @@
 #include <cmath>
 #include <cstdio>
 #include <algorithm>
+#include <mach/mach_time.h>
+
+static double GetTimeMs() {
+    static mach_timebase_info_data_t info = {0};
+    if (info.denom == 0) mach_timebase_info(&info);
+    uint64_t now = mach_absolute_time();
+    return (double)now * (double)info.numer / (double)info.denom / 1e6;
+}
+
+static int s_dropTxnId = 0;
 
 // Gate verbose fetch tracing behind the debug-to-terminal flag so the
 // release path doesn't spam stderr every tick.
@@ -191,8 +201,12 @@ void handleReturning(Goose& g, double time, int w, int h) {
 
 
             // Actor takes ownership of drop.data
+            int txnId = ++s_dropTxnId;
+            double t0 = GetTimeMs();
             new DroppedItemActor(drop);
+            double t1 = GetTimeMs();
             g.heldItem = nullptr;
+            double t2 = GetTimeMs();
             const char* itemType = "unknown";
             if (drop.data) {
                 switch (drop.data->type) {
@@ -201,6 +215,9 @@ void handleReturning(Goose& g, double time, int w, int h) {
                     case ItemData::TOY:  itemType = "toy"; break;
                 }
             }
+            fprintf(stderr, "[DROP_TIMING] txn=%d g%d type=%s pos=(%.0f,%.0f) t0=%.6f actorCreat=%.3fms nullHeld=%.3fms total=%.3fms\n",
+                txnId, g.id, itemType, drop.pos.x, drop.pos.y,
+                t0, (t1 - t0), (t2 - t1), (t2 - t0));
             EventBus::Instance().Publish(ItemDroppedEvent{g.id, drop.pos.x, drop.pos.y, itemType});
             FETCH_LOG("[FETCH] handleReturning g%d dropped item at (%.0f,%.0f) rot=%.1f\n",
                     g.id, drop.pos.x, drop.pos.y, drop.rotation);

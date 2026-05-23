@@ -87,6 +87,7 @@ static void BELog(const char* fmt, ...) {
     if (self) {
         self.backgroundColor = [NSColor clearColor];
         [self setOpaque:NO];
+        [self setOneShot:YES];
         self.ignoresMouseEvents = YES;
         self.acceptsMouseMovedEvents = NO;
         self.level = NSStatusWindowLevel; // Below goose window

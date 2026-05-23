@@ -69,9 +69,18 @@ extern NSMutableArray* g_configItemsForAccess;
 - (NSString*)currentModelName;
 - (void)setModelName:(NSString*)name;
 - (void)updateCustomVisibility;
+@end
+
+// Category interfaces (implemented in separate files)
+@interface AITabView (Prompts)
 - (NSString*)promptPreviewForEvilLevel:(float)level;
+- (void)evilSliderChanged:(NSSlider*)sender;
+@end
+
+@interface AITabView (Connection)
 - (NSString*)modelsEndpointForTest;
 - (void)refreshModels:(id)sender;
+- (void)testConnection:(id)sender;
 @end
 
 @interface AppearanceTabView : NSView

@@ -6,6 +6,15 @@
 #include "item_window.h"
 #include "config.h"
 #include <cstdio>
+#include <mach/mach_time.h>
+#include <TargetConditionals.h>
+
+static double GetTimeMs() {
+    static mach_timebase_info_data_t info = {0};
+    if (info.denom == 0) mach_timebase_info(&info);
+    uint64_t now = mach_absolute_time();
+    return (double)now * (double)info.numer / (double)info.denom / 1e6;
+}
 
 DroppedItemActor::DroppedItemActor(const DroppedItem& item)
     : m_item(item)
@@ -68,13 +77,19 @@ void DroppedItemActor::render(IRenderer* renderer) {
 #ifdef __APPLE__
 
 void DroppedItemActor::initWindow() {
+    double t0 = GetTimeMs();
     ItemWindowManager* manager = [ItemWindowManager shared];
     ItemWindow* win = [[ItemWindow alloc] initWithItem:&m_item];
+    double t1 = GetTimeMs();
     m_window = (__bridge_retained void*)win;
 
     static NSInteger s_nextKey = 1000;
     m_windowKey = (__bridge_retained void*)@(s_nextKey++);
     manager.windows[(__bridge NSNumber*)m_windowKey] = win;
+    double t2 = GetTimeMs();
+    fprintf(stderr, "[DROP_TIMING] initWindow item=(%.1f,%.1f) allocInit=%.3fms storeKey=%.3fms total=%.3fms\n",
+        m_item.pos.x, m_item.pos.y,
+        (t1 - t0), (t2 - t1), (t2 - t0));
 }
 
 void DroppedItemActor::updateWindow() {

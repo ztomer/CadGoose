@@ -80,7 +80,7 @@ static float CalculateGooseWindowSize(const Goose* goose) {
                               backing:NSBackingStoreBuffered
                                 defer:NO
                                screen:screen];
-    DEBUG_LOG("GooseWindow super init done, self=%p");
+    DEBUG_LOG("GooseWindow super init done, self=%p", self);
 
     if (self) {
         self.level = NSStatusWindowLevel + 1; // Above item windows (NSStatusWindowLevel)

@@ -62,22 +62,18 @@ failsafe_hotkey = "cmd+shift+escape"
 
 [Rig]
 body_y = 14.0
-neck_height_idle = 20.0
-neck_lerp_rate = 0.1
-run_speed_threshold = 150.0
-step_lift_height = 3.0
 neck_base_x = 15.0
 beak_len = 12.0
+beak_base_offset = 4.0
 beak_width = 16.0
-stride_max = 15.0
 neck_ext_idle = 3.0
 underbody_y = 9.0
 neck_height_moving = 10.0
 head_forward_bias = 1.0
 neck_ext_moving = 16.0
-head_base_x = 3.0
-head_base_y = 2.0
-beak_base_offset = 4.0
+neck_lerp_rate = 0.1
+neck_height_idle = 20.0
+run_speed_threshold = 150.0
 foot_spacing = 8.0
 foot_offset_y = 2.0
 
@@ -255,7 +251,6 @@ max_fetch_geese = 3
 max_dropped_memes = 20
 meme_fetch_bias_max = 30
 note_fetch_bias_max = 20
-attack_mouse_bias_max = 25
 heist_approach_margin = 8
 
 [Physics]
@@ -305,7 +300,6 @@ catch_threshold_base = 22.0
 wander_target_offset = 200.0
 catch_threshold_min = 15.0
 wander_target_margin = 400.0
-max_fetching_geese = 100
 
 [Screen]
 default_width = 60
@@ -341,17 +335,17 @@ right_foot_angle = 15.0
 zero_velocity_threshold = 0.001
 
 [Behavior]
-interactive_drops_enabled = true
+interactive_drops_enabled = false
 autumn_leaves_enabled = true
-rainbow_enabled = true
+rainbow_enabled = false
 interactive_drops_puddle_lifetime = 30.0
 anger_enabled = false
 avoidance_enabled = false
-boredom_enabled = true
-breadcrumbs_enabled = true
-peeking_enabled = true
+boredom_enabled = false
+breadcrumbs_enabled = false
+peeking_enabled = false
 acid_enabled = false
-ball_enabled = true
+ball_enabled = false
 honcker_hotkey = "f"
 toys_enabled = false
 jail_enabled = false
@@ -363,7 +357,7 @@ jail_hotkey_o = "o"
 config_gui_enabled = false
 honcker_enabled = false
 visible_enabled = true
-hats_enabled = true
+hats_enabled = false
 ai_enabled = false
 health_enabled = false
 portals_enabled = false

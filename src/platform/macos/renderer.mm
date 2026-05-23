@@ -7,7 +7,7 @@
 #import <cmath>
 #import <algorithm>
 #import <time.h>
-#import <QuartzCore/CADisplayLink.h>
+#import <QuartzCore/QuartzCore.h>
 
 #include "goose.h"
 #include "random_util.h"
@@ -76,8 +76,10 @@ static void DrawLine(CGContextRef ctx, Vector2 a, Vector2 b, float width, float 
 @property (nonatomic, assign) int tickCount;
 @property (nonatomic, assign) BOOL needsRedraw;
 @property (nonatomic, strong) CADisplayLink* displayLink;
+@property (nonatomic, strong) NSMutableDictionary* heldItemLayers; // NSNumber(gooseId) -> CALayer
 - (void)handleKeyDown:(NSEvent*)event;
 - (void)onFrameRefresh:(CADisplayLink*)displayLink;
+- (void)updateHeldItemLayers;
 @end
 
 static BOOL s_hasPrimary = NO;
@@ -86,60 +88,40 @@ static BOOL s_hasPrimary = NO;
 
 + (void)resetPrimaryGuard { s_hasPrimary = NO; }
 
-- (BOOL)isFlipped {
-    return YES;
-}
+- (BOOL)isFlipped { return YES; }
 
 - (instancetype)initWithFrame:(NSRect)frameRect {
-    DEBUG_LOG("GooseView initWithFrame START, frame=%s", NSStringFromRect(frameRect).UTF8String);
-
     self = [super initWithFrame:frameRect];
-    DEBUG_LOG("  super init done, self=%p", self);
-
     if (self) {
         self.wantsLayer = YES;
-        DEBUG_LOG("  wantsLayer=YES");
-
         self.layer.backgroundColor = [[NSColor clearColor] CGColor];
-        DEBUG_LOG("  layer backgroundColor set");
 
         if (!s_hasPrimary) {
             self.isPrimary = YES;
             s_hasPrimary = YES;
-            DEBUG_LOG("  PRIMARY GOOSE VIEW (will update geese)");
         } else {
             self.isPrimary = NO;
-            DEBUG_LOG("  SECONDARY GOOSE VIEW (display only)");
         }
 
         _currentTime = 0.0;
         _tickCount = 0;
         _needsRedraw = NO;
         _displayLink = nil;
-        DEBUG_LOG("  time/count initialized");
-    } else {
-        LOG("ERROR: GooseView init returned nil!");
+        _heldItemLayers = [NSMutableDictionary dictionary];
     }
-
-    DEBUG_LOG("GooseView initWithFrame END");
     return self;
 }
 
 - (void)startAnimation {
-    DEBUG_LOG("GooseView startAnimation START");
-
     [self stopAnimation];
-    DEBUG_LOG("  stopped old timer");
 
     self.displayLink = [self displayLinkWithTarget:self selector:@selector(onFrameRefresh:)];
     if (@available(macOS 14.0, *)) {
         self.displayLink.preferredFrameRateRange = CAFrameRateRangeMake(kDisplayLinkMinFps, kDisplayLinkMaxFps, kDisplayLinkDefaultFps);
     }
     [self.displayLink addToRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
-    DEBUG_LOG("  CADisplayLink created and added to run loop");
 
     [self becomeFirstResponder];
-    DEBUG_LOG("GooseView startAnimation END");
 }
 
 - (void)stopAnimation {
@@ -156,45 +138,32 @@ static BOOL s_hasPrimary = NO;
     NSUInteger flags = [event modifierFlags];
 
     if (key == 'f' || key == 'F') {
-        fprintf(stderr, "[HONCKER] F key pressed\n");
         for (auto* g : ActorManager::Instance().getGeese()) {
             Honcker_Honk(g, self.currentTime);
         }
     }
 }
 
-- (BOOL)acceptsFirstResponder {
-    return YES;
-}
-
-- (BOOL)acceptsFirstMouse:(NSEvent *)event {
-    return YES;
-}
+- (BOOL)acceptsFirstResponder { return YES; }
+- (BOOL)acceptsFirstMouse:(NSEvent *)event { return YES; }
 
 - (void)keyDown:(NSEvent*)event {
     [self handleKeyDown:event];
 }
 
-- (void)handleClickAtPoint:(NSPoint)point {
-}
+- (void)handleClickAtPoint:(NSPoint)point {}
 
 - (void)tick {
     double dt = g_config.render.frameDt;
     self.currentTime += dt;
     self.tickCount++;
-    // Publish the tick counter so subsystems that don't have direct access
-    // to the renderer's currentTime (e.g. effect-window-manager registrations
-    // that compare against fp.timeSpawned) can read it. Used to be compared
-    // against wall-clock NSDate, which silently made footprint ages enormous
-    // and filtered every footprint out.
+
     g_time = self.currentTime;
 
     if (self.isPrimary) {
-        // Tick all actors (geese, toys, flowers, etc.)
         ActorManager::Instance().tickAll(g_world, dt, self.currentTime);
         ActorManager::Instance().cleanup();
 
-        // Update window positions for geese
         auto geese = ActorManager::Instance().getGeese();
         [[WindowManager shared] updateWindowPositionsForGeese:geese];
     }
@@ -213,11 +182,9 @@ static BOOL s_hasPrimary = NO;
                             geese.empty() ? nullptr : geese.front());
     }
 
-    // Sync effect windows (leaves, mud, etc.)
     [[EffectWindowManager shared] syncWindows];
     if (ActorManager::Instance().countByType("leafpile") > 0) self.needsRedraw = YES;
 
-    // Always sync item windows — needed to clean up orphaned windows when goose picks up last item
     [[ItemWindowManager shared] syncWindows];
     if (!ActorManager::Instance().getDroppedItems().empty()) self.needsRedraw = YES;
 
@@ -231,29 +198,92 @@ static BOOL s_hasPrimary = NO;
     [super setNeedsDisplay:flag];
 }
 
+- (void)updateHeldItemLayers {
+    NSScreen* windowScreen = self.window.screen ?: [NSScreen mainScreen];
+    float screenH = (float)windowScreen.frame.size.height;
+    NSRect winFrame = self.window.frame;
+    ScreenPoint screenTopLeft = {(float)winFrame.origin.x,
+                                  (float)winFrame.origin.y + (float)winFrame.size.height};
+    DevicePoint viewOriginDevice = CoordTransform::ScreenToDeviceMacOS(screenTopLeft, screenH);
+
+    auto geese = ActorManager::Instance().getGeese();
+    NSMutableSet* holdingIDs = [NSMutableSet set];
+
+    for (auto* g : geese) {
+        if (!g->heldItem) continue;
+
+        NSNumber* key = @(g->id);
+        [holdingIDs addObject:key];
+
+        CALayer* layer = self.heldItemLayers[key];
+        if (!layer) {
+            layer = [CALayer layer];
+            layer.contentsGravity = kCAGravityResize;
+            layer.anchorPoint = CGPointMake(1.0, 0.5);
+            [self.layer addSublayer:layer];
+            self.heldItemLayers[key] = layer;
+        }
+
+        float itemW = g->heldItem->w * g_config.general.globalScale;
+        float itemH = g->heldItem->h * g_config.general.globalScale;
+
+        layer.bounds = CGRectMake(0, 0, itemW, itemH);
+
+        Vector2 beak = g->GetBeakTipDevice();
+        CGPoint layerPos = CGPointMake(
+            beak.x - viewOriginDevice.x,
+            beak.y - viewOriginDevice.y);
+
+        [CATransaction begin];
+        [CATransaction setDisableActions:YES];
+        layer.contents = (__bridge id)g->heldItem->image;
+        layer.position = layerPos;
+        layer.affineTransform = CGAffineTransformMakeRotation(-g->dragRot);
+        [CATransaction commit];
+    }
+
+    // Remove layers for geese no longer holding an item
+    BOOL hadRemovals = NO;
+    for (NSNumber* key in [self.heldItemLayers allKeys]) {
+        if (![holdingIDs containsObject:key]) {
+            CALayer* layer = self.heldItemLayers[key];
+            [layer removeFromSuperlayer];
+            [self.heldItemLayers removeObjectForKey:key];
+            hadRemovals = YES;
+        }
+    }
+
+    if (hadRemovals) {
+        [CATransaction flush];
+    }
+}
+
 - (void)drawRect:(NSRect)dirtyRect {
     CGContextRef ctx = (CGContextRef)[[NSGraphicsContext currentContext] CGContext];
     if (!ctx) return;
 
+    // Update held item layers BEFORE clearing and rendering
+    // (sets up layer tree so held item is independent of double-buffered backing store)
+    [self updateHeldItemLayers];
+
     CGContextClearRect(ctx, self.bounds);
     CGContextSaveGState(ctx);
 
-    // Convert window frame origin to device coords using the coordinate library
     NSScreen* windowScreen = self.window.screen ?: [NSScreen mainScreen];
     float screenH = (float)windowScreen.frame.size.height;
     NSRect winFrame = self.window.frame;
-    // Window frame origin is bottom-left in screen coords; top-left is origin.y + height
     ScreenPoint screenTopLeft = {(float)winFrame.origin.x, (float)winFrame.origin.y + (float)winFrame.size.height};
     DevicePoint viewOriginDevice = CoordTransform::ScreenToDeviceMacOS(screenTopLeft, screenH);
 
-    // Translate from device coords to view coords (view origin = window top-left)
     CGContextTranslateCTM(ctx, -viewOriginDevice.x, -viewOriginDevice.y);
 
-    // Render all actors (geese, toys, flowers, etc.)
+    // Render all actors — DrawHeldItem is skipped on macOS
+    // (handled by updateHeldItemLayers above)
     CGRenderer renderer(ctx);
     ActorManager::Instance().renderAll(&renderer);
 
-    // Draw debug overlay
+    [[ItemWindowManager shared] showPendingWindows];
+
     DrawDebugOverlay(ctx, ActorManager::Instance().getGeese());
     CGContextRestoreGState(ctx);
 }

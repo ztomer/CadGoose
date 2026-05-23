@@ -17,6 +17,7 @@
 #include "goose_drawing.h"
 #include "cg_renderer.h"
 #include <CoreGraphics/CoreGraphics.h>
+#include <mach/mach_time.h>
 #endif
 
 // --- Magic numbers extracted as named constants ---
@@ -586,6 +587,22 @@ void Goose::render(IRenderer* renderer) {
     CGContextRef ctx = (CGContextRef)renderer->nativeContext();
     if (!ctx) return;
 
+    // Track transition from held→null to correlate with window creation timing
+    static bool s_prevHeldItem = false;
+    static double s_lastHoldLog = 0;
+    bool nowHeld = (heldItem != nullptr);
+    if (s_prevHeldItem && !nowHeld) {
+        static mach_timebase_info_data_t info = {0};
+        if (info.denom == 0) mach_timebase_info(&info);
+        uint64_t now = mach_absolute_time();
+        double tMs = (double)now * (double)info.numer / (double)info.denom / 1e6;
+        if (tMs - s_lastHoldLog > 100.0) {
+            fprintf(stderr, "[DROP_TIMING] Goose::render g%d HELD_TRANSITION held->null t=%.6f\n", id, tMs);
+            s_lastHoldLog = tMs;
+        }
+    }
+    s_prevHeldItem = nowHeld;
+
     CGContextSaveGState(ctx);
     CGContextTranslateCTM(ctx, pos.x, pos.y);
     CGContextScaleCTM(ctx, g_config.general.globalScale, g_config.general.globalScale);
@@ -594,9 +611,11 @@ void Goose::render(IRenderer* renderer) {
     CGContextRestoreGState(ctx);
 
     DrawGoose(this, ctx);
+#ifndef __APPLE__
     if (heldItem) {
         DrawHeldItem(this, ctx);
     }
+#endif
 
     CGContextSaveGState(ctx);
     CGContextTranslateCTM(ctx, pos.x, pos.y);
