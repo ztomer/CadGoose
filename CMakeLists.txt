@@ -419,6 +419,7 @@ if(APPLE)
             tests/platform/macos/test_dragging_integration.mm
             tests/platform/macos/test_headless_rendering.mm
             tests/platform/macos/test_window_trail.mm
+        src/platform/macos/assets.mm
         )
     target_link_libraries(CadGooseTests
         toml11
@@ -487,8 +488,30 @@ if(APPLE)
             ${CORE_MEDIA_LIBRARY}
             Threads::Threads
         )
-        set_target_properties(trail_detection_test PROPERTIES
-            COMPILE_FLAGS "-fobjc-arc"
-        )
-    endif()
+    set_target_properties(trail_detection_test PROPERTIES
+        COMPILE_FLAGS "-fobjc-arc"
+    )
+
+    add_executable(soak_fetch_test
+        tests/platform/macos/test_soak_fetch_visibility.mm
+        src/platform/macos/command_socket.cpp
+    )
+    target_enable_asan(soak_fetch_test)
+    target_include_directories(soak_fetch_test PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/include
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/platform/macos
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/common
+    )
+    target_link_libraries(soak_fetch_test PRIVATE
+        ${COCOA_LIBRARY}
+        ${COREGRAPHICS_LIBRARY}
+        ${SCREEN_CAPTURE_KIT_LIBRARY}
+        ${CORE_VIDEO_LIBRARY}
+        ${CORE_MEDIA_LIBRARY}
+        Threads::Threads
+    )
+    set_target_properties(soak_fetch_test PROPERTIES
+        COMPILE_FLAGS "-fobjc-arc"
+    )
+endif()
 endif()

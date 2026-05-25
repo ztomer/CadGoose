@@ -225,11 +225,9 @@ void DrawGoose(Goose* g, CGContextRef ctx) {
         DrawEllipse(ctx, markPos + up * (-kSurpriseMarkLineSize * kSurpriseMarkLineOffset - kSurpriseMarkDotOffset), kSurpriseMarkDotRadius, kSurpriseMarkDotRadius, kSurpriseMarkR, kSurpriseMarkG, kSurpriseMarkB, 1.0f);
     }
 
-#ifndef __APPLE__
     if (g->heldItem && !facingBack) {
         DrawHeldItem(g, ctx);
     }
-#endif
 
     CGContextRestoreGState(ctx);
 }

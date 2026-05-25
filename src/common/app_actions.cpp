@@ -133,6 +133,14 @@ std::string AppActions_GetStatus() {
         }
         out << "\n";
         out << "goose_heldItem=" << (g.heldItem ? "yes" : "no") << "\n";
+        out << "goose_dir=" << g.dir << "\n";
+        {
+            Vector2 rawFwd = Vector2::FromAngleDegrees(g.dir);
+            Vector2 fwd{ rawFwd.x * g.ISO_SCALE.x, rawFwd.y * g.ISO_SCALE.y };
+            float facing = Dot(Vector2::Normalize(fwd), Vector2{0, 1});
+            float back = std::max(0.0f, std::min(-facing, 1.0f));
+            out << "goose_facingBack=" << (back > g_config.render.facingBackThreshold ? "1" : "0") << "\n";
+        }
     }
 
     auto droppedItems = ActorManager::Instance().getDroppedItems();
@@ -194,6 +202,7 @@ std::string AppActions_HandleCommand(const std::vector<std::string>& args) {
         if (args.size() > 1) {
             if (args[1] == "text") type = 1;
             else if (args[1] == "meme") type = 0;
+            else if (args[1] == "test") type = 2;
         }
         fprintf(stderr, "[CLI] fetch type=%d geese.size=%zu\n", type, geese.size());
         geese.front()->ForceFetch(type, g_world.screenWidth, g_world.screenHeight);

@@ -2,6 +2,7 @@
 /Users/ztomer/Projects/CadGoose/build/CMakeFiles/CompileSwiftFoundationLLM.dir
 /Users/ztomer/Projects/CadGoose/build/CMakeFiles/CadGooseTests.dir
 /Users/ztomer/Projects/CadGoose/build/CMakeFiles/trail_detection_test.dir
+/Users/ztomer/Projects/CadGoose/build/CMakeFiles/soak_fetch_test.dir
 /Users/ztomer/Projects/CadGoose/build/CMakeFiles/edit_cache.dir
 /Users/ztomer/Projects/CadGoose/build/CMakeFiles/rebuild_cache.dir
 /Users/ztomer/Projects/CadGoose/build/vendor/toml11/CMakeFiles/Experimental.dir

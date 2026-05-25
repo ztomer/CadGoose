@@ -150,6 +150,9 @@ void handleFetching(Goose& g, double time, int w, int h) {
             FETCH_LOG("[FETCH] handleFetching g%d AI text empty, falling back to file text\n", g.id);
             g.heldItem = g_assets.GetRandomText();
         }
+    } else if (g.forceItemFetch == 2) {
+        FETCH_LOG("[FETCH] handleFetching g%d creating test image\n", g.id);
+        g.heldItem = g_assets.CreateTestImage(100, 50);
     } else {
         FETCH_LOG("[FETCH] handleFetching g%d random fetch (forceItemFetch=%d)\n", g.id, g.forceItemFetch);
         g.heldItem = (rng_util::RandRange(2) == 0) ? g_assets.GetRandomMeme() : g_assets.GetRandomText();

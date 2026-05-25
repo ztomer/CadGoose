@@ -31,7 +31,37 @@ Saves results to `soak_results_YYYYMMDD_HHMMSS.md`.
 ```
 Simple 60-second CPU profile, saves to quick_profile.md
 
+### Trail Detection Test (Cyan-pixel)
+```bash
+./run_trail_test.sh
+```
+Full automated trail detection. Auto-re-launches in Ghostty (needs
+Screen Recording permission), hides all other windows, builds,
+launches CadGoose, runs v4 cyan-pixel test, restores desktop.
+Exit: 0=clean, 10=trail, 11=item not visible, 97=build fail.
+Output: `/tmp/trail_test_YYYYMMDD_HHMMSS/`
+
+### Crash Debug (lldb)
+```bash
+./crash_debug.sh
+```
+Launches CadGoose under lldb, waits for crash, saves backtrace to
+`/tmp/cadgoose_crash_*.txt`. Attach to running process:
+```bash
+./crash_debug.sh --attach <PID>
+```
+
+### Memory Watch (leaks + heap)
+```bash
+./mem_watch.sh
+```
+Launches CadGoose and monitors RSS/leaks/heap every 5 seconds.
+Saves output to `/tmp/cadgoose_mem_*/`. Attach to running process:
+```bash
+./mem_watch.sh --attach <PID>
+./mem_watch.sh --attach <PID> --quick  # single snapshot
+```
+
 ## Requirements
-- Xcode command line tools (`xctrace`)
-- CadGoose must be running
-- Profile with PID of running CadGoose process
+- Xcode command line tools (`xctrace`, `leaks`, `heap`)
+- CadGoose must be running (or let scripts launch it)
