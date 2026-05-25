@@ -76,33 +76,23 @@ namespace {
     }
 
     void HandleClientConnection(int clientFd) {
-        fprintf(stderr, "[CS-SERVER] HandleClientConnection called\n");
         std::string requestData;
         char buffer[512];
         while (true) {
             ssize_t rc = read(clientFd, buffer, sizeof(buffer));
-            fprintf(stderr, "[CS-SERVER] read rc=%zd\n", rc);
             if (rc <= 0) break;
             requestData.append(buffer, (size_t)rc);
         }
 
-        fprintf(stderr, "[CS-SERVER] full request: '%s'\n", requestData.c_str());
-
         std::string response;
         if (g_commandHandler) {
             std::vector<std::string> args = ParseArgs(requestData);
-            fprintf(stderr, "[CS-SERVER] parsed %zu args:", args.size());
-            for (size_t i = 0; i < args.size(); ++i) fprintf(stderr, " [%zu]='%s'", i, args[i].c_str());
-            fprintf(stderr, "\n");
             response = g_commandHandler(args);
-            fprintf(stderr, "[CS-SERVER] handler returned len=%zu: '%s'\n", response.size(), response.c_str());
         } else {
             response = "error command handler unavailable\n";
         }
 
-        fprintf(stderr, "[CS-SERVER] writing response...\n");
         WriteAll(clientFd, response);
-        fprintf(stderr, "[CS-SERVER] done\n");
     }
 }
 
@@ -203,21 +193,19 @@ bool CommandSocket_Send(const std::vector<std::string>& args, std::string* respo
     }
     msg += "\n";
 
-    fprintf(stderr, "[CS-SEND] sending: %s\n", msg.c_str());
-    ssize_t w = write(fd, msg.c_str(), msg.size());
-    fprintf(stderr, "[CS-SEND] wrote %zd bytes\n", w);
-    fprintf(stderr, "[CS-SEND] shutting down write...\n");
+    write(fd, msg.c_str(), msg.size());
     shutdown(fd, SHUT_WR);
-    fprintf(stderr, "[CS-SEND] reading...\n");
 
-    char buf[4096] = {0};
-    int n = read(fd, buf, sizeof(buf) - 1);
-    fprintf(stderr, "[CS-SEND] read %d bytes: '%s'\n", n, buf);
+    std::string responseBuf;
+    char chunk[4096];
+    while (true) {
+        int n = (int)read(fd, chunk, sizeof(chunk));
+        if (n <= 0) break;
+        responseBuf.append(chunk, (size_t)n);
+    }
     close(fd);
 
-    if (responseOut && n > 0) {
-        responseOut->assign(buf, n);
-    }
+    if (responseOut) *responseOut = responseBuf;
 
     return true;
 }

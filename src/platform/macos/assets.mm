@@ -287,6 +287,32 @@ ItemData* AssetManager::CreateToyItem(bool isStick) {
     return data;
 }
 
+ItemData* AssetManager::CreateTestImage(int width, int height) {
+    ItemData* data = new ItemData();
+    data->type = ItemData::MEME;
+    data->w = width;
+    data->h = height;
+
+#ifdef __APPLE__
+    CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
+    CGContextRef ctx = CGBitmapContextCreate(nullptr, width, height, 8, 0, colorSpace, kCGImageAlphaPremultipliedFirst);
+    CGColorSpaceRelease(colorSpace);
+
+    if (ctx) {
+        // Solid red (survives P3→sRGB color conversion, unlike cyan which shifts R=0→~130)
+        CGContextSetRGBFillColor(ctx, 1.0f, 0.0f, 0.0f, 1.0f);
+        CGContextFillRect(ctx, CGRectMake(0, 0, width, height));
+        CGImageRef img = CGBitmapContextCreateImage(ctx);
+        if (img) {
+            data->image = img;  // owns the +1 retain from CreateImage
+        }
+        CGContextRelease(ctx);
+    }
+#endif
+
+    return data;
+}
+
 void AssetManager::Honk() {
     Audio_PlayHonk();
 }

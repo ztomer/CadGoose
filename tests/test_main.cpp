@@ -274,40 +274,5 @@ int main(int argc, char **argv) {
     return RUN_ALL_TESTS();
 }
 
-const std::string ASSET_ROOT_NAME = "Assets";
-std::filesystem::path ASSET_ROOT = "Assets";
-
-AssetManager g_assets;
-
-void AssetManager::Init() {}
-AssetManager::~AssetManager() {}
-ItemData* AssetManager::GetRandomMeme(int, int, float) {
-    ItemData* i = new ItemData();
-    i->type = ItemData::MEME;
-    i->w = 100; i->h = 100;
-    return i;
-}
-ItemData* AssetManager::GetRandomText() {
-    ItemData* i = new ItemData();
-    i->type = ItemData::TEXT;
-    i->w = 100; i->h = 100;
-    return i;
-}
-ItemData* AssetManager::CreateTextItem(const std::string& text) {
-    ItemData* i = new ItemData();
-    i->type = ItemData::TEXT;
-    i->w = 100; i->h = 100;
-    return i;
-}
-void AssetManager::Honk() {}
-void AssetManager::Pat() {}
-void AssetManager::Bite() {}
-void AssetManager::MudSquish() {}
-CGImageRef AssetManager::GetBehaviorImage(const std::string&) { return nullptr; }
-ItemData* AssetManager::CreateToyItem(bool isStick) {
-    ItemData* i = new ItemData();
-    i->type = ItemData::TOY;
-    i->w = isStick ? 32 : 20;
-    i->h = isStick ? 8 : 20;
-    return i;
-}
+// AssetManager global, ASSET_ROOT, ASSET_ROOT_NAME are defined in assets.mm.
+// No mock definitions here — they conflict with the real implementations.

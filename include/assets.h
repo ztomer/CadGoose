@@ -41,6 +41,7 @@ public:
     ItemData* GetRandomText();
     ItemData* CreateTextItem(const std::string& text);
     ItemData* CreateToyItem(bool isStick);
+    ItemData* CreateTestImage(int width, int height);
     void Honk();
     void Pat();
     void Bite();

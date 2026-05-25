@@ -493,7 +493,7 @@ void Goose::ForceWander(int w, int h) {
 
 void Goose::StartFetch(int w, int h, double time) {
   state = GooseState::FETCHING;
-  if (time > 0) fetchStartTime = time;
+  fetchStartTime = time; // allow 0 or -1 to suppress stale timeout
 
   int side = rng_util::RandRange(4);
   float edgeMargin = g_config.spawn.fetchEdgeMargin;

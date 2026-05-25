@@ -15,12 +15,16 @@ cd $HOME/Projects/CadGoose
 mkdir -p build && cd build && cmake .. -DCMAKE_BUILD_TYPE=Release && make -j$(sysctl -n hw.logicalcpu)
 ./build/CadGoose [--debug]
 ./build/CadGooseTests
-# Trail detection test (run from GUI terminal with CadGoose running):
-mkdir -p build/release && cd build/release && cmake ../.. -DCMAKE_BUILD_TYPE=Release && make trail_detection_test
-./build/release/trail_detection_test
+# Trail detection test (run from Ghostty — auto-hides windows):
+./tools/profiling/run_trail_test.sh
+# Fetch visibility soak test (run from Ghostty — repeats fetch cycles for up to 10m):
+./tools/profiling/run_soak_test.sh
+# Or directly from build directory (with CadGoose running):
+./build/trail_detection_test
+./build/soak_fetch_test
 ```
 
-## Project State (May 23, 2026)
+## Project State (May 24, 2026)
 
 - **773 tests, 102 suites** — 741 pass, 1 pre-existing failure (`LocalLLMTest.GenerateWithHighTemperatureDoesNotCrash` — FoundationModels timeout), 32 skipped (31 AX + 1 drag test)
 - **Leaf pile scaling fixed** — `actor_leafpile.mm` now applies `g_config.general.globalScale` to window size, leaf positions (`curPosPlanar`, `curPosZ`), and leaf ellipse dimensions. Meme images were already correctly scaled via `item_window.mm`. Window padding increased to 40px (`kKickScatterPad`) to prevent leaf clipping when kicked. 3 new unit tests added (`tests/common/test_leafpile_scaling.cpp`).
@@ -80,11 +84,17 @@ mkdir -p build/release && cd build/release && cmake ../.. -DCMAKE_BUILD_TYPE=Rel
 - **behavior.h split** — Split into 4 focused headers: `behavior_state.h` (29 LOC), `behavior_manager.h` (86 LOC), `behavior_registry.h` (107 LOC), `behavior_api.h`. 15 behavior state structs in individual files under `include/behaviors/states/`.
 - **Goose monolith deconstructed** — `Update()` split into `UpdatePhysics()`, `UpdateDetection()`, `UpdateAnimation()`, `UpdateDebug()`. Each focused on single responsibility.
 - **WorldContext** — Exists in `world.h` with all global state encapsulated: `geese`, `monitors`, `droppedItems`, `footprints`, `crumbs`, `leafPiles`, screen dimensions, cursor state.
-- **Trail detection test (v2)** — Rewritten with 4-frame temporal comparison and `SCScreenshotManager captureImageInRect` (ScreenCaptureKit). Algorithm: trail pixels match baseline (stale pre-drop content through ItemWindow transparent padding) for exactly one post-drop frame, then resolve. Saves trail mask PNG (red pixels) and overlay PNG to `/tmp/trail_test_frames/`. Links `ScreenCaptureKit.framework`. Exit code 10 = trail suspected.
+- **Trail detection test (v5)** — Multi-cycle red-pixel soak test via SCStream. Runs N fetch cycles, validates held-item visibility per cycle, tracks RSS/memory. Uses red test image (survives P3→sRGB, unlike cyan). `kRingSize=300` (reduced from 6000 to control test memory ~7.6GB). Per-cycle `wind=` field (frames in carry window), `BACK` message when goose faces away. 6/6 cycles visible after sublayer fix. Exit codes: 0=clean, 10=trail, 11=item not visible.
+- **Trace rect color switch** — Cyan→red. Cyan R=0→~130 in Display P3→sRGB conversion, failing detection. Red (255,0,0) survives.
+- **CALayer sublayer REMOVED** — `updateHeldItemLayers` and `heldItemLayers` deleted from `renderer.mm`. CoreGraphics `DrawHeldItem` now exclusively renders held item into backing store. Fixes ~3.7GB/cycle IOSurface leak AND intermittent held-item invisibility (6/6 cycles visible post-removal).
+- **`goose_facingBack` in status** — `app_actions.cpp` now reports `goose_dir` (heading angle) and `goose_facingBack` boolean in status command output. Verified the facingBack guard doesn't cause invisibility (item visible even during BACK segments).
+- **Trail findings documented** — See `docs/TRAIL_TEST_FINDINGS.md` for full investigation: B1 (held invisible) resolved by sublayer removal; B2 (double-rendering) = accumulated dropped items; B3 (CALayer leak) fixed; B4 (CadGoose memory) stable at ~985MB; B5 (trail FP from dropped items) pending.
 
-## Known Bugs (May 23, 2026)
+## Known Bugs (May 24, 2026)
 
 - **Config generator** — Works correctly for registry generation. GUI generation intentionally skipped (incompatible with `config_gui.mm` key-based lookup architecture).
 - **g_world.droppedItems** — 127 references across codebase. `DroppedItemActor` scaffold ready for future migration.
 - **Stale pointer risk in item_window.mm** — Mitigated by `IsItemValid()` check before every use + `std::list` pointer stability guarantees.
-- **Window trail on dropped item** — When goose drops a held item, the compositor composites stale goose-window backing store (showing held item at beak) through the ItemWindow's transparent padding for 1-2 frames. Deferred `orderFront` does not fix it — root cause is vsync-aligned compositor reusing previous frame's goose window content. Fix candidate: separate held-item overlay `NSView`/`CALayer` hideable per-frame without `drawRect:` vsync wait.
+- **Trail detection false positive** — Trail scan counts dropped-item-contaminated frames as "trails". Need to filter frames where previous-cycle dropped items are on screen.
+- **Test process memory ~7.2GB** — From ring buffer (300 × 25MB frames). Acceptable for short runs; not a CadGoose issue.
+- **Pre-existing: stale fetchStartTime timeout** — `app_actions.cpp:200` called `ForceFetch(type, w, h)` without `time` parameter (defaulted to `-1`). `StartFetch` skipped updating `fetchStartTime` because `if (time > 0)` guard failed. If a previous real fetch cycle had set `fetchStartTime` to an old value (>16s ago), the timeout in `goose_behaviors_interact.cpp:150` would fire on the next tick, resetting `forceItemFetch = -1` and switching state to WANDER. Fix: `StartFetch` now always sets `fetchStartTime = time` (even `-1`). Soak test: `soak_fetch_test` (repeated forced fetches with SCStream visibility check, up to 10m).

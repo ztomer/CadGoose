@@ -76,10 +76,8 @@ static void DrawLine(CGContextRef ctx, Vector2 a, Vector2 b, float width, float 
 @property (nonatomic, assign) int tickCount;
 @property (nonatomic, assign) BOOL needsRedraw;
 @property (nonatomic, strong) CADisplayLink* displayLink;
-@property (nonatomic, strong) NSMutableDictionary* heldItemLayers; // NSNumber(gooseId) -> CALayer
 - (void)handleKeyDown:(NSEvent*)event;
 - (void)onFrameRefresh:(CADisplayLink*)displayLink;
-- (void)updateHeldItemLayers;
 @end
 
 static BOOL s_hasPrimary = NO;
@@ -95,6 +93,7 @@ static BOOL s_hasPrimary = NO;
     if (self) {
         self.wantsLayer = YES;
         self.layer.backgroundColor = [[NSColor clearColor] CGColor];
+        self.layer.masksToBounds = NO;
 
         if (!s_hasPrimary) {
             self.isPrimary = YES;
@@ -107,7 +106,6 @@ static BOOL s_hasPrimary = NO;
         _tickCount = 0;
         _needsRedraw = NO;
         _displayLink = nil;
-        _heldItemLayers = [NSMutableDictionary dictionary];
     }
     return self;
 }
@@ -161,9 +159,11 @@ static BOOL s_hasPrimary = NO;
     g_time = self.currentTime;
 
     if (self.isPrimary) {
+        // Tick all actors (geese, toys, flowers, etc.)
         ActorManager::Instance().tickAll(g_world, dt, self.currentTime);
         ActorManager::Instance().cleanup();
 
+        // Update window positions for geese
         auto geese = ActorManager::Instance().getGeese();
         [[WindowManager shared] updateWindowPositionsForGeese:geese];
     }
@@ -188,83 +188,23 @@ static BOOL s_hasPrimary = NO;
     [[ItemWindowManager shared] syncWindows];
     if (!ActorManager::Instance().getDroppedItems().empty()) self.needsRedraw = YES;
 
+    auto geese = ActorManager::Instance().getGeese();
+    for (auto* g : geese) {
+        if (g->heldItem) {
+            self.needsRedraw = YES;
+            break;
+        }
+    }
+
     if (self.needsRedraw) {
         [self setNeedsDisplay:YES];
         self.needsRedraw = NO;
     }
 }
 
-- (void)setNeedsDisplay:(BOOL)flag {
-    [super setNeedsDisplay:flag];
-}
-
-- (void)updateHeldItemLayers {
-    NSScreen* windowScreen = self.window.screen ?: [NSScreen mainScreen];
-    float screenH = (float)windowScreen.frame.size.height;
-    NSRect winFrame = self.window.frame;
-    ScreenPoint screenTopLeft = {(float)winFrame.origin.x,
-                                  (float)winFrame.origin.y + (float)winFrame.size.height};
-    DevicePoint viewOriginDevice = CoordTransform::ScreenToDeviceMacOS(screenTopLeft, screenH);
-
-    auto geese = ActorManager::Instance().getGeese();
-    NSMutableSet* holdingIDs = [NSMutableSet set];
-
-    for (auto* g : geese) {
-        if (!g->heldItem) continue;
-
-        NSNumber* key = @(g->id);
-        [holdingIDs addObject:key];
-
-        CALayer* layer = self.heldItemLayers[key];
-        if (!layer) {
-            layer = [CALayer layer];
-            layer.contentsGravity = kCAGravityResize;
-            layer.anchorPoint = CGPointMake(1.0, 0.5);
-            [self.layer addSublayer:layer];
-            self.heldItemLayers[key] = layer;
-        }
-
-        float itemW = g->heldItem->w * g_config.general.globalScale;
-        float itemH = g->heldItem->h * g_config.general.globalScale;
-
-        layer.bounds = CGRectMake(0, 0, itemW, itemH);
-
-        Vector2 beak = g->GetBeakTipDevice();
-        CGPoint layerPos = CGPointMake(
-            beak.x - viewOriginDevice.x,
-            beak.y - viewOriginDevice.y);
-
-        [CATransaction begin];
-        [CATransaction setDisableActions:YES];
-        layer.contents = (__bridge id)g->heldItem->image;
-        layer.position = layerPos;
-        layer.affineTransform = CGAffineTransformMakeRotation(-g->dragRot);
-        [CATransaction commit];
-    }
-
-    // Remove layers for geese no longer holding an item
-    BOOL hadRemovals = NO;
-    for (NSNumber* key in [self.heldItemLayers allKeys]) {
-        if (![holdingIDs containsObject:key]) {
-            CALayer* layer = self.heldItemLayers[key];
-            [layer removeFromSuperlayer];
-            [self.heldItemLayers removeObjectForKey:key];
-            hadRemovals = YES;
-        }
-    }
-
-    if (hadRemovals) {
-        [CATransaction flush];
-    }
-}
-
 - (void)drawRect:(NSRect)dirtyRect {
     CGContextRef ctx = (CGContextRef)[[NSGraphicsContext currentContext] CGContext];
     if (!ctx) return;
-
-    // Update held item layers BEFORE clearing and rendering
-    // (sets up layer tree so held item is independent of double-buffered backing store)
-    [self updateHeldItemLayers];
 
     CGContextClearRect(ctx, self.bounds);
     CGContextSaveGState(ctx);
@@ -277,8 +217,6 @@ static BOOL s_hasPrimary = NO;
 
     CGContextTranslateCTM(ctx, -viewOriginDevice.x, -viewOriginDevice.y);
 
-    // Render all actors — DrawHeldItem is skipped on macOS
-    // (handled by updateHeldItemLayers above)
     CGRenderer renderer(ctx);
     ActorManager::Instance().renderAll(&renderer);
 
