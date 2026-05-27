@@ -16,6 +16,7 @@
 #ifdef __APPLE__
 #import <Foundation/Foundation.h>
 #import <AppKit/AppKit.h>
+#import "behavior_element_window.h"
 #include <CoreGraphics/CoreGraphics.h>
 #endif
 
@@ -325,5 +326,28 @@ void DrawDebugOverlay(CGContextRef ctx, const std::vector<Goose*>& geese) {
     CGContextSetLineWidth(ctx, 1);
     for (const auto* g : geese) {
         CGContextStrokeRect(ctx, CGRectMake(g->pos.x - kDebugOverlayBoxSize, g->pos.y - kDebugOverlayBoxSize, kDebugOverlayBoxSize * 2, kDebugOverlayBoxSize * 2));
+    }
+}
+
+void Goose_DestroyPerGooseWindow(Goose* g) {
+    if (!g) return;
+    if (g->m_perGooseWindow) {
+        void* winPtr = (__bridge_retained void*)(__bridge BehaviorElementWindow*)g->m_perGooseWindow;
+        void* keyPtr = (__bridge_retained void*)(__bridge NSNumber*)g->m_perGooseWindowKey;
+        g->m_perGooseWindow = nullptr;
+        g->m_perGooseWindowKey = nullptr;
+
+        dispatch_block_t cleanup = ^{
+            BehaviorElementWindow* win = (__bridge_transfer BehaviorElementWindow*)winPtr;
+            NSNumber* key = (__bridge_transfer NSNumber*)keyPtr;
+            [[BehaviorElementWindowManager shared] unregisterWindow:key];
+            [win closeAndRemove];
+        };
+
+        if ([NSThread isMainThread]) {
+            cleanup();
+        } else {
+            dispatch_sync(dispatch_get_main_queue(), cleanup);
+        }
     }
 }

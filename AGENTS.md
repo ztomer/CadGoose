@@ -15,6 +15,8 @@ cd /Users/ztomer/Projects/CadGoose
 mkdir -p build && cd build && cmake .. -DCMAKE_BUILD_TYPE=Release && make -j$(sysctl -n hw.logicalcpu)
 ./build/CadGoose [--debug]
 ./build/CadGooseTests
+# Multi-goose regression test (run from any terminal — no SCStream needed):
+./build/multi_goose_test
 # Trail detection test (run from Ghostty — auto-hides windows):
 ./tools/profiling/run_trail_test.sh
 # Fetch visibility soak test (run from Ghostty — repeats fetch cycles for up to 10m):
@@ -24,77 +26,66 @@ mkdir -p build && cd build && cmake .. -DCMAKE_BUILD_TYPE=Release && make -j$(sy
 ./build/soak_fetch_test
 ```
 
-## Project State (May 24, 2026)
+## Session Summary (May 26, 2026) — Afternoon
 
-- **773 tests, 102 suites** — 741 pass, 1 pre-existing failure (`LocalLLMTest.GenerateWithHighTemperatureDoesNotCrash` — FoundationModels timeout), 32 skipped (31 AX + 1 drag test)
-- **Leaf pile scaling fixed** — `actor_leafpile.mm` now applies `g_config.general.globalScale` to window size, leaf positions (`curPosPlanar`, `curPosZ`), and leaf ellipse dimensions. Meme images were already correctly scaled via `item_window.mm`. Window padding increased to 40px (`kKickScatterPad`) to prevent leaf clipping when kicked. 3 new unit tests added (`tests/common/test_leafpile_scaling.cpp`).
-- **Footprint/PomodoroBed effect registration fixed** — `effect_reg_footprint.mm` and `effect_reg_pomodorobed.mm` used hardcoded magic numbers (`1`, `5`) instead of actual `EffectType` enum values (`0`, `1`). Windows created with wrong type, so `drawRect` never matched. Fixed to use `EffectTypeFootprint` and `EffectTypePomodoroBed`. Removed unnecessary `(int)` casts from enum comparisons. 5 new unit tests added (`tests/common/test_footprint_registration.cpp`).
-- **Behavior toggle system fixed** — `BehaviorRegistry::TickAll` now detects enabled→disabled transitions (calls `cleanup()`) and disabled→enabled transitions (calls `init()`) at runtime. Previously behaviors would keep running after being disabled via the UI. 5 new unit tests added (`tests/common/test_behavior_toggle.cpp`).
-- **Pomodoro quiet during rest** — `triggerHonk` in `goose_behaviors_internal.cpp` now returns early when `goose.isResting` is true. Goose no longer honks while sleeping during pomodoro work phase. Timer resets on re-enable (handled by behavior toggle fix). 3 new unit tests added (`tests/common/test_pomodoro_quiet.cpp`).
-- **Actor System (R1)** — All world entities migrated to Actor pattern. `Actor` base class (`include/actor.h`) with `ActorManager` singleton. 9 actor types: `BallActor`, `ToyActor`, `FlowerActor`, `JailActor`, `PortalActor`, `BreadcrumbActor`, `LeafPileActor`, `Goose`, `DroppedItemActor`. Each actor has its own window, lifecycle (tick/render/cleanup), managed by `ActorManager`. `Goose` extends `Actor`. `renderer.mm` uses `ActorManager::tickAll()` and `ActorManager::renderAll()`. All `g_geese` iteration code migrated to `ActorManager::getGeese()`. `g_geese` retained for lifecycle management only (spawn, clear, config save/load).
-- **DroppedItemActor** — Created (`include/actor_dropped_item.h`, `src/common/actor_dropped_item.mm`). Passive actor for memes/text/toys on ground. Window managed by `ItemWindowManager::syncWindows`. `g_world.droppedItems` retained for compatibility (127 refs across codebase).
-- **EffectWindow Registration (R2)** — Each effect type self-registers via `EffectRegister()` with callbacks. `EffectWindowManager::syncWindows` is generic — iterates registrations instead of monolithic switch statements. Files: `include/effect_registration.h`, `src/platform/macos/effect_registration.mm`, `src/platform/macos/effect_reg_footprint.mm`, `src/platform/macos/effect_reg_pomodorobed.mm`. Only 2 effect types remain: `Footprint`, `PomodoroBed`. All other effects migrated to Actors. `effect_window.h` enum cleaned to only active types.
-- **EventBus** — Type-safe event bus (`include/event_bus.h`) for decoupled behavior signaling. 13 event types: `GooseHonked`, `GooseDamaged`, `ItemDropped`, `ItemEaten`, `GooseJailed`, `GooseFreed`, `PomodoroPhaseChanged`, `GooseStuck`, `CursorFastMove`, `ToySpawned`, `BallKicked`, `BreadcrumbDropped`, `GooseTeleported`. Thread-safe with `shared_mutex`, unique subscription IDs, unsubscribe support. 22 unit tests. Integrated into `behavior_anger.cpp` — anger subscribes to `GooseHonkedEvent` and `CursorFastMoveEvent`.
-- **ItemRenderer strategy** — `ItemRenderer` base class + `MemeItemRenderer`, `TextItemRenderer`, `ToyItemRenderer`. Eliminates type-specific branching in `goose_drawing.mm`. `DrawHeld()` for goose-held items, `DrawDropped()` for ground items (returns bool for close button visibility — toys return `false`). Factory via `ItemRenderer::ForType(ItemData::Type)`.
-- **IRenderer full migration** — All 14 behaviors now use `IRenderer` interface instead of direct CoreGraphics calls. `CGRenderer` wraps `CGContextRef` with `DrawEllipse`, `DrawEllipseOutline`, `DrawLine`, `DrawRect`, `DrawRectOutline`, `DrawPolygon`, `DrawImage`, `DrawText`, `SaveState/RestoreState`, `Translate/Scale/Rotate`, `SetAlpha`, `nativeContext()`. Added `DrawPolygon()` for toy stick rendering.
-- **CairoRenderer** — Linux `IRenderer` implementation (`include/linux/cairo_renderer.h`) using Cairo + Pango. Full parity with `CGRenderer`: all primitives, transforms, state management, alpha tracking, text via Pango. Header-only, guarded with `#ifndef __APPLE__`.
-- **Coordinate system** — Typed coordinate wrappers (`DevicePoint`, `WorldPoint`, `ScreenPoint`, `ViewPoint`) in `coordinate_system.h`. Prevents coordinate space mixing bugs. All goose pos/target/vel/item.pos are DEVICE coords. Rig parts are WORLD coords. Explicit transforms via `CoordTransform`. Single hit test logic in `HitTest` struct.
-- **Behavior rendering scaling** — `renderer.mm` applies `CGContextScaleCTM` transform around `goose->pos` before calling `RenderPass`. All behaviors use raw pixel values (no manual scaling). Goose-relative positions use raw rig coords (`goose->rig.neckHead`). Global device coords (toys, ball, breadcrumbs, portals, jails, flowers, bed) converted to transform space: `drawPos = goose->pos + (devicePos - goose->pos) / scale`. Single unified rendering approach matching main goose drawing.
-- **Item drag controller** — `ItemDragController` class extracts shared hit-test + drag logic from `renderer.mm`. Both AppKit responder chain and NSEvent monitor handlers delegate to it. Single source of truth for drag operations.
-- **Timer utility** — `Timer` struct in `timer.h` with `Start()`, `Elapsed()`, `IsExpired()`, `Reset()`, `Remaining()`, `Progress()`. Header-only, zero overhead. 10 unit tests.
-- **Ball state** — All ball physics state migrated from 8 static globals to `BallState` via `BehaviorStateManager`. Multi-goose support restored. Shared `CGImageRef` assets remain static (acceptable).
-- **Footprint windows** — Muddy footprints use independent `EffectWindow` windows (`EffectTypeFootprint`) instead of goose renderer. Each footprint gets transparent click-through window that fades over lifetime and auto-cleans on expiry. Persists on screen independently of goose movement/respawn. `EffectWindowManager::syncWindows` creates/updates/removes footprint windows.
-- **Headless rendering tests** — 22 tests covering hit-test at different scales, close button hit-test, coordinate transforms, item coords, screen bounds, and drag controller behavior. No AppKit dependencies, runs in CI.
-- **Config code generation** — YAML schema + Python generator for registry entries and GUI rows. Expanded from 7 to 15 sections (added Spawn, Rig, Snatch, Mud, Honk, Step, Item, Render). 80+ new fields covered with proper min/max/step ranges. Generator in `tools/generate_config.py`.
-- **Behavior toggle system** — All 19 behaviors use `BEHAVIOR_DEF*` macros (`behavior_registry.h`) that enforce `enabledPtr` == `configPtr` pointing to the same config bool. Prevents the toggle-desync bug where behaviors kept running after user disabled them. Four macro variants: `BEHAVIOR_DEF` (standard), `BEHAVIOR_DEF_STARTER` (starter behavior), `BEHAVIOR_DEF_GROUND` (ground-pass rendering), `BEHAVIOR_DEF_CUSTOM` (custom cleanup/priority/renderOnGround/isStarter).
-- **Config key consistency** — GUI `addRow:` calls, config registry, and behavior `configPtr` all use the same registry keys (e.g., `ball_enabled`, not `behaviors.fun.ball`). Regression tests in `test_gui_config.mm` verify: every GUI key exists in registry with correct pointer, every registry toggle has a GUI row, no duplicate pointers.
-- **Preferences panel** — Three tabs (Behaviors/Appearance/AI). Behaviors tab: 19 toggles in 5 categories (FUN/JOY/CONTROL/INFO/SYSTEMS), detail panel with sliders/hotkey fields per behavior. All toggles functional and verified via AX accessibility tests.
-- **AI chat** — HTTP-only LLM client (`ai_http_client.mm`) with function calling (MCP tools as OpenAI tools), `think...>` block stripping for Gemma/Qwen, connection health check on chat window open, 4-stage fallback chain (LLM→tools→MCP bridge→keywords). Foundation provider routes to local CoreML LLM. Model switching reflected in chat via `refreshConnection()`. AI code split into 5 files: `ai_http_client.mm`, `ai_local_llm_adapter.mm`, `ai_model_profiles.mm`, `ai_prompt_builder.mm`, `ai_think_block_stripper.mm`.
-- **MCP server** — 12 tools, 5 resource URIs, dual transport: Unix socket (`/tmp/desktop-goose-mcp.sock`) + HTTP (port 31072), JSON-RPC 2.0 (see [docs/MCP.md](docs/MCP.md))
-- **AI→MCP bridge** — natural language routing of 8 command categories, first-word prefix matching (see [docs/MCP.md](docs/MCP.md))
-- **Fallback chain** — LLM errors displayed to user; MCP bridge still works when LLM is down
-- **AI Text Memes** — Two-pool system: **AI pool** (LLM-replenished) + **file pool** (always available). `Dequeue()` prefers AI, falls back to file. Async generator builds prompts from evil level + active behaviors + color mode + random seed. Temperature 0-2 (default 1.2). Cooldown = response_time × 1.5 (min 2s). Dedup via `RingBuffer<size_t, 500>`. Auto-save to `ConfigDir/TextMemes/`. Queue max 5 pending. Foundation provider falls back to file texts when no local model.
-- **Local CoreML LLM (`local_llm*.mm`)** — Direct `MLModel` integration, discovers Apple Intelligence FM GenerativeModels assets at system paths, `ConfigDir/Models/`, or custom search paths from config. Tokenizer from model package. Autoregressive top-K (K=40), 48 token limit, 512 context. State machine: Unavailable → Loading → Ready → Error. Thread-safe result queue. Split into tokenizer/model/inference modules.
-- **Text generation backends** — Priority: (1) local CoreML LLM → (2) HTTP provider (Osaurus/Ollama/custom) → (3) file texts. 11 API contract tests (no model required).
-- **AI text paper canvas** — AI texts render with cream paper `#F5F0E8` + sepia stroke vs yellow for file texts. `"AI"` label. `ItemData::isAIGenerated` flag.
-- **Chewing animation** — When goose eats a breadcrumb, beak splits into upper/lower halves oscillating open/close at 10 Hz for 0.4s with decaying amplitude. `Goose::isChewing` + `chewingStartTime` fields.
-- **Breadcrumbs** — `Hold RightShift` to drop crumbs at cursor, expire after 10s. Migrated to `BreadcrumbActor` with own window. `Crumbs` struct moved to `world.h` with global `g_crumbs` RingBuffer. Goose eats on proximity (`footSize × 2`), plays `Bite()`.
-- **Pomodoro** — work=rest (green, goose walks to bottom-right corner then sleeps with bed + ZZZ animation), break=manic (red "ATK!"). Timer text uses `CGContextSetTextMatrix` Y-flip. `bedPosition` initialized to bottom-right in `init()`.
-- **Toys fetch** — Goose picks up toys into `Goose::heldItem` (new `ItemData::TOY` type), transitions to `RETURNING` state, drops at random location. `CreateToyItem(bool isStick)` creates stick/ball CGImage. Toys managed by `ToyActor` with own window.
-- **Fetch loop** — `fetchCooldown=4s`, `fetchEdgeMargin=80`, CHASE_CURSOR timeout at `fetchCooldown*2`. Detailed [FETCH] logging for debugging.
-- **Hotkey system** — `hotkey.h`/`.cpp` (22 tests). All behaviors use semantic hotkey strings. Toggle persistence via config registry.
-- **Ring buffers** — `ring_buffer.h` with `ConstIter`. Applied to breadcrumbs (200), jails (10), footprints (500), seen hashes (500), goose names (10). AI chat history capped at 100.
-- **Memory profile** — Physical ~460-490 MB (IOSurface 193.5 MB at 3456×2234×8 triple-buffered + CoreAnimation 229-293 MB). RSS stable 82-146 MB with **zero growth** over 15-min soak. No Metal textures — all CoreGraphics.
-- **macOS bundle** — `.app` crashes on macOS 26.5 with ad-hoc signing. Root cause: ad-hoc signed binaries rejected by MTLCompilerService XPC. Two trigger paths: `MLComputeUnitsAll` in CoreML + `wantsLayer=YES` on CALayer-backed views. Fix requires Apple Developer signing + hardened runtime + `com.apple.security.cs.allow-jit` entitlement. Use `./build/CadGoose` directly.
-- **Velocity** — `steerSeekForce=4.0`, `maxForce=1000` produce ~800-1000 px/s² acceleration; walk ~0.25s, run ~0.48s.
-- **Stuck detection** — Goose tracks position every frame. If moves < 5px over 3s → picks new target. Logs [STUCK] events.
-- **Portal persistence** — Portals persist across goose spawns. Migrated to `PortalActor` with own window. No longer cleared on goose init.
-- **Mute option** — Apple B&W icons (NSImageNameTouchBarAudioOutputMuteTemplate/NSImageNameTouchBarAudioInputTemplate) in menubar after Honk! option.
-- **Geese names persistence** — Saved to config file as TOML array, loaded on startup. RingBuffer<std::string, 10>.
-- **AI prompts** — All prompts defined in `Assets/prompts.toml` for easy configuration. Evil levels, text meme system prompt, chat fallback responses, local LLM search paths.
-- **Removed features** — Petting, weekend mode, nighttime mode, banish, idle preening, AI typing sounds, custom behavior toggle, interactive drops puddles, Sonic mode, Custom Affirmations.
-- **Added features** — Toys enabled toggle, bed assets from Toys mod for pomodoro rest, Avoidance, Boredom Sigh, Window Peeking, Custom Affirmations, Interactive Drops (flowers only).
-- **Code quality** — All files under 500 LOC. No magic numbers (extracted to named constants). DRY violations eliminated. Prompts in TOML. Local LLM search paths configurable. `BEHAVIOR_DEF*` macros prevent toggle-desync bugs. Typed coordinate system prevents space mixing bugs. All behaviors use `IRenderer` interface for platform-agnostic rendering.
-- **Actor-per-object architecture** — ALL world entities now use Actor pattern: goose (`Goose`), ball (`BallActor`), toys (`ToyActor`), flowers (`FlowerActor`), jails (`JailActor`), portals (`PortalActor`), breadcrumbs (`BreadcrumbActor`), leaf piles (`LeafPileActor`), dropped items (`DroppedItemActor`). Each actor has own window, lifecycle, managed by `ActorManager`. Zero behaviors manage entity state directly.
-- **EffectWindow types** — 2 remaining effect types: `Footprint`, `PomodoroBed`. Manager uses circular buffer (max 50 windows). Other effects migrated to Actors.
-- **Ball cursor hit-test** — Ball window now sized to ball's visual radius (`ball->radius * 2`), cursor kick detection uses circle hit-test (`distToCursor < ball->radius`) instead of footSize-based margin.
-- **Autumn leaves interaction** — Goose kick proximity for leaf piles uses `g_config.render.footSize` instead of hardcoded `4.0f`, matching the goose's actual size.
-- **NSWindow crash fix** — `releasedWhenClosed = NO` set on all dictionary-managed windows (`item_window.mm`, `effect_window.mm`) to prevent double-release when windows are removed from dictionary before system deallocation.
-- **item_window.mm refactored** — `IsItemValid()` helper extracted (eliminated 7 repetitions), `GetMouseDeviceCoords()` helper extracted (eliminated 4 repetitions). Named constants: `kItemDragLogPath`, `kCloseButtonPadding`. ~110 LOC reduction (17%).
-- **behavior.h split** — Split into 4 focused headers: `behavior_state.h` (29 LOC), `behavior_manager.h` (86 LOC), `behavior_registry.h` (107 LOC), `behavior_api.h`. 15 behavior state structs in individual files under `include/behaviors/states/`.
-- **Goose monolith deconstructed** — `Update()` split into `UpdatePhysics()`, `UpdateDetection()`, `UpdateAnimation()`, `UpdateDebug()`. Each focused on single responsibility.
-- **WorldContext** — Exists in `world.h` with all global state encapsulated: `geese`, `monitors`, `droppedItems`, `footprints`, `crumbs`, `leafPiles`, screen dimensions, cursor state.
-- **Trail detection test (v5)** — Multi-cycle red-pixel soak test via SCStream. Runs N fetch cycles, validates held-item visibility per cycle, tracks RSS/memory. Uses red test image (survives P3→sRGB, unlike cyan). `kRingSize=300` (reduced from 6000 to control test memory ~7.6GB). Per-cycle `wind=` field (frames in carry window), `BACK` message when goose faces away. 6/6 cycles visible after sublayer fix. Exit codes: 0=clean, 10=trail, 11=item not visible.
-- **Trace rect color switch** — Cyan→red. Cyan R=0→~130 in Display P3→sRGB conversion, failing detection. Red (255,0,0) survives.
-- **CALayer sublayer REMOVED** — `updateHeldItemLayers` and `heldItemLayers` deleted from `renderer.mm`. CoreGraphics `DrawHeldItem` now exclusively renders held item into backing store. Fixes ~3.7GB/cycle IOSurface leak AND intermittent held-item invisibility (6/6 cycles visible post-removal).
-- **`goose_facingBack` in status** — `app_actions.cpp` now reports `goose_dir` (heading angle) and `goose_facingBack` boolean in status command output. Verified the facingBack guard doesn't cause invisibility (item visible even during BACK segments).
-- **Trail findings documented** — See `docs/TRAIL_TEST_FINDINGS.md` for full investigation: B1 (held invisible) resolved by sublayer removal; B2 (double-rendering) = accumulated dropped items; B3 (CALayer leak) fixed; B4 (CadGoose memory) stable at ~985MB; B5 (trail FP from dropped items) pending.
+### Multi-Goose Regression Tests
+- **Integration test** (`test_multi_goose.mm`): Command-socket-only. Spawns 3 geese, verifies goose_count=3, each goose completes a forced fetch cycle via `fetch <idx> test`. Exit 0 = all pass. Duration: ~8-20s. Verified 3/3 passes.
+- **GTest** (`GooseRender.DrawThreeGeese_AllVisible`): 3 geese at different positions/directions render into single CGBitmapContext. Each body visible at rig coords. Head positions differ by direction.
+- **`fetch <idx>` backward-compatible**: First arg parsed as optional numeric goose index (0-1). Non-numeric → existing type-only parsing. `chicken_dinner` → backward compat test for arbitrary non-numeric first arg.
 
-## Known Bugs (May 24, 2026)
+### Background-Thread AppKit Crash Fix
+- `Goose_DestroyPerGooseWindow()` called from command socket server thread crashed with `EXC_BREAKPOINT "Must only be used from the main thread"`. Fixed via `dispatch_sync(dispatch_get_main_queue(), ...)` with `__bridge_retained`/`__bridge_transfer` ownership transfers.
+
+### Phase 3 Final Cleanup — renderer.h/renderer.mm Removed
+- `src/platform/macos/renderer.h` (Cocoa import placeholder) and `renderer.mm` (2-line comment placeholder) deleted.
+- `#include "renderer.h"` removed from `main.mm`, `tick_manager.mm`, `test_renderer.mm` (all already import Cocoa directly).
+- `CMakeLists.txt`: `renderer.mm` removed from both `CadGoose` and `CadGooseTests` targets.
+- `WindowManager` stub confirmed: no remaining callers or references. The 3 active window managers (`ItemWindowManager`, `EffectWindowManager`, `BehaviorElementWindowManager`) are all necessary and unrelated.
+
+### Verification
+- 744 non-AX tests pass (no regressions from 741)
+- 19 GooseRender tests pass (including new DrawThreeGeese_AllVisible)
+- Multi-goose integration test: 3/3 geese pass
+- Build zero warnings on both targets
+
+## Project State (May 26, 2026)
+
+- **764 tests, 104 suites** — 744 pass, 2 pre-existing failures (`Integration.Goose_ReturningItem`, `Integration.Goose_DropItem` — AssetManager needs Assets/ in build dir), 6 MCPIntegrationTest failures (need running MCP server), 32 skipped (31 AX + 1 drag), 1 LocalLLMTest skipped (no model)
+- **CGBitmapContextCreate works on macOS 26.5** — Y-flip formula `pixelRow = imageHeight - 1 - cgY`. Default byte order = `A,R,G,B` (R at byte +1). 19 rendering unit tests pass.
+- **Full-screen overlay eliminated**: No more ~1GB backing store. Every entity uses small per-actor windows.
+- **TickManager owns rendering**: `ActorManager::renderAll(nullptr)` called from `TickManager::tick`. Per-goose window creation/update loop in `tick_manager.mm`. Global NSEvent monitor for 'f' honk.
+- **Current rendering architecture**:
+  ```
+  TickManager::tick (CADisplayLink, 60fps)
+    ├─ ActorManager::tickAll + cleanup
+    ├─ ActorManager::renderAll(nullptr)
+    └─ Per-goose BehaviorElementWindow update loop
+
+  PerGooseWindow::drawRect: (~600×600, centered on goose->pos)
+    └─ translate → Goose::draw(&r)
+  ```
+- **g_cutoverMode = true**: `Goose::render()` returns immediately. Only `Goose::draw()` executes (per-goose window path).
+- **Multi-goose test**: Command-socket-only, no SCStream needed. Verifies goose_count + per-goose fetch cycle. `clear_dropped` command isolates fetch cycles. `fetch <idx> type` targets specific goose.
+- **renderer.h/renderer.mm deleted**: Placeholder files finally removed after Phase 3 cleanup. No replacement needed — Cocoa imports are direct.
+- **WindowManager stub removed**: No remaining callers. 3 active managers: `ItemWindowManager`, `EffectWindowManager`, `BehaviorElementWindowManager`.
+
+## Known Bugs (May 26, 2026)
 
 - **Config generator** — Works correctly for registry generation. GUI generation intentionally skipped (incompatible with `config_gui.mm` key-based lookup architecture).
 - **g_world.droppedItems** — 127 references across codebase. `DroppedItemActor` scaffold ready for future migration.
 - **Stale pointer risk in item_window.mm** — Mitigated by `IsItemValid()` check before every use + `std::list` pointer stability guarantees.
 - **Trail detection false positive** — Trail scan counts dropped-item-contaminated frames as "trails". Need to filter frames where previous-cycle dropped items are on screen.
 - **Test process memory ~7.2GB** — From ring buffer (300 × 25MB frames). Acceptable for short runs; not a CadGoose issue.
-- **Pre-existing: stale fetchStartTime timeout** — `app_actions.cpp:200` called `ForceFetch(type, w, h)` without `time` parameter (defaulted to `-1`). `StartFetch` skipped updating `fetchStartTime` because `if (time > 0)` guard failed. If a previous real fetch cycle had set `fetchStartTime` to an old value (>16s ago), the timeout in `goose_behaviors_interact.cpp:150` would fire on the next tick, resetting `forceItemFetch = -1` and switching state to WANDER. Fix: `StartFetch` now always sets `fetchStartTime = time` (even `-1`). Soak test: `soak_fetch_test` (repeated forced fetches with SCStream visibility check, up to 10m).
+- **Integration.Goose_ReturningItem and Goose_DropItem fail from build dir** — AssetManager (`assets.mm`) loads images from `./Assets/` relative to CWD. Tests run from `build/` which has no `Assets/` directory. Fix: copy `Assets/` to build dir, or use CMake `WORKING_DIRECTORY` property.
+- **MCPIntegrationTest failures** — Tests require running MCP server. Run with `./CadGoose` running in background.
+
+## Next Steps
+
+### Remaining
+- Run trail test: verify 6/6 cycles visible in per-goose window architecture.
+- Run soak test after full-screen overlay removal: verify memory drops from ~985MB to ~150-200MB.
+- Run the AX accessibility tests (checking per-goose windows exist).
+
+### Baby Stalin Character System (deferred)
+- See `docs/PLAN.md` for full design: `CharacterSkin` interface, `SkinRegistry`, `BabyStalinSkin` with programmatic drawing.
+- Not blocking any current work.

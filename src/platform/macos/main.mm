@@ -16,8 +16,11 @@
 #include "app_actions.h"
 #include "app_cli.h"
 #include "window.h"
-#include "renderer.h"
 #include "audio.h"
+#import "tick_manager.h"
+#import "behavior_element_window.h"
+#include "goose.h"
+#include "actor.h"
 
 // --- Menu bar icon constants ---
 static constexpr float kMenuBarIconSize = 16;
@@ -302,42 +305,9 @@ bool Config_IsSystemDarkTheme();
     g_backendManager.Init();
     DEBUG_LOG("Backend: %s", g_backendManager.GetActiveBackend()->Name().c_str());
 
-    DEBUG_LOG("Creating windows for %lu screens", (unsigned long)[NSScreen screens].count);
-
-    WindowManager* wm = [WindowManager shared];
-    DEBUG_LOG("WindowManager instance: %p", wm);
-
-    [wm createWindowsForAllScreens];
-    DEBUG_LOG("createWindowsForAllScreens completed");
-
-    NSArray* windows = [wm windows];
-    DEBUG_LOG("Windows created: %lu", (unsigned long)windows.count);
-
-    if (windows.count == 0) {
-        LOG("ERROR: No windows created!");
-    }
-
-    for (GooseWindow* window in windows) {
-        DEBUG_LOG("Processing window: %p", window);
-        DEBUG_LOG("  frame: %s", NSStringFromRect(window.frame).UTF8String);
-        DEBUG_LOG("  level: %ld", (long)window.level);
-        DEBUG_LOG("  opaque: %d", window.opaque);
-        DEBUG_LOG("  ignoresMouseEvents: %d", window.ignoresMouseEvents);
-
-        GooseView* view = window.gooseView;
-        DEBUG_LOG("  gooseView: %p", view);
-        DEBUG_LOG("  gooseView.frame: %s", NSStringFromRect(view.frame).UTF8String);
-
-        [view startAnimation];
-        DEBUG_LOG("  startAnimation done");
-
-        [window orderFront:nil];
-        DEBUG_LOG("  orderFront done");
-
-        DEBUG_LOG("Window setup complete for window %p", window);
-    }
-
-    LOG("Window setup complete, count: %lu", (unsigned long)windows.count);
+    // Phase 3: No full-screen windows. Per-goose windows managed by TickManager.
+    [[TickManager shared] start];
+    LOG("TickManager started");
 
     std::string error;
     // Wrapper to add macOS-specific socket commands
@@ -421,13 +391,15 @@ extern "C" void Presence_UpdateStatusFromBehavior(const char* status) {
 
 extern "C" void Presence_SetGooseWindowVisible(bool visible) {
     dispatch_async(dispatch_get_main_queue(), ^{
-        WindowManager* wm = [WindowManager shared];
-        NSArray<GooseWindow*>* windows = [wm windows];
-        for (GooseWindow* window in windows) {
-            if (visible) {
-                [window orderFront:nil];
-            } else {
-                [window orderOut:nil];
+        auto geese = ActorManager::Instance().getGeese();
+        for (auto* g : geese) {
+            if (g && g->m_perGooseWindow) {
+                BehaviorElementWindow* win = (__bridge BehaviorElementWindow*)g->m_perGooseWindow;
+                if (visible) {
+                    [win orderFront:nil];
+                } else {
+                    [win orderOut:nil];
+                }
             }
         }
     });

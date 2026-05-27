@@ -479,8 +479,12 @@ struct Config {
 };
 
 extern Config g_config;
+
 extern double g_time;
+
 extern std::vector<ConfigOption> g_configRegistry;
+
+extern bool g_cutoverMode;
 void OnConfigChange();
 
 std::filesystem::path ConfigDirPath();

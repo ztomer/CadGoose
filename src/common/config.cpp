@@ -11,7 +11,8 @@ namespace fs = std::filesystem;
 Config g_config;
 double g_time = 0.0;
 std::vector<ConfigOption> g_configRegistry;
-std::unordered_map<std::string, ConfigOption*> g_configLookup;
+
+bool g_cutoverMode = true;std::unordered_map<std::string, ConfigOption*> g_configLookup;
 
 static std::string ToLower(std::string s) {
     std::transform(s.begin(), s.end(), s.begin(), [](unsigned char c) { return std::tolower(c); });

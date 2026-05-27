@@ -370,7 +370,7 @@ if(APPLE)
             src/common/behaviors/local_llm_inference.mm
             src/platform/macos/window.mm
             src/platform/macos/cursor_backend.mm
-            src/platform/macos/renderer.mm
+            src/platform/macos/tick_manager.mm
             src/platform/macos/item_drag_controller.mm
             src/platform/macos/audio.mm
             src/platform/macos/command_socket.cpp
@@ -378,6 +378,7 @@ if(APPLE)
             tests/platform/macos/test_gui_accessibility.mm
             tests/platform/macos/test_dragging_integration.mm
             tests/platform/macos/test_headless_rendering.mm
+            tests/platform/macos/test_goose_rendering.mm
             tests/platform/macos/test_window_trail.mm
         )
     else()
@@ -401,7 +402,7 @@ if(APPLE)
             src/common/world_utils.mm
             src/platform/macos/window.mm
             src/platform/macos/cursor_backend.mm 
-            src/platform/macos/renderer.mm
+            src/platform/macos/tick_manager.mm
             src/platform/macos/item_drag_controller.mm
             src/platform/macos/item_window.mm
             src/platform/macos/item_window_test.mm
@@ -511,6 +512,28 @@ if(APPLE)
         Threads::Threads
     )
     set_target_properties(soak_fetch_test PROPERTIES
+        COMPILE_FLAGS "-fobjc-arc"
+    )
+
+    add_executable(multi_goose_test
+        tests/platform/macos/test_multi_goose.mm
+        src/platform/macos/command_socket.cpp
+    )
+    target_enable_asan(multi_goose_test)
+    target_include_directories(multi_goose_test PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/include
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/platform/macos
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/common
+    )
+    target_link_libraries(multi_goose_test PRIVATE
+        ${COCOA_LIBRARY}
+        ${COREGRAPHICS_LIBRARY}
+        ${SCREEN_CAPTURE_KIT_LIBRARY}
+        ${CORE_VIDEO_LIBRARY}
+        ${CORE_MEDIA_LIBRARY}
+        Threads::Threads
+    )
+    set_target_properties(multi_goose_test PROPERTIES
         COMPILE_FLAGS "-fobjc-arc"
     )
 endif()

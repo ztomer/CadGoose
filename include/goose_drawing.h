@@ -19,6 +19,9 @@ void DrawFootprints(CGContextRef ctx, const RingBuffer<Footprint, kMaxFootprints
 void DrawDroppedItem(CGContextRef ctx, const DroppedItem& item, float viewHeight);
 void DrawDebugOverlay(CGContextRef ctx, const std::vector<Goose*>& geese);
 
+// Per-goose window cleanup (needs ObjC, defined in goose_drawing.mm)
+void Goose_DestroyPerGooseWindow(Goose* g);
+
 // Anger tint - defined in behavior_anger.cpp
 float Anger_GetLevel(int gooseId);
 

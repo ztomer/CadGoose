@@ -8,6 +8,7 @@
 #include <fstream>
 #include <iomanip>
 #include <sstream>
+#include <cstdlib>
 
 #if defined(__linux__)
 #include "glib.h"
@@ -199,15 +200,32 @@ std::string AppActions_HandleCommand(const std::vector<std::string>& args) {
         auto geese = ActorManager::Instance().getGeese();
         if (geese.empty()) return "error no goose\n";
         int type = 0;
+        int gooseIdx = 0;
         if (args.size() > 1) {
-            if (args[1] == "text") type = 1;
-            else if (args[1] == "meme") type = 0;
-            else if (args[1] == "test") type = 2;
+            char* end = nullptr;
+            long idx = std::strtol(args[1].c_str(), &end, 10);
+            if (end && *end == '\0' && idx >= 0 && idx < (long)geese.size()) {
+                gooseIdx = (int)idx;
+                if (args.size() > 2) {
+                    if (args[2] == "text") type = 1;
+                    else if (args[2] == "meme") type = 0;
+                    else if (args[2] == "test") type = 2;
+                }
+            } else {
+                if (args[1] == "text") type = 1;
+                else if (args[1] == "meme") type = 0;
+                else if (args[1] == "test") type = 2;
+            }
         }
-        fprintf(stderr, "[CLI] fetch type=%d geese.size=%zu\n", type, geese.size());
-        geese.front()->ForceFetch(type, g_world.screenWidth, g_world.screenHeight);
-        fprintf(stderr, "[CLI] after ForceFetch state=%d heldItem=%p\n", (int)geese.front()->state, (void*)geese.front()->heldItem);
-        return "ok force_fetch type=" + std::to_string(type) + "\n";
+        fprintf(stderr, "[CLI] fetch gooseIdx=%d type=%d geese.size=%zu\n", gooseIdx, type, geese.size());
+        geese[gooseIdx]->ForceFetch(type, g_world.screenWidth, g_world.screenHeight);
+        fprintf(stderr, "[CLI] after ForceFetch g%d state=%d heldItem=%p\n", geese[gooseIdx]->id, (int)geese[gooseIdx]->state, (void*)geese[gooseIdx]->heldItem);
+        return "ok force_fetch goose=" + std::to_string(gooseIdx) + " type=" + std::to_string(type) + "\n";
+    }
+
+    if (command == "clear_dropped") {
+        ActorManager::Instance().removeAllDroppedItems();
+        return "ok\n";
     }
 
     if (command == "enable") {

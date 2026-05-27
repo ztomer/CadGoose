@@ -1,6 +1,5 @@
 #include <gtest/gtest.h>
 #import <Cocoa/Cocoa.h>
-#include "renderer.h"
 #include <cstdio>
 #include <cstdlib>
 
@@ -15,7 +14,6 @@ static std::string run_tesseract(const char* imagePath) {
         result += buf;
     }
     pclose(f);
-    // Remove trailing newlines
     while (!result.empty() && (result.back() == '\n' || result.back() == '\r')) {
         result.pop_back();
     }
@@ -29,67 +27,7 @@ TEST(Rendering, YAxisFlip) {
     EXPECT_FLOAT_EQ(flippedY, 880.0f);
 }
 
-TEST(Rendering, IsFlippedReturnsYes) {
-    [GooseView resetPrimaryGuard];
-    GooseView* view = [[GooseView alloc] initWithFrame:NSMakeRect(0, 0, 100, 100)];
-    EXPECT_TRUE([view isFlipped]);
-}
-
-TEST(Rendering, PrimaryGuardFirstViewPrimary) {
-    [GooseView resetPrimaryGuard];
-    GooseView* v1 = [[GooseView alloc] initWithFrame:NSMakeRect(0, 0, 100, 100)];
-    EXPECT_TRUE(v1.isPrimary);
-}
-
-TEST(Rendering, PrimaryGuardSecondViewSecondary) {
-    [GooseView resetPrimaryGuard];
-    GooseView* v1 = [[GooseView alloc] initWithFrame:NSMakeRect(0, 0, 100, 100)];
-    EXPECT_TRUE(v1.isPrimary);
-
-    GooseView* v2 = [[GooseView alloc] initWithFrame:NSMakeRect(0, 0, 100, 100)];
-    EXPECT_FALSE(v2.isPrimary);
-}
-
-TEST(Rendering, PrimaryGuardThirdViewAlsoSecondary) {
-    [GooseView resetPrimaryGuard];
-    GooseView* v1 = [[GooseView alloc] initWithFrame:NSMakeRect(0, 0, 100, 100)];
-    EXPECT_TRUE(v1.isPrimary);
-
-    GooseView* v2 = [[GooseView alloc] initWithFrame:NSMakeRect(0, 0, 100, 100)];
-    EXPECT_FALSE(v2.isPrimary);
-
-    GooseView* v3 = [[GooseView alloc] initWithFrame:NSMakeRect(0, 0, 100, 100)];
-    EXPECT_FALSE(v3.isPrimary);
-}
-
-TEST(Rendering, PrimaryGuardResetWorks) {
-    [GooseView resetPrimaryGuard];
-    GooseView* v1 = [[GooseView alloc] initWithFrame:NSMakeRect(0, 0, 100, 100)];
-    EXPECT_TRUE(v1.isPrimary);
-
-    [GooseView resetPrimaryGuard];
-    GooseView* v2 = [[GooseView alloc] initWithFrame:NSMakeRect(0, 0, 100, 100)];
-    EXPECT_TRUE(v2.isPrimary);
-}
-
-TEST(Rendering, GooseViewInitialization) {
-    NSRect frame = NSMakeRect(0, 0, 1920, 1080);
-    GooseView* view = [[GooseView alloc] initWithFrame:frame];
-    EXPECT_NE(view, nil);
-    EXPECT_TRUE(view.wantsLayer);
-    EXPECT_EQ(view.bounds.size.width, 1920);
-    EXPECT_EQ(view.bounds.size.height, 1080);
-}
-
-TEST(Rendering, ResolutionAndDPISimulation) {
-    NSRect lowRes = NSMakeRect(0, 0, 800, 600);
-    GooseView* viewLow = [[GooseView alloc] initWithFrame:lowRes];
-    EXPECT_EQ(viewLow.bounds.size.width, 800);
-    
-    NSRect highRes = NSMakeRect(0, 0, 3840, 2160);
-    GooseView* viewHigh = [[GooseView alloc] initWithFrame:highRes];
-    EXPECT_EQ(viewHigh.bounds.size.width, 3840);
-}
+// GooseView tests removed in Phase 3 (full-screen overlay eliminated).
 
 TEST(Rendering, TextMirroringFix) {
     // Test that NOT using Y-flip preserves text orientation
