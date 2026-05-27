@@ -147,13 +147,22 @@ public:
     bool behaviorsEnabled = true;
     bool isResting = false;
 
+#ifdef __APPLE__
+    // Per-goose window for Phase 1 dual-write (__bridge BehaviorElementWindow*)
+    void* m_perGooseWindow = nullptr;
+    void* m_perGooseWindowKey = nullptr;
+    float m_perGooseWindowSize = 600.0f;
+#endif
+
     // Actor interface
     const char* type() const override { return "goose"; }
     void tick(WorldContext& ctx, double dt, double time) override;
     void render(IRenderer* renderer) override;
+    void draw(IRenderer* renderer);
     bool isAlive() const override { return true; }
 
     Goose(int _id, const std::string& _name, int screenW, int screenH);
+    ~Goose() override;
 
     CursorAction Update(double dt, double time, int scrW, int scrH, const CursorState& cursor);
     void ForceFetch(int type, int w, int h, double time = -1.0);
@@ -165,6 +174,9 @@ public:
 #endif
 
     Vector2 GetBeakTipDevice();
+    Vector2 GetFootHome(float angleOffset);
+    void SolveFeet(double time);
+    void UpdateRig();
 
     void StartSnatch(double time, const Vector2& cursorPos);
     void EndSnatch(double time, int w, int h);
@@ -188,16 +200,9 @@ private:
 #ifdef __linux__
     void DrawHeldItem(cairo_t* cr);
     void DrawEyes(cairo_t* cr, Vector2 fwd);
-    Vector2 GetFootHome(float angleOffset);
-    void SolveFeet(double time);
-    void UpdateRig();
     void DrawEllipse(cairo_t* cr, Vector2 p, int rx, int ry, float r, float g, float b, float a=1.0);
     void DrawLine(cairo_t* cr, Vector2 a, Vector2 b, float w, const float color[]);
     void DrawLine(cairo_t* cr, Vector2 a, Vector2 b, float w, float r, float g, float bl);
-#else
-    Vector2 GetFootHome(float angleOffset);
-    void SolveFeet(double time);
-    void UpdateRig();
 #endif
 };
 

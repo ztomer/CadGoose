@@ -1,0 +1,160 @@
+#import "tick_manager.h"
+#import "window.h"
+#import "item_window.h"
+#import "effect_window.h"
+#import "behavior_element_window.h"
+#import "world.h"
+#import "config.h"
+#import "actor.h"
+#import "random_util.h"
+#import "world_utils.h"
+#import "goose.h"
+#import "goose_drawing.h"
+#import "cg_renderer.h"
+
+void Honcker_Honk(Goose* goose, double time);
+
+#import <AppKit/AppKit.h>
+
+static constexpr int kWorldCleanupTickInterval = 60;
+static constexpr int kLeafSpawnProbabilityDenominator = 10800;
+static constexpr float kDisplayLinkMinFps = 30;
+static constexpr float kDisplayLinkMaxFps = 60;
+static constexpr float kDisplayLinkDefaultFps = 60;
+
+@interface TickManager ()
+@property (nonatomic, assign) double currentTime;
+@property (nonatomic, assign) int tickCount;
+@property (nonatomic, strong) CADisplayLink* displayLink;
+@property (nonatomic, strong) id keyMonitor;
+@end
+
+@implementation TickManager
+
++ (instancetype)shared {
+    static TickManager* instance = nil;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        instance = [[TickManager alloc] init];
+    });
+    return instance;
+}
+
+- (instancetype)init {
+    self = [super init];
+    if (self) {
+        _currentTime = 0.0;
+        _tickCount = 0;
+        _displayLink = nil;
+        _keyMonitor = nil;
+    }
+    return self;
+}
+
+- (void)dealloc {
+    if (_keyMonitor) {
+        [NSEvent removeMonitor:_keyMonitor];
+    }
+}
+
+- (void)setupGlobalKeyMonitor {
+    if (self.keyMonitor) return;
+    __weak TickManager* weakSelf = self;
+    self.keyMonitor = [NSEvent addGlobalMonitorForEventsMatchingMask:NSEventMaskKeyDown
+        handler:^(NSEvent* event) {
+            unichar key = [[event characters] characterAtIndex:0];
+            if (key == 'f' || key == 'F') {
+                for (auto* g : ActorManager::Instance().getGeese()) {
+                    Honcker_Honk(g, weakSelf.currentTime);
+                }
+            }
+        }];
+}
+
+- (void)start {
+    [self stop];
+    [self setupGlobalKeyMonitor];
+    NSScreen* screen = [NSScreen mainScreen];
+    self.displayLink = [screen displayLinkWithTarget:self selector:@selector(onFrameRefresh:)];
+    if (@available(macOS 14.0, *)) {
+        self.displayLink.preferredFrameRateRange = CAFrameRateRangeMake(kDisplayLinkMinFps, kDisplayLinkMaxFps, kDisplayLinkDefaultFps);
+    }
+    [self.displayLink addToRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
+}
+
+- (void)stop {
+    [self.displayLink invalidate];
+    self.displayLink = nil;
+}
+
+- (BOOL)isRunning {
+    return self.displayLink != nil;
+}
+
+- (void)onFrameRefresh:(CADisplayLink*)displayLink {
+    [self tick];
+}
+
+- (void)tick {
+    double dt = g_config.render.frameDt;
+    self.currentTime += dt;
+    self.tickCount++;
+
+    g_time = self.currentTime;
+
+    // Tick all actors
+    ActorManager::Instance().tickAll(g_world, dt, self.currentTime);
+    ActorManager::Instance().cleanup();
+
+    // Phase 3: actors create/update their windows via renderAll
+    ActorManager::Instance().renderAll(nullptr);
+
+    // Phase 3: per-goose window position updates (no full-screen overlay)
+    for (auto* g : ActorManager::Instance().getGeese()) {
+        if (!g) continue;
+        float winSize = CalculateGooseWindowSize(g);
+        float winX = g->pos.x - winSize / 2.0f;
+        float winY = g->pos.y - winSize / 2.0f;
+        if (!g->m_perGooseWindow) {
+            Goose* captured = g;
+            BehaviorElementWindow* win = [[BehaviorElementWindow alloc]
+                initWithDrawBlock:^(CGContextRef cgCtx) {
+                    float ox = captured->pos.x - captured->m_perGooseWindowSize / 2.0f;
+                    float oy = captured->pos.y - captured->m_perGooseWindowSize / 2.0f;
+                    CGContextTranslateCTM(cgCtx, -ox, -oy);
+                    CGRenderer r(cgCtx);
+                    captured->draw(&r);
+                }
+                deviceX:winX deviceY:winY width:winSize height:winSize];
+            g->m_perGooseWindow = (__bridge_retained void*)win;
+            g->m_perGooseWindowKey = (__bridge_retained void*)[[BehaviorElementWindowManager shared] registerWindow:win];
+            g->m_perGooseWindowSize = winSize;
+        } else {
+            BehaviorElementWindow* win = (__bridge BehaviorElementWindow*)g->m_perGooseWindow;
+            [win updatePosition:winX y:winY width:winSize height:winSize];
+            [(BehaviorElementContentView*)win.contentView setNeedsDisplay:YES];
+            g->m_perGooseWindowSize = winSize;
+        }
+    }
+    [[ItemWindowManager shared] showPendingWindows];
+
+    if (self.tickCount % kWorldCleanupTickInterval == 0) {
+        World_CleanupExpired(self.currentTime);
+    }
+
+    auto geese = ActorManager::Instance().getGeese();
+
+    if (g_config.behaviors.fun.autumnLeaves) {
+        if (rng_util::RandRange(kLeafSpawnProbabilityDenominator) == 0) {
+            World_SpawnRandomLeafPile(g_world.screenWidth, g_world.screenHeight, self.currentTime);
+        }
+        World_TickLeafPiles(self.currentTime, dt,
+                            geese.empty() ? nullptr : geese.front());
+    }
+
+    [[EffectWindowManager shared] syncWindows];
+
+    [[ItemWindowManager shared] syncWindows];
+}
+
+@end

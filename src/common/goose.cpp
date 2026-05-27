@@ -152,6 +152,12 @@ Goose::Goose(int id_, const std::string &name_, int screenW, int screenH)
   PickNewTarget(screenW, screenH);
 }
 
+Goose::~Goose() {
+#ifdef __APPLE__
+    Goose_DestroyPerGooseWindow(this);
+#endif
+}
+
 Vector2 Goose::GetBeakTipDevice() {
   Vector2 rawFwd = Vector2::FromAngleDegrees(dir);
   Vector2 fwd{rawFwd.x * ISO_SCALE.x, rawFwd.y * ISO_SCALE.y};
@@ -583,6 +589,11 @@ void Goose::tick(WorldContext& world, double dt, double time) {
 }
 
 void Goose::render(IRenderer* renderer) {
+    if (g_cutoverMode) return;
+    draw(renderer);
+}
+
+void Goose::draw(IRenderer* renderer) {
 #ifdef __APPLE__
     CGContextRef ctx = (CGContextRef)renderer->nativeContext();
     if (!ctx) return;

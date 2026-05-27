@@ -1,294 +1,36 @@
 #import "window.h"
-#import "renderer.h"
 #import "coordinate_system.h"
-#import <CoreGraphics/CoreGraphics.h>
-#include <list>
 #include "goose.h"
-#include "goose_drawing.h"
 #include "config.h"
-
-#if defined(__APPLE__)
-extern bool g_debugMode;
-#define DEBUG_LOG(fmt, ...) do { \
-    if (g_debugMode) { \
-        time_t now = time(nullptr); \
-        struct tm* tm = localtime(&now); \
-        char ts[32]; strftime(ts, sizeof(ts), "%H:%M:%S", tm); \
-        fprintf(stderr, "[%s] DEBUG: " fmt "\n", ts, ##__VA_ARGS__); \
-    } \
-} while(0)
-#define LOG(fmt, ...) fprintf(stderr, "[INFO] " fmt "\n", ##__VA_ARGS__)
-#endif
+#include "goose_math.h"
+#include "world_coord.h"
 
 static constexpr float kGooseWindowSize = 600.0f;
-static constexpr float kHeldItemPadding = 40.0f; // extra padding for rotated held items
-static constexpr float kHeldItemBeakOffset = 5.0f; // from item_renderer.mm
+static constexpr float kHeldItemPadding = 40.0f;
+static constexpr float kHeldItemBeakOffset = 5.0f;
 
-// Calculate the bounding box size of a rotated rectangle
 static DevicePoint RotatedBoundsSize(float width, float height, float rotation) {
     float cosA = std::abs(std::cos(rotation));
     float sinA = std::abs(std::sin(rotation));
     return {width * cosA + height * sinA, width * sinA + height * cosA};
 }
 
-// Calculate the required window size to contain the goose + held item
-static float CalculateGooseWindowSize(const Goose* goose) {
+float CalculateGooseWindowSize(const Goose* goose) {
     float baseSize = kGooseWindowSize;
     if (goose && goose->heldItem) {
         float scale = g_config.general.globalScale;
         float itemW = goose->heldItem->w * scale;
         float itemH = goose->heldItem->h * scale;
 
-        // Distance from goose center to beak tip (approximate)
         Vector2 neckHeadDev = WorldCoord::RigNeckHead(*goose).toVector2();
         float distToBeak = Vector2::Distance({goose->pos.x, goose->pos.y}, neckHeadDev);
 
-        // Item extends behind the beak by itemW + beak offset
         float itemBehindBeak = itemW + kHeldItemBeakOffset;
-
-        // Item half-height extends above/below beak
-        float itemHalfH = itemH * 0.5f;
-
-        // Rotated item extent (worst case)
         DevicePoint rotatedSize = RotatedBoundsSize(itemW, itemH, goose->dragRot);
         float maxItemExtent = std::max(rotatedSize.x, rotatedSize.y) * 0.5f;
 
-        // Total extent from goose center: dist to beak + item behind beak + padding
         float totalExtent = distToBeak + itemBehindBeak + maxItemExtent + kHeldItemPadding;
-
-        // Window must be large enough to contain this extent in all directions
         baseSize = std::max(baseSize, totalExtent * 2.0f);
     }
     return baseSize;
 }
-
-@implementation GooseWindow
-
-- (instancetype)initWithScreen:(NSScreen*)screen {
-    DEBUG_LOG("GooseWindow initWithScreen START");
-
-    // Make the window cover the entire screen. Originally each window was a
-    // 600x600 box centered on the front goose, which meant additional geese
-    // (rendered into the same CGContext at their true device coords) were
-    // clipped against the small window's bounds and were invisible. A
-    // screen-sized window keeps the math simple and lets every goose draw
-    // inside it. Click-through (`ignoresMouseEvents = YES`) means the full
-    // screen window doesn't steal interaction.
-    NSRect rect = [screen frame];
-    self = [super initWithContentRect:rect
-                            styleMask:NSWindowStyleMaskBorderless
-                              backing:NSBackingStoreBuffered
-                                defer:NO
-                               screen:screen];
-    DEBUG_LOG("GooseWindow super init done, self=%p", self);
-
-    if (self) {
-        self.level = NSStatusWindowLevel + 1; // Above item windows (NSStatusWindowLevel)
-        DEBUG_LOG("  level=%ld", (long)self.level);
-
-        self.collectionBehavior = NSWindowCollectionBehaviorCanJoinAllSpaces |
-                                   NSWindowCollectionBehaviorFullScreenAuxiliary |
-                                   NSWindowCollectionBehaviorStationary;
-        DEBUG_LOG("  collectionBehavior set");
-
-        self.backgroundColor = [NSColor clearColor];
-        self.opaque = NO;
-        self.hasShadow = NO;
-        self.ignoresMouseEvents = YES;
-        self.acceptsMouseMovedEvents = NO;
-        self.collectionBehavior |= NSWindowCollectionBehaviorIgnoresCycle;
-
-        DEBUG_LOG("  window props set: opaque=%d, ignoresMouse=%d", self.opaque, self.ignoresMouseEvents);
-
-        // Local-coord rect for the contentView (origin at 0, size of screen).
-        NSRect contentRect = NSMakeRect(0, 0, rect.size.width, rect.size.height);
-        self.gooseView = [[GooseView alloc] initWithFrame:contentRect];
-        DEBUG_LOG("  gooseView created: %p", self.gooseView);
-
-        self.contentView = self.gooseView;
-        DEBUG_LOG("  contentView set");
-    } else {
-        LOG("ERROR: GooseWindow init returned nil!");
-    }
-    DEBUG_LOG("GooseWindow initWithScreen END");
-    return self;
-}
-
-- (void)centerOnDevicePoint:(DevicePoint)devicePt {
-    NSScreen* windowScreen = self.screen ?: [NSScreen mainScreen];
-    float screenH = (float)windowScreen.frame.size.height;
-
-    ScreenPoint screenPt = CoordTransform::DeviceToScreenMacOS(devicePt, screenH);
-
-    NSRect frame = self.frame;
-    NSPoint newOrigin = NSMakePoint(screenPt.x - frame.size.width / 2.0, screenPt.y - frame.size.height / 2.0);
-
-    // Clamp to screen bounds
-    NSRect screenFrame = windowScreen.frame;
-    newOrigin.x = MAX(screenFrame.origin.x, MIN(newOrigin.x, screenFrame.origin.x + screenFrame.size.width - frame.size.width));
-    newOrigin.y = MAX(screenFrame.origin.y, MIN(newOrigin.y, screenFrame.origin.y + screenFrame.size.height - frame.size.height));
-
-    // Only move if position changed significantly
-    if (std::abs(frame.origin.x - newOrigin.x) < 2.0f && std::abs(frame.origin.y - newOrigin.y) < 2.0f) {
-        return;
-    }
-
-    [self setFrameOrigin:newOrigin];
-}
-
-- (void)updateSizeForGoose:(const Goose*)goose {
-    float newSize = CalculateGooseWindowSize(goose);
-    NSRect frame = self.frame;
-    
-    // Only resize if size changed significantly
-    if (std::abs(frame.size.width - newSize) < 2.0f && std::abs(frame.size.height - newSize) < 2.0f) {
-        return;
-    }
-    
-    // Keep window centered on current position while resizing
-    NSPoint center = NSMakePoint(frame.origin.x + frame.size.width / 2.0, frame.origin.y + frame.size.height / 2.0);
-    NSRect newFrame = NSMakeRect(center.x - newSize / 2.0, center.y - newSize / 2.0, newSize, newSize);
-    
-    [self setFrame:newFrame display:YES];
-    [self.gooseView setFrame:NSMakeRect(0, 0, newSize, newSize)];
-}
-
-- (BOOL)canBecomeKeyWindow { return NO; }
-- (BOOL)canBecomeMainWindow { return NO; }
-
-@end
-
-@interface WindowManager ()
-@property (nonatomic, strong) NSMutableArray<GooseWindow*>* windows;
-@end
-
-@implementation WindowManager
-
-+ (instancetype)shared {
-    static WindowManager* instance = nil;
-    static dispatch_once_t onceToken;
-    dispatch_once(&onceToken, ^{
-        instance = [[WindowManager alloc] init];
-    });
-    return instance;
-}
-
-- (instancetype)init {
-    self = [super init];
-    if (self) {
-        _windows = [NSMutableArray array];
-        [[NSNotificationCenter defaultCenter] addObserver:self
-                                                 selector:@selector(screenParametersChanged:)
-                                                     name:NSApplicationDidChangeScreenParametersNotification
-                                                   object:nil];
-    }
-    return self;
-}
-
-- (void)dealloc {
-    [[NSNotificationCenter defaultCenter] removeObserver:self];
-}
-
-- (void)screenParametersChanged:(NSNotification*)notification {
-    DEBUG_LOG("Screen parameters changed, re-evaluating windows...");
-    for (GooseWindow* w in _windows) {
-        [w close];
-    }
-    [_windows removeAllObjects];
-    [self createWindowsForAllScreens];
-    for (GooseWindow* w in _windows) {
-        [w.gooseView startAnimation];
-        [w orderFront:nil];
-    }
-}
-
-- (void)createWindowsForAllScreens {
-    for (NSScreen* screen in NSScreen.screens) {
-        [self createWindowForScreen:screen];
-    }
-}
-
-- (void)createWindowForScreen:(NSScreen*)screen {
-    GooseWindow* window = [[GooseWindow alloc] initWithScreen:screen];
-    [_windows addObject:window];
-}
-
-- (void)updateWindowPositionsForGeese:(const std::vector<Goose*>&)geese {
-    // The goose windows are screen-sized and stationary now; we only need to
-    // invalidate the *rects* around each goose that actually moved. Calling
-    // setNeedsDisplay:YES on a 4K screen-sized view at 60Hz was burning
-    // ~40% CPU repainting empty pixels every frame.
-    //
-    // Track the last position drawn per goose per window. If a goose moved
-    // since the last frame, we invalidate the union of its prev + current
-    // sprite rect (so the trail behind the old pos clears). If nothing
-    // moved, we skip setNeedsDisplay entirely and the OS keeps the prior
-    // pixels.
-    if (geese.empty()) return;
-
-    // Per-goose-id -> last device point. NSValue boxes DevicePoint via
-    // CGPoint storage since DevicePoint is layout-compatible with two floats.
-    static NSMutableDictionary<NSNumber*, NSValue*>* s_lastPositions = nil;
-    if (!s_lastPositions) s_lastPositions = [NSMutableDictionary dictionary];
-
-    constexpr float kSpriteHalfExtent = 90.0f; // goose sprite + nametag + hat fits in ~180px
-    constexpr float kMoveThreshold    = 0.5f;
-
-    for (GooseWindow* window in self.windows) {
-        NSView* view = window.gooseView;
-        // Window's content view is in device coords (the GooseView's CTM is
-        // translated by -viewOriginDevice on each drawRect). We can pass
-        // device-coord rects directly to setNeedsDisplayInRect.
-        bool anyMoved = false;
-        for (const Goose* g : geese) {
-            if (!g) continue;
-            NSNumber* key = @(g->id);
-            NSValue* prev = s_lastPositions[key];
-            CGPoint prevPt = prev ? [prev pointValue] : CGPointMake(NAN, NAN);
-            CGPoint curPt  = CGPointMake(g->pos.x, g->pos.y);
-            if (std::isnan(prevPt.x) ||
-                std::abs(prevPt.x - curPt.x) >= kMoveThreshold ||
-                std::abs(prevPt.y - curPt.y) >= kMoveThreshold) {
-                anyMoved = true;
-                if (!std::isnan(prevPt.x)) {
-                    [view setNeedsDisplayInRect:NSMakeRect(prevPt.x - kSpriteHalfExtent,
-                                                            prevPt.y - kSpriteHalfExtent,
-                                                            kSpriteHalfExtent * 2,
-                                                            kSpriteHalfExtent * 2)];
-                }
-                [view setNeedsDisplayInRect:NSMakeRect(curPt.x - kSpriteHalfExtent,
-                                                        curPt.y - kSpriteHalfExtent,
-                                                        kSpriteHalfExtent * 2,
-                                                        kSpriteHalfExtent * 2)];
-                s_lastPositions[key] = [NSValue valueWithPoint:curPt];
-            }
-        }
-        (void)anyMoved;
-    }
-}
-
-- (void)updateWindowForScreen:(NSScreen*)screen {
-    for (GooseWindow* window in self.windows) {
-        if (window.screen == screen) {
-            NSRect frame = [screen frame];
-            [window setFrame:frame display:YES];
-            [window.gooseView setFrame:NSMakeRect(0, 0, frame.size.width, frame.size.height)];
-            break;
-        }
-    }
-}
-
-- (GooseWindow*)windowForScreen:(NSScreen*)screen {
-    for (GooseWindow* window in self.windows) {
-        if (window.screen == screen) {
-            return window;
-        }
-    }
-    return nil;
-}
-
-- (NSArray<GooseWindow*>*)windows {
-    return _windows;
-}
-
-@end
