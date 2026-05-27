@@ -143,7 +143,7 @@ static constexpr float kEffectWindowMinSize = 40.0f;
 
         self.backgroundColor = [NSColor clearColor];
         self.ignoresMouseEvents = YES; // Always click-through
-        self.level = NSStatusWindowLevel;
+        self.level = NSStatusWindowLevel - 15; // Lowest layer — ground effects
         self.hasShadow = NO;
         self.releasedWhenClosed = NO; // Lifetime managed by EffectWindowManager dictionary
         self.collectionBehavior = NSWindowCollectionBehaviorCanJoinAllSpaces |

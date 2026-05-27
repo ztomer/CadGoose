@@ -103,6 +103,7 @@ void ToyActor::render(IRenderer* renderer) {
             }
             deviceX:winX deviceY:winY width:winSize height:winSize]);
         BehaviorElementWindow* newWin = (__bridge BehaviorElementWindow*)m_window;
+        newWin.level = NSStatusWindowLevel + 3; // Interactive layer — above ball, below goose
         m_windowKey = (void*)CFBridgingRetain([[BehaviorElementWindowManager shared] registerWindow:newWin]);
     } else {
         BehaviorElementWindow* win = (__bridge BehaviorElementWindow*)m_window;

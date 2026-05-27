@@ -104,6 +104,7 @@ void FlowerActor::render(IRenderer* renderer) {
             }
             deviceX:winX deviceY:winY width:winSize height:winSize]);
         BehaviorElementWindow* newWin = (__bridge BehaviorElementWindow*)m_window;
+        newWin.level = NSStatusWindowLevel - 10; // Ground layer — above leaves, below decorations
         m_windowKey = (void*)CFBridgingRetain([[BehaviorElementWindowManager shared] registerWindow:newWin]);
     } else {
         BehaviorElementWindow* win = (__bridge BehaviorElementWindow*)m_window;

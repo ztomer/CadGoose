@@ -90,7 +90,7 @@ static void BELog(const char* fmt, ...) {
         [self setOneShot:YES];
         self.ignoresMouseEvents = YES;
         self.acceptsMouseMovedEvents = NO;
-        self.level = NSStatusWindowLevel; // Below goose window
+        self.level = NSStatusWindowLevel; // Default mid-layer; goose +5, leaves -5, footprints -10
         self.hasShadow = NO;
         self.releasedWhenClosed = NO;
         self.collectionBehavior = NSWindowCollectionBehaviorCanJoinAllSpaces |
