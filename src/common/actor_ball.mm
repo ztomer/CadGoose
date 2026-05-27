@@ -164,6 +164,7 @@ void BallActor::render(IRenderer* renderer) {
                 }
             }
             deviceX:winX deviceY:winY width:winW height:winH];
+        newWin.level = NSStatusWindowLevel + 2; // Interactive layer — above memes, below goose
         m_window = (__bridge_retained void*)newWin;
         m_windowKey = (__bridge_retained void*)[[BehaviorElementWindowManager shared] registerWindow:newWin];
     } else {

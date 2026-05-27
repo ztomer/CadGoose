@@ -92,6 +92,7 @@ void BreadcrumbActor::render(IRenderer* renderer) {
             }
             deviceX:winX deviceY:winY width:winSize height:winSize]);
         BehaviorElementWindow* newWin = (__bridge BehaviorElementWindow*)m_window;
+        newWin.level = NSStatusWindowLevel - 5; // Decoration layer — above ground, below memes
         m_windowKey = (void*)CFBridgingRetain([[BehaviorElementWindowManager shared] registerWindow:newWin]);
     } else {
         BehaviorElementWindow* win = (__bridge BehaviorElementWindow*)m_window;

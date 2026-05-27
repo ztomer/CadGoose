@@ -126,6 +126,7 @@ static constexpr float kDisplayLinkDefaultFps = 60;
                     captured->draw(&r);
                 }
                 deviceX:winX deviceY:winY width:winSize height:winSize];
+            win.level = NSStatusWindowLevel + 5; // Above memes and all other actors
             g->m_perGooseWindow = (__bridge_retained void*)win;
             g->m_perGooseWindowKey = (__bridge_retained void*)[[BehaviorElementWindowManager shared] registerWindow:win];
             g->m_perGooseWindowSize = winSize;
