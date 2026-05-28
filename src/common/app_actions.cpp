@@ -31,9 +31,8 @@ Goose* AppActions_SpawnGoose(const std::string& requestedName) {
         }
     }
 
-    bool stalinMode = g_config.general.appearanceMode == APPEARANCE_STALIN;
 #if defined(__APPLE__)
-    if (stalinMode) {
+    if (g_config.general.appearanceMode == APPEARANCE_STALIN) {
         Goose* goose = new BabyStalinActor(g_world.nextId++, name, g_world.screenWidth, g_world.screenHeight);
         ActorManager::Instance().add(goose);
         BehaviorRegistry::Instance().InitAll(goose);
@@ -50,6 +49,7 @@ Goose* AppActions_SpawnGoose(const std::string& requestedName) {
     return goose;
 }
 
+#ifdef __APPLE__
 Goose* AppActions_SpawnBabyStalin(const std::string& requestedName) {
     std::string name = requestedName;
     if (name.empty()) {
@@ -61,6 +61,7 @@ Goose* AppActions_SpawnBabyStalin(const std::string& requestedName) {
     BehaviorRegistry::Instance().InitAll(actor);
     return actor;
 }
+#endif
 
 void AppActions_EnsureInitialGoose() {
     if (!ActorManager::Instance().getGeese().empty()) return;

@@ -26,7 +26,7 @@ mkdir -p build && cd build && cmake .. -DCMAKE_BUILD_TYPE=Release && make -j$(sy
 ./build/soak_fetch_test
 ```
 
-## Session Summary (May 27, 2026) — Gulag Audio + Menubar Icon + Audio Fix
+## Session Summary (May 27, 2026) — Gulag Audio + Menubar Icon + AI Stalin Mode + Linux Fix
 
 ### Gulag Audio for BabyStalinActor
 - **Gulag MP3 replaced**: Downloaded from Wikimedia Commons (`Ru-Gulag.ogg`), trimmed to first word only (~1.15s, "ГУЛаг") via ffmpeg silence detection, converted to 44.1kHz stereo 64kbps MP3 (10KB).
@@ -39,6 +39,19 @@ mkdir -p build && cd build && cmake .. -DCMAKE_BUILD_TYPE=Release && make -j$(sy
 ### Stalin Mode Menubar Icon
 - **Status bar icon changes in Stalin mode**: Shows ☭ (hammer and sickle, U+262D) instead of 🍁 (dark/Canada) or 🪿 (light/default).
 - **Dynamic update on mode switch**: `UpdateStatusBarIcon()` C function called from both `setupMenubar` (launch) and `modeChanged:` (GUI mode switch).
+
+### AI Stalin Mode — Honker & Chat
+- **Honcker behavior** calls `goose->onHonk()` instead of `g_assets.Honk()`, so BabyStalin plays Gulag sound via F key.
+- **AI chat system prompt** replaces HONK→GULAG, Goose→Comrade in Stalin mode. Fallback responses use `s_applyStalinMode()` for string replacement.
+- **Chat UI** uses Stalin-mode text: "GULAG!" greeting, "Comrade:" markers, window title "Chat with Comrade X ☭".
+
+### Linux Build Fixes
+- **`onHonk()` moved out of `__APPLE__` guard** in `goose.h` — virtual method was inside `#ifdef __APPLE__` but called from common code (`goose_behaviors_internal.cpp`), causing Linux compile error
+- **`AppActions_SpawnBabyStalin` guarded with `#ifdef __APPLE__`** — function body and declaration now macOS-only; BabyStalinActor constructor only exists in `.mm` files not compiled on Linux
+- **`stalinMode` variable removed from non-`__APPLE__` path** in `app_actions.cpp` — was unused on Linux
+
+### Multi-Goose Test Extended
+- **Mixed goose types**: `multi_goose_test` now spawns 2 regular geese ("Alpha", "Beta") + 1 BabyStalin ("Stalin") using `spawn_baby_stalin` command. Each completes a forced fetch cycle. Verifies BabyStalin is fully functional through the command socket.
 
 ### Build & Tests
 - 4 BabyStalin tests pass, 744 non-AX tests pass (no regressions)
@@ -66,7 +79,7 @@ mkdir -p build && cd build && cmake .. -DCMAKE_BUILD_TYPE=Release && make -j$(sy
 - Multi-goose integration test: 3/3 geese pass
 - Build zero warnings on both targets
 
-## Project State (May 27, 2026)
+## Project State (May 27, 2026, evening)
 
 - **764 tests, 104 suites** — 744 pass, 2 pre-existing failures (`Integration.Goose_ReturningItem`, `Integration.Goose_DropItem` — AssetManager needs Assets/ in build dir), 6 MCPIntegrationTest failures (need running MCP server), 32 skipped (31 AX + 1 drag), 1 LocalLLMTest skipped (no model)
 - **CGBitmapContextCreate works on macOS 26.5** — Y-flip formula `pixelRow = imageHeight - 1 - cgY`. Default byte order = `A,R,G,B` (R at byte +1). 19 rendering unit tests pass.
@@ -106,7 +119,14 @@ mkdir -p build && cd build && cmake .. -DCMAKE_BUILD_TYPE=Release && make -j$(sy
 - Run soak test after full-screen overlay removal: verify memory drops from ~985MB to ~150-200MB.
 - Run the AX accessibility tests (checking per-goose windows exist).
 
+### Release
+- CI release infrastructure exists (`.github/workflows/build_and_release.yml`) but untested. Creates `.dmg` (macOS) and `.tar.zst` (Linux).
+- Verify CI pipeline works end-to-end: push a tag, check release artifacts.
+- Consider adding: `make dist` CMake target, `CadGoose --version` flag, version header.
+
 ### Baby Stalin Character System (deferred)
 - See `docs/PLAN.md` for full design: `CharacterSkin` interface, `SkinRegistry`, `BabyStalinSkin` with programmatic drawing.
 - Not blocking any current work.
 - ~~Gulag audio~~ ✅ (wired to replace honk sound for BabyStalinActor)
+- ~~Honk F key~~ ✅ (Honcker dispatches through `onHonk()` virtual)
+- ~~AI Chat~~ ✅ (Stalin-mode system prompt replacement + fallback string replacement)

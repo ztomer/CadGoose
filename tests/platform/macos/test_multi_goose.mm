@@ -1,7 +1,7 @@
 // test_multi_goose.mm
-// Multi-goose regression test: spawns 3 geese, verifies all functional via command socket.
+// Multi-goose regression test: spawns mixed geese, verifies all functional via command socket.
 //
-// Spawns geese "Alpha", "Beta", "Gamma". Verifies:
+// Spawns 2 regular geese ("Alpha", "Beta") + 1 BabyStalin ("Stalin"). Verifies:
 //   1. goose_count=3 in status
 //   2. Each goose can complete a forced fetch cycle (fetch → carry → drop)
 //
@@ -26,7 +26,17 @@
 
 static const double kCycleTimeoutMs = 25000.0;
 static const int kNumGeese = 3;
-static const char* kGooseNames[kNumGeese] = {"Alpha", "Beta", "Gamma"};
+
+struct GooseSpec {
+    const char* name;
+    const char* command; // "spawn" or "spawn_baby_stalin"
+};
+
+static const GooseSpec kGooseSpecs[kNumGeese] = {
+    {"Alpha",  "spawn"},
+    {"Beta",   "spawn"},
+    {"Stalin", "spawn_baby_stalin"},
+};
 
 static double GetNowMs() {
     return std::chrono::duration<double, std::milli>(
@@ -55,8 +65,9 @@ int main() {
 
     fprintf(stderr, "=======================================================\n");
     fprintf(stderr, "  Multi-Goose Regression Test\n");
-    fprintf(stderr, "  Geese: %d (%s, %s, %s)\n",
-            kNumGeese, kGooseNames[0], kGooseNames[1], kGooseNames[2]);
+    fprintf(stderr, "  Geese: %d\n", kNumGeese);
+    for (int i = 0; i < kNumGeese; ++i)
+        fprintf(stderr, "    %d: %s (%s)\n", i, kGooseSpecs[i].name, kGooseSpecs[i].command);
     fprintf(stderr, "=======================================================\n");
 
     // ---- Connect ----
@@ -73,15 +84,15 @@ int main() {
     SendCmd("clear");
     std::this_thread::sleep_for(std::chrono::milliseconds(200));
 
-    fprintf(stderr, "  Spawning 3 geese...\n");
+    fprintf(stderr, "  Spawning %d geese...\n", kNumGeese);
     for (int i = 0; i < kNumGeese; ++i) {
-        resp = SendCmd(std::string("spawn ") + kGooseNames[i]);
+        resp = SendCmd(std::string(kGooseSpecs[i].command) + " " + kGooseSpecs[i].name);
         if (resp.find("ok id=") == std::string::npos) {
-            fprintf(stderr, "    %s -> FAIL: %s", kGooseNames[i], resp.c_str());
+            fprintf(stderr, "    %s (%s) -> FAIL: %s", kGooseSpecs[i].name, kGooseSpecs[i].command, resp.c_str());
             SendCmd("clear");
             return 1;
         }
-        fprintf(stderr, "    %s -> %s", kGooseNames[i], resp.c_str());
+        fprintf(stderr, "    %s (%s) -> %s", kGooseSpecs[i].name, kGooseSpecs[i].command, resp.c_str());
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
 
@@ -119,7 +130,7 @@ int main() {
     int failCount = 0;
 
     for (int gooseIdx = 0; gooseIdx < kNumGeese; ++gooseIdx) {
-        fprintf(stderr, "\n--- Goose %d (%s) ---\n", gooseIdx, kGooseNames[gooseIdx]);
+        fprintf(stderr, "\n--- Goose %d (%s) ---\n", gooseIdx, kGooseSpecs[gooseIdx].name);
 
         // Clear dropped items from previous cycles
         SendCmd("clear_dropped");
@@ -170,7 +181,7 @@ int main() {
     fprintf(stderr, "  Passed:   %d\n", passCount);
     fprintf(stderr, "  Failed:   %d\n", failCount);
     for (int i = 0; i < kNumGeese; ++i) {
-        fprintf(stderr, "    %s: %s\n", kGooseNames[i],
+        fprintf(stderr, "    %s (%s): %s\n", kGooseSpecs[i].name, kGooseSpecs[i].command,
                 (i < passCount) ? "PASS" : "FAIL");
     }
 
