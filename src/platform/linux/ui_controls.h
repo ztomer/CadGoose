@@ -22,6 +22,13 @@ extern GtkWidget* g_sliderGooseCursorChance;
 extern GtkWidget* g_labelGooseCursorChance;
 extern GtkWidget* g_sliderGooseSnatchDur;
 extern GtkWidget* g_labelGooseSnatchDur;
+extern GtkWidget* g_labelMudChanceVal;
+extern GtkWidget* g_labelMudLifetimeVal;
+extern GtkWidget* g_labelScaleVal;
+extern GtkWidget* g_labelWalkVal;
+extern GtkWidget* g_labelRunVal;
+extern GtkWidget* g_labelSnatchVal;
+extern GtkApplication* g_uiApp;
 
 void RefreshSelectedGooseUi();
 void cb_spawn(GtkButton*, gpointer);

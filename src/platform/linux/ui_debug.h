@@ -9,6 +9,8 @@ extern bool g_debugOverlaySelectedOnly;
 
 void draw_debug_overlay(cairo_t* cr, int width, int height, bool verbose, bool selectedOnly);
 
-#endifstruct Goose;
+#endif
+
+struct Goose;
 struct Vector2;
 void draw_goose_debug_visuals(cairo_t* cr, Goose* g, const Vector2& origin);

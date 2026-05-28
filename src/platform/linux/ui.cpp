@@ -130,9 +130,6 @@ void draw_overlay(GtkDrawingArea* area, cairo_t* cr, int width, int height, gpoi
     cairo_save(cr); 
     cairo_translate(cr, -m->x, -m->y);
 
-    DrawFootprints(cr);
-    DrawDroppedItems(cr);
-
     // Draw Geese
     for (auto* gp : ActorManager::Instance().getGeese()) {
         if (cairo_status(cr) != CAIRO_STATUS_SUCCESS) break;
@@ -296,7 +293,7 @@ void draw_overlay(GtkDrawingArea* area, cairo_t* cr, int width, int height, gpoi
 
     // Debug overlay (only on the primary monitor window)
     if (m->x == 0 && m->y == 0) {
-        draw_debug_overlay(cr);
+        draw_debug_overlay(cr, m->width, m->height, g_debugOverlayVerbose, g_debugOverlaySelectedOnly);
     }
 }
 
@@ -336,6 +333,7 @@ void setup_overlay_window(GtkApplication* app) {
 
         // Create overlay for this monitor
         GtkWindow* overlay = GTK_WINDOW(gtk_application_window_new(app));
+#ifdef GTK4_LAYER_SHELL_ENABLED
         gtk_layer_init_for_window(overlay);
         gtk_layer_set_monitor(overlay, monitor);
         gtk_layer_set_layer(overlay, GTK_LAYER_SHELL_LAYER_OVERLAY);
@@ -344,6 +342,7 @@ void setup_overlay_window(GtkApplication* app) {
         gtk_layer_set_anchor(overlay, GTK_LAYER_SHELL_EDGE_LEFT, 1);
         gtk_layer_set_anchor(overlay, GTK_LAYER_SHELL_EDGE_RIGHT, 1);
         gtk_layer_set_keyboard_mode(overlay, GTK_LAYER_SHELL_KEYBOARD_MODE_NONE);
+#endif
 
         GtkWidget* canvas = gtk_drawing_area_new();
         // Pass the MonitorInfo reference

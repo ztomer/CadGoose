@@ -12,16 +12,15 @@
 
 ```bash
 cd /Users/ztomer/Projects/CadGoose
+./build.sh              # macOS Release (quiet)
+./build_debug.sh        # macOS Debug (verbose)
+./build_linux.sh        # Linux Release via Docker (quiet)
 mkdir -p build && cd build && cmake .. -DCMAKE_BUILD_TYPE=Release && make -j$(sysctl -n hw.logicalcpu)
 ./build/CadGoose [--debug]
 ./build/CadGooseTests
-# Multi-goose regression test (run from any terminal — no SCStream needed):
 ./build/multi_goose_test
-# Trail detection test (run from Ghostty — auto-hides windows):
 ./tools/profiling/run_trail_test.sh
-# Fetch visibility soak test (run from Ghostty — repeats fetch cycles for up to 10m):
 ./tools/profiling/run_soak_test.sh
-# Or directly from build directory (with CadGoose running):
 ./build/trail_detection_test
 ./build/soak_fetch_test
 ```

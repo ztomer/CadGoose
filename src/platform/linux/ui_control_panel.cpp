@@ -1,4 +1,3 @@
-#include "ui_control_panel.h"
 #include "ui_controls.h"
 #include "ui_factory.h"
 #include "ui_escape.h"
