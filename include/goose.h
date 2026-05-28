@@ -164,6 +164,7 @@ public:
     void draw(IRenderer* renderer);
 #ifdef __APPLE__
     virtual void drawBody(CGContextRef ctx);
+    virtual void onHonk();
 #endif
     bool isAlive() const override { return true; }
 

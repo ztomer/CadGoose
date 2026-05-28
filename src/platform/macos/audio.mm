@@ -20,7 +20,8 @@ static constexpr int kPatPoolDepth   = 6;  // ~25Hz peak (2 feet x 12Hz) needs r
 static constexpr int kHonkPoolDepth  = 4;
 
 static AVAudioPlayer* g_patPool[kPatPoolDepth]   = {nullptr};
-static AVAudioPlayer* g_honkPool[kHonkPoolDepth] = {nullptr};
+static AVAudioPlayer* g_honkPool[kHonkPoolDepth]  = {nullptr};
+static AVAudioPlayer* g_gulagPool[2]               = {nullptr};
 static AVAudioPlayer* g_bitePlayer = nullptr;
 static AVAudioPlayer* g_mudPlayer = nullptr;
 static bool g_audioInitialized = false;
@@ -75,6 +76,13 @@ void Audio_Init() {
         g_honkPool[i] = MakePlayer(path);
     }
 
+    // Gulag pool (2 players for BabyStalin)
+    for (int i = 0; i < 2; i++) {
+        NSString* path = [assetsPath stringByAppendingPathComponent:
+                          @"Sound/NotEmbedded/Gulag.mp3"];
+        g_gulagPool[i] = MakePlayer(path);
+    }
+
     g_bitePlayer = MakePlayer([assetsPath stringByAppendingPathComponent:
                                @"Sound/NotEmbedded/BITE.mp3"]);
     g_mudPlayer  = MakePlayer([assetsPath stringByAppendingPathComponent:
@@ -98,6 +106,12 @@ void Audio_PlayHonk() {
     if (g_config.general.audioMuted) return;
     if (!g_audioInitialized) Audio_Init();
     PlayFromPool(g_honkPool, kHonkPoolDepth);
+}
+
+void Audio_PlayGulag() {
+    if (g_config.general.audioMuted) return;
+    if (!g_audioInitialized) Audio_Init();
+    PlayFromPool(g_gulagPool, 2);
 }
 
 void Audio_PlayPat() {

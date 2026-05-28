@@ -29,7 +29,7 @@ void triggerHonk(Goose& g, double time, double cd, double& lastBucket) {
     auto& hs = g.honkState;
     if ((time - hs.lastAny) < g_config.honk.minGap) return;
     if ((time - lastBucket) < cd) return;
-    g_assets.Honk();
+    g.onHonk();
     hs.lastAny = time;
     lastBucket = time;
     EventBus::Instance().Publish(GooseHonkedEvent{g.id, g.pos.x, g.pos.y, time});

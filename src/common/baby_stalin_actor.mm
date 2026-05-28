@@ -40,7 +40,11 @@ static CGImageRef GetHeadImage() {
 
 BabyStalinActor::BabyStalinActor(int id_, const std::string& name_, int screenW, int screenH)
     : Goose(id_, name_, screenW, screenH) {
-    m_canHonk = false;
+    m_canHonk = true;
+}
+
+void BabyStalinActor::onHonk() {
+    g_assets.Gulag();
 }
 
 #ifdef __APPLE__

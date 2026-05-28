@@ -336,7 +336,7 @@ zero_velocity_threshold = 0.001
 
 [Behavior]
 interactive_drops_enabled = false
-autumn_leaves_enabled = true
+autumn_leaves_enabled = false
 rainbow_enabled = false
 interactive_drops_puddle_lifetime = 30.0
 anger_enabled = false
@@ -355,7 +355,7 @@ portal_hotkey_1 = "1"
 presence_enabled = false
 jail_hotkey_o = "o"
 config_gui_enabled = false
-honcker_enabled = false
+honcker_enabled = true
 visible_enabled = true
 hats_enabled = false
 ai_enabled = false

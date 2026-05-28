@@ -44,7 +44,7 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
     bool pressed = IsKeyPressed(keyCode);
 
     if (pressed && !s_wasPressed) {
-        g_assets.Honk();
+        goose->onHonk();
         EventBus::Instance().Publish(GooseHonkedEvent{goose->id, goose->pos.x, goose->pos.y, time});
         auto* state = BehaviorStateManager::Instance().GetOrCreate<HonckerState>(goose->id, "honcker");
         state->visible = true;
@@ -91,7 +91,7 @@ REGISTER_BEHAVIOR(g_honckerBehavior);
 
 void Honcker_Honk(Goose* goose, double time) {
     if (!goose || !goose->m_canHonk) return;
-    g_assets.Honk();
+    goose->onHonk();
     EventBus::Instance().Publish(GooseHonkedEvent{goose->id, goose->pos.x, goose->pos.y, time});
     auto* state = BehaviorStateManager::Instance().GetOrCreate<HonckerState>(goose->id, "honcker");
     state->visible = true;

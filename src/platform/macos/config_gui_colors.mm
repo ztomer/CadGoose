@@ -5,6 +5,7 @@
 #include "app_actions.h"
 #include <filesystem>
 
+extern "C" void UpdateStatusBarIcon();
 bool LoadThemeFromFile(const std::string& path);
 bool SaveThemeToFile(const std::string& path, const std::string& desc);
 
@@ -248,6 +249,9 @@ static float* ColorFieldForIdentifier(NSString* ident) {
         AppActions_ClearGeese();
         AppActions_EnsureInitialGoose();
     }
+
+    // Update status bar icon for new appearance mode
+    UpdateStatusBarIcon();
 }
 
 - (void)colorSliderChanged:(NSSlider*)sender {
