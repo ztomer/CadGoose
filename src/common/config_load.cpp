@@ -156,8 +156,18 @@ extern bool Config_IsSystemDarkTheme();
 
 void Config_UpdateActiveTheme() {
     int mode = g_config.general.appearanceMode;
+
+    // 4=Stalin, 0=Light, 1=Dark, 2=System, 3=Custom
+    if (mode == 4) { // Stalin
+        g_config.color.currentBody = {0.50f, 0.55f, 0.40f};
+        g_config.color.currentNeck = {0.50f, 0.55f, 0.40f};
+        g_config.color.currentHead = {0.50f, 0.55f, 0.40f};
+        g_config.color.currentBeak = g_config.color.beak;
+        g_config.color.currentEye = g_config.color.eye;
+        g_config.color.currentOutline = {0.35f, 0.40f, 0.28f};
+        return;
+    }
     
-    // 0=Light, 1=Dark, 2=System, 3=Custom
     if (mode == 2) {
         mode = Config_IsSystemDarkTheme() ? 1 : 0;
     }

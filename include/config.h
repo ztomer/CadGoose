@@ -58,6 +58,7 @@ static const int APPEARANCE_LIGHT = 0;
 static const int APPEARANCE_DARK = 1;
 static const int APPEARANCE_SYSTEM = 2;
 static const int APPEARANCE_CUSTOM = 3;
+static const int APPEARANCE_STALIN = 4;
 
 struct GeneralConfig {
   float globalScale = 1.0f;

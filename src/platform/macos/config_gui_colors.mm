@@ -2,6 +2,7 @@
 // AppearanceTabView — appearance mode selector + color editor + goose preview
 #import "config_gui_helpers.h"
 #include "config.h"
+#include "app_actions.h"
 #include <filesystem>
 
 bool LoadThemeFromFile(const std::string& path);
@@ -73,19 +74,21 @@ static float* ColorFieldForIdentifier(NSString* ident) {
     appearanceLabel.alignment = NSTextAlignmentLeft;
     [self addSubview:appearanceLabel];
 
-    NSSegmentedControl* modeControl = [[NSSegmentedControl alloc] initWithFrame:NSMakeRect(96, y - 2, 180, 24)];
-    modeControl.segmentCount = 3;
+    NSSegmentedControl* modeControl = [[NSSegmentedControl alloc] initWithFrame:NSMakeRect(96, y - 2, 244, 24)];
+    modeControl.segmentCount = 4;
     [modeControl setLabel:@"System" forSegment:0];
-    [modeControl setLabel:@"Dark" forSegment:1];
-    [modeControl setLabel:@"Light" forSegment:2];
+    [modeControl setLabel:@"Light" forSegment:1];
+    [modeControl setLabel:@"Dark" forSegment:2];
+    [modeControl setLabel:@"Stalin" forSegment:3];
     int mode = g_config.general.appearanceMode;
-    modeControl.selectedSegment = (mode == APPEARANCE_LIGHT) ? 2 :
-                                  (mode == APPEARANCE_DARK)  ? 1 : 0;
+    modeControl.selectedSegment = (mode == APPEARANCE_LIGHT) ? 1 :
+                                  (mode == APPEARANCE_DARK)  ? 2 :
+                                  (mode == APPEARANCE_STALIN) ? 3 : 0;
     modeControl.target = self;
     modeControl.action = @selector(modeChanged:);
     [self addSubview:modeControl];
 
-    _themePopup = [[NSPopUpButton alloc] initWithFrame:NSMakeRect(284, y - 2, 164, 24)];
+    _themePopup = [[NSPopUpButton alloc] initWithFrame:NSMakeRect(350, y - 2, 164, 24)];
     _themePopup.target = self;
     _themePopup.action = @selector(themeSelected:);
     [self addSubview:_themePopup];
@@ -231,10 +234,20 @@ static float* ColorFieldForIdentifier(NSString* ident) {
 
 - (void)modeChanged:(NSSegmentedControl*)sender {
     NSInteger idx = sender.selectedSegment;
-    int mode = (idx == 2) ? APPEARANCE_LIGHT : (idx == 1) ? APPEARANCE_DARK : APPEARANCE_SYSTEM;
+    int mode = APPEARANCE_SYSTEM;
+    if (idx == 1) mode = APPEARANCE_LIGHT;
+    else if (idx == 2) mode = APPEARANCE_DARK;
+    else if (idx == 3) mode = APPEARANCE_STALIN;
+    int oldMode = g_config.general.appearanceMode;
     g_config.general.appearanceMode = mode;
     Config_UpdateActiveTheme();
     [self redrawGoosePreview];
+
+    // Mode switch from/to Stalin: re-spawn to switch goose type
+    if ((mode == APPEARANCE_STALIN) != (oldMode == APPEARANCE_STALIN)) {
+        AppActions_ClearGeese();
+        AppActions_EnsureInitialGoose();
+    }
 }
 
 - (void)colorSliderChanged:(NSSlider*)sender {

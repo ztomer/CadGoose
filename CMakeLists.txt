@@ -294,6 +294,7 @@ if(APPLE)
         tests/common/test_dropped_item_hit.cpp
         tests/common/test_ai_text_meme.cpp
         tests/common/presence_stub.cpp
+        tests/common/test_baby_stalin_spawn.mm
         src/common/app_actions.cpp
         src/common/app_cli.cpp
         src/common/behavior.cpp
@@ -322,6 +323,7 @@ if(APPLE)
         src/common/actor_breadcrumb.mm
         src/common/actor_leafpile.mm
         src/common/actor_dropped_item.mm
+        src/common/baby_stalin_actor.mm
         src/common/world.cpp
         src/common/behaviors/behavior_honcker.cpp
         src/common/behaviors/behavior_rainbow.cpp

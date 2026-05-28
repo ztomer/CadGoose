@@ -92,6 +92,9 @@ public:
     // Delete and remove all actors of a given type (owning cleanup)
     void destroyAllOfType(const char* type);
 
+    // Mark dropped-items cache dirty so getDroppedItems() rebuilds on next call
+    void invalidateDroppedItemsCache() { droppedItemsCacheDirty = true; }
+
 private:
     ActorManager() = default;
     std::vector<Actor*> actors;

@@ -115,7 +115,7 @@ const std::vector<Goose*>& ActorManager::getGeese() const {
         geeseCache.clear();
         geeseCache.reserve(actors.size());
         for (auto* actor : actors) {
-            if (actor->isActive() && strcmp(actor->type(), "goose") == 0) {
+            if (actor->isActive() && dynamic_cast<Goose*>(actor)) {
                 geeseCache.push_back(static_cast<Goose*>(actor));
             }
         }

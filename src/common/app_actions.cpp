@@ -17,6 +17,7 @@
 
 #if defined(__APPLE__)
 void AppActions_SetApplication(void* app) {}
+#include "baby_stalin_actor.h"
 #endif
 
 Goose* AppActions_SpawnGoose(const std::string& requestedName) {
@@ -30,6 +31,15 @@ Goose* AppActions_SpawnGoose(const std::string& requestedName) {
         }
     }
 
+    bool stalinMode = g_config.general.appearanceMode == APPEARANCE_STALIN;
+#if defined(__APPLE__)
+    if (stalinMode) {
+        Goose* goose = new BabyStalinActor(g_world.nextId++, name, g_world.screenWidth, g_world.screenHeight);
+        ActorManager::Instance().add(goose);
+        BehaviorRegistry::Instance().InitAll(goose);
+        return goose;
+    }
+#endif
     Goose* goose = new Goose(g_world.nextId++, name, g_world.screenWidth, g_world.screenHeight);
     ActorManager::Instance().add(goose);
     BehaviorRegistry::Instance().InitAll(goose);
@@ -38,6 +48,18 @@ Goose* AppActions_SpawnGoose(const std::string& requestedName) {
     UiLogPush("Spawned " + name);
 #endif
     return goose;
+}
+
+Goose* AppActions_SpawnBabyStalin(const std::string& requestedName) {
+    std::string name = requestedName;
+    if (name.empty()) {
+        name = "BabyStalin " + std::to_string(g_world.nextId);
+    }
+
+    Goose* actor = new BabyStalinActor(g_world.nextId++, name, g_world.screenWidth, g_world.screenHeight);
+    ActorManager::Instance().add(actor);
+    BehaviorRegistry::Instance().InitAll(actor);
+    return actor;
 }
 
 void AppActions_EnsureInitialGoose() {
@@ -52,6 +74,7 @@ void AppActions_ClearGeese() {
     Config_SaveGooseNames();
 
     ActorManager::Instance().destroyAllOfType("goose");
+    ActorManager::Instance().destroyAllOfType("baby_stalin");
 
     g_world.cursorGrabberId = -1;
     g_world.selectedGooseId = 0;
@@ -175,6 +198,15 @@ std::string AppActions_HandleCommand(const std::vector<std::string>& args) {
     if (command == "spawn") {
         Goose* goose = AppActions_SpawnGoose(args.size() > 1 ? args[1] : "");
         return "ok id=" + std::to_string(goose ? goose->id : -1) + "\n";
+    }
+
+    if (command == "spawn_baby_stalin" || command == "spawn_stalin") {
+#ifdef __APPLE__
+        Goose* stalin = AppActions_SpawnBabyStalin(args.size() > 1 ? args[1] : "");
+        return "ok id=" + std::to_string(stalin ? stalin->id : -1) + "\n";
+#else
+        return "error only supported on macOS\n";
+#endif
     }
 
     if (command == "clear") {

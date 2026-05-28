@@ -5,6 +5,7 @@
 #include "assets.h"
 #include "renderer_interface.h"
 #include <cmath>
+#include <cstring>
 
 static constexpr float kFacingLeftMin = 90.0f;
 static constexpr float kFacingLeftMax = 270.0f;
@@ -26,9 +27,10 @@ static void render(Goose* goose, BehaviorContext& ctx, IRenderer* irenderer) {
     if (!irenderer || !s_hatImage) return;
     IRenderer& renderer = *irenderer;
 
-    float hatSize = g_config.behaviors.hats.sizeX;
-    float offsetX = g_config.behaviors.hats.offsetX;
-    float offsetY = g_config.behaviors.hats.offsetY;
+    float headScale = (std::strcmp(goose->type(), "baby_stalin") == 0) ? 2.0f : 1.0f;
+    float hatSize = g_config.behaviors.hats.sizeX * headScale;
+    float offsetX = g_config.behaviors.hats.offsetX * headScale;
+    float offsetY = g_config.behaviors.hats.offsetY * headScale;
     float dir = goose->dir;
 
     float imgWidth = 0, imgHeight = 0;

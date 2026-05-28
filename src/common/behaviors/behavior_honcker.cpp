@@ -90,6 +90,7 @@ static Behavior g_honckerBehavior = BEHAVIOR_DEF_STARTER(
 REGISTER_BEHAVIOR(g_honckerBehavior);
 
 void Honcker_Honk(Goose* goose, double time) {
+    if (!goose || !goose->m_canHonk) return;
     g_assets.Honk();
     EventBus::Instance().Publish(GooseHonkedEvent{goose->id, goose->pos.x, goose->pos.y, time});
     auto* state = BehaviorStateManager::Instance().GetOrCreate<HonckerState>(goose->id, "honcker");

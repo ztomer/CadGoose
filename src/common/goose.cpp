@@ -588,6 +588,10 @@ void Goose::tick(WorldContext& world, double dt, double time) {
     BehaviorRegistry::Instance().TickAll(this, dt, time);
 }
 
+void Goose::drawBody(CGContextRef ctx) {
+    DrawGoose(this, ctx);
+}
+
 void Goose::render(IRenderer* renderer) {
     if (g_cutoverMode) return;
     draw(renderer);
@@ -621,12 +625,7 @@ void Goose::draw(IRenderer* renderer) {
     BehaviorRegistry::Instance().RenderPass(this, renderer, true);
     CGContextRestoreGState(ctx);
 
-    DrawGoose(this, ctx);
-#ifndef __APPLE__
-    if (heldItem) {
-        DrawHeldItem(this, ctx);
-    }
-#endif
+    drawBody(ctx);
 
     CGContextSaveGState(ctx);
     CGContextTranslateCTM(ctx, pos.x, pos.y);

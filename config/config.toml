@@ -56,7 +56,7 @@ audio_enabled = false
 audio_muted = false
 dark_theme_role = "Canadian"
 memes_enabled = true
-appearance_mode = 0
+appearance_mode = 4
 light_theme_role = "Default"
 failsafe_hotkey = "cmd+shift+escape"
 
@@ -357,7 +357,7 @@ jail_hotkey_o = "o"
 config_gui_enabled = false
 honcker_enabled = false
 visible_enabled = true
-hats_enabled = true
+hats_enabled = false
 ai_enabled = false
 health_enabled = false
 portals_enabled = false
