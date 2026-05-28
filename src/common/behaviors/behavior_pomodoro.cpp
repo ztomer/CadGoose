@@ -205,7 +205,7 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
                 goose->target = state->bedPosition;
                 goose->currentSpeed = walkSpeed;
 
-                float targetAngle = std::atan2f(dir.y, dir.x) * RAD_TO_DEG;
+                float targetAngle = std::atan2(dir.y, dir.x) * RAD_TO_DEG;
                 float angleDiff = targetAngle - goose->dir;
                 while (angleDiff > kAngleNormalizeHalf) angleDiff -= kAngleFull;
                 while (angleDiff < -kAngleNormalizeHalf) angleDiff += kAngleFull;
@@ -251,7 +251,7 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
         state->accumulatedRotation += rotationAmount;
 
         if (time - state->lastHonkTime >= cfg.aggressiveHonkInterval) {
-            Audio_PlayHonk();
+            goose->onHonk();
             state->lastHonkTime = time;
         }
 

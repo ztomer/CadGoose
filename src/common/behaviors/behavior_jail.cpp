@@ -105,7 +105,7 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
         bool pDown = IsKeyPressed(KeyNameToKeyCode(g_config.behaviors.jail.hotkeyP));
         if (pDown && !s_pWasKeyDown && !s_jails.empty()) {
             s_jailsActive = !s_jailsActive;
-            g_assets.Honk();
+            goose->onHonk();
         }
         s_pWasKeyDown = pDown;
     }

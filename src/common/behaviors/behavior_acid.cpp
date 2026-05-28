@@ -10,14 +10,6 @@
 #include "config.h"
 #include "behaviors/states/acid_state.h"
 
-#ifdef __APPLE__
-extern void Audio_PlayHonk();
-#define PLAY_HONK() Audio_PlayHonk()
-#else
-#define PLAY_HONK() fprintf(stderr, "[ACID] Honk!\n")
-#endif
-
-
 static void init(BehaviorContext& ctx) {
     auto* state = BehaviorStateManager::Instance().GetOrCreate<AcidState>(ctx.goose->id, "acid");
     state->Reset();
@@ -40,7 +32,7 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
     if (goose->dir >= 360.0f) goose->dir -= 360.0f;
 
     if (time - state->lastHonkTime >= g_config.behaviors.acid.honkInterval) {
-        PLAY_HONK();
+        goose->onHonk();
         state->lastHonkTime = time;
     }
 

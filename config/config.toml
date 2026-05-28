@@ -1,4 +1,4 @@
-goose = ["Mila"]
+goose = ["Mila", "Goose 1", "Goose 2"]
 
 [Debug]
 to_terminal = false
@@ -56,7 +56,7 @@ audio_enabled = false
 audio_muted = false
 dark_theme_role = "Canadian"
 memes_enabled = true
-appearance_mode = 4
+appearance_mode = 1
 light_theme_role = "Default"
 failsafe_hotkey = "cmd+shift+escape"
 
@@ -335,22 +335,22 @@ right_foot_angle = 15.0
 zero_velocity_threshold = 0.001
 
 [Behavior]
-interactive_drops_enabled = false
+interactive_drops_enabled = true
 autumn_leaves_enabled = false
 rainbow_enabled = false
 interactive_drops_puddle_lifetime = 30.0
 anger_enabled = false
 avoidance_enabled = true
-boredom_enabled = false
-breadcrumbs_enabled = false
-peeking_enabled = false
+boredom_enabled = true
+breadcrumbs_enabled = true
+peeking_enabled = true
 acid_enabled = false
 ball_enabled = true
 honcker_hotkey = "f"
-toys_enabled = false
-jail_enabled = false
+toys_enabled = true
+jail_enabled = true
 drag_enabled = true
-nametag_enabled = false
+nametag_enabled = true
 portal_hotkey_1 = "1"
 presence_enabled = false
 jail_hotkey_o = "o"
@@ -361,7 +361,7 @@ hats_enabled = false
 ai_enabled = false
 health_enabled = false
 portals_enabled = false
-pomodoro_enabled = false
+pomodoro_enabled = true
 jail_hotkey_p = "p"
 portal_hotkey_2 = "2"
 breadcrumbs_hotkey = "i"

@@ -46,7 +46,7 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
             } else if (time - state->idleStartTime > kBoredomIdleStartTime && (rng_util::RandRange(kBoredomSighProbability)) == 0) {
                 state->isSighing = true;
                 state->sighStartTime = time;
-                g_assets.Honk();
+                goose->onHonk();
             }
         } else {
             double sighDuration = time - state->sighStartTime;
