@@ -20,6 +20,10 @@
 
 #pragma mark - Foundation Fallback
 
+static bool IsStalinMode() {
+    return g_config.general.appearanceMode == APPEARANCE_STALIN;
+}
+
 static NSString* s_fallbackResponseForMessage(NSString* message, NSString* gooseName) {
     @autoreleasepool {
         if (message.length == 0) return @"HONK! Silence speaks volumes... HONK!";
@@ -70,6 +74,18 @@ static NSString* s_fallbackResponseForMessage(NSString* message, NSString* goose
         ];
         return defaults[arc4random_uniform((uint32_t)defaults.count)];
     }
+}
+
+static NSString* s_applyStalinMode(NSString* response, NSString* gooseName) {
+    if (!IsStalinMode()) return response;
+    NSString* r = [response stringByReplacingOccurrencesOfString:@"HONK" withString:@"GULAG"];
+    r = [r stringByReplacingOccurrencesOfString:@"goose" withString:@"Comrade"];
+    r = [r stringByReplacingOccurrencesOfString:@"Goose" withString:@"Comrade"];
+    if (gooseName) {
+        r = [r stringByReplacingOccurrencesOfString:@"I'm" withString:@"This is"];
+        r = [r stringByReplacingOccurrencesOfString:@"I am" withString:@"This is"];
+    }
+    return r;
 }
 
 #pragma mark - AIHTTPClient
@@ -167,7 +183,9 @@ static constexpr float kChatFontSize = 13.0f;
                                              styleMask:NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskResizable | NSWindowStyleMaskFullSizeContentView
                                                backing:NSBackingStoreBuffered
                                                  defer:NO];
-    self.window.title = [NSString stringWithFormat:@"💬 Chat with %@ 🦆", name];
+    self.window.title = IsStalinMode()
+        ? [NSString stringWithFormat:@"💬 Chat with Comrade %@ ☭", name]
+        : [NSString stringWithFormat:@"💬 Chat with %@ 🦆", name];
     self.window.titleVisibility = NSWindowTitleHidden;
     self.window.titlebarAppearsTransparent = YES;
     self.window.backgroundColor = [NSColor clearColor];
@@ -237,7 +255,9 @@ static constexpr float kChatFontSize = 13.0f;
     textView.editable = NO;
     textView.font = chatFont;
     textView.backgroundColor = [NSColor clearColor];
-    textView.string = [NSString stringWithFormat:@"🦆 %@: HONK! What do you want?\n", name];
+    textView.string = IsStalinMode()
+        ? [NSString stringWithFormat:@"☭ %@: GULAG! What do you want?\n", name]
+        : [NSString stringWithFormat:@"🦆 %@: HONK! What do you want?\n", name];
     self.chatView = textView;
     scrollView.documentView = textView;
     [contentView addSubview:scrollView];
@@ -316,7 +336,7 @@ static constexpr float kChatFontSize = 13.0f;
     NSString* chatText = self.chatView.string;
     chatText = [chatText stringByAppendingFormat:@"You: %@\n", message];
     self.chatView.string = chatText;
-    self.chatView.string = [self.chatView.string stringByAppendingString:@"Goose: HONK...\n"];
+    self.chatView.string = [self.chatView.string stringByAppendingString:IsStalinMode() ? @"Comrade: GULAG...\n" : @"Goose: HONK...\n"];
 
     self.sendButton.enabled = NO;
     [self.spinner startAnimation:nil];
@@ -343,7 +363,7 @@ static constexpr float kChatFontSize = 13.0f;
                     [strong appendResponse:response];
                     fprintf(stderr, "[AI] LLM error displayed: %s\n", response.UTF8String);
                 } else {
-                    NSString* fallback = s_fallbackResponseForMessage(message, strong.gooseName);
+                    NSString* fallback = s_applyStalinMode(s_fallbackResponseForMessage(message, strong.gooseName), strong.gooseName);
                     [strong appendResponse:fallback];
                     fprintf(stderr, "[AI] Using fallback response\n");
                 }
@@ -360,12 +380,15 @@ static constexpr float kChatFontSize = 13.0f;
 - (void)appendResponse:(NSString*)response {
     dispatch_async(dispatch_get_main_queue(), ^{
         NSString* current = self.chatView.string;
-        // Search backwards to find the most recent "Goose: HONK..." marker
-        NSRange honkRange = [current rangeOfString:@"Goose: HONK..." options:NSBackwardsSearch];
-        if (honkRange.location != NSNotFound) {
-            NSString* before = [current substringToIndex:honkRange.location];
-            NSString* after = [current substringFromIndex:honkRange.location + honkRange.length];
-            self.chatView.string = [before stringByAppendingFormat:@"Goose: %@\n\n%@", response, after];
+        // Search backwards to find the most recent marker ("Goose: HONK..." or "Comrade: GULAG...")
+        BOOL stalin = IsStalinMode();
+        NSString* marker = stalin ? @"Comrade: GULAG..." : @"Goose: HONK...";
+        NSString* label = stalin ? @"Comrade" : @"Goose";
+        NSRange markerRange = [current rangeOfString:marker options:NSBackwardsSearch];
+        if (markerRange.location != NSNotFound) {
+            NSString* before = [current substringToIndex:markerRange.location];
+            NSString* after = [current substringFromIndex:markerRange.location + markerRange.length];
+            self.chatView.string = [before stringByAppendingFormat:@"%@: %@\n\n%@", label, response, after];
         }
     });
 }
@@ -390,7 +413,7 @@ static constexpr float kChatFontSize = 13.0f;
         }
     }
     if (self.goosePopup.numberOfItems == 0) {
-        [self.goosePopup addItemWithTitle:self.gooseName ?: @"Goose"];
+        [self.goosePopup addItemWithTitle:self.gooseName ?: (IsStalinMode() ? @"Comrade" : @"Goose")];
         [self.goosePopup selectItemAtIndex:0];
     }
 }
@@ -426,7 +449,8 @@ static AIChatWindowController* g_chatController = nil;
 extern "C" void AI_OpenChat(const char* gooseName) {
 #ifdef __APPLE__
     dispatch_async(dispatch_get_main_queue(), ^{
-        NSString* name = [NSString stringWithUTF8String:gooseName ? gooseName : "Goose"];
+        const char* defaultName = IsStalinMode() ? "Comrade" : "Goose";
+        NSString* name = [NSString stringWithUTF8String:gooseName ? gooseName : defaultName];
         if (g_chatController) {
             [g_chatController.window makeKeyAndOrderFront:nil];
         } else {
