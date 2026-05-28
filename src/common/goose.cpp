@@ -152,6 +152,10 @@ Goose::Goose(int id_, const std::string &name_, int screenW, int screenH)
   PickNewTarget(screenW, screenH);
 }
 
+void Goose::onHonk() {
+  g_assets.Honk();
+}
+
 Goose::~Goose() {
 #ifdef __APPLE__
     Goose_DestroyPerGooseWindow(this);

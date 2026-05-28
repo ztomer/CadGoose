@@ -317,6 +317,10 @@ void AssetManager::Honk() {
     Audio_PlayHonk();
 }
 
+void AssetManager::Gulag() {
+    Audio_PlayGulag();
+}
+
 void AssetManager::Pat() {
     Audio_PlayPat();
 }

@@ -8,6 +8,8 @@ public:
 
     const char* type() const override { return "baby_stalin"; }
 
+    void onHonk() override;
+
 #ifdef __APPLE__
     void drawBody(CGContextRef ctx) override;
 #endif

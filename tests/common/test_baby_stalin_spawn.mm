@@ -38,7 +38,10 @@ TEST_F(BabyStalinSpawnTest, StalinModeSpawnHasPhotoHead) {
     g_config.general.appearanceMode = APPEARANCE_STALIN;
     Goose* g = AppActions_SpawnGoose("test_stalin");
     ASSERT_NE(g, nullptr);
-    ASSERT_TRUE(g->m_canHonk == false);
+    // BabyStalin can honk — plays Gulag sound via onHonk() override
+    ASSERT_TRUE(g->m_canHonk);
+    // Verify the type is baby_stalin
+    ASSERT_STREQ(g->type(), "baby_stalin");
 }
 
 TEST_F(BabyStalinSpawnTest, NormalModeSpawnCanHonk) {

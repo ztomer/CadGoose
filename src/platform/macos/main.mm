@@ -86,6 +86,7 @@ void LogWrite(const char* level, const char* fmt, ...) {
 
 extern "C" void AI_OpenChat(const char* gooseName);
 extern "C" void AI_SendMessage(const char* message);
+extern "C" void UpdateStatusBarIcon();
 
 bool Config_IsSystemDarkTheme();
 
@@ -106,11 +107,7 @@ bool Config_IsSystemDarkTheme();
 - (void)setupMenubar {
     self.statusItem = [[NSStatusBar systemStatusBar] statusItemWithLength:NSSquareStatusItemLength];
 
-    {
-        bool darkAppearance = (g_config.general.appearanceMode == APPEARANCE_DARK) ||
-            (g_config.general.appearanceMode == APPEARANCE_SYSTEM && Config_IsSystemDarkTheme());
-        self.statusItem.button.title = darkAppearance ? @"\U0001F341" : @"\U0001FABF";
-    }
+    UpdateStatusBarIcon();
 
     NSMenu* menu = [[NSMenu alloc] init];
 
@@ -379,6 +376,15 @@ bool Config_IsSystemDarkTheme();
 }
 
 @end
+
+extern "C" void UpdateStatusBarIcon() {
+    AppDelegate* delegate = (AppDelegate*)[NSApp delegate];
+    if (!delegate.statusItem) return;
+    bool stalinMode = g_config.general.appearanceMode == APPEARANCE_STALIN;
+    bool darkAppearance = (g_config.general.appearanceMode == APPEARANCE_DARK) ||
+        (g_config.general.appearanceMode == APPEARANCE_SYSTEM && Config_IsSystemDarkTheme());
+    delegate.statusItem.button.title = stalinMode ? @"\u262D" : (darkAppearance ? @"\U0001F341" : @"\U0001FABF");
+}
 
 extern "C" void Presence_UpdateStatusFromBehavior(const char* status) {
     dispatch_async(dispatch_get_main_queue(), ^{

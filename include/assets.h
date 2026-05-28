@@ -43,6 +43,7 @@ public:
     ItemData* CreateToyItem(bool isStick);
     ItemData* CreateTestImage(int width, int height);
     void Honk();
+    void Gulag();
     void Pat();
     void Bite();
     void MudSquish();
