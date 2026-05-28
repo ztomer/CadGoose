@@ -6,7 +6,7 @@ CadGoose is the more polite, publicly health-insured cousin of the Desktop Goose
 
 He's still a little bit belligerent.
 
-Cross-platform (Canadian) goose that runs on macOS (AppKit) and Linux (GTK4).
+Runs on macOS (AppKit). Linux (GTK4) support is experimental — see below.
 
 Highly modified port of [CppGoose](https://github.com/jeffthepineapple/desktop-goose-linux-port)
 
@@ -15,7 +15,7 @@ Highly modified port of [CppGoose](https://github.com/jeffthepineapple/desktop-g
 ## Platforms
 
 - **macOS**: Native AppKit implementation with Core Graphics rendering
-- **Linux**: GTK4 with Wayland (Hyprland, wlroots) and X11 support (Linux support is best-effort and not regularly tested. Patches welcome.)
+- **Linux**: **EXPERIMENTAL** — GTK4 with Wayland (Hyprland, wlroots) and X11 support. Untested and may not compile or run correctly. Not recommended for everyday use. Patches welcome.
 
 See [docs/README_LINUX.md](docs/README_LINUX.md) for Linux platform details.
 

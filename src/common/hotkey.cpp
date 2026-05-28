@@ -3,7 +3,16 @@
 #include <cstring>
 #include <cstdio>
 #include <cctype>
-#include <CoreGraphics/CGEventSource.h>
+
+// kCGEventFlagMask constants from CoreGraphics — hardcode values for
+// cross-platform compatibility (macOS defines these in CGEventTypes.h).
+#ifndef kCGEventFlagMaskCommand
+#define kCGEventFlagMaskCommand     0x100000
+#define kCGEventFlagMaskShift       0x020000
+#define kCGEventFlagMaskAlternate   0x080000
+#define kCGEventFlagMaskControl     0x040000
+#define kCGEventFlagMaskSecondaryFn 0x400000
+#endif
 
 struct KeyMap { const char* name; int code; };
 struct ModMap { const char* name; int flag; };

@@ -8,6 +8,7 @@
 #include <vector>
 #include <cstdint>
 #include <string>
+#include <mutex>
 #include <shared_mutex>
 
 #include "goose_math.h"

@@ -22,7 +22,7 @@
 #include <ApplicationServices/ApplicationServices.h>
 #include <TargetConditionals.h>
 #elif defined(__linux__)
-#include "linux_renderer.h"
+#include "cairo_renderer.h"
 #include <X11/Xlib.h>
 #endif
 

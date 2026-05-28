@@ -11,6 +11,7 @@ public:
     bool Init() override;
     Vector2 GetCursorPos() override;
     void MoveCursorAbs(int x, int y) override;
+    void MoveCursorRel(int dx, int dy) override {}
     
     // Internal helper remains available if needed, but usually hidden
     static bool isAvailable(); 
