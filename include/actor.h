@@ -40,10 +40,10 @@ public:
 protected:
     Actor() : m_position{0, 0}, m_radius(0), m_active(true) {}
 
+#ifdef __APPLE__
     // Safely dispatch a cleanup block to the main thread (call from destructor).
-    // Use this instead of raw dispatch_async to ensure consistent lifetime management.
-    // Example: closeWindowOnMainThread(^{ [win closeAndRemove]; });
     void closeWindowOnMainThread(void (^cleanupBlock)());
+#endif
 
     DevicePoint m_position;
     float m_radius;

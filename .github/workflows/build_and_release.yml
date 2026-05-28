@@ -38,23 +38,19 @@ jobs:
           ./scripts/create_bundle.sh --clean
 
       - name: Create DMG
-        if: hashFiles('build/CadGoose.app') != ''
         run: |
           hdiutil create -volname CadGoose -srcfolder build/CadGoose.app -ov -format UDZO build/CadGoose.dmg
 
       - name: Upload DMG (artifact)
-        if: hashFiles('build/CadGoose.dmg') != ''
         uses: actions/upload-artifact@v4
         with:
           name: CadGoose-macOS
           path: build/CadGoose.dmg
           retention-days: 30
 
-      - name: Publish DMG (release only)
-        if: github.event_name == 'release' && hashFiles('build/CadGoose.dmg') != ''
-        uses: softprops/action-gh-release@v2
-        with:
-          files: build/CadGoose.dmg
+      - name: Upload DMG to Release
+        if: github.event_name == 'release'
+        run: gh release upload "${{ github.event.release.tag_name }}" build/CadGoose.dmg --clobber
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -96,10 +92,8 @@ jobs:
           path: CadGoose-linux.tar.zst
           retention-days: 30
 
-      - name: Publish tar.zst (release only)
+      - name: Upload tar.zst to Release
         if: github.event_name == 'release'
-        uses: softprops/action-gh-release@v2
-        with:
-          files: CadGoose-linux.tar.zst
+        run: gh release upload "${{ github.event.release.tag_name }}" CadGoose-linux.tar.zst --clobber
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
