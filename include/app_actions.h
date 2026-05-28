@@ -17,7 +17,9 @@ void AppActions_SetApplication(void* app);
 
 void AppActions_EnsureInitialGoose();
 Goose* AppActions_SpawnGoose(const std::string& name = "");
+#ifdef __APPLE__
 Goose* AppActions_SpawnBabyStalin(const std::string& name = "");
+#endif
 void AppActions_ClearGeese();
 void AppActions_Quit();
 std::string AppActions_GetStatus();

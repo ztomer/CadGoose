@@ -162,9 +162,10 @@ public:
     void tick(WorldContext& ctx, double dt, double time) override;
     void render(IRenderer* renderer) override;
     void draw(IRenderer* renderer);
+    virtual void onHonk();
+
 #ifdef __APPLE__
     virtual void drawBody(CGContextRef ctx);
-    virtual void onHonk();
 #endif
     bool isAlive() const override { return true; }
 
