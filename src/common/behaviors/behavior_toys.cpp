@@ -93,7 +93,7 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
                 margin + (float)(rng_util::RandRange((int)(g_world.screenHeight - margin * 2)))
             };
             g_assets.Bite();
-            g_assets.Honk();
+            goose->onHonk();
         }
         return;
     }

@@ -96,7 +96,7 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
         ActorManager::Instance().add(actor);
         EventBus::Instance().Publish(BreadcrumbDroppedEvent{cursorPos.x, cursorPos.y});
         LogCrumb("first crumb dropped");
-        g_assets.Honk();
+        goose->onHonk();
     } else if (!keyDown) {
         if (s_wasKeyDown) LogCrumb("key released");
         s_wasKeyDown = false;

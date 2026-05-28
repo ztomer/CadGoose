@@ -17,7 +17,8 @@ void Honcker_Honk(Goose* goose, double time);
 #import <AppKit/AppKit.h>
 
 static constexpr int kWorldCleanupTickInterval = 60;
-static constexpr int kLeafSpawnProbabilityDenominator = 10800;
+static constexpr int kLeafSpawnProbabilityDenominator = 500;
+static bool s_leafPilesInitialized = false;
 static constexpr float kDisplayLinkMinFps = 30;
 static constexpr float kDisplayLinkMaxFps = 60;
 static constexpr float kDisplayLinkDefaultFps = 60;
@@ -146,7 +147,12 @@ static constexpr float kDisplayLinkDefaultFps = 60;
     auto geese = ActorManager::Instance().getGeese();
 
     if (g_config.behaviors.fun.autumnLeaves) {
-        if (rng_util::RandRange(kLeafSpawnProbabilityDenominator) == 0) {
+        if (!s_leafPilesInitialized) {
+            s_leafPilesInitialized = true;
+            for (int i = 0; i < 3; i++) {
+                World_SpawnRandomLeafPile(g_world.screenWidth, g_world.screenHeight, self.currentTime);
+            }
+        } else if (rng_util::RandRange(kLeafSpawnProbabilityDenominator) == 0) {
             World_SpawnRandomLeafPile(g_world.screenWidth, g_world.screenHeight, self.currentTime);
         }
         World_TickLeafPiles(self.currentTime, dt,

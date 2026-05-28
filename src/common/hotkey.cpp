@@ -4,14 +4,20 @@
 #include <cstdio>
 #include <cctype>
 
-// kCGEventFlagMask constants from CoreGraphics — hardcode values for
-// cross-platform compatibility (macOS defines these in CGEventTypes.h).
+// CoreGraphics is a pure C API (valid to include from .cpp on macOS).
+// On Linux the header is unavailable so constants are hardcoded below.
+#ifdef __APPLE__
+#include <CoreGraphics/CGEventSource.h>
+#endif
+
+// kCGEventFlagMask constants — hardcode fallback values for Linux
+// (macOS defines these in CGEventTypes.h via the include above).
 #ifndef kCGEventFlagMaskCommand
 #define kCGEventFlagMaskCommand     0x100000
 #define kCGEventFlagMaskShift       0x020000
 #define kCGEventFlagMaskAlternate   0x080000
 #define kCGEventFlagMaskControl     0x040000
-#define kCGEventFlagMaskSecondaryFn 0x400000
+#define kCGEventFlagMaskSecondaryFn 0x800000
 #endif
 
 struct KeyMap { const char* name; int code; };

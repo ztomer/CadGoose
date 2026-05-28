@@ -64,7 +64,7 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
             goose->pos.x = state->portalB.x;
             goose->pos.y = state->portalB.y;
             goose->vel = {0, 0};
-            g_assets.Honk();
+            goose->onHonk();
             state->justTeleported = true;
             EventBus::Instance().Publish(GooseTeleportedEvent{goose->id, 0, fromX, fromY, state->portalB.x, state->portalB.y});
             fprintf(stderr, "[Portal] g%d teleported A->B at (%.0f,%.0f)\n", goose->id, state->portalB.x, state->portalB.y);
@@ -73,7 +73,7 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
             goose->pos.x = state->portalA.x;
             goose->pos.y = state->portalA.y;
             goose->vel = {0, 0};
-            g_assets.Honk();
+            goose->onHonk();
             state->justTeleported = true;
             EventBus::Instance().Publish(GooseTeleportedEvent{goose->id, 1, fromX, fromY, state->portalA.x, state->portalA.y});
             fprintf(stderr, "[Portal] g%d teleported B->A at (%.0f,%.0f)\n", goose->id, state->portalA.x, state->portalA.y);
@@ -164,9 +164,14 @@ static void render(Goose* goose, BehaviorContext& ctx, IRenderer* irenderer) {
     (void)goose; (void)ctx; (void)irenderer;
 }
 
-static Behavior g_portalBehavior = BEHAVIOR_DEF_STARTER(
+static void cleanup(BehaviorContext& ctx) {
+    (void)ctx;
+    ActorManager::Instance().destroyAllOfType("portal");
+}
+
+static Behavior g_portalBehavior = BEHAVIOR_DEF_CUSTOM(
     "portal", "Portal", "Press 1/2 to place portals at cursor, 0 to toggle. Based on PortalGoos by Moonaliss1",
-    g_config.behaviors.control.portals, init, tick, render
+    g_config.behaviors.control.portals, init, tick, render, cleanup, true, false
 );
 
 REGISTER_BEHAVIOR(g_portalBehavior);
