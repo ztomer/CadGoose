@@ -147,6 +147,9 @@ public:
     bool behaviorsEnabled = true;
     bool isResting = false;
 
+    // Character-specific capability flags
+    bool m_canHonk = true;
+
 #ifdef __APPLE__
     // Per-goose window for Phase 1 dual-write (__bridge BehaviorElementWindow*)
     void* m_perGooseWindow = nullptr;
@@ -159,6 +162,9 @@ public:
     void tick(WorldContext& ctx, double dt, double time) override;
     void render(IRenderer* renderer) override;
     void draw(IRenderer* renderer);
+#ifdef __APPLE__
+    virtual void drawBody(CGContextRef ctx);
+#endif
     bool isAlive() const override { return true; }
 
     Goose(int _id, const std::string& _name, int screenW, int screenH);

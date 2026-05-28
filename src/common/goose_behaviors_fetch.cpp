@@ -96,8 +96,9 @@ void tryPickupItem(Goose& g, double time, int w, int h) {
     Vector2 btPoint = g.GetBeakTipDevice();
 
     for (auto* actor : items) {
-        if (!actor || actor->pinned()) continue;
+        if (!actor || !actor->isActive() || actor->pinned()) continue;
         const DroppedItem& item = actor->item();
+        if (!item.data) continue;
         Vector2 itemCenter = WorldCoord::ItemCenter(item).toVector2();
         float dist = Vector2::Distance(btPoint, itemCenter);
         float pickupDist = WorldCoord::Scale(g_config.spawn.itemPickupDistance);
@@ -110,6 +111,7 @@ void tryPickupItem(Goose& g, double time, int w, int h) {
             // Hand ownership of ItemData to the goose so the actor doesn't delete it
             actor->item().data = nullptr;
             actor->setActive(false);
+            ActorManager::Instance().invalidateDroppedItemsCache();
             g.state = GooseState::RETURNING;
             g.target = {static_cast<float>(rng_util::RandRange(std::max(1, (int)(w - g_config.spawn.itemDropMarginX * 2)) + (int)g_config.spawn.itemDropMarginX)),
                         static_cast<float>(rng_util::RandRange(std::max(1, (int)(h - g_config.spawn.itemDropMarginY * 2)) + (int)g_config.spawn.itemDropMarginY))};
