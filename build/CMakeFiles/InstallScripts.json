@@ -1,9 +1,0 @@
-{
-	"InstallScripts" : 
-	[
-		"build/cmake_install.cmake",
-		"build/vendor/toml11/cmake_install.cmake",
-		"build/vendor/toml11/src/cmake_install.cmake"
-	],
-	"Parallel" : false
-}

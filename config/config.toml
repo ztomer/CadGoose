@@ -1,4 +1,4 @@
-goose = ["Mila", "Goose 1", "Goose 2"]
+goose = ["Mila"]
 
 [Debug]
 to_terminal = false
@@ -56,7 +56,7 @@ audio_enabled = false
 audio_muted = false
 dark_theme_role = "Canadian"
 memes_enabled = true
-appearance_mode = 1
+appearance_mode = 3
 light_theme_role = "Default"
 failsafe_hotkey = "cmd+shift+escape"
 
@@ -336,7 +336,7 @@ zero_velocity_threshold = 0.001
 
 [Behavior]
 interactive_drops_enabled = true
-autumn_leaves_enabled = false
+autumn_leaves_enabled = true
 rainbow_enabled = false
 interactive_drops_puddle_lifetime = 30.0
 anger_enabled = false
@@ -361,7 +361,7 @@ hats_enabled = false
 ai_enabled = false
 health_enabled = false
 portals_enabled = false
-pomodoro_enabled = true
+pomodoro_enabled = false
 jail_hotkey_p = "p"
 portal_hotkey_2 = "2"
 breadcrumbs_hotkey = "i"

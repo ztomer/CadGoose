@@ -13,6 +13,8 @@ struct WlrootsImpl {
     struct wl_seat* seat = nullptr;
     struct zwlr_virtual_pointer_manager_v1* manager = nullptr;
     struct zwlr_virtual_pointer_v1* pointer = nullptr;
+    int cursorX = 0;
+    int cursorY = 0;
 };
 
 WlrootsBackend::WlrootsBackend() = default;
@@ -84,11 +86,17 @@ bool WlrootsBackend::Init() {
     return true;
 }
 
+Vector2 WlrootsBackend::GetCursorPos() {
+    if (!m_impl) return {-1.0f, -1.0f};
+    return {(float)m_impl->cursorX, (float)m_impl->cursorY};
+}
+
 void WlrootsBackend::MoveCursorAbs(int x, int y) {
     if (!m_impl || !m_impl->pointer) return;
 
-    // zwlr_virtual_pointer_v1_motion_absolute(pointer, time, x, y, x_extent, y_extent)
-    // We use g_world.screenWidth/Height as extents.
+    m_impl->cursorX = x;
+    m_impl->cursorY = y;
+
     zwlr_virtual_pointer_v1_motion_absolute(m_impl->pointer, 0, x, y, g_world.screenWidth, g_world.screenHeight);
     zwlr_virtual_pointer_v1_frame(m_impl->pointer);
     wl_display_flush(m_impl->display);

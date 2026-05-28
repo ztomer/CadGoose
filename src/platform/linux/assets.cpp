@@ -10,9 +10,6 @@
 const std::string ASSET_ROOT_NAME = "Assets";
 fs::path ASSET_ROOT;
 
-ItemData::ItemData() : pixbuf(nullptr), w(0), h(0) {}
-ItemData::~ItemData() { if(pixbuf) g_object_unref(pixbuf); }
-
 AssetManager g_assets;
 
 AssetManager::~AssetManager() {
@@ -166,9 +163,9 @@ ItemData* AssetManager::CreateToyItem(bool isStick) {
     return item;
 }
 
-void AssetManager::Honk()  { if(g_config.audioEnabled && !honks.empty()) Mix_PlayChannel(-1, honks[rng_util::RandRange((int)honks.size())], 0); }
+void AssetManager::Honk()  { if(g_config.general.audioEnabled && !honks.empty()) Mix_PlayChannel(-1, honks[rng_util::RandRange((int)honks.size())], 0); }
 void AssetManager::Gulag() { Honk(); } // fallback to regular honk on Linux
-void AssetManager::Pat()   { if(g_config.audioEnabled && !pats.empty())  Mix_PlayChannel(-1, pats[rng_util::RandRange((int)pats.size())], 0); }
+void AssetManager::Pat()   { if(g_config.general.audioEnabled && !pats.empty())  Mix_PlayChannel(-1, pats[rng_util::RandRange((int)pats.size())], 0); }
 
 void* AssetManager::GetBehaviorImage(const std::string& name) {
     fs::path path = ASSET_ROOT / name;

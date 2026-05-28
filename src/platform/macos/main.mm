@@ -413,7 +413,7 @@ extern "C" void Presence_SetGooseWindowVisible(bool visible) {
 
 int main(int argc, char** argv) {
     srand((unsigned int)time(NULL));
-    OpenLogFile();
+    if (g_debugMode) OpenLogFile();
     fprintf(stderr, "[DEBUG] main() starting, argc=%d\n", argc);
     fflush(stderr);
     for (int i = 0; i < argc; i++) {

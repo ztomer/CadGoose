@@ -1,10 +1,13 @@
 #include "ui_tick.h"
 #include "ui.h"
 #include "ui_escape.h"
+#include "ui_controls.h"
 #include "world.h"
 #include "config.h"
 #include "actor.h"
 #include "cursor_io.h"
+
+static constexpr float kTickDt = 1.0f / 60.0f;
 
 gboolean on_tick(gpointer data) {
     g_time += kTickDt;

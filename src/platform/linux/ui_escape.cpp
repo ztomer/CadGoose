@@ -1,4 +1,5 @@
 #include "ui_escape.h"
+#include "ui_controls.h"
 #include "world.h"
 #include "config.h"
 #include "goose.h"
@@ -13,8 +14,6 @@ static bool g_escapeKillTriggered = false;
 
 static GtkWidget* g_escapeHoldHudWindow = nullptr;
 static GtkWidget* g_escapeHoldHudBar = nullptr;
-
-void UiLogPush(const char* msg);
 
 static double GetEscapeHoldProgress() {
     if (!g_escapeHeld || g_escapeHeldSinceUs == 0) return 0.0;
@@ -32,6 +31,7 @@ static void EnsureEscapeHoldHud() {
     gtk_window_set_resizable(win, FALSE);
     gtk_window_set_default_size(win, 320, 64);
 
+#ifdef GTK4_LAYER_SHELL_ENABLED
     gtk_layer_init_for_window(win);
     gtk_layer_set_layer(win, GTK_LAYER_SHELL_LAYER_TOP);
     gtk_layer_set_anchor(win, GTK_LAYER_SHELL_EDGE_LEFT, 1);
@@ -39,6 +39,7 @@ static void EnsureEscapeHoldHud() {
     gtk_layer_set_anchor(win, GTK_LAYER_SHELL_EDGE_BOTTOM, 1);
     gtk_layer_set_keyboard_mode(win, GTK_LAYER_SHELL_KEYBOARD_MODE_NONE);
     gtk_layer_set_margin(win, GTK_LAYER_SHELL_EDGE_BOTTOM, 20);
+#endif
 
     GtkWidget* outer = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
     gtk_widget_set_halign(outer, GTK_ALIGN_CENTER);
@@ -76,7 +77,7 @@ static void EnsureEscapeHoldHud() {
     gtk_widget_set_visible(g_escapeHoldHudWindow, FALSE);
 }
 
-static void UpdateEscapeHoldHud() {
+void UpdateEscapeHoldHud() {
     EnsureEscapeHoldHud();
     if (!g_escapeHoldHudWindow || !g_escapeHoldHudBar) return;
 
@@ -100,7 +101,7 @@ void ClearAllGooseState() {
     g_world.nextId = 0;
 }
 
-static void MaybeTriggerEscapeKill() {
+void MaybeTriggerEscapeKill() {
     if (!g_escapeHeld || g_escapeKillTriggered) return;
 
     const gint64 nowUs = g_get_monotonic_time();
@@ -121,7 +122,7 @@ static gboolean cb_window_key_pressed(GtkEventControllerKey*, guint keyval, guin
             if (g->id == g_world.cursorGrabberId && g->state == GooseState::SNATCH_CURSOR) {
                 UiLogPush("ESC pressed: ending snatch");
                 g->state = GooseState::WANDER;
-                g->PickNewTarget(g_config.screen.width, g_config.screen.height);
+                g->PickNewTarget(g_world.screenWidth, g_world.screenHeight);
                 g_world.cursorGrabberId = -1;
             }
         }
