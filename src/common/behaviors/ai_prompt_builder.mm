@@ -18,5 +18,15 @@ NSString* systemPromptForEvilLevel(float level) {
     };
 
     NSString* extension = extensions[nsPersonality] ?: @"You do what you want. Keep responses short.";
+
+    if (g_config.general.appearanceMode == APPEARANCE_STALIN) {
+        extension = [extension stringByReplacingOccurrencesOfString:@"Honk Goose" withString:@"GULAG Comrade"];
+        extension = [extension stringByReplacingOccurrencesOfString:@"honk" withString:@"GULAG"];
+        extension = [extension stringByReplacingOccurrencesOfString:@"Honk" withString:@"GULAG"];
+        extension = [extension stringByReplacingOccurrencesOfString:@"goose" withString:@"Comrade"];
+        extension = [extension stringByReplacingOccurrencesOfString:@"Goose" withString:@"Comrade"];
+        extension = [extension stringByAppendingString:@" Always say GULAG instead of HONK, Comrade instead of goose."];
+    }
+
     return [NSString stringWithFormat:@"You are %@. %@", nsPersonality, extension];
 }
