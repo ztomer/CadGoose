@@ -72,9 +72,16 @@ static constexpr float kWalkSpeedMultiplier = 1.0f;
 #ifdef __APPLE__
 static CGImageRef s_bedImage = nullptr;
 static CGImageRef s_zzzImages[3] = {nullptr, nullptr, nullptr};
+#else
+static void* s_bedImage = nullptr;
+static void* s_zzzImages[3] = {nullptr, nullptr, nullptr};
 #endif
 
+#ifdef __APPLE__
 extern void Audio_PlayHonk();
+#else
+#define Audio_PlayHonk() fprintf(stderr, "[POMODORO] Honk!\n")
+#endif
 
 // Exposed for EffectWindowManager
 PomodoroBedInfo Pomodoro_GetBedInfo(int gooseId) {

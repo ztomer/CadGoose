@@ -592,9 +592,11 @@ void Goose::tick(WorldContext& world, double dt, double time) {
     BehaviorRegistry::Instance().TickAll(this, dt, time);
 }
 
+#ifdef __APPLE__
 void Goose::drawBody(CGContextRef ctx) {
     DrawGoose(this, ctx);
 }
+#endif
 
 void Goose::render(IRenderer* renderer) {
     if (g_cutoverMode) return;

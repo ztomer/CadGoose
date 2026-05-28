@@ -13,6 +13,7 @@ public:
     uint32_t Caps() const override { return CAP_MOVE_REL | CAP_MOVE_ABS; }
     
     bool Init() override;
+    Vector2 GetCursorPos() override;
     
     // Core operations
     void MoveCursorAbs(int x, int y) override;

@@ -15,13 +15,21 @@
 #include <cmath>
 #include <cstdio>
 #include <algorithm>
+#ifdef __APPLE__
 #include <mach/mach_time.h>
+#endif
+#include <chrono>
 
 static double GetTimeMs() {
+#ifdef __APPLE__
     static mach_timebase_info_data_t info = {0};
     if (info.denom == 0) mach_timebase_info(&info);
     uint64_t now = mach_absolute_time();
     return (double)now * (double)info.numer / (double)info.denom / 1e6;
+#else
+    return std::chrono::duration<double, std::milli>(
+        std::chrono::steady_clock::now().time_since_epoch()).count();
+#endif
 }
 
 static int s_dropTxnId = 0;
@@ -160,8 +168,8 @@ void handleFetching(Goose& g, double time, int w, int h) {
         g.heldItem = (rng_util::RandRange(2) == 0) ? g_assets.GetRandomMeme() : g_assets.GetRandomText();
     }
 
-    FETCH_LOG("[FETCH] handleFetching g%d heldItem=%p image=%p after creation\n",
-            g.id, (void*)g.heldItem, g.heldItem ? (void*)g.heldItem->image : nullptr);
+    FETCH_LOG("[FETCH] handleFetching g%d heldItem=%p after creation\n",
+            g.id, (void*)g.heldItem);
 
     g.forceItemFetch = -1;
     g.forcedText.clear();
