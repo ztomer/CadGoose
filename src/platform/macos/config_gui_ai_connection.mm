@@ -3,6 +3,7 @@
 #import "config_gui_helpers.h"
 #include "config.h"
 #include "local_llm.h"
+#include "behaviors/ai_local_llm_adapter.h"
 
 static constexpr float kTestTimeout = 30.0f;
 static constexpr float kModelRefreshDelay = 0.5f;
@@ -91,10 +92,13 @@ static constexpr float kModelPopupTag = 101;
                 self.statusLabel.stringValue = @"\u274C Local LLM error";
                 self.statusLabel.textColor = [NSColor systemRedColor];
                 break;
-            case LocalLLMState::Unavailable:
-                self.statusLabel.stringValue = @"\u274C No local model found";
+            case LocalLLMState::Unavailable: {
+                int code = FoundationLLM_AvailabilityCode();
+                NSString* why = (code == 0) ? @"No local model found" : FoundationUnavailableMessage(code);
+                self.statusLabel.stringValue = [NSString stringWithFormat:@"\u274C %@", why];
                 self.statusLabel.textColor = [NSColor systemRedColor];
                 break;
+            }
         }
         return;
     }
