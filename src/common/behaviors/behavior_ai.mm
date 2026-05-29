@@ -451,9 +451,11 @@ static AIChatWindowController* g_chatController = nil;
 
 extern "C" void AI_OpenChat(const char* gooseName) {
 #ifdef __APPLE__
+    // Snapshot the C string now — it may be freed before the async block runs.
+    const char* defaultName = IsStalinMode() ? "Comrade" : "Goose";
+    NSString* name = [NSString stringWithUTF8String:(gooseName && gooseName[0]) ? gooseName : defaultName];
+    if (!name) name = @"Goose";
     dispatch_async(dispatch_get_main_queue(), ^{
-        const char* defaultName = IsStalinMode() ? "Comrade" : "Goose";
-        NSString* name = [NSString stringWithUTF8String:gooseName ? gooseName : defaultName];
         if (g_chatController) {
             [g_chatController.window makeKeyAndOrderFront:nil];
         } else {
@@ -488,9 +490,14 @@ extern "C" void AI_CloseChat() {
 
 extern "C" void AI_SendMessage(const char* message) {
 #ifdef __APPLE__
+    // Snapshot now: `message` may be freed before the async block runs, and a
+    // dangling pointer yields nil from stringWithUTF8String, which makes
+    // -[NSTextField setStringValue:nil] assert and abort the app.
+    NSString* msg = message ? [NSString stringWithUTF8String:message] : @"";
+    if (!msg) msg = @"";
     dispatch_async(dispatch_get_main_queue(), ^{
         if (g_chatController) {
-            g_chatController.inputField.stringValue = [NSString stringWithUTF8String:message];
+            g_chatController.inputField.stringValue = msg;
             [g_chatController sendMessage:nil];
         }
     });

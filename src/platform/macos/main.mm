@@ -324,7 +324,10 @@ bool Config_IsSystemDarkTheme();
             return "ok chat opened\n";
         }
         if (!args.empty() && args[0] == "send" && args.size() > 1) {
-            dispatch_async(dispatch_get_main_queue(), ^{ AI_SendMessage(args[1].c_str()); });
+            // Copy into a local: `args` is freed when this handler returns, so
+            // capturing args[1].c_str() in the async block is a use-after-free.
+            std::string msg = args[1];
+            dispatch_async(dispatch_get_main_queue(), ^{ AI_SendMessage(msg.c_str()); });
             return "ok message sent\n";
         }
         return AppActions_HandleCommand(args);
