@@ -80,7 +80,7 @@ jobs:
       - name: Create App Bundle
         run: |
           chmod +x scripts/create_bundle.sh
-          ./scripts/create_bundle.sh --clean
+          BUNDLE_VERSION="${VERSION#v}" ./scripts/create_bundle.sh --clean
 
       - name: Create DMG
         run: |

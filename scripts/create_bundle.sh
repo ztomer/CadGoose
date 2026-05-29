@@ -38,6 +38,14 @@ RESOURCES_DIR="${CONTENTS_DIR}/Resources"
 BUNDLE_ID="${BUNDLE_ID:-com.desktoppad.CadGoose}"
 BUNDLE_NAME="${BUNDLE_NAME:-CadGoose}"
 
+# Version shown in Finder/About. Prefer an explicit BUNDLE_VERSION (set by CI
+# to the release tag), else derive from git, else a placeholder. Strip a
+# leading "v" so CFBundleShortVersionString is a clean number (e.g. v1.9 -> 1.9).
+RAW_VERSION="${BUNDLE_VERSION:-$(git -C "$PROJECT_DIR" describe --tags --always 2>/dev/null || echo 0.0.0)}"
+SHORT_VERSION="${RAW_VERSION#v}"
+# CFBundleVersion must be a monotonic build number — use the commit count.
+BUILD_NUMBER="$(git -C "$PROJECT_DIR" rev-list --count HEAD 2>/dev/null || echo 1)"
+
 # Parse options
 CLEAN=false
 DO_BUILD=false
@@ -136,9 +144,9 @@ cat > "${CONTENTS_DIR}/Info.plist" <<PLIST
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleShortVersionString</key>
-    <string>1.0</string>
+    <string>${SHORT_VERSION}</string>
     <key>CFBundleVersion</key>
-    <string>1</string>
+    <string>${BUILD_NUMBER}</string>
     <key>LSMinimumSystemVersion</key>
     <string>10.15</string>
     <key>NSHighResolutionCapable</key>
