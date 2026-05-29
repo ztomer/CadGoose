@@ -473,7 +473,16 @@ if(APPLE)
         )
     endif()
     
-    add_test(NAME CadGooseTests COMMAND CadGooseTests)
+    # Register the gtest binary with CTest. enable_testing() is required or
+    # `ctest` finds no tests (which is why CI silently never ran them).
+    # WORKING_DIRECTORY = source tree so the suite finds Assets/ at runtime.
+    # WindowTrailTest.* drives a real NSWindow server and can't run on a
+    # headless CI runner (it crashes), so it's excluded here — run it locally
+    # with `./build/CadGooseTests` on a machine with a display.
+    enable_testing()
+    add_test(NAME CadGooseTests
+             COMMAND CadGooseTests --gtest_filter=-WindowTrailTest.*
+             WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
     # Trail detection test — standalone binary, not a gtest.
     # Connects to running CadGoose app via Unix socket, captures screenshots,
