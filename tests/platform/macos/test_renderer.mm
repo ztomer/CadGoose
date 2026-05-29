@@ -20,6 +20,13 @@ static std::string run_tesseract(const char* imagePath) {
     return result;
 }
 
+// These tests verify text isn't mirrored by OCR'ing the rendered output, which
+// requires the `tesseract` CLI. It isn't on headless CI runners, so skip there
+// rather than fail (run them on a dev machine with `brew install tesseract`).
+static bool tesseract_available() {
+    return system("command -v tesseract >/dev/null 2>&1") == 0;
+}
+
 TEST(Rendering, YAxisFlip) {
     float boundsHeight = 1080.0f;
     float originalY = 200.0f;
@@ -30,6 +37,7 @@ TEST(Rendering, YAxisFlip) {
 // GooseView tests removed in Phase 3 (full-screen overlay eliminated).
 
 TEST(Rendering, TextMirroringFix) {
+    if (!tesseract_available()) GTEST_SKIP() << "tesseract not installed; skipping OCR render test";
     // Test that NOT using Y-flip preserves text orientation
     // "FLIPPED" in Y-flipped context appears mirrored
     // "NORMAL" and "DRAWRECT" in unflipped context appear correct
@@ -76,6 +84,7 @@ TEST(Rendering, TextMirroringFix) {
 }
 
 TEST(Rendering, TextRenderingCorrect) {
+    if (!tesseract_available()) GTEST_SKIP() << "tesseract not installed; skipping OCR render test";
     // Regression test: ensure text renders without X-mirroring.
     // Solution: DON'T use Y-flip for text rendering. Use manual Y conversion instead.
     // This test verifies that text without Y-flip renders correctly.
@@ -115,6 +124,7 @@ TEST(Rendering, TextRenderingCorrect) {
 }
 
 TEST(Rendering, DroppedItemTextNotMirrored) {
+    if (!tesseract_available()) GTEST_SKIP() << "tesseract not installed; skipping OCR render test";
     // Regression test: dropped item text notes should render correctly.
     // Fix: DON'T use Y-flip for text, use manual Y conversion.
 
