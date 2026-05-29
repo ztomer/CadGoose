@@ -1,4 +1,4 @@
-goose = ["Mila"]
+goose = ["Goose 0"]
 
 [Debug]
 to_terminal = false
@@ -35,7 +35,7 @@ local_llm_enabled = false
 osaurus_port = 1337
 custom_port = 1337
 evil_level = 1.0
-provider_type = 1
+provider_type = 0
 text_meme_temperature = 1.2
 ollama_model = "llama3"
 text_meme_auto_save = true
@@ -56,7 +56,7 @@ audio_enabled = false
 audio_muted = false
 dark_theme_role = "Canadian"
 memes_enabled = true
-appearance_mode = 4
+appearance_mode = 3
 light_theme_role = "Default"
 failsafe_hotkey = "cmd+shift+escape"
 
@@ -337,7 +337,7 @@ zero_velocity_threshold = 0.001
 [Behavior]
 interactive_drops_enabled = true
 autumn_leaves_enabled = true
-rainbow_enabled = false
+rainbow_enabled = true
 interactive_drops_puddle_lifetime = 30.0
 anger_enabled = false
 avoidance_enabled = true
@@ -357,7 +357,7 @@ jail_hotkey_o = "o"
 config_gui_enabled = false
 honcker_enabled = true
 visible_enabled = true
-hats_enabled = false
+hats_enabled = true
 ai_enabled = false
 health_enabled = false
 portals_enabled = false
