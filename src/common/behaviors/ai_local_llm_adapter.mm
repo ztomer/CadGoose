@@ -25,27 +25,35 @@ NSString* FoundationUnavailableMessage(int code) {
 static void runLocalLLMGenerate(const std::string& promptStr, float temperature,
                                 void(^completion)(NSString*, NSError*), void(^connectedCallback)(BOOL)) {
     LocalLLM_Generate(promptStr, temperature, ^(const std::string& result) {
+        // `result` is a reference to a temporary std::string that is destroyed
+        // as soon as this callback returns (it lives in the caller's frame —
+        // e.g. the FoundationModels C trampoline). Convert it to an NSString
+        // NOW, synchronously, before handing off to the async block below.
+        // Capturing `result` by reference into dispatch_async read freed memory
+        // and delivered garbage text to the chat.
+        BOOL empty = result.empty();
+        NSString* response = empty ? nil : [NSString stringWithUTF8String:result.c_str()];
+
         dispatch_async(dispatch_get_main_queue(), ^{
-            if (result.empty()) {
+            if (empty) {
                 fprintf(stderr, "[AI] Local LLM returned empty\n");
                 connectedCallback(NO);
                 if (completion) completion(@"HONK! Local brain returned nothing.", nil);
                 return;
             }
 
-            NSString* response = [NSString stringWithUTF8String:result.c_str()];
             if (!response || response.length == 0) {
                 fprintf(stderr, "[AI] Local LLM returned invalid UTF-8 or empty\n");
                 connectedCallback(NO);
                 if (completion) completion(@"HONK! Local brain returned garbled text.", nil);
                 return;
             }
-            
-            response = stripThinkBlocks(response);
+
+            NSString* stripped = stripThinkBlocks(response);
             connectedCallback(YES);
 
-            fprintf(stderr, "[AI] Local LLM response: %zu chars\n", (size_t)response.length);
-            if (completion) completion(response, nil);
+            fprintf(stderr, "[AI] Local LLM response: %zu chars\n", (size_t)stripped.length);
+            if (completion) completion(stripped, nil);
         });
     });
 }

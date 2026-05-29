@@ -283,15 +283,19 @@ static void TryLocalGeneration(const std::string& prompt, float temperature) {
     s_nextGenTime = [[NSDate date] timeIntervalSince1970] + kAITextInitialCooldown;
 
     LocalLLM_Generate(prompt, temperature, ^(const std::string& result) {
+        // `result` references a temporary destroyed when this callback returns;
+        // copy it before handing off to the async block (capturing the
+        // reference would read freed memory).
+        std::string resultCopy = result;
         dispatch_async(dispatch_get_main_queue(), ^{
-            if (result.empty()) {
+            if (resultCopy.empty()) {
                 fprintf(stderr, "[AITEXT] Local LLM returned empty, falling back to file texts\n");
                 // Fall back to file texts - they're always available via Dequeue
                 s_nextGenTime = [[NSDate date] timeIntervalSince1970] + kAITextErrorCooldown;
                 return;
             }
 
-            size_t hash = SimpleHash(result);
+            size_t hash = SimpleHash(resultCopy);
             std::lock_guard<std::mutex> lock(s_mutex);
             if (SeenHash(hash)) {
                 fprintf(stderr, "[AITEXT] Duplicate local text, skipping\n");
@@ -300,9 +304,9 @@ static void TryLocalGeneration(const std::string& prompt, float temperature) {
             }
 
             s_seenHashes.push(hash);
-            s_aiQueue.push(result);
+            s_aiQueue.push(resultCopy);
             s_nextGenTime = [[NSDate date] timeIntervalSince1970] + 10.0;
-            fprintf(stderr, "[AITEXT] Local LLM: \"%s\" (ai_queue=%d)\n", result.c_str(), (int)s_aiQueue.size());
+            fprintf(stderr, "[AITEXT] Local LLM: \"%s\" (ai_queue=%d)\n", resultCopy.c_str(), (int)s_aiQueue.size());
         });
     });
 }
