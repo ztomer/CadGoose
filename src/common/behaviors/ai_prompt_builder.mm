@@ -1,5 +1,22 @@
 #import "ai_prompt_builder.h"
 #import "config.h"
+#import <algorithm>
+
+// "villainous goose scheming against humanity" (state 6 of 8) is the spiciest
+// persona the on-device guardrail reliably allows; "evil overlord" (7) and
+// "dictator who conquered Poland" (8) get refused. State 6 ≈ level 0.72
+// (state = round(level*9)).
+const float kFoundationMaxEvilLevel = 0.72f;
+
+float CapEvilForFoundation(float level) {
+    return std::min(level, kFoundationMaxEvilLevel);
+}
+
+NSString* FoundationPersonaCapNote(void) {
+    return @"⚠︎ Apple Foundation caps the persona at “villainous” — its safety filter "
+            "blocks the Overlord/Dictator levels (the goose falls back to canned lines there). "
+            "Use Osaurus or Ollama for the full evil range.";
+}
 
 NSString* systemPromptForEvilLevel(float level) {
     std::string personality = Config_EvilPersonality(level);

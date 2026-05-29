@@ -20,6 +20,7 @@ static constexpr float kDefaultMcpPort = 31072;
     [self.modelPopup removeAllItems];
     [self.modelPopup addItemWithTitle:[self currentModelName]];
     [self updateCustomVisibility];
+    self.foundationNote.hidden = (idx != 0);  // Foundation persona-cap note
     Config_SaveAll();
     [self refreshModels:sender];
 }
