@@ -1,4 +1,4 @@
-# CadGoose 🪿
+# CadGoose
 
 ![CadGoose](Assets/Images/OtherGfx/CadGooseEvil.jpeg)
 
@@ -12,21 +12,21 @@ Each goose lives in a transparent, click-through overlay above your normal windo
 
 | Platform | Status |
 |---|---|
-| **macOS** | ✅ **Supported** — native AppKit + Core Graphics. macOS 10.15+ (Apple Intelligence features need macOS 26+). |
-| **Linux** | ⚠️ **Experimental** — GTK4 (Wayland / X11). May not build or run correctly; not recommended for daily use. Patches welcome. |
+| **macOS** | **Supported** — native AppKit + Core Graphics. macOS 10.15+ (Apple Intelligence features need macOS 26+). |
+| **Linux** | **Experimental** — GTK4 (Wayland / X11). May not build or run correctly; not recommended for daily use. Patches welcome. |
 
 ---
 
 ## Features
 
-- 🪿 **One or many geese** roaming transparent overlays across all your monitors, with smooth directional animation and fading footprint trails.
-- 🖱️ **Cursor mischief** — geese chase your cursor and occasionally snatch and drag it.
-- 🧷 **Steals & drops** meme images and sticky-note messages, and pushes balls around.
-- 🔊 **Honks** on a timer (mutable from the menu bar).
-- 🤖 **AI chat** — click a goose to chat. Works with Apple's on-device Foundation model (no setup, macOS 26+) or your own local server (Osaurus / Ollama / custom endpoint).
-- 🎭 **Adjustable personality** — from a cuddly gosling to a villainous goose, via an "evil level" slider.
-- 🖥️ **Multi-monitor** — geese discover all your displays at startup and roam across them.
-- 🎛️ **21 toggleable behaviors** across five categories (below), each individually tunable.
+- **One or many geese** roaming transparent overlays across all your monitors, with smooth directional animation and fading footprint trails.
+- **Cursor mischief** — geese chase your cursor and occasionally snatch and drag it.
+- **Steals & drops** meme images and sticky-note messages, and pushes balls around.
+- **Honks** on a timer (mutable from the menu bar).
+- **AI chat** — click a goose to chat. Works with Apple's on-device Foundation model (no setup, macOS 26+) or your own local server (Osaurus / Ollama / custom endpoint).
+- **Adjustable personality** — from a cuddly gosling to a villainous goose, via an "evil level" slider.
+- **Multi-monitor** — geese discover all your displays at startup and roam across them.
+- **21 toggleable behaviors** across five categories (below), each individually tunable.
 
 ### Behaviors
 
@@ -50,7 +50,7 @@ Toggle and tune each from **Preferences → Behaviors**:
    ```
    Then open it normally (double-click). You only need to do this once. *(A future notarized build will remove this step.)*
 
-CadGoose runs in your **menu bar** (🪿). Use the menu to spawn geese, open Preferences, start a chat, mute honks, or quit.
+CadGoose runs in your **menu bar**. Use the menu to spawn geese, open Preferences, start a chat, mute honks, or quit.
 
 ---
 
