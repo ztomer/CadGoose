@@ -7,6 +7,12 @@ on:
     branches: [main, master]
   release:
     types: [published]
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: "Existing release tag to attach the built artifacts to (e.g. v1.9). Leave blank to only build artifacts."
+        required: false
+        default: ""
 
 permissions:
   contents: write
@@ -52,8 +58,11 @@ jobs:
           retention-days: 30
 
       - name: Upload DMG to Release
-        if: github.event_name == 'release'
-        run: gh release upload "${{ github.event.release.tag_name }}" build/CadGoose.dmg --clobber
+        if: github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && inputs.release_tag != '')
+        run: |
+          TAG="${{ github.event.release.tag_name || inputs.release_tag }}"
+          echo "Attaching DMG to release $TAG"
+          gh release upload "$TAG" build/CadGoose.dmg --clobber
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -96,7 +105,10 @@ jobs:
           retention-days: 30
 
       - name: Upload tar.zst to Release
-        if: github.event_name == 'release'
-        run: gh release upload "${{ github.event.release.tag_name }}" CadGoose-linux.tar.zst --clobber
+        if: github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && inputs.release_tag != '')
+        run: |
+          TAG="${{ github.event.release.tag_name || inputs.release_tag }}"
+          echo "Attaching tar.zst to release $TAG"
+          gh release upload "$TAG" CadGoose-linux.tar.zst --clobber
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
