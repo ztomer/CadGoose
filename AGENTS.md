@@ -12,7 +12,7 @@
 
 ```bash
 cd $HOME/Projects/CadGoose
-./build.sh              # macOS Release (quiet)
+./build.sh              # macOS Release — checks/installs Homebrew deps, verbose output
 ./build_debug.sh        # macOS Debug (verbose)
 ./build_linux.sh        # Linux Release via Docker (quiet)
 mkdir -p build && cd build && cmake .. -DCMAKE_BUILD_TYPE=Release && make -j$(sysctl -n hw.logicalcpu)
@@ -24,6 +24,18 @@ mkdir -p build && cd build && cmake .. -DCMAKE_BUILD_TYPE=Release && make -j$(sy
 ./build/trail_detection_test
 ./build/soak_fetch_test
 ```
+
+- **Dependencies**: `build.sh` installs `cmake ninja googletest mimalloc` via Homebrew if missing (set `SKIP_DEPS=1` to skip). **toml11** is fetched at configure time via CMake `FetchContent` (pinned commit `b32a2ff`) — no git submodule, so a plain `git clone` builds without `--recursive`.
+- **Logs/crashes**: written to `<ConfigDir>/logs/` (macOS: `~/Library/Application Support/CadGoose/logs/`). Crash backtraces in `crash-<ts>.log`; stderr captured to `session-<ts>.log` when launched from the bundle (not a terminal).
+- **CI/release**: `.github/workflows/build_and_release.yml` builds the macOS DMG + Linux tarball, attaches them to a release on `release: published`, and can be run manually via `workflow_dispatch` with a `release_tag` input to attach artifacts to an existing tag. NOTE: the `ctest` step is currently a no-op (no `enable_testing()`/`include(CTest)`), so CI does not actually gate on tests.
+
+## Session Summary (May 28, 2026) — Fresh-machine bug fixes + release packaging
+
+- **Local-model chat fix** (`ai_local_llm_adapter.mm`): chat no longer rejects a model in `Loading`; only `Unavailable`/`Error` bail. Generation runs on a background queue so the CoreML wait loop doesn't freeze the UI. This resolved "chat fails but Test Connection works".
+- **Stalin texture fix** (`assets.mm`): `GetBehaviorImage`/`PreloadBehaviorAssets` now resolve via `ASSET_ROOT` (was cwd-relative → failed from the bundle). `stalin_head.png` added to preload list.
+- **Crash/log capture** (new `crash_logger.mm`/`.h`, wired in `main.mm`): signal + uncaught-exception handlers write symbolicated backtraces; stderr redirected to a session log when headless.
+- **Packaging**: `build.sh` dep-check + verbose output; toml11 → FetchContent (submodule removed); `workflow_dispatch` added to release workflow; README install/Gatekeeper docs.
+- Known pre-existing test failures (unrelated): `Integration.Goose_ReturningItem`, `Integration.Goose_DropItem` — fail on committed HEAD independent of these changes.
 
 ## Session Summary (May 27, 2026) — Gulag Audio + Menubar Icon + AI Stalin Mode + Linux Fix
 
