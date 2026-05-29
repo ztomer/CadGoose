@@ -36,9 +36,16 @@ static void runLocalLLMGenerate(const std::string& promptStr, float temperature,
 
         dispatch_async(dispatch_get_main_queue(), ^{
             if (empty) {
-                fprintf(stderr, "[AI] Local LLM returned empty\n");
-                connectedCallback(NO);
-                if (completion) completion(@"HONK! Local brain returned nothing.", nil);
+                // Empty usually means the on-device model *declined* to answer:
+                // Apple's FoundationModels enforces guardrails that refuse spicy
+                // personas (high evil level / dictator / Stalin prompts) with a
+                // guardrailViolation, returning no text. The model is reachable,
+                // so keep the connection green and return nil — the chat then
+                // falls back to an in-character canned line instead of showing a
+                // confusing "returned nothing" error.
+                fprintf(stderr, "[AI] Local LLM returned empty (model likely declined — guardrail). Falling back.\n");
+                connectedCallback(YES);
+                if (completion) completion(nil, nil);
                 return;
             }
 

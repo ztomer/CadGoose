@@ -87,12 +87,10 @@ public func cGenerate(prompt: UnsafePointer<CChar>, temperature: Float, callback
         var options = GenerationOptions()
         options.temperature = Double(temperature)
 
-        fmLog("respond() start, prompt \(promptStr.count) chars")
         Task {
             do {
                 let response = try await session.respond(to: promptStr, options: options)
                 var content = response.content
-                fmLog("raw response \(content.count) chars")
 
                 // Strip think...> blocks
                 while let startRange = content.range(of: "<think>"),
