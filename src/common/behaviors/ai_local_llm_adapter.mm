@@ -6,6 +6,19 @@
 
 static const int kAIChatRetryAttempts = 10;
 
+// Human-readable explanation for a FoundationLLM_AvailabilityCode(). Shared by
+// the chat error path and the Test Connection panel so the user is told *why*
+// the local model can't be reached (most often: Apple Intelligence is off).
+NSString* FoundationUnavailableMessage(int code) {
+    switch (code) {
+        case 2: return @"this Mac isn't eligible for Apple Intelligence";
+        case 3: return @"Apple Intelligence is off — enable it in System Settings ▸ Apple Intelligence & Siri";
+        case 4: return @"the on-device model is still downloading — try again shortly";
+        case 1: return @"this build has no FoundationModels support (needs a macOS 26 SDK build)";
+        default: return @"the on-device model is unavailable";
+    }
+}
+
 // Runs the actual generation. LocalLLM_Generate internally waits for the model
 // to finish loading (Loading -> Ready) before producing tokens, so callers can
 // invoke this whenever the model isn't in an Unavailable/Error state.
@@ -69,9 +82,16 @@ void completeWithLocalLLM(NSArray* history, float evilLevel, void(^completion)(N
     // (which tolerates Loading) so the chat window no longer rejects a model
     // that is simply still warming up on its background loader thread.
     if (state == LocalLLMState::Unavailable) {
-        fprintf(stderr, "[AI] Local LLM unavailable\n");
+        // Foundation is the default provider, so explain the specific reason
+        // (Apple Intelligence off, model downloading, etc.) rather than a
+        // generic "no model" message that sends users hunting in settings.
+        int code = FoundationLLM_AvailabilityCode();
+        fprintf(stderr, "[AI] Local LLM unavailable (foundation code=%d)\n", code);
         connectedCallback(NO);
-        if (completion) completion(@"🦆 HONK! No local model found. Enable local LLM in settings.", nil);
+        NSString* why = (code == 0)
+            ? @"no local model found — add one in settings or enable Apple Intelligence"
+            : FoundationUnavailableMessage(code);
+        if (completion) completion([NSString stringWithFormat:@"🦆 HONK! Can't reach the local brain: %@.", why], nil);
         return;
     }
     if (state == LocalLLMState::Error) {

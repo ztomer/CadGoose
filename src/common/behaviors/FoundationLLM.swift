@@ -11,17 +11,38 @@ import FoundationModels
 
 @_cdecl("FoundationLLM_IsAvailable")
 public func cIsAvailable() -> Int32 {
+    return cAvailabilityCode() == 0 ? 1 : 0
+}
+
+// Returns a code describing why the FoundationModels backend is (un)available,
+// so the UI can tell the user what to do rather than a generic failure:
+//   0 = available
+//   1 = framework not present (app built without the macOS 26 SDK, or OS < 26)
+//   2 = device not eligible for Apple Intelligence
+//   3 = Apple Intelligence not enabled in System Settings
+//   4 = model still downloading / not ready
+//   5 = unavailable for an unknown reason
+@_cdecl("FoundationLLM_AvailabilityCode")
+public func cAvailabilityCode() -> Int32 {
     #if canImport(FoundationModels)
     if #available(macOS 26.0, *) {
-        do {
-            let model = try SystemLanguageModel.default
-            return model.availability == .available ? 1 : 0
-        } catch {
+        let model = SystemLanguageModel.default
+        switch model.availability {
+        case .available:
             return 0
+        case .unavailable(let reason):
+            switch reason {
+            case .deviceNotEligible: return 2
+            case .appleIntelligenceNotEnabled: return 3
+            case .modelNotReady: return 4
+            @unknown default: return 5
+            }
+        @unknown default:
+            return 5
         }
     }
     #endif
-    return 0
+    return 1
 }
 
 @_cdecl("FoundationLLM_ContextSize")
