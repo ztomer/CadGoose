@@ -19,63 +19,17 @@ NSString* FoundationUnavailableMessage(int code) {
     }
 }
 
-// Runs the actual generation. LocalLLM_Generate internally waits for the model
-// to finish loading (Loading -> Ready) before producing tokens, so callers can
-// invoke this whenever the model isn't in an Unavailable/Error state.
-static void runLocalLLMGenerate(const std::string& promptStr, float temperature,
-                                void(^completion)(NSString*, NSError*), void(^connectedCallback)(BOOL)) {
-    LocalLLM_Generate(promptStr, temperature, ^(const std::string& result) {
-        // `result` is a reference to a temporary std::string that is destroyed
-        // as soon as this callback returns (it lives in the caller's frame —
-        // e.g. the FoundationModels C trampoline). Convert it to an NSString
-        // NOW, synchronously, before handing off to the async block below.
-        // Capturing `result` by reference into dispatch_async read freed memory
-        // and delivered garbage text to the chat.
-        BOOL empty = result.empty();
-        NSString* response = empty ? nil : [NSString stringWithUTF8String:result.c_str()];
+// When Foundation declines (guardrail) we retry at a lower evil level so the
+// user still gets a real reply instead of a canned line. Step down by this much
+// each attempt, down to this floor (a guaranteed-safe persona).
+static constexpr float kLocalRetryEvilStep = 0.28f;
+static constexpr float kLocalRetryFloorEvil = 0.10f;
 
-        dispatch_async(dispatch_get_main_queue(), ^{
-            if (empty) {
-                // Empty usually means the on-device model *declined* to answer:
-                // Apple's FoundationModels enforces guardrails that refuse spicy
-                // personas (high evil level / dictator / Stalin prompts) with a
-                // guardrailViolation, returning no text. The model is reachable,
-                // so keep the connection green and return nil — the chat then
-                // falls back to an in-character canned line instead of showing a
-                // confusing "returned nothing" error.
-                fprintf(stderr, "[AI] Local LLM returned empty (model likely declined — guardrail). Falling back.\n");
-                connectedCallback(YES);
-                if (completion) completion(nil, nil);
-                return;
-            }
-
-            if (!response || response.length == 0) {
-                fprintf(stderr, "[AI] Local LLM returned invalid UTF-8 or empty\n");
-                connectedCallback(NO);
-                if (completion) completion(@"HONK! Local brain returned garbled text.", nil);
-                return;
-            }
-
-            NSString* stripped = stripThinkBlocks(response);
-            connectedCallback(YES);
-
-            fprintf(stderr, "[AI] Local LLM response: %zu chars\n", (size_t)stripped.length);
-            if (completion) completion(stripped, nil);
-        });
-    });
-}
-
-void completeWithLocalLLM(NSArray* history, float evilLevel, void(^completion)(NSString*, NSError*), void(^connectedCallback)(BOOL)) {
-    fprintf(stderr, "[AI] Foundation provider: routing to local LLM\n");
-
+// Build the full prompt (system persona + recent history) for a given evil level.
+static NSString* buildLocalPrompt(NSArray* history, float evilLevel) {
     NSMutableString* prompt = [NSMutableString string];
-    // Cap the persona only when FoundationModels is the backend — its guardrail
-    // refuses the most extreme levels. CoreML/other local models are uncapped.
-    float effectiveEvil = FoundationLLM_IsAvailable() ? CapEvilForFoundation(evilLevel) : evilLevel;
-    NSString* sysPrompt = systemPromptForEvilLevel(effectiveEvil);
-    [prompt appendString:sysPrompt];
+    [prompt appendString:systemPromptForEvilLevel(evilLevel)];
     [prompt appendString:@"\n\n"];
-
     NSInteger startIdx = MAX(0, (NSInteger)history.count - 5);
     for (NSInteger i = startIdx; i < (NSInteger)history.count; i++) {
         NSDictionary* msg = history[i];
@@ -87,8 +41,63 @@ void completeWithLocalLLM(NSArray* history, float evilLevel, void(^completion)(N
             [prompt appendFormat:@"Assistant: %@\n", content];
         }
     }
+    return prompt;
+}
 
+// Generate at `evilLevel`; on an empty result from the FoundationModels backend
+// (a guardrail refusal), recursively retry at a lower evil level before giving
+// up to the chat's in-character canned fallback. Recursion is via this static
+// function (not a self-referential block), so there's no lifetime hazard.
+static void generateLocalAtEvil(NSArray* history, float evilLevel, BOOL foundation, float temperature,
+                                void(^completion)(NSString*, NSError*), void(^connectedCallback)(BOOL)) {
+    NSString* prompt = buildLocalPrompt(history, evilLevel);
     std::string promptStr = std::string([prompt UTF8String]);
+
+    LocalLLM_Generate(promptStr, temperature, ^(const std::string& result) {
+        // Convert synchronously — `result` references a temporary freed once
+        // this callback returns; capturing it by reference would read freed
+        // memory and deliver garbage.
+        BOOL empty = result.empty();
+        NSString* response = empty ? nil : [NSString stringWithUTF8String:result.c_str()];
+
+        dispatch_async(dispatch_get_main_queue(), ^{
+            if (!empty && response.length > 0) {
+                NSString* stripped = stripThinkBlocks(response);
+                connectedCallback(YES);
+                fprintf(stderr, "[AI] Local LLM response: %zu chars (evil=%.2f)\n", (size_t)stripped.length, evilLevel);
+                if (completion) completion(stripped, nil);
+                return;
+            }
+            if (!empty) {  // non-empty bytes but not valid UTF-8
+                fprintf(stderr, "[AI] Local LLM returned invalid UTF-8\n");
+                connectedCallback(NO);
+                if (completion) completion(@"HONK! Local brain returned garbled text.", nil);
+                return;
+            }
+            // Empty: Foundation's guardrail likely refused this persona. Retry a
+            // notch milder so the user still gets a real, in-character answer.
+            if (foundation && evilLevel > kLocalRetryFloorEvil) {
+                float lower = MAX(kLocalRetryFloorEvil, evilLevel - kLocalRetryEvilStep);
+                fprintf(stderr, "[AI] Foundation declined at evil=%.2f, retrying at %.2f\n", evilLevel, lower);
+                generateLocalAtEvil(history, lower, foundation, temperature, completion, connectedCallback);
+                return;
+            }
+            // Even the mild persona produced nothing — fall back to a canned line.
+            fprintf(stderr, "[AI] Local LLM declined down to evil=%.2f — using canned fallback\n", evilLevel);
+            connectedCallback(YES);
+            if (completion) completion(nil, nil);
+        });
+    });
+}
+
+void completeWithLocalLLM(NSArray* history, float evilLevel, void(^completion)(NSString*, NSError*), void(^connectedCallback)(BOOL)) {
+    fprintf(stderr, "[AI] Foundation provider: routing to local LLM\n");
+
+    // Cap the persona only when FoundationModels is the backend — its guardrail
+    // refuses the most extreme levels. CoreML/other local models are uncapped.
+    BOOL foundation = (FoundationLLM_IsAvailable() != 0);
+    float effectiveEvil = foundation ? CapEvilForFoundation(evilLevel) : evilLevel;
+
     const BuiltinProfile* profile = MatchProfile("foundation");
     float temperature = profile->temperature;
 
@@ -124,7 +133,7 @@ void completeWithLocalLLM(NSArray* history, float evilLevel, void(^completion)(N
     // CoreML path, which must NOT run on the main thread or it freezes the UI.
     // The FoundationModels path ignores state and returns immediately.
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-        runLocalLLMGenerate(promptStr, temperature, completion, connectedCallback);
+        generateLocalAtEvil(history, effectiveEvil, foundation, temperature, completion, connectedCallback);
     });
 }
 
