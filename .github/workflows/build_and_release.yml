@@ -41,6 +41,18 @@ jobs:
           cd build
           ctest --output-on-failure -j$(sysctl -n hw.logicalcpu)
 
+      - name: Determine version
+        run: |
+          if [ "${{ github.event_name }}" = "release" ]; then
+            VERSION="${{ github.event.release.tag_name }}"
+          elif [ -n "${{ inputs.release_tag }}" ]; then
+            VERSION="${{ inputs.release_tag }}"
+          else
+            VERSION="dev-${GITHUB_SHA::7}"
+          fi
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+          echo "Version: $VERSION"
+
       - name: Create App Bundle
         run: |
           chmod +x scripts/create_bundle.sh
@@ -48,21 +60,21 @@ jobs:
 
       - name: Create DMG
         run: |
-          hdiutil create -volname CadGoose -srcfolder build/CadGoose.app -ov -format UDZO build/CadGoose.dmg
+          hdiutil create -volname CadGoose -srcfolder build/CadGoose.app -ov -format UDZO "build/CadGoose-${VERSION}.dmg"
 
       - name: Upload DMG (artifact)
         uses: actions/upload-artifact@v4
         with:
-          name: CadGoose-macOS
-          path: build/CadGoose.dmg
+          name: CadGoose-macOS-${{ env.VERSION }}
+          path: build/CadGoose-${{ env.VERSION }}.dmg
           retention-days: 30
 
       - name: Upload DMG to Release
         if: github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && inputs.release_tag != '')
         run: |
           TAG="${{ github.event.release.tag_name || inputs.release_tag }}"
-          echo "Attaching DMG to release $TAG"
-          gh release upload "$TAG" build/CadGoose.dmg --clobber
+          echo "Attaching CadGoose-${VERSION}.dmg to release $TAG"
+          gh release upload "$TAG" "build/CadGoose-${VERSION}.dmg" --clobber
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -89,26 +101,38 @@ jobs:
 
       # Tests are macOS-only (behaviors have CoreGraphics dependencies)
 
+      - name: Determine version
+        run: |
+          if [ "${{ github.event_name }}" = "release" ]; then
+            VERSION="${{ github.event.release.tag_name }}"
+          elif [ -n "${{ inputs.release_tag }}" ]; then
+            VERSION="${{ inputs.release_tag }}"
+          else
+            VERSION="dev-${GITHUB_SHA::7}"
+          fi
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+          echo "Version: $VERSION"
+
       - name: Package binary
         run: |
           mkdir -p cadgoose-linux/{bin,config,Assets}
           cp build/CadGoose cadgoose-linux/bin/
           cp -r config/* cadgoose-linux/config/ 2>/dev/null || true
           cp -r Assets/* cadgoose-linux/Assets/ 2>/dev/null || true
-          tar --zstd -cf CadGoose-linux.tar.zst cadgoose-linux
+          tar --zstd -cf "CadGoose-${VERSION}-linux.tar.zst" cadgoose-linux
 
       - name: Upload tar.zst (artifact)
         uses: actions/upload-artifact@v4
         with:
-          name: CadGoose-Linux
-          path: CadGoose-linux.tar.zst
+          name: CadGoose-Linux-${{ env.VERSION }}
+          path: CadGoose-${{ env.VERSION }}-linux.tar.zst
           retention-days: 30
 
       - name: Upload tar.zst to Release
         if: github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && inputs.release_tag != '')
         run: |
           TAG="${{ github.event.release.tag_name || inputs.release_tag }}"
-          echo "Attaching tar.zst to release $TAG"
-          gh release upload "$TAG" CadGoose-linux.tar.zst --clobber
+          echo "Attaching CadGoose-${VERSION}-linux.tar.zst to release $TAG"
+          gh release upload "$TAG" "CadGoose-${VERSION}-linux.tar.zst" --clobber
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
