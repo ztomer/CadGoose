@@ -318,6 +318,11 @@ bool Config_IsSystemDarkTheme();
             dispatch_async(dispatch_get_main_queue(), ^{ Audio_Init(); Audio_PlayHonk(); });
             return "ok honk\n";
         }
+        if (!args.empty() && args[0] == "openchat") {
+            std::string gooseName = args.size() > 1 ? args[1] : "Goose";
+            dispatch_async(dispatch_get_main_queue(), ^{ AI_OpenChat(gooseName.c_str()); });
+            return "ok chat opened\n";
+        }
         if (!args.empty() && args[0] == "send" && args.size() > 1) {
             dispatch_async(dispatch_get_main_queue(), ^{ AI_SendMessage(args[1].c_str()); });
             return "ok message sent\n";
