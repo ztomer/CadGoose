@@ -300,6 +300,7 @@ static NSString* GetModelsEndpoint() {
     NSURLSession* session = [NSURLSession sharedSession];
     NSURLSessionDataTask* task = [session dataTaskWithRequest:request completionHandler:^(NSData* data, NSURLResponse* response, NSError* error) {
         if (error) {
+            self.connected = NO;
             if (completion) completion(NO, [NSString stringWithFormat:@"Can't connect: %s", error.localizedDescription.UTF8String]);
             return;
         }
@@ -308,6 +309,7 @@ static NSString* GetModelsEndpoint() {
             self.connected = YES;
             if (completion) completion(YES, @"Connected");
         } else {
+            self.connected = NO;
             if (completion) completion(NO, [NSString stringWithFormat:@"HTTP %ld", (long)httpResp.statusCode]);
         }
     }];

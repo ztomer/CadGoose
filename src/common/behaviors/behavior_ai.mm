@@ -316,6 +316,7 @@ static constexpr float kChatFontSize = 13.0f;
             if (!strong) return;
             if (!connected) {
                 strong.statusBar.stringValue = [NSString stringWithFormat:@"⚠️ %@", message];
+                strong.statusBar.textColor = [NSColor systemRedColor];
                 fprintf(stderr, "[AI] Connection check failed: %s\n", message.UTF8String);
             } else {
                 fprintf(stderr, "[AI] Connection OK\n");
@@ -434,8 +435,10 @@ static constexpr float kChatFontSize = 13.0f;
 }
 
 - (void)windowDidBecomeKey:(NSNotification*)notification {
-    [self.httpClient refreshConnection];
-    [self updateModelDisplay];
+    // Re-check asynchronously and let the completion update the status dot.
+    // (Previously this reset connected=NO and repainted synchronously, so the
+    // window always showed "disconnected" on focus and never recovered.)
+    [self checkConnection];
 }
 
 @end
