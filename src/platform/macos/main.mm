@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include "config.h"
 #include "config_gui.h"
+#include "crash_logger.h"
 #include "cursor_backend.h"
 #include "world.h"
 #include "command_socket.h"
@@ -434,6 +435,11 @@ int main(int argc, char** argv) {
             break;
         }
     }
+
+    // Install crash/log capture for the GUI (and MCP) run. Placed after CLI
+    // handling so quick CLI commands that exit early don't get stderr
+    // redirected to a session log.
+    CrashLogger_Init();
 
     @autoreleasepool {
         NSApplication* app = [NSApplication sharedApplication];

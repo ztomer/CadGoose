@@ -94,6 +94,7 @@ void AssetManager::PreloadBehaviorAssets() {
         "Assets/Images/OtherGfx/heart.png",
         "Assets/Images/OtherGfx/hat_default.png",
         "Assets/Images/OtherGfx/honk.png",
+        "Assets/Images/OtherGfx/stalin_head.png",
         "Assets/Items/Bed/bed.png",
         "Assets/Items/Bed/z1.png",
         "Assets/Items/Bed/z2.png",
@@ -102,7 +103,10 @@ void AssetManager::PreloadBehaviorAssets() {
 
     for (const auto& path : behaviorImages) {
         if (memeCache.find(path) != memeCache.end()) continue;
-        NSString* nsPath = [NSString stringWithUTF8String:path.c_str()];
+        // Resolve against ASSET_ROOT so loading doesn't depend on the current
+        // working directory (which is "/" when launched from the .app bundle).
+        std::string fullPath = (ASSET_ROOT / path).string();
+        NSString* nsPath = [NSString stringWithUTF8String:fullPath.c_str()];
         NSImage* img = [[NSImage alloc] initWithContentsOfFile:nsPath];
         if (img) {
             CGImageRef cg = [img CGImageForProposedRect:NULL context:nil hints:nil];
@@ -119,7 +123,12 @@ CGImageRef AssetManager::GetBehaviorImage(const std::string& name) {
         return it->second;
     }
 
-    NSString* nsPath = [NSString stringWithUTF8String:name.c_str()];
+    // Resolve against ASSET_ROOT so loading doesn't depend on the current
+    // working directory (which is "/" when launched from the .app bundle).
+    // This is why the Stalin head — the only behavior image loaded lazily here
+    // rather than preloaded — intermittently failed to render.
+    std::string fullPath = (ASSET_ROOT / name).string();
+    NSString* nsPath = [NSString stringWithUTF8String:fullPath.c_str()];
     NSImage* img = [[NSImage alloc] initWithContentsOfFile:nsPath];
     if (img) {
         CGImageRef cg = [img CGImageForProposedRect:NULL context:nil hints:nil];
