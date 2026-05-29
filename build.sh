@@ -7,6 +7,9 @@ set -euo pipefail
 # then configures and builds with Ninja. Pass a build directory as $1
 # (default: build). Set SKIP_DEPS=1 to bypass the dependency check.
 
+# Always operate from the repo root so the CMake cache's home dir matches.
+cd "$(dirname "$0")"
+
 BUILD_DIR="${1:-build}"
 
 # ── Dependency check (macOS / Homebrew) ────────────────────
@@ -55,6 +58,18 @@ if [[ "${SKIP_DEPS:-0}" != "1" ]]; then
 fi
 
 # ── Configure & build ──────────────────────────────────────
+# Self-heal a stale or foreign CMake cache. A cache generated elsewhere (e.g. a
+# committed CI build under /work) or with a different generator makes `cmake -B`
+# fail outright, which silently skips the rebuild. Wipe it when it doesn't match
+# this source tree + the Ninja generator.
+if [[ -f "$BUILD_DIR/CMakeCache.txt" ]]; then
+    if ! grep -qx "CMAKE_HOME_DIRECTORY:INTERNAL=$PWD" "$BUILD_DIR/CMakeCache.txt" \
+       || ! grep -qx "CMAKE_GENERATOR:INTERNAL=Ninja" "$BUILD_DIR/CMakeCache.txt"; then
+        echo "==> Stale/foreign CMake cache in $BUILD_DIR — removing it"
+        rm -rf "$BUILD_DIR"
+    fi
+fi
+
 echo "==> Configuring ($BUILD_DIR, Release, Ninja)"
 cmake -B "$BUILD_DIR" -DCMAKE_BUILD_TYPE=Release -GNinja
 
