@@ -13,9 +13,12 @@ float CapEvilForFoundation(float level) {
 }
 
 NSString* FoundationPersonaCapNote(void) {
-    return @"⚠︎ Apple Foundation caps the persona at “villainous” — its safety filter "
-            "blocks the Overlord/Dictator levels (the goose falls back to canned lines there). "
-            "Use Osaurus or Ollama for the full evil range.";
+    int pct = (int)(kFoundationMaxEvilLevel * 100.0f + 0.5f);
+    return [NSString stringWithFormat:
+            @"⚠︎ Apple Foundation caps evil at %d%% (“villainous”). Above %d%% its on-device "
+             "safety filter refuses, so requests are sent at %d%% and the goose may use canned "
+             "lines. Osaurus / Ollama have no cap — use them for the full range.",
+            pct, pct, pct];
 }
 
 NSString* systemPromptForEvilLevel(float level) {
