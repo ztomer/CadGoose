@@ -318,7 +318,15 @@ static NSString* GetModelsEndpoint() {
 
 - (void)checkConnectionWithCompletion:(void(^)(BOOL connected, NSString* message))completion {
     if (g_config.ai.providerType == 0) {
-        checkLocalLLMConnection(completion);
+        // checkLocalLLMConnection only invokes the completion; it doesn't touch
+        // self.connected. Set it here so the chat status dot reflects the local
+        // (Foundation/CoreML) backend state instead of staying stuck red.
+        __weak AIHTTPClient* weakSelf = self;
+        checkLocalLLMConnection(^(BOOL connected, NSString* message) {
+            AIHTTPClient* strongSelf = weakSelf;
+            if (strongSelf) strongSelf.connected = connected;
+            if (completion) completion(connected, message);
+        });
         return;
     }
 
