@@ -27,8 +27,30 @@ jobs:
         with:
           submodules: recursive
 
+      # FoundationModels (the local "Foundation" AI provider) only exists in the
+      # macOS 26+ SDK. canImport() is evaluated at compile time, so building
+      # against an older SDK silently strips the backend out of the DMG. Select
+      # the newest Xcode the runner offers to maximize the chance of an SDK that
+      # includes FoundationModels.
+      - name: Select latest Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
       - name: Install dependencies
         run: brew install cmake googletest mimalloc
+
+      - name: Verify FoundationModels SDK support
+        run: |
+          echo "Xcode: $(xcodebuild -version | head -1)"
+          SDK_PATH="$(xcrun --show-sdk-path)"
+          echo "SDK: $SDK_PATH (version $(xcrun --show-sdk-version))"
+          printf '#if canImport(FoundationModels)\n#warning("FoundationModels present in SDK")\n#else\n#warning("FoundationModels MISSING from SDK")\n#endif\n' > /tmp/fmcheck.swift
+          if swiftc -typecheck /tmp/fmcheck.swift -sdk "$SDK_PATH" 2>&1 | grep -q "FoundationModels present"; then
+            echo "✅ FoundationModels available — local Foundation provider will work in this build"
+          else
+            echo "::warning title=Foundation provider disabled::This SDK lacks FoundationModels; the released DMG will NOT support the local Foundation AI provider. Use a runner/Xcode with the macOS 26+ SDK."
+          fi
 
       - name: Configure & Build
         run: |
