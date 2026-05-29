@@ -7,6 +7,12 @@ import Foundation
 import FoundationModels
 #endif
 
+// Log to stderr so messages appear alongside the app's other diagnostics
+// (Swift's print() goes to stdout, which the app's logging doesn't capture).
+private func fmLog(_ s: String) {
+    FileHandle.standardError.write(("[FOUNDATION_LLM] " + s + "\n").data(using: .utf8)!)
+}
+
 // MARK: - C-compatible interface
 
 @_cdecl("FoundationLLM_IsAvailable")
@@ -81,10 +87,12 @@ public func cGenerate(prompt: UnsafePointer<CChar>, temperature: Float, callback
         var options = GenerationOptions()
         options.temperature = Double(temperature)
 
+        fmLog("respond() start, prompt \(promptStr.count) chars")
         Task {
             do {
                 let response = try await session.respond(to: promptStr, options: options)
                 var content = response.content
+                fmLog("raw response \(content.count) chars")
 
                 // Strip think...> blocks
                 while let startRange = content.range(of: "<think>"),
@@ -105,15 +113,15 @@ public func cGenerate(prompt: UnsafePointer<CChar>, temperature: Float, callback
                     content = String(content[...qmark])
                 }
 
-                print("[FOUNDATION_LLM] Generated: \(content)")
+                fmLog("Generated \(content.count) chars: \(content)")
                 callback?(content, context)
             } catch {
-                print("[FOUNDATION_LLM] Generation error: \(error.localizedDescription)")
+                fmLog("Generation error: \(error)")
                 callback?("", context)
             }
         }
     } catch {
-        print("[FOUNDATION_LLM] Failed to get model: \(error.localizedDescription)")
+        fmLog("Failed to get model: \(error)")
         callback?("", context)
     }
     #else
