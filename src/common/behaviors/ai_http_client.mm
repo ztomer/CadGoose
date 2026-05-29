@@ -177,19 +177,52 @@ static NSString* GetModelsEndpoint() {
             (turn == 0 && g_config.ai.enableMCP) ? " tools=on" : "");
 
     NSURLSession* session = [NSURLSession sharedSession];
+
+    // Retry transient failures: a timeout, or a 5xx from a reachable server
+    // (e.g. a local model server like Osaurus returning 500 while it's busy or
+    // still loading the model). Without this, a single busy-server blip is
+    // reported as a hard failure. Uses the safe self-referential block pattern
+    // (__block var nil'd out once we stop retrying) to avoid a retain cycle.
+    __block int retriesLeft = 2;            // up to 3 attempts total
+    const double kRetryDelaySecs = 1.5;
+    __block void (^attempt)(void) = nil;
+    attempt = ^{
     NSURLSessionDataTask* task = [session dataTaskWithRequest:request completionHandler:^(NSData* data, NSURLResponse* response, NSError* error) {
+        NSHTTPURLResponse* httpResp = (NSHTTPURLResponse*)response;
+        BOOL timedOut = (error && error.code == NSURLErrorTimedOut);
+        BOOL serverBusy = (!error && httpResp && httpResp.statusCode >= 500);
+        if ((timedOut || serverBusy) && retriesLeft > 0) {
+            retriesLeft--;
+            fprintf(stderr, "[AI] transient failure (%s, status=%ld), retrying in %.1fs (%d left)\n",
+                    timedOut ? "timeout" : "5xx", (long)(httpResp ? httpResp.statusCode : 0), kRetryDelaySecs, retriesLeft);
+            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(kRetryDelaySecs * NSEC_PER_SEC)),
+                           dispatch_get_main_queue(), ^{ if (attempt) attempt(); });
+            return;
+        }
+        attempt = nil;  // no more retries — break the retain cycle
+
         if (error) {
-            self.connected = NO;
-            if (completion) completion(@"🦆 HONK! The brain is sleeping. Check if your AI server is running.", error);
+            // A timeout means the server was reachable but slow (likely busy);
+            // any other transport error means it's genuinely unreachable.
+            if (!timedOut) self.connected = NO;
+            NSString* m = timedOut
+                ? @"🦆 HONK! The brain is taking too long — server busy? Try again."
+                : @"🦆 HONK! The brain is sleeping. Check if your AI server is running.";
+            if (completion) completion(m, error);
             if (onDone) onDone(NO);
             return;
         }
 
-        NSHTTPURLResponse* httpResp = (NSHTTPURLResponse*)response;
         if (httpResp.statusCode != 200) {
             NSError* httpError = [NSError errorWithDomain:@"HTTP" code:httpResp.statusCode userInfo:@{NSLocalizedDescriptionKey: @"Non-200 response from AI server"}];
-            self.connected = NO;
-            if (completion) completion(@"🦆 HONK! The goose can't reach its brain. Check provider/port in settings.", httpError);
+            // We reached the server (it answered with an HTTP status), so it's
+            // connected. A 5xx is a busy/loading/server error; a 4xx is a
+            // request problem (bad model name, etc.).
+            self.connected = YES;
+            NSString* m = (httpResp.statusCode >= 500)
+                ? @"🦆 HONK! The server is busy or still loading the model. Try again in a moment."
+                : @"🦆 HONK! The goose can't reach its brain. Check the model name / provider in settings.";
+            if (completion) completion(m, httpError);
             if (onDone) onDone(NO);
             return;
         }
@@ -279,6 +312,8 @@ static NSString* GetModelsEndpoint() {
         if (onDone) onDone(NO);
     }];
     [task resume];
+    };  // end attempt block
+    attempt();
 }
 
 - (void)checkConnectionWithCompletion:(void(^)(BOOL connected, NSString* message))completion {
