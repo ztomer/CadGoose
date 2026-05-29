@@ -21,6 +21,37 @@ See [docs/README_LINUX.md](docs/README_LINUX.md) for Linux platform details.
 
 ---
 
+## Installation (macOS)
+
+Download `CadGoose.dmg` from the [latest release](https://github.com/ztomer/CadGoose/releases/latest), open it, and drag **CadGoose** into your Applications folder.
+
+### First launch — Gatekeeper warning
+
+The app is **ad-hoc signed and not notarized** by Apple. On first launch macOS will block it with a message like *"CadGoose is damaged and can't be opened"* or *"the developer cannot be verified."* This is expected for an unsigned beta — it does **not** mean the download is broken.
+
+To run it, strip the quarantine flag macOS adds to downloaded apps:
+
+```bash
+xattr -dr com.apple.quarantine /Applications/CadGoose.app
+```
+
+Then open it normally (double-click, or `open /Applications/CadGoose.app`). You only need to do this once.
+
+> If you didn't move it to Applications, point the command at wherever the `.app` lives, e.g. `xattr -dr com.apple.quarantine ~/Downloads/CadGoose.app`.
+
+A future signed-and-notarized build will remove this step.
+
+### Reporting a crash or bug
+
+CadGoose writes logs to `~/Library/Application Support/CadGoose/logs/`:
+
+- `crash-<timestamp>.log` — a backtrace, if the app crashed.
+- `session-<timestamp>.log` — diagnostic output from the run (captured when launched from the bundle).
+
+Attach the most recent of these when filing an issue.
+
+---
+
 ## Documentation
 
 - [AGENTS.md](AGENTS.md) — Current project state, build/run, architecture notes

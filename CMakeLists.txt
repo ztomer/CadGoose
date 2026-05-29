@@ -40,11 +40,21 @@ endif()
 
 if(APPLE)
     set(MACOS TRUE)
-    add_subdirectory(vendor/toml11)
 elseif(UNIX)
     set(LINUX TRUE)
-    add_subdirectory(vendor/toml11)
 endif()
+
+# toml11 — fetched at configure time instead of vendored as a git submodule.
+# Pinned to a specific commit for reproducible builds. The fetched package
+# provides the `toml11` target (header `<toml.hpp>`), which carries its own
+# include directories, so no manual include paths are needed.
+include(FetchContent)
+FetchContent_Declare(
+    toml11
+    GIT_REPOSITORY https://github.com/ToruNiina/toml11.git
+    GIT_TAG b32a2fff0d27e1f7522f26a125101500ddb47156
+)
+FetchContent_MakeAvailable(toml11)
 
 if(MACOS)
     enable_language(OBJCXX)
@@ -109,7 +119,6 @@ if(MACOS)
         ${CMAKE_CURRENT_SOURCE_DIR}/include
         ${CMAKE_CURRENT_SOURCE_DIR}/src/platform/macos
         ${CMAKE_CURRENT_SOURCE_DIR}/src/common
-        ${CMAKE_CURRENT_SOURCE_DIR}/vendor/toml11
         ${MIMALLOC_INCLUDE_DIR}
     )
 
@@ -228,7 +237,6 @@ elseif(LINUX)
         ${CMAKE_CURRENT_SOURCE_DIR}/src/common
         ${CMAKE_CURRENT_SOURCE_DIR}/src/platform/linux
         ${CMAKE_CURRENT_BINARY_DIR}
-        ${CMAKE_CURRENT_SOURCE_DIR}/vendor/toml11
     )
 
     target_compile_options(CadGoose PUBLIC
@@ -456,7 +464,6 @@ if(APPLE)
         ${CMAKE_CURRENT_SOURCE_DIR}/include
         ${CMAKE_CURRENT_SOURCE_DIR}/src/common
         ${CMAKE_CURRENT_SOURCE_DIR}/src/platform/macos
-        ${CMAKE_CURRENT_SOURCE_DIR}/vendor/toml11/include
         ${MIMALLOC_INCLUDE_DIR}
     )
     
