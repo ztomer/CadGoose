@@ -69,7 +69,10 @@ void completeWithLocalLLM(NSArray* history, float evilLevel, void(^completion)(N
     fprintf(stderr, "[AI] Foundation provider: routing to local LLM\n");
 
     NSMutableString* prompt = [NSMutableString string];
-    NSString* sysPrompt = systemPromptForEvilLevel(evilLevel);
+    // Cap the persona only when FoundationModels is the backend — its guardrail
+    // refuses the most extreme levels. CoreML/other local models are uncapped.
+    float effectiveEvil = FoundationLLM_IsAvailable() ? CapEvilForFoundation(evilLevel) : evilLevel;
+    NSString* sysPrompt = systemPromptForEvilLevel(effectiveEvil);
     [prompt appendString:sysPrompt];
     [prompt appendString:@"\n\n"];
 

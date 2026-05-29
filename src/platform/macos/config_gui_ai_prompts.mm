@@ -2,12 +2,16 @@
 // AITabView prompt preview and evil slider
 #import "config_gui_helpers.h"
 #include "config.h"
+#include "behaviors/ai_prompt_builder.h"
 
 static constexpr int kEvilStates = 9;
 
 @implementation AITabView (Prompts)
 
 - (NSString*)promptPreviewForEvilLevel:(float)level {
+    // For the Foundation provider, preview the capped persona so the displayed
+    // prompt matches what's actually sent (guardrail-limited).
+    if ([self currentProvider] == 0) level = CapEvilForFoundation(level);
     int state = MIN((int)round(level * (kEvilStates - 1)), kEvilStates - 2);
     switch (state) {
         case 0: return @"You are an adorable fluffy gosling. You love everyone and want to\nbe best friends. Use gentle honks and warm hugs.";

@@ -3,6 +3,7 @@
 #include "mcp_server.h"
 #include "ai_text_meme.h"
 #include "local_llm.h"
+#include "behaviors/ai_prompt_builder.h"
 
 extern "C" void AI_RefreshModelDisplay();
 
@@ -63,6 +64,8 @@ static constexpr float kPostTestYGap = 40.0f;
 static constexpr float kPostSectionYGap = 26.0f;
 static constexpr float kPostSectionYGapLarge = 28.0f;
 static constexpr float kPostSliderYGap = 10.0f;
+static constexpr float kFoundationNoteHeight = 44.0f;
+static constexpr float kFoundationNoteGap = 50.0f;
 static constexpr float kPostToggleYGap = 26.0f;
     static constexpr float kPostAutoSaveYGap = 26.0f;
 static constexpr float kEvilSliderYGap = 20.0f;
@@ -322,6 +325,23 @@ static constexpr float kRefreshBtnFontSize = 12.0f;
     [self addSubview:evilValue];
 
     y -= kPostSliderYGap;
+
+    // Foundation persona-cap note — shown only when the Foundation provider is
+    // selected (Apple's on-device guardrail limits the spiciest personas).
+    _foundationNote = [[NSTextField alloc] initWithFrame:NSMakeRect(marginX, y, w - marginX*2, kFoundationNoteHeight)];
+    _foundationNote.stringValue = FoundationPersonaCapNote();
+    _foundationNote.font = [NSFont fontWithName:@"Maple Mono" size:kSmallFontSize] ?: [NSFont systemFontOfSize:kSmallFontSize];
+    _foundationNote.textColor = [NSColor systemOrangeColor];
+    _foundationNote.backgroundColor = [NSColor clearColor];
+    _foundationNote.bordered = NO; _foundationNote.editable = NO;
+    _foundationNote.usesSingleLineMode = NO;
+    _foundationNote.lineBreakMode = NSLineBreakByWordWrapping;
+    _foundationNote.cell.wraps = YES;
+    _foundationNote.autoresizingMask = NSViewWidthSizable;
+    _foundationNote.hidden = ([self currentProvider] != 0);
+    [self addSubview:_foundationNote];
+
+    y -= kFoundationNoteGap;
 
     NSTextField* promptTitle = [[NSTextField alloc] initWithFrame:NSMakeRect(marginX, y, kSectionTitleWidth, kPromptTitleHeight)];
     promptTitle.stringValue = @"\U0001F9E0 System Prompt Preview:";
