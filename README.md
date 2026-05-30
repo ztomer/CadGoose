@@ -50,6 +50,17 @@ Toggle and tune each from **Preferences → Behaviors**:
    ```
    Then open it normally (double-click). You only need to do this once. *(A future notarized build will remove this step.)*
 
+### Alternatively: Install via Homebrew Cask (Automated quarantine removal)
+
+If you prefer using Homebrew, you can install CadGoose directly using our custom Cask, which automatically strips the quarantine flag for you so the app launches instantly:
+
+```bash
+# Install directly from the repository cask file
+brew install --cask tools/homebrew/cadgoose.rb
+```
+
+For setting up a custom GitHub Tap or hosting the formula publicly, refer to the [Homebrew Cask Guide](docs/HOMEBREW.md).
+
 CadGoose runs in your **menu bar**. Use the menu to spawn geese, open Preferences, start a chat, mute honks, or quit.
 
 ---
@@ -130,6 +141,7 @@ Release `.app` bundles are **ad-hoc signed** (not yet notarized), which is why t
 
 - [AGENTS.md](AGENTS.md) — current project state, build/run, architecture notes
 - [docs/ARCH.md](docs/ARCH.md) — internal architecture (state machine, project structure, bundle)
+- [docs/HOMEBREW.md](docs/HOMEBREW.md) — Homebrew Cask installation & tap instructions
 - [docs/MCP.md](docs/MCP.md) — MCP protocol & AI chat command reference
 - [docs/PROTOCOL.md](docs/PROTOCOL.md) — Unix-socket command protocol
 - [docs/PLAN.md](docs/PLAN.md) — backlog and planned features
