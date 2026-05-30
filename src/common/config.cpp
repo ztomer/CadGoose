@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cctype>
 #include <cstdlib>
+#include <mutex>
 #include <sstream>
 #include <unordered_map>
 
@@ -144,12 +145,20 @@ bool Config_SaveNow(std::string* errorOut) {
     return true;
 }
 
+static std::mutex g_configMutex;
+static bool g_configInitialized = false;
+
 void Config_Init() {
+    std::lock_guard<std::mutex> lock(g_configMutex);
+    if (g_configInitialized) {
+        return;
+    }
     Config_InitRegistry();
     g_configLookup.clear();
     for (auto& opt : g_configRegistry) {
         g_configLookup[ToLower(opt.key)] = &opt;
     }
+    g_configInitialized = true;
 }
 
 std::string Config_EvilPersonality(float level) {
