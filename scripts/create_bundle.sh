@@ -113,10 +113,14 @@ if [ -f "${BUILD_DIR}/CadGoose.dSYM" ]; then
     cp -R "${BUILD_DIR}/CadGoose.dSYM" "${CONTENTS_DIR}/CadGoose.dSYM"
 fi
 
-# Symlink Assets so the app can find them at runtime
-echo "Linking assets..."
+# Copy Assets INTO the bundle so the .app is self-contained. A symlink to the
+# project dir works on the build machine but ships dangling in the DMG, so on
+# any other Mac the images (stalin head, balls, portals, memes, font, sounds)
+# are missing and `xattr` trips over the broken link.
+echo "Copying assets..."
 if [ -d "${PROJECT_DIR}/Assets" ]; then
-    ln -sf "${PROJECT_DIR}/Assets" "${RESOURCES_DIR}/Assets"
+    rm -rf "${RESOURCES_DIR}/Assets"
+    cp -RL "${PROJECT_DIR}/Assets" "${RESOURCES_DIR}/Assets"
 else
     echo "WARNING: Assets directory not found at ${PROJECT_DIR}/Assets"
 fi
@@ -237,6 +241,11 @@ if false && command -v strip &>/dev/null; then
     echo "Stripping symbols..."
     strip -S "${MACOS_DIR}/CadGoose" 2>/dev/null || true
 fi
+
+# Make every bundle file user-writable so `xattr -dr com.apple.quarantine`
+# succeeds post-install (Homebrew dylibs are copied in read-only, which makes
+# xattr fail with EPERM otherwise). Done before signing so signatures are fresh.
+chmod -R u+w "${BUNDLE_DIR}"
 
 # Ad-hoc code sign the bundle
 # Note: Using minimal entitlements to avoid Metal JIT issues with ad-hoc signing
