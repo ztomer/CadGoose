@@ -39,7 +39,7 @@ void World_CleanupExpired(double currentTime) {
         for (auto* actor : items) {
             if (toRemove <= 0) break;
             if (actor->data() && actor->data()->type == ItemData::MEME && !actor->pinned()) {
-                mgr.remove(actor);
+                actor->setActive(false);
                 toRemove--;
             }
         }
@@ -50,7 +50,7 @@ void World_CleanupExpired(double currentTime) {
         for (auto* actor : items) {
             if (toRemove <= 0) break;
             if (actor->data() && actor->data()->type == ItemData::TEXT && !actor->pinned()) {
-                mgr.remove(actor);
+                actor->setActive(false);
                 toRemove--;
             }
         }
