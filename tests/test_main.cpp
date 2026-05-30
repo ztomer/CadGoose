@@ -10,6 +10,7 @@
 #include "goose.h"
 #include "assets.h"
 #include "world.h"
+#include "config.h"
 
 // Load assets once before any test runs. Fetch/return/drop tests need
 // GetRandomMeme() to return a real item; without Init() the meme pool is empty
@@ -17,7 +18,10 @@
 // (CMake sets the test's WORKING_DIRECTORY to the source tree).
 class CadGooseTestEnvironment : public ::testing::Environment {
 public:
-    void SetUp() override { g_assets.Init(); }
+    void SetUp() override { 
+        Config_Init();
+        g_assets.Init(); 
+    }
 };
 static ::testing::Environment* const kCadGooseEnv =
     ::testing::AddGlobalTestEnvironment(new CadGooseTestEnvironment);
