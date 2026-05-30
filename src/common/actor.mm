@@ -11,7 +11,11 @@
 void Actor::closeWindowOnMainThread(void (^closeBlock)()) {
 #ifdef __APPLE__
     if (!closeBlock) return;
-    dispatch_async(dispatch_get_main_queue(), closeBlock);
+    if ([NSThread isMainThread]) {
+        closeBlock();
+    } else {
+        dispatch_async(dispatch_get_main_queue(), closeBlock);
+    }
 #else
     (void)closeBlock;
 #endif
