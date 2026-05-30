@@ -262,6 +262,7 @@ if(APPLE)
     # Cross-platform test sources
     set(TEST_SOURCES_COMMON
         tests/test_main.cpp
+        src/common/crash_logger.mm
         tests/test_goose_behavior.cpp
         tests/test_goose_physics.cpp
         tests/test_goose_behaviors.cpp

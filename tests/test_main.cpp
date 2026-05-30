@@ -279,7 +279,10 @@ TEST(CursorState, HasPos) {
     EXPECT_FALSE(s3.hasPos());
 }
 
+#include "crash_logger.h"
+
 int main(int argc, char **argv) {
+    CrashLogger_Init();
     ::testing::InitGoogleTest(&argc, argv);
     setenv("CADGOOSE_CONFIG_DIR", "/tmp/cadgoose-test-config", 1);
     return RUN_ALL_TESTS();
