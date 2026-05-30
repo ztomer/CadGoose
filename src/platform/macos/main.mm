@@ -10,6 +10,7 @@
 #include "config.h"
 #include "config_gui.h"
 #include "crash_logger.h"
+#include "log.h"
 #include "cursor_backend.h"
 #include "world.h"
 #include "command_socket.h"
@@ -443,6 +444,9 @@ int main(int argc, char** argv) {
             break;
         }
     }
+
+    // Quiet by default; verbose with --debug or CADGOOSE_VERBOSE.
+    Log_InitLevel(g_debugMode);
 
     // Install crash/log capture for the GUI (and MCP) run. Placed after CLI
     // handling so quick CLI commands that exit early don't get stderr

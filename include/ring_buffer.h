@@ -5,6 +5,10 @@
 #include <type_traits>
 #include <utility>
 
+// Fixed-capacity circular buffer. Stores elements BY VALUE — do not use with
+// owning raw pointers (e.g. RingBuffer<ItemData*>): push() on a full buffer
+// overwrites the oldest slot, which would silently leak an owned pointer. Use a
+// smart pointer or a value type instead.
 template <typename T, size_t N>
 class RingBuffer {
     static_assert(N > 0, "RingBuffer size must be > 0");
@@ -14,7 +18,7 @@ class RingBuffer {
     bool full = false;
 
 public:
-    void push(T val) {
+    void push(const T& val) {
         buf[head] = val;
         head = (head + 1) % N;
         if (full) tail = (tail + 1) % N;
@@ -49,16 +53,15 @@ public:
     class Iter {
         RingBuffer& rb;
         size_t idx;
-        size_t count;
     public:
-        Iter(RingBuffer& r, size_t i, size_t c) : rb(r), idx(i), count(c) {}
+        Iter(RingBuffer& r, size_t i) : rb(r), idx(i) {}
         T& operator*() { return rb.buf[(rb.tail + idx) % N]; }
         Iter& operator++() { ++idx; return *this; }
         bool operator!=(const Iter& o) const { return idx != o.idx; }
     };
 
-    Iter begin() { return Iter(*this, 0, size()); }
-    Iter end() { return Iter(*this, size(), size()); }
+    Iter begin() { return Iter(*this, 0); }
+    Iter end() { return Iter(*this, size()); }
 
     class ConstIter {
         const RingBuffer& rb;

@@ -21,4 +21,5 @@ wlr-virtual-pointer-unstable-v1-client-protocol.h
 wlr-virtual-pointer-unstable-v1-protocol.c
 FoundationLLM.*
 !PLAN.md
+!docs/CLEANUP_PLAN.md
 config/logs/

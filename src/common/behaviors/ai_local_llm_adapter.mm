@@ -1,4 +1,5 @@
 #import "ai_local_llm_adapter.h"
+#include "log.h"
 #import "local_llm.h"
 #import "ai_prompt_builder.h"
 #import "ai_think_block_stripper.h"
@@ -64,12 +65,12 @@ static void generateLocalAtEvil(NSArray* history, float evilLevel, BOOL foundati
             if (!empty && response.length > 0) {
                 NSString* stripped = stripThinkBlocks(response);
                 connectedCallback(YES);
-                fprintf(stderr, "[AI] Local LLM response: %zu chars (evil=%.2f)\n", (size_t)stripped.length, evilLevel);
+                CG_DEBUG("AI", "Local LLM response: %zu chars (evil=%.2f)", (size_t)stripped.length, evilLevel);
                 if (completion) completion(stripped, nil);
                 return;
             }
             if (!empty) {  // non-empty bytes but not valid UTF-8
-                fprintf(stderr, "[AI] Local LLM returned invalid UTF-8\n");
+                CG_ERROR("AI", "Local LLM returned invalid UTF-8");
                 connectedCallback(NO);
                 if (completion) completion(@"HONK! Local brain returned garbled text.", nil);
                 return;
@@ -78,12 +79,12 @@ static void generateLocalAtEvil(NSArray* history, float evilLevel, BOOL foundati
             // notch milder so the user still gets a real, in-character answer.
             if (foundation && evilLevel > kLocalRetryFloorEvil) {
                 float lower = MAX(kLocalRetryFloorEvil, evilLevel - kLocalRetryEvilStep);
-                fprintf(stderr, "[AI] Foundation declined at evil=%.2f, retrying at %.2f\n", evilLevel, lower);
+                CG_ERROR("AI", "Foundation declined at evil=%.2f, retrying at %.2f", evilLevel, lower);
                 generateLocalAtEvil(history, lower, foundation, temperature, completion, connectedCallback);
                 return;
             }
             // Even the mild persona produced nothing — fall back to a canned line.
-            fprintf(stderr, "[AI] Local LLM declined down to evil=%.2f — using canned fallback\n", evilLevel);
+            CG_ERROR("AI", "Local LLM declined down to evil=%.2f — using canned fallback", evilLevel);
             connectedCallback(YES);
             if (completion) completion(nil, nil);
         });
@@ -91,7 +92,7 @@ static void generateLocalAtEvil(NSArray* history, float evilLevel, BOOL foundati
 }
 
 void completeWithLocalLLM(NSArray* history, float evilLevel, void(^completion)(NSString*, NSError*), void(^connectedCallback)(BOOL)) {
-    fprintf(stderr, "[AI] Foundation provider: routing to local LLM\n");
+    CG_DEBUG("AI", "Foundation provider: routing to local LLM");
 
     // Cap the persona only when FoundationModels is the backend — its guardrail
     // refuses the most extreme levels. CoreML/other local models are uncapped.
@@ -113,7 +114,7 @@ void completeWithLocalLLM(NSArray* history, float evilLevel, void(^completion)(N
         // (Apple Intelligence off, model downloading, etc.) rather than a
         // generic "no model" message that sends users hunting in settings.
         int code = FoundationLLM_AvailabilityCode();
-        fprintf(stderr, "[AI] Local LLM unavailable (foundation code=%d)\n", code);
+        CG_ERROR("AI", "Local LLM unavailable (foundation code=%d)", code);
         connectedCallback(NO);
         NSString* why = (code == 0)
             ? @"no local model found — add one in settings or enable Apple Intelligence"
@@ -122,7 +123,7 @@ void completeWithLocalLLM(NSArray* history, float evilLevel, void(^completion)(N
         return;
     }
     if (state == LocalLLMState::Error) {
-        fprintf(stderr, "[AI] Local LLM in error state\n");
+        CG_ERROR("AI", "Local LLM in error state");
         connectedCallback(NO);
         if (completion) completion(@"🦆 HONK! The local brain hit an error. Check settings.", nil);
         return;

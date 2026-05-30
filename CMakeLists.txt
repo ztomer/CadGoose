@@ -307,6 +307,7 @@ if(APPLE)
         src/common/app_actions.cpp
         src/common/app_cli.cpp
         src/common/behavior.cpp
+        src/common/log.cpp
         src/common/config.cpp
         src/common/config_helpers.h
         src/common/config_load.cpp

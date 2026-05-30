@@ -195,8 +195,16 @@ static NSString* GetModelsEndpoint() {
             retriesLeft--;
             fprintf(stderr, "[AI] transient failure (%s, status=%ld), retrying in %.1fs (%d left)\n",
                     timedOut ? "timeout" : "5xx", (long)(httpResp ? httpResp.statusCode : 0), kRetryDelaySecs, retriesLeft);
+            // `attempt` must stay strongly held here so the block survives until
+            // this dispatch_after fires (a __weak ref would be freed when the
+            // current dataTask completes). The cycle is broken by `attempt = nil`
+            // on the terminal path below, so the retain-cycle warning is a false
+            // positive for this intentional retained-then-released pattern.
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Warc-retain-cycles"
             dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(kRetryDelaySecs * NSEC_PER_SEC)),
                            dispatch_get_main_queue(), ^{ if (attempt) attempt(); });
+#pragma clang diagnostic pop
             return;
         }
         attempt = nil;  // no more retries — break the retain cycle

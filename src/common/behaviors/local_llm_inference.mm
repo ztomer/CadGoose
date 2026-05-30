@@ -1,6 +1,7 @@
 // local_llm_inference.mm
 // Sampling, input creation, generation, and download for local CoreML LLM
 #include "local_llm.h"
+#include "log.h"
 #include "config.h"
 
 #import <CoreML/CoreML.h>
@@ -172,7 +173,7 @@ void LocalLLM_Generate(const std::string& prompt, float temperature,
 
     // Use FoundationModels backend if available (macOS 26+)
     if (FoundationLLM_IsAvailable()) {
-        fprintf(stderr, "[LOCAL_LLM] Using FoundationModels for generation\n");
+        CG_DEBUG("LOCAL_LLM", "Using FoundationModels for generation");
 
         auto* wrapper = new std::function<void(const std::string&)>(callback);
         FoundationLLM_Generate(prompt.c_str(), temperature,
@@ -260,7 +261,7 @@ void LocalLLM_Generate(const std::string& prompt, float temperature,
                 std::lock_guard<std::mutex> lock(s_queueMutex);
                 s_resultQueue.push(result);
             }
-            fprintf(stderr, "[LOCAL_LLM] Generated %zu tok (%.1fs): %s\n",
+            CG_DEBUG("LOCAL_LLM", "Generated %zu tok (%.1fs): %s",
                    generated.size(), elapsed, result.c_str());
 
             std::lock_guard<std::mutex> lock(s_genMutex);
@@ -277,7 +278,7 @@ void LocalLLM_DownloadModel(const std::string& url,
             NSString* nsUrl = [NSString stringWithUTF8String:url.c_str()];
             NSURL* downloadURL = [NSURL URLWithString:nsUrl];
             if (!downloadURL) {
-                fprintf(stderr, "[LOCAL_LLM] Invalid download URL\n");
+                CG_ERROR("LOCAL_LLM", "Invalid download URL");
                 if (callback) callback(false, "");
                 return;
             }
@@ -291,7 +292,7 @@ void LocalLLM_DownloadModel(const std::string& url,
                                                  options:NSDataReadingUncached
                                                    error:&err];
             if (err || !data) {
-                fprintf(stderr, "[LOCAL_LLM] Download failed: %s\n",
+                CG_ERROR("LOCAL_LLM", "Download failed: %s",
                        err.localizedDescription.UTF8String);
                 if (callback) callback(false, "");
                 return;
@@ -301,7 +302,7 @@ void LocalLLM_DownloadModel(const std::string& url,
             NSString* destPath = [destDir stringByAppendingPathComponent:fileName];
 
             if ([data writeToFile:destPath atomically:YES]) {
-                fprintf(stderr, "[LOCAL_LLM] Downloaded to %s\n", destPath.UTF8String);
+                CG_DEBUG("LOCAL_LLM", "Downloaded to %s", destPath.UTF8String);
 
                 if ([fileName hasSuffix:@".zip"]) {
                     NSTask* unzip = [[NSTask alloc] init];
@@ -309,7 +310,7 @@ void LocalLLM_DownloadModel(const std::string& url,
                     unzip.arguments = @[@"-o", destPath, @"-d", destDir];
                     NSError* taskErr = nil;
                     if (![unzip launchAndReturnError:&taskErr]) {
-                        fprintf(stderr, "[LOCAL_LLM] Unzip failed: %s\n",
+                        CG_ERROR("LOCAL_LLM", "Unzip failed: %s",
                                taskErr.localizedDescription.UTF8String);
                         if (callback) callback(false, "");
                         return;
@@ -322,7 +323,7 @@ void LocalLLM_DownloadModel(const std::string& url,
                 LocalLLM_Init();
                 if (callback) callback(true, std::string(destPath.UTF8String));
             } else {
-                fprintf(stderr, "[LOCAL_LLM] Failed to save model\n");
+                CG_ERROR("LOCAL_LLM", "Failed to save model");
                 if (callback) callback(false, "");
             }
         }

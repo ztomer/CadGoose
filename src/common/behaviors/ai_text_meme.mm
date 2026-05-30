@@ -1,4 +1,5 @@
 #include "ai_text_meme.h"
+#include "log.h"
 #include "config.h"
 #include "world.h"
 #include "local_llm.h"
@@ -128,10 +129,10 @@ static void SendGenerateRequest(const std::string& prompt, float temperature) {
             // Foundation: use local CoreML LLM if available, otherwise fall back to file texts
             LocalLLM_Init();
             if (LocalLLM_GetState() == LocalLLMState::Ready) {
-                fprintf(stderr, "[AITEXT] Foundation provider: routing to local CoreML LLM\n");
+                CG_DEBUG("AITEXT", "Foundation provider: routing to local CoreML LLM");
                 TryLocalGeneration(prompt, temperature);
             } else {
-                fprintf(stderr, "[AITEXT] Foundation provider: no local model available, using file texts\n");
+                CG_ERROR("AITEXT", "Foundation provider: no local model available, using file texts");
                 // Don't set s_nextGenTime here - let file queue handle it
                 // File texts are always available via Dequeue fallback
                 s_nextGenTime = [[NSDate date] timeIntervalSince1970] + kAITextErrorCooldown; // Gentle cooldown
@@ -157,7 +158,7 @@ static void SendGenerateRequest(const std::string& prompt, float temperature) {
 
     NSURL* url = [NSURL URLWithString:endpoint];
     if (!url) {
-        fprintf(stderr, "[AITEXT] Invalid URL: %s\n", endpoint.UTF8String);
+        CG_ERROR("AITEXT", "Invalid URL: %s", endpoint.UTF8String);
         return;
     }
 
@@ -179,7 +180,7 @@ static void SendGenerateRequest(const std::string& prompt, float temperature) {
     NSError* jsonErr;
     NSData* jsonData = [NSJSONSerialization dataWithJSONObject:body options:0 error:&jsonErr];
     if (jsonErr) {
-        fprintf(stderr, "[AITEXT] JSON serialization failed: %s\n", jsonErr.localizedDescription.UTF8String);
+        CG_ERROR("AITEXT", "JSON serialization failed: %s", jsonErr.localizedDescription.UTF8String);
         return;
     }
     [request setHTTPBody:jsonData];
@@ -189,7 +190,7 @@ static void SendGenerateRequest(const std::string& prompt, float temperature) {
     NSURLSession* session = [NSURLSession sharedSession];
     NSURLSessionDataTask* task = [session dataTaskWithRequest:request completionHandler:^(NSData* data, NSURLResponse* response, NSError* error) {
         double elapsed = [[NSDate date] timeIntervalSinceDate:startTime];
-        fprintf(stderr, "[AITEXT] Response in %.1fs\n", elapsed);
+        CG_DEBUG("AITEXT", "Response in %.1fs", elapsed);
         double cooldown = elapsed * 1.5;
         if (cooldown < kAITextMinCooldown) cooldown = kAITextMinCooldown;
 
@@ -197,7 +198,7 @@ static void SendGenerateRequest(const std::string& prompt, float temperature) {
             s_responseTime = elapsed;
 
             if (error) {
-                fprintf(stderr, "[AITEXT] Request failed: %s (endpoint: %s)\n",
+                CG_ERROR("AITEXT", "Request failed: %s (endpoint: %s)",
                         error.localizedDescription.UTF8String, endpoint.UTF8String);
                 s_nextGenTime = [[NSDate date] timeIntervalSince1970] + cooldown;
                 return;
@@ -206,7 +207,7 @@ static void SendGenerateRequest(const std::string& prompt, float temperature) {
             NSHTTPURLResponse* httpResp = (NSHTTPURLResponse*)response;
             if (httpResp.statusCode != 200) {
                 NSString* errorBody = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
-                fprintf(stderr, "[AITEXT] HTTP %ld, body: %s\n",
+                CG_ERROR("AITEXT", "HTTP %ld, body: %s",
                         (long)httpResp.statusCode, errorBody.UTF8String ?: "nil");
                 s_nextGenTime = [[NSDate date] timeIntervalSince1970] + cooldown;
                 return;
@@ -216,7 +217,7 @@ static void SendGenerateRequest(const std::string& prompt, float temperature) {
             NSDictionary* json = [NSJSONSerialization JSONObjectWithData:data options:0 error:&parseErr];
             if (parseErr || !json) {
                 NSString* rawBody = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
-                fprintf(stderr, "[AITEXT] Parse error: %s, raw body: %s\n",
+                CG_ERROR("AITEXT", "Parse error: %s, raw body: %s",
                         parseErr.localizedDescription.UTF8String, rawBody.UTF8String ?: "nil");
                 s_nextGenTime = [[NSDate date] timeIntervalSince1970] + cooldown;
                 return;
@@ -225,7 +226,7 @@ static void SendGenerateRequest(const std::string& prompt, float temperature) {
             NSString* content = json[@"choices"][0][@"message"][@"content"];
             if (!content || content.length == 0) {
                 NSString* jsonStr = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
-                fprintf(stderr, "[AITEXT] Empty content field. Full JSON: %s\n",
+                CG_ERROR("AITEXT", "Empty content field. Full JSON: %s",
                         jsonStr.UTF8String ?: "nil");
                 s_nextGenTime = [[NSDate date] timeIntervalSince1970] + cooldown;
                 return;
@@ -239,7 +240,7 @@ static void SendGenerateRequest(const std::string& prompt, float temperature) {
 
             std::lock_guard<std::mutex> lock(s_mutex);
             if (SeenHash(hash)) {
-                fprintf(stderr, "[AITEXT] Duplicate text, skipping\n");
+                CG_DEBUG("AITEXT", "Duplicate text, skipping");
                 s_nextGenTime = [[NSDate date] timeIntervalSince1970] + cooldown;
                 return;
             }
@@ -249,7 +250,7 @@ static void SendGenerateRequest(const std::string& prompt, float temperature) {
             int queueSize = (int)s_aiQueue.size();
             s_nextGenTime = [[NSDate date] timeIntervalSince1970] + cooldown;
 
-            fprintf(stderr, "[AITEXT] Generated: \"%s\" (ai_queue=%d, next=%.1fs)\n", text.c_str(), queueSize, cooldown);
+            CG_DEBUG("AITEXT", "Generated: \"%s\" (ai_queue=%d, next=%.1fs)", text.c_str(), queueSize, cooldown);
 
             if (g_config.ai.textMemeAutoSave) {
                 @autoreleasepool {
@@ -268,7 +269,7 @@ static void SendGenerateRequest(const std::string& prompt, float temperature) {
                     if (f) {
                         fprintf(f, "%s", text.c_str());
                         fclose(f);
-                        fprintf(stderr, "[AITEXT] Saved to %s\n", fullPath.c_str());
+                        CG_DEBUG("AITEXT", "Saved to %s", fullPath.c_str());
                     }
                 }
             }
@@ -289,7 +290,7 @@ static void TryLocalGeneration(const std::string& prompt, float temperature) {
         std::string resultCopy = result;
         dispatch_async(dispatch_get_main_queue(), ^{
             if (resultCopy.empty()) {
-                fprintf(stderr, "[AITEXT] Local LLM returned empty, falling back to file texts\n");
+                CG_ERROR("AITEXT", "Local LLM returned empty, falling back to file texts");
                 // Fall back to file texts - they're always available via Dequeue
                 s_nextGenTime = [[NSDate date] timeIntervalSince1970] + kAITextErrorCooldown;
                 return;
@@ -298,7 +299,7 @@ static void TryLocalGeneration(const std::string& prompt, float temperature) {
             size_t hash = SimpleHash(resultCopy);
             std::lock_guard<std::mutex> lock(s_mutex);
             if (SeenHash(hash)) {
-                fprintf(stderr, "[AITEXT] Duplicate local text, skipping\n");
+                CG_DEBUG("AITEXT", "Duplicate local text, skipping");
                 s_nextGenTime = [[NSDate date] timeIntervalSince1970] + kAITextErrorCooldown;
                 return;
             }
@@ -306,7 +307,7 @@ static void TryLocalGeneration(const std::string& prompt, float temperature) {
             s_seenHashes.push(hash);
             s_aiQueue.push(resultCopy);
             s_nextGenTime = [[NSDate date] timeIntervalSince1970] + 10.0;
-            fprintf(stderr, "[AITEXT] Local LLM: \"%s\" (ai_queue=%d)\n", resultCopy.c_str(), (int)s_aiQueue.size());
+            CG_DEBUG("AITEXT", "Local LLM: \"%s\" (ai_queue=%d)", resultCopy.c_str(), (int)s_aiQueue.size());
         });
     });
 }
@@ -338,7 +339,7 @@ void AI_TextMeme_LoadFileTexts() {
     LoadTextsFromDirectory(ConfigDirPath() / "TextMemes", s_fileQueue);
     LoadTextsFromDirectory(ASSET_ROOT / "Assets" / "Text" / "NotepadMessages", s_fileQueue);
 
-    fprintf(stderr, "[AITEXT] Loaded %zu file texts\n", s_fileQueue.size());
+    CG_DEBUG("AITEXT", "Loaded %zu file texts", s_fileQueue.size());
 }
 
 #pragma mark - Public Interface
@@ -359,13 +360,13 @@ void AI_TextMeme_Tick(double time) {
     if (g_config.ai.localLlmEnabled) {
         LocalLLM_Init();
         if (LocalLLM_GetState() == LocalLLMState::Ready) {
-            fprintf(stderr, "[AITEXT] Generating via local CoreML... (ai_queue=%d)\n", (int)s_aiQueue.size());
+            CG_DEBUG("AITEXT", "Generating via local CoreML... (ai_queue=%d)", (int)s_aiQueue.size());
             TryLocalGeneration(prompt, temp);
             return;
         }
     }
 
-    fprintf(stderr, "[AITEXT] Generating via HTTP... (ai_queue=%d, temp=%.1f, provider=%d)\n", (int)s_aiQueue.size(), temp, g_config.ai.providerType);
+    CG_DEBUG("AITEXT", "Generating via HTTP... (ai_queue=%d, temp=%.1f, provider=%d)", (int)s_aiQueue.size(), temp, g_config.ai.providerType);
     SendGenerateRequest(prompt, temp);
 }
 

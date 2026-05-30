@@ -197,6 +197,10 @@ private:
     Vector2 CalculateSeparationForce();
     Vector2 CalculateEdgeAvoidance(int w, int h);
     void UpdateDrag(double dt);
+    // Per-foot procedural step (shared by both feet). `gait` holds the
+    // speed-derived step parameters computed once per frame in SolveFeet.
+    struct Gait { float stepTrigger; float overshoot; float baseDur; float liftAmt; };
+    void StepFoot(FootState& f, Vector2 home, const Gait& gait, double time);
     void StartFetch(int w, int h, double time = -1.0);
     CursorAction UpdateBehaviors(double dt, double time, int w, int h, const CursorState& cursor);
     void UpdatePhysics(double dt, int w, int h);
