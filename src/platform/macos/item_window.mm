@@ -104,6 +104,10 @@ static DevicePoint RotatedBoundsSize(float width, float height, float rotation, 
     return self;
 }
 
+- (void)clearItem {
+    _item = nullptr;
+}
+
 - (BOOL)isFlipped {
     return YES;
 }
@@ -408,6 +412,14 @@ static DevicePoint RotatedBoundsSize(float width, float height, float rotation, 
 
 - (void)closeAndRemove {
     [self close];
+}
+
+- (void)clearItem {
+    _item = nullptr;
+    ItemContentView* view = (ItemContentView*)self.contentView;
+    if ([view respondsToSelector:@selector(clearItem)]) {
+        [view clearItem];
+    }
 }
 
 @end

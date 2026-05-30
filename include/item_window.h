@@ -15,6 +15,7 @@
 @property (nonatomic, assign) DroppedItem* item;
 @property (nonatomic, weak) NSWindow* parentWindow;
 - (instancetype)initWithFrame:(NSRect)frame item:(DroppedItem*)item;
+- (void)clearItem;
 @end
 
 @interface ItemWindow : NSWindow
@@ -24,6 +25,7 @@
 - (instancetype)initWithItem:(DroppedItem*)item;
 - (void)updatePosition;
 - (void)closeAndRemove;
+- (void)clearItem;
 // Returns YES if a local view point is inside the item's rotated rectangle
 - (BOOL)isPointInsideItem:(NSPoint)pt;
 @end
