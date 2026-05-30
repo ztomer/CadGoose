@@ -54,22 +54,15 @@ Toggle and tune each from **Preferences → Behaviors**:
 
 ### Option 2: Homebrew Cask Installation (Automated Quarantine Removal)
 
-If you use Homebrew, you can install CadGoose via our custom Cask. This automates the download, copies the app to your `/Applications` directory, and **automatically strips the Gatekeeper quarantine flag** during installation so the app launches instantly!
+If you use Homebrew, you can install CadGoose via our custom Cask from our official Tap. This automates the download, copies the app to your `/Applications` directory, and **automatically strips the Gatekeeper quarantine flag** during installation so the app launches instantly!
 
-**Direct Local Installation:**
 ```bash
-# From the root of the CadGoose repository
-brew install --cask tools/homebrew/cadgoose.rb
-```
-
-**Using a Custom Tap (Optional):**
-If you want to host the cask publicly or share it with others, you can add it to a public GitHub repository named `homebrew-tap` (e.g. `ztomer/homebrew-tap`) under a `Casks` folder and install it from anywhere:
-```bash
+# Tap the repository and install CadGoose
 brew tap ztomer/tap
 brew install --cask cadgoose
 ```
 
-For more detailed setup options, refer to the [Homebrew Cask Guide](docs/HOMEBREW.md).
+For direct local development installation or custom tap setup details, refer to the [Homebrew Cask Guide](docs/HOMEBREW.md).
 
 CadGoose runs in your **menu bar**. Use the menu to spawn geese, open Preferences, start a chat, mute honks, or quit.
 
