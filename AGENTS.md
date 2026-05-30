@@ -23,6 +23,7 @@ cd /Users/ztomer/Projects/CadGoose
 ./build/multi_goose_test
 ./tools/profiling/run_trail_test.sh
 ./tools/profiling/run_soak_test.sh
+brew install --cask tools/homebrew/cadgoose.rb   # Test the Homebrew Cask installer locally
 ```
 
 - **Dependencies**: `build.sh` installs `cmake ninja googletest mimalloc` via Homebrew if missing (set `SKIP_DEPS=1` to skip). **toml11** is fetched at configure time via CMake `FetchContent` (pinned commit `b32a2ff`) — no git submodule, so a plain `git clone` builds without `--recursive`. `build/` and `release-build/` are gitignored (never commit build output); `build.sh` wipes a stale/foreign CMake cache automatically.
