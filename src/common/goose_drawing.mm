@@ -332,8 +332,8 @@ void DrawDebugOverlay(CGContextRef ctx, const std::vector<Goose*>& geese) {
 void Goose_DestroyPerGooseWindow(Goose* g) {
     if (!g) return;
     if (g->m_perGooseWindow) {
-        void* winPtr = (__bridge_retained void*)(__bridge BehaviorElementWindow*)g->m_perGooseWindow;
-        void* keyPtr = (__bridge_retained void*)(__bridge NSNumber*)g->m_perGooseWindowKey;
+        void* winPtr = g->m_perGooseWindow;
+        void* keyPtr = g->m_perGooseWindowKey;
         g->m_perGooseWindow = nullptr;
         g->m_perGooseWindowKey = nullptr;
 
