@@ -95,6 +95,37 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Update Homebrew Cask in Tap
+        if: github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && inputs.release_tag != '')
+        env:
+          TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+        run: |
+          if [ -z "$TAP_TOKEN" ]; then
+            echo "HOMEBREW_TAP_TOKEN secret is not set, skipping cask tap automation."
+            exit 0
+          fi
+          
+          # 1. Calculate SHA-256 and get version strings
+          DMG_FILE="build/CadGoose-${VERSION}.dmg"
+          SHA256_HASH=$(shasum -a 256 "$DMG_FILE" | awk '{print $1}')
+          CLEAN_VERSION="${VERSION#v}"
+          
+          # 2. Clone the tap repository
+          git clone "https://${TAP_TOKEN}@github.com/ztomer/homebrew-tap.git" /tmp/homebrew-tap
+          cd /tmp/homebrew-tap
+          
+          # 3. Update the cask file with new version and SHA-256 hash using portable perl
+          perl -pi -e "s/version \".*\"/version \"$CLEAN_VERSION\"/" Casks/cadgoose.rb
+          perl -pi -e "s/sha256 \".*\"/sha256 \"$SHA256_HASH\"/" Casks/cadgoose.rb
+          perl -pi -e "s/sha256 :no_check/sha256 \"$SHA256_HASH\"/" Casks/cadgoose.rb
+          
+          # 4. Commit and push directly to the tap repository
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add Casks/cadgoose.rb
+          git commit -m "Update CadGoose cask to version $CLEAN_VERSION"
+          git push origin main
+
   # ── Linux ──────────────────────────────────────────────
   build-linux:
     name: Build Linux (tar.zst)
