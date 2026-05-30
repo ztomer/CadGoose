@@ -1,6 +1,12 @@
 # Changelog
 
-## May 30, 2026 — Release hardening: assets, AI chat, CI gate, and EXC_BAD_ACCESS crash fix
+## May 30, 2026 — Release hardening: assets, AI chat, CI gate, and safety fixes
+
+### EXC_BAD_ACCESS (SIGBUS) / snapshot iteration crash when disabling Ball behavior
+- **Fixed safe Snapshot iteration in ActorManager loops.** When behaviors like the `ball` behavior were toggled off in the settings, the behavior's `cleanup` routine was triggered synchronously inside `BehaviorRegistry::TickAll`, which removed and deleted the active `BallActor`. Because the `ActorManager::tickAll` loop runs over a local `snapshot` copy of the actors list, this left a dangling pointer in the snapshot loop, causing subsequent iterations to dereference the deleted actor and crash with `EXC_BAD_ACCESS` / `SIGBUS`.
+- **Added master existence check (`std::find`) in `tickAll` and `renderAll`.** Before dereferencing or ticking any actor, the loops now verify that the actor is still present in the master `actors` registry list, allowing synchronous deletion of actors to occur safely at any point.
+- **Added safety regression unit tests.** Created a comprehensive test suite `tests/common/test_actor_manager.cpp` checking self-deletion, next-deletion, and previous-deletion during both tick and render loops, confirming 100% robust and crash-free execution.
+- **Fixed Swift compiler warnings in `FoundationLLM.swift`.** Removed redundant `try` keywords and `do-catch` blocks around the non-throwing `SystemLanguageModel.default` property, restoring a clean, warning-free build.
 
 ### EXC_BAD_ACCESS (SIGSEGV) crash in World_CleanupExpired and Headless Test Segfaults
 - **Fixed a null pointer dereference in `World_CleanupExpired` and `ItemHitTest`.** When a dropped item's close button was clicked, its `m_item.data` was deleted and set to `nullptr`, but the actor was not marked dead. In the next frame refresh, `World_CleanupExpired` iterated over the active dropped items and attempted to read `actor->data()->type`, resulting in a NULL pointer dereference.

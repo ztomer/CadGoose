@@ -55,12 +55,8 @@ public func cAvailabilityCode() -> Int32 {
 public func cContextSize() -> Int32 {
     #if canImport(FoundationModels)
     if #available(macOS 26.0, *) {
-        do {
-            let model = try SystemLanguageModel.default
-            return Int32(model.contextSize)
-        } catch {
-            return 0
-        }
+        let model = SystemLanguageModel.default
+        return Int32(model.contextSize)
     }
     #endif
     return 0
@@ -79,48 +75,42 @@ public func cGenerate(prompt: UnsafePointer<CChar>, temperature: Float, callback
     }
 
     let promptStr = String(cString: prompt)
+    let model = SystemLanguageModel.default
+    let session = LanguageModelSession(model: model)
 
-    do {
-        let model = try SystemLanguageModel.default
-        let session = LanguageModelSession(model: model)
+    var options = GenerationOptions()
+    options.temperature = Double(temperature)
 
-        var options = GenerationOptions()
-        options.temperature = Double(temperature)
+    Task {
+        do {
+            let response = try await session.respond(to: promptStr, options: options)
+            var content = response.content
 
-        Task {
-            do {
-                let response = try await session.respond(to: promptStr, options: options)
-                var content = response.content
-
-                // Strip think...> blocks
-                while let startRange = content.range(of: "<think>"),
-                      let endRange = content.range(of: "</think>", range: startRange.upperBound..<content.endIndex) {
-                    content.removeSubrange(startRange.lowerBound..<endRange.upperBound)
-                }
-
-                // Trim whitespace
-                content = content.trimmingCharacters(in: .whitespacesAndNewlines)
-
-                // Truncate at first sentence-ending punctuation for meme texts
-                let minLen = 10
-                if let dot = content.firstIndex(of: "."), content.distance(from: content.startIndex, to: dot) > minLen {
-                    content = String(content[...dot])
-                } else if let excl = content.firstIndex(of: "!"), content.distance(from: content.startIndex, to: excl) > minLen {
-                    content = String(content[...excl])
-                } else if let qmark = content.firstIndex(of: "?"), content.distance(from: content.startIndex, to: qmark) > minLen {
-                    content = String(content[...qmark])
-                }
-
-                fmLog("Generated \(content.count) chars: \(content)")
-                callback?(content, context)
-            } catch {
-                fmLog("Generation error: \(error)")
-                callback?("", context)
+            // Strip think...> blocks
+            while let startRange = content.range(of: "<think>"),
+                  let endRange = content.range(of: "</think>", range: startRange.upperBound..<content.endIndex) {
+                content.removeSubrange(startRange.lowerBound..<endRange.upperBound)
             }
+
+            // Trim whitespace
+            content = content.trimmingCharacters(in: .whitespacesAndNewlines)
+
+            // Truncate at first sentence-ending punctuation for meme texts
+            let minLen = 10
+            if let dot = content.firstIndex(of: "."), content.distance(from: content.startIndex, to: dot) > minLen {
+                content = String(content[...dot])
+            } else if let excl = content.firstIndex(of: "!"), content.distance(from: content.startIndex, to: excl) > minLen {
+                content = String(content[...excl])
+            } else if let qmark = content.firstIndex(of: "?"), content.distance(from: content.startIndex, to: qmark) > minLen {
+                content = String(content[...qmark])
+            }
+
+            fmLog("Generated \(content.count) chars: \(content)")
+            callback?(content, context)
+        } catch {
+            fmLog("Generation error: \(error)")
+            callback?("", context)
         }
-    } catch {
-        fmLog("Failed to get model: \(error)")
-        callback?("", context)
     }
     #else
     callback?("", context)
