@@ -87,7 +87,6 @@ static void BELog(const char* fmt, ...) {
     if (self) {
         self.backgroundColor = [NSColor clearColor];
         [self setOpaque:NO];
-        [self setOneShot:YES];
         self.ignoresMouseEvents = YES;
         self.acceptsMouseMovedEvents = NO;
         self.level = NSStatusWindowLevel; // Default mid-layer; goose +5, leaves -5, footprints -10
