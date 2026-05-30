@@ -28,15 +28,17 @@ void World_CleanupExpired(double currentTime) {
     int memeCount = 0, textCount = 0;
     auto items = mgr.getDroppedItems();
     for (auto* actor : items) {
-        if (actor->data()->type == ItemData::MEME) memeCount++;
-        else if (actor->data()->type == ItemData::TEXT) textCount++;
+        if (actor->data()) {
+            if (actor->data()->type == ItemData::MEME) memeCount++;
+            else if (actor->data()->type == ItemData::TEXT) textCount++;
+        }
     }
 
     if (memeCount > g_config.item.maxDroppedMemes) {
         int toRemove = memeCount - g_config.item.maxDroppedMemes;
         for (auto* actor : items) {
             if (toRemove <= 0) break;
-            if (actor->data()->type == ItemData::MEME && !actor->pinned()) {
+            if (actor->data() && actor->data()->type == ItemData::MEME && !actor->pinned()) {
                 mgr.remove(actor);
                 toRemove--;
             }
@@ -47,7 +49,7 @@ void World_CleanupExpired(double currentTime) {
         int toRemove = textCount - g_config.item.maxDroppedTexts;
         for (auto* actor : items) {
             if (toRemove <= 0) break;
-            if (actor->data()->type == ItemData::TEXT && !actor->pinned()) {
+            if (actor->data() && actor->data()->type == ItemData::TEXT && !actor->pinned()) {
                 mgr.remove(actor);
                 toRemove--;
             }
@@ -142,6 +144,7 @@ bool ItemHitTest(NSPoint p, float viewHeight, DroppedItem** hitItem, float close
     // Iterate in reverse for z-order (last added = on top)
     for (auto it = items.rbegin(); it != items.rend(); ++it) {
         DroppedItemActor* actor = *it;
+        if (!actor->data()) continue;
         DroppedItem& item = actor->item();
         DevicePoint itemPos = {item.pos.x, item.pos.y};
         if (HitTest::PointInItem(mousePt, itemPos, item.data->w, item.data->h, item.rotation, g_config.general.globalScale)) {
