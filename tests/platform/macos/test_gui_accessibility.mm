@@ -337,7 +337,7 @@ protected:
         s_prefsWindow = findPrefsWindow();
         if (!s_prefsWindow) {
             NSRunningApplication* app = [NSRunningApplication runningApplicationWithProcessIdentifier:s_appPID];
-            [app activateWithOptions:NSApplicationActivateIgnoringOtherApps];
+            [app activateWithOptions:NSApplicationActivateAllWindows];
             usleep(300000);
             if (OpenPreferencesViaMenu(s_appElem))
                 usleep(800000);
