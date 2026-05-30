@@ -23,8 +23,10 @@ void ActorManager::remove(Actor* actor) {
 void ActorManager::tickAll(WorldContext& ctx, double dt, double time) {
     std::vector<Actor*> snapshot = actors;
     for (auto* actor : snapshot) {
-        if (actor && actor->isActive()) {
-            actor->tick(ctx, dt, time);
+        if (std::find(actors.begin(), actors.end(), actor) != actors.end()) {
+            if (actor && actor->isActive()) {
+                actor->tick(ctx, dt, time);
+            }
         }
     }
 }
@@ -32,8 +34,10 @@ void ActorManager::tickAll(WorldContext& ctx, double dt, double time) {
 void ActorManager::renderAll(IRenderer* renderer) {
     std::vector<Actor*> snapshot = actors;
     for (auto* actor : snapshot) {
-        if (actor && actor->isActive() && actor->isAlive()) {
-            actor->render(renderer);
+        if (std::find(actors.begin(), actors.end(), actor) != actors.end()) {
+            if (actor && actor->isActive() && actor->isAlive()) {
+                actor->render(renderer);
+            }
         }
     }
 }

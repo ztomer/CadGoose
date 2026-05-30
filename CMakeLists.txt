@@ -304,6 +304,7 @@ if(APPLE)
         tests/common/test_ai_text_meme.cpp
         tests/common/presence_stub.cpp
         tests/common/test_regression_portal_leaves_honk.cpp
+        tests/common/test_actor_manager.cpp
         tests/common/test_baby_stalin_spawn.mm
         src/common/app_actions.cpp
         src/common/app_cli.cpp
