@@ -214,6 +214,8 @@ TEST(GooseRender, CGRenderer_Transforms) {
 
 static Goose* createTestGoose() {
     g_config.general.globalScale = 1.0f;
+    g_config.physics.isoScaleX = 1.0f;
+    g_config.physics.isoScaleY = 1.0f;
     g_config.color.currentBody = {0.8f, 0.8f, 0.8f};
     g_config.color.currentHead = {0.7f, 0.7f, 0.7f};
     g_config.color.currentNeck = {0.75f, 0.75f, 0.75f};
@@ -508,6 +510,8 @@ TEST(GooseRender, CGBitmapContext_CreateImageAfterDraw) {
 
 TEST(GooseRender, DrawThreeGeese_AllVisible) {
     g_config.general.globalScale = 1.0f;
+    g_config.physics.isoScaleX = 1.0f;
+    g_config.physics.isoScaleY = 1.0f;
     g_config.color.currentBody = {0.8f, 0.8f, 0.8f};
     g_config.color.currentHead = {0.7f, 0.7f, 0.7f};
     g_config.color.currentNeck = {0.75f, 0.75f, 0.75f};
