@@ -90,6 +90,7 @@ void HandleUncaughtException(NSException* exception) {
 // preserved. When run from a terminal, leave stderr alone for live dev output.
 void RedirectStderrIfHeadless(const fs::path& logDir, const char* stamp) {
     if (isatty(STDERR_FILENO)) return;
+    if (getenv("CI") || getenv("GITHUB_ACTIONS")) return; // Do not redirect in CI
     fs::path sessionLog = logDir / (std::string("session-") + stamp + ".log");
     FILE* f = freopen(sessionLog.string().c_str(), "w", stderr);
     if (f) {
