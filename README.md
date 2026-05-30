@@ -42,24 +42,34 @@ Toggle and tune each from **Preferences → Behaviors**:
 
 ## Install (macOS)
 
+### Option 1: Standard Installation (DMG)
+
 1. Download `CadGoose-<version>.dmg` from the [latest release](https://github.com/ztomer/CadGoose/releases/latest).
-2. Open it and drag **CadGoose** into your Applications folder.
-3. The first launch is blocked by Gatekeeper because the app isn't notarized by Apple yet. Clear the quarantine flag once:
+2. Open the DMG and drag **CadGoose** into your `/Applications` folder.
+3. The first launch is blocked by macOS Gatekeeper because the app is ad-hoc signed and not notarized yet. Clear the quarantine flag once by running this in your terminal:
    ```bash
    xattr -dr com.apple.quarantine /Applications/CadGoose.app
    ```
    Then open it normally (double-click). You only need to do this once. *(A future notarized build will remove this step.)*
 
-### Alternatively: Install via Homebrew Cask (Automated quarantine removal)
+### Option 2: Homebrew Cask Installation (Automated Quarantine Removal)
 
-If you prefer using Homebrew, you can install CadGoose directly using our custom Cask, which automatically strips the quarantine flag for you so the app launches instantly:
+If you use Homebrew, you can install CadGoose via our custom Cask. This automates the download, copies the app to your `/Applications` directory, and **automatically strips the Gatekeeper quarantine flag** during installation so the app launches instantly!
 
+**Direct Local Installation:**
 ```bash
-# Install directly from the repository cask file
+# From the root of the CadGoose repository
 brew install --cask tools/homebrew/cadgoose.rb
 ```
 
-For setting up a custom GitHub Tap or hosting the formula publicly, refer to the [Homebrew Cask Guide](docs/HOMEBREW.md).
+**Using a Custom Tap (Optional):**
+If you want to host the cask publicly or share it with others, you can add it to a public GitHub repository named `homebrew-tap` (e.g. `ztomer/homebrew-tap`) under a `Casks` folder and install it from anywhere:
+```bash
+brew tap ztomer/tap
+brew install --cask cadgoose
+```
+
+For more detailed setup options, refer to the [Homebrew Cask Guide](docs/HOMEBREW.md).
 
 CadGoose runs in your **menu bar**. Use the menu to spawn geese, open Preferences, start a chat, mute honks, or quit.
 
