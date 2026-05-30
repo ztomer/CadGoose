@@ -12,22 +12,33 @@
 
 ```bash
 cd $HOME/Projects/CadGoose
-./build.sh              # macOS Release — checks/installs Homebrew deps, verbose output
+./build.sh              # macOS Release — checks/installs Homebrew deps, self-heals stale cache, verbose
+./run.sh               # build, then run build/CadGoose
 ./build_debug.sh        # macOS Debug (verbose)
 ./build_linux.sh        # Linux Release via Docker (quiet)
-mkdir -p build && cd build && cmake .. -DCMAKE_BUILD_TYPE=Release && make -j$(sysctl -n hw.logicalcpu)
 ./build/CadGoose [--debug]
-./build/CadGooseTests
+./build/CadGooseTests          # full suite (run on a machine with a display for window/OCR tests)
+( cd build && ctest --output-on-failure )   # CI gate: excludes WindowTrailTest.*
+./scripts/create_bundle.sh --clean   # build/CadGoose.app (copies Assets in; self-contained)
 ./build/multi_goose_test
 ./tools/profiling/run_trail_test.sh
 ./tools/profiling/run_soak_test.sh
-./build/trail_detection_test
-./build/soak_fetch_test
 ```
 
-- **Dependencies**: `build.sh` installs `cmake ninja googletest mimalloc` via Homebrew if missing (set `SKIP_DEPS=1` to skip). **toml11** is fetched at configure time via CMake `FetchContent` (pinned commit `b32a2ff`) — no git submodule, so a plain `git clone` builds without `--recursive`.
-- **Logs/crashes**: written to `<ConfigDir>/logs/` (macOS: `~/Library/Application Support/CadGoose/logs/`). Crash backtraces in `crash-<ts>.log`; stderr captured to `session-<ts>.log` when launched from the bundle (not a terminal).
-- **CI/release**: `.github/workflows/build_and_release.yml` builds the macOS DMG + Linux tarball, attaches them to a release on `release: published`, and can be run manually via `workflow_dispatch` with a `release_tag` input to attach artifacts to an existing tag. NOTE: the `ctest` step is currently a no-op (no `enable_testing()`/`include(CTest)`), so CI does not actually gate on tests.
+- **Dependencies**: `build.sh` installs `cmake ninja googletest mimalloc` via Homebrew if missing (set `SKIP_DEPS=1` to skip). **toml11** is fetched at configure time via CMake `FetchContent` (pinned commit `b32a2ff`) — no git submodule, so a plain `git clone` builds without `--recursive`. `build/` and `release-build/` are gitignored (never commit build output); `build.sh` wipes a stale/foreign CMake cache automatically.
+- **Logs/crashes**: written to `<ConfigDir>/logs/` (macOS: `~/Library/Application Support/CadGoose/logs/`, or `<repo>/config/logs/` when run from the repo). Crash backtraces in `crash-<ts>.log`; stderr captured to `session-<ts>.log` when launched headless (not a terminal). `ConfigDirPath()` prefers `./config/config.toml` if present, else `~/Library/Application Support/CadGoose`.
+- **Tests in CI**: `ctest` now actually runs the suite (added `enable_testing()`, WORKING_DIRECTORY = source so `Assets/` resolves). It excludes `WindowTrailTest.*` (needs a real window server) and the OCR `Rendering.Text*` tests skip when `tesseract` is absent; accessibility tests skip headless. ~770 tests gate every build.
+- **CI/release**: `.github/workflows/build_and_release.yml` runs the macOS job on **`macos-26`** (so the SDK has FoundationModels — verified by a build step), builds the macOS DMG + Linux tarball, **version-stamps** artifacts (`CadGoose-<tag>.dmg`, bundle `CFBundleShortVersionString`), and attaches them on `release: published` or via `workflow_dispatch` (`release_tag` input). The `.app` is self-contained (Assets copied in, not symlinked).
+
+## Session Summary (May 30, 2026) — Release hardening: assets, AI chat, CI gate
+
+- **Bundle ships assets** (`scripts/create_bundle.sh`): `Resources/Assets` was a **symlink** to the build machine's project dir → dangling in the DMG, so every released `.app` had no images (and `xattr` failed on the broken link). Now `cp -RL`'d in (self-contained, 1.5M → 25M) and `chmod -R u+w` so quarantine removal works. **This is the fix for "no images when installed from DMG".**
+- **Local-model (Foundation) chat** (`ai_local_llm_adapter.mm`, `FoundationLLM.swift`): fixed a dangling `const std::string&` that delivered garbage/empty text; cap the persona at `kFoundationMaxEvilLevel` (0.72 ≈ "villainous", `ai_prompt_builder`) since Apple's guardrail refuses Overlord/Dictator; on a guardrail refusal, **retry at progressively lower evil** before a canned fallback. AI settings panel shows the cap note (below the slider, with the %).
+- **Osaurus/HTTP chat** (`ai_http_client.mm`): retry transient 5xx/timeout; a reachable server is no longer shown as "disconnected"; fixed the chat status dot (`windowDidBecomeKey` + local-provider `connected` not being set).
+- **Crash fix**: `AI_SendMessage`/`AI_OpenChat` + the `send` socket handler captured a `const char*`/`args` past its lifetime → SIGABRT on `setStringValue:nil`. Snapshot to NSString synchronously. Added an `openchat` socket verb.
+- **Build/run scripts**: `build.sh` self-heals a foreign CMake cache and `cd`s to repo root; `run.sh` now runs `build/CadGoose` (was a stale `release-build/`); removed committed `build/`+`release-build/` from git. **This was the real cause of "fixes don't take effect".**
+- **CI**: macOS job on `macos-26` + FoundationModels-SDK verify step; `ctest` actually gates now (enable_testing, WindowTrail excluded, OCR tests skip without tesseract); version-stamped DMG; app icon regenerated (`scripts/make_icon.swift`).
+- **Docs**: README rewritten customer-first (no emojis); this file.
 
 ## Session Summary (May 28, 2026) — Fresh-machine bug fixes + release packaging
 
@@ -120,7 +131,7 @@ mkdir -p build && cd build && cmake .. -DCMAKE_BUILD_TYPE=Release && make -j$(sy
 - **Stale pointer risk in item_window.mm** — Mitigated by `IsItemValid()` check before every use + `std::list` pointer stability guarantees.
 - **Trail detection false positive** — Trail scan counts dropped-item-contaminated frames as "trails". Need to filter frames where previous-cycle dropped items are on screen.
 - **Test process memory ~7.2GB** — From ring buffer (300 × 25MB frames). Acceptable for short runs; not a CadGoose issue.
-- **Integration.Goose_ReturningItem and Goose_DropItem fail from build dir** — AssetManager (`assets.mm`) loads images from `./Assets/` relative to CWD. Tests run from `build/` which has no `Assets/` directory. Fix: copy `Assets/` to build dir, or use CMake `WORKING_DIRECTORY` property.
+- ~~**Integration.Goose_ReturningItem / Goose_DropItem fail from build dir**~~ ✅ Fixed — test harness now calls `g_assets.Init()` and `ctest` sets `WORKING_DIRECTORY` to the source tree so `Assets/` resolves.
 - **MCPIntegrationTest failures** — Tests require running MCP server. Run with `./CadGoose` running in background.
 
 ## Next Steps
@@ -131,9 +142,9 @@ mkdir -p build && cd build && cmake .. -DCMAKE_BUILD_TYPE=Release && make -j$(sy
 - Run the AX accessibility tests (checking per-goose windows exist).
 
 ### Release
-- CI release infrastructure exists (`.github/workflows/build_and_release.yml`) but untested. Creates `.dmg` (macOS) and `.tar.zst` (Linux).
-- Verify CI pipeline works end-to-end: push a tag, check release artifacts.
-- Consider adding: `make dist` CMake target, `CadGoose --version` flag, version header.
+- CI (`.github/workflows/build_and_release.yml`) is **green end-to-end**: macOS DMG (on `macos-26`, FoundationModels SDK verified) + Linux `.tar.zst`, version-stamped, tests gating. Auto-attaches on `release: published`; use `workflow_dispatch` (`release_tag`) to attach to an existing tag.
+- The released DMG is **ad-hoc signed, not notarized** — users need `xattr -dr com.apple.quarantine` (documented in README). Notarization (Developer ID + `notarytool` + staple) is the remaining release polish.
+- Optional nice-to-haves: `CadGoose --version` CLI flag (the bundle already carries the version via `CFBundleShortVersionString`).
 
 ### Baby Stalin Character System (deferred)
 - See `docs/PLAN.md` for full design: `CharacterSkin` interface, `SkinRegistry`, `BabyStalinSkin` with programmatic drawing.
