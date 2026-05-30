@@ -213,6 +213,7 @@ TEST(GooseRender, CGRenderer_Transforms) {
 // ===========================
 
 static Goose* createTestGoose() {
+    Config_Init();
     g_config.general.globalScale = 1.0f;
     g_config.physics.isoScaleX = 1.0f;
     g_config.physics.isoScaleY = 1.0f;
