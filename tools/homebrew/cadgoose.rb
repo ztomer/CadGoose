@@ -1,6 +1,7 @@
 cask "cadgoose" do
-  version "1.9"
-  sha256 :no_check # Set to :no_check for ease of custom/local updates, or replace with actual SHA-256 hash of the DMG
+  version "0.5"
+  sha256 "7b3f33816703da07612642d0439bbd4c71963eeaefce775253873b3f5d8e4e2c"
+
 
   url "https://github.com/ztomer/CadGoose/releases/download/v#{version}/CadGoose-v#{version}.dmg"
   name "CadGoose"
