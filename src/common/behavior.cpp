@@ -133,7 +133,7 @@ void BehaviorRegistry::TickAll(Goose* goose, double dt, double time) {
             }
 
             if (!state) {
-                state = BehaviorStateManager::Instance().Get<BehaviorState>(goose->id, behavior->id);
+                state = BehaviorStateManager::Instance().GetOrCreate<BehaviorState>(goose->id, behavior->id);
             }
             if (state) {
                 state->wasEnabled = isEnabled;

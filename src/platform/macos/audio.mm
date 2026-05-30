@@ -2,6 +2,7 @@
 #import <AVFoundation/AVFoundation.h>
 #import <Foundation/Foundation.h>
 #import "config.h"
+#include "assets.h"
 
 extern bool g_debugMode;
 
@@ -30,11 +31,8 @@ static bool g_audioInitialized = false;
     if (g_debugMode) fprintf(stderr, "[DEBUG] " fmt "\n", ##__VA_ARGS__); } while(0)
 
 static NSString* GetAssetsPath() {
-    NSBundle* bundle = [NSBundle mainBundle];
-    NSString* execPath = [bundle executablePath];
-    NSString* buildDir = [execPath stringByDeletingLastPathComponent];
-    NSString* projectDir = [buildDir stringByDeletingLastPathComponent];
-    return [projectDir stringByAppendingPathComponent:@"Assets"];
+    std::string path = (ASSET_ROOT / "Assets").string();
+    return [NSString stringWithUTF8String:path.c_str()];
 }
 
 static AVAudioPlayer* MakePlayer(NSString* path) {
