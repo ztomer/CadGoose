@@ -1,0 +1,25 @@
+name: 'Determine version'
+description: 'Compute VERSION into $GITHUB_ENV from the release tag, workflow_dispatch input, or a dev-<sha> fallback.'
+inputs:
+  release_tag:
+    description: 'workflow_dispatch release tag (empty for push/release events)'
+    required: false
+    default: ''
+runs:
+  using: 'composite'
+  steps:
+    - shell: bash
+      env:
+        EVENT_NAME: ${{ github.event_name }}
+        RELEASE_TAG_NAME: ${{ github.event.release.tag_name }}
+        DISPATCH_TAG: ${{ inputs.release_tag }}
+      run: |
+        if [ "$EVENT_NAME" = "release" ]; then
+          VERSION="$RELEASE_TAG_NAME"
+        elif [ -n "$DISPATCH_TAG" ]; then
+          VERSION="$DISPATCH_TAG"
+        else
+          VERSION="dev-${GITHUB_SHA::7}"
+        fi
+        echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+        echo "Version: $VERSION"

@@ -66,16 +66,9 @@ jobs:
           ctest --output-on-failure -j$(sysctl -n hw.logicalcpu)
 
       - name: Determine version
-        run: |
-          if [ "${{ github.event_name }}" = "release" ]; then
-            VERSION="${{ github.event.release.tag_name }}"
-          elif [ -n "${{ inputs.release_tag }}" ]; then
-            VERSION="${{ inputs.release_tag }}"
-          else
-            VERSION="dev-${GITHUB_SHA::7}"
-          fi
-          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
-          echo "Version: $VERSION"
+        uses: ./.github/actions/determine-version
+        with:
+          release_tag: ${{ inputs.release_tag }}
 
       - name: Create App Bundle
         run: |
@@ -126,16 +119,9 @@ jobs:
       # Tests are macOS-only (behaviors have CoreGraphics dependencies)
 
       - name: Determine version
-        run: |
-          if [ "${{ github.event_name }}" = "release" ]; then
-            VERSION="${{ github.event.release.tag_name }}"
-          elif [ -n "${{ inputs.release_tag }}" ]; then
-            VERSION="${{ inputs.release_tag }}"
-          else
-            VERSION="dev-${GITHUB_SHA::7}"
-          fi
-          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
-          echo "Version: $VERSION"
+        uses: ./.github/actions/determine-version
+        with:
+          release_tag: ${{ inputs.release_tag }}
 
       - name: Package binary
         run: |

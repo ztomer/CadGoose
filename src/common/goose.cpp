@@ -234,82 +234,81 @@ void Goose::SolveFeet(double time) {
       1.0f, (g_config.movement.baseRunSpeed - g_config.movement.baseWalkSpeed));
   float speed01 =
       Clamp((speed - g_config.movement.baseWalkSpeed) / denom, 0.0f, 1.0f);
-  float stepTrigger = Lerp(g_config.step.stepTriggerWalk,
-                           g_config.step.stepTriggerRun, speed01);
-  float overshoot =
-      Lerp(g_config.step.overshootWalk, g_config.step.overshootRun, speed01);
-  float baseDur =
-      Lerp(g_config.step.durationWalk, g_config.step.durationRun, speed01);
-  float liftAmt = Lerp(g_config.step.liftWalk, g_config.step.liftRun, speed01);
+  Gait gait{
+      Lerp(g_config.step.stepTriggerWalk, g_config.step.stepTriggerRun, speed01),
+      Lerp(g_config.step.overshootWalk, g_config.step.overshootRun, speed01),
+      Lerp(g_config.step.durationWalk, g_config.step.durationRun, speed01),
+      Lerp(g_config.step.liftWalk, g_config.step.liftRun, speed01),
+  };
 
-  auto UpdateFoot = [&](FootState &f, Vector2 home) {
-    // NaN guard — recover corrupted foot positions
-    if (!std::isfinite(f.currentPos.x) || !std::isfinite(f.currentPos.y)) {
+  StepFoot(rig.lFoot, lHome, gait, time);
+  StepFoot(rig.rFoot, rHome, gait, time);
+}
+
+void Goose::StepFoot(FootState &f, Vector2 home, const Gait &gait, double time) {
+  // NaN guard — recover corrupted foot positions
+  if (!std::isfinite(f.currentPos.x) || !std::isfinite(f.currentPos.y)) {
+    f.currentPos = home;
+    f.moveStartTime = -1.0;
+    return;
+  }
+  if (!std::isfinite(home.x) || !std::isfinite(home.y)) {
+    home = pos;
+  }
+
+  if (f.moveStartTime < 0) {
+    float dist = Vector2::Distance(f.currentPos, home);
+
+    if (dist > g_config.step.snapDistance) {
       f.currentPos = home;
       f.moveStartTime = -1.0;
       return;
     }
-    if (!std::isfinite(home.x) || !std::isfinite(home.y)) {
-      home = pos;
-    }
 
-    if (f.moveStartTime < 0) {
-      float dist = Vector2::Distance(f.currentPos, home);
-
-      if (dist > g_config.step.snapDistance) {
-        f.currentPos = home;
-        f.moveStartTime = -1.0;
+    if (dist > gait.stepTrigger) {
+      if (rig.lFoot.moveStartTime >= 0.0 || rig.rFoot.moveStartTime >= 0.0)
         return;
+
+      f.moveOrigin = f.currentPos;
+      f.moveDir = Vector2::Normalize(home - f.currentPos);
+      f.moveStartTime = time;
+
+      float distFactor =
+          Clamp(dist / g_config.step.distFactorBase,
+                g_config.step.distFactorMin, g_config.step.distFactorMax);
+      f.moveDuration = Clamp(gait.baseDur * distFactor, g_config.step.durationMin,
+                             g_config.step.durationMax);
+    }
+  } else {
+    Vector2 target = home + f.moveDir * gait.overshoot;
+    float p = (float)(time - f.moveStartTime) /
+              std::max(g_config.step.minDuration, f.moveDuration);
+
+    if (p >= 1.0f) {
+      f.currentPos = home;
+      f.moveStartTime = -1;
+
+      if (mudEnabled && (rng_util::RandRange(100)) < mudChance) {
+        Footprint fp;
+        fp.pos = home; // already device coords (GetFootHome returns pos + offset)
+        fp.dir = dir + ((&f == &rig.lFoot) ? g_config.step.leftFootAngle
+                                           : g_config.step.rightFootAngle);
+        fp.timeSpawned = time;
+        fp.lifetime = mudLifetime;
+        g_world.footprints.push(fp);
       }
 
-      if (dist > stepTrigger) {
-        if (rig.lFoot.moveStartTime >= 0.0 || rig.rFoot.moveStartTime >= 0.0)
-          return;
-
-        f.moveOrigin = f.currentPos;
-        f.moveDir = Vector2::Normalize(home - f.currentPos);
-        f.moveStartTime = time;
-
-        float distFactor =
-            Clamp(dist / g_config.step.distFactorBase,
-                  g_config.step.distFactorMin, g_config.step.distFactorMax);
-        f.moveDuration = Clamp(baseDur * distFactor, g_config.step.durationMin,
-                               g_config.step.durationMax);
+      if (time - lastStepSoundTime > stepSoundCooldown) {
+        g_assets.Pat();
+        lastStepSoundTime = time;
       }
     } else {
-      Vector2 target = home + f.moveDir * overshoot;
-      float p = (float)(time - f.moveStartTime) /
-                std::max(g_config.step.minDuration, f.moveDuration);
-
-      if (p >= 1.0f) {
-        f.currentPos = home;
-        f.moveStartTime = -1;
-
-        if (mudEnabled && (rng_util::RandRange(100)) < mudChance) {
-          Footprint fp;
-          fp.pos = home; // already device coords (GetFootHome returns pos + offset)
-          fp.dir = dir + ((&f == &rig.lFoot) ? g_config.step.leftFootAngle
-                                             : g_config.step.rightFootAngle);
-          fp.timeSpawned = time;
-          fp.lifetime = mudLifetime;
-          g_world.footprints.push(fp);
-        }
-        
-        if (time - lastStepSoundTime > stepSoundCooldown) {
-          g_assets.Pat();
-          lastStepSoundTime = time;
-        }
-      } else {
-        float e = CubicEaseInOut(p);
-        Vector2 base = Vector2::Lerp(f.moveOrigin, target, e);
-        float lift = std::sin((float)PI * p) * liftAmt;
-        f.currentPos = base + Vector2{0.0f, -lift};
-      }
+      float e = CubicEaseInOut(p);
+      Vector2 base = Vector2::Lerp(f.moveOrigin, target, e);
+      float lift = std::sin((float)PI * p) * gait.liftAmt;
+      f.currentPos = base + Vector2{0.0f, -lift};
     }
-  };
-
-  UpdateFoot(rig.lFoot, lHome);
-  UpdateFoot(rig.rFoot, rHome);
+  }
 }
 
 void Goose::UpdateDirection() {
