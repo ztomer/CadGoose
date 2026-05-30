@@ -80,6 +80,9 @@ void DroppedItemActor::render(IRenderer* renderer) {
 #ifdef __APPLE__
 
 void DroppedItemActor::initWindow() {
+    if (getenv("CADGOOSE_HEADLESS_TEST")) {
+        return;
+    }
     double t0 = GetTimeMs();
     ItemWindowManager* manager = [ItemWindowManager shared];
     ItemWindow* win = [[ItemWindow alloc] initWithItem:&m_item];

@@ -285,6 +285,7 @@ int main(int argc, char **argv) {
     CrashLogger_Init();
     ::testing::InitGoogleTest(&argc, argv);
     setenv("CADGOOSE_CONFIG_DIR", "/tmp/cadgoose-test-config", 1);
+    setenv("CADGOOSE_HEADLESS_TEST", "1", 1);
     return RUN_ALL_TESTS();
 }
 
