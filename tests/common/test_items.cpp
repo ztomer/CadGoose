@@ -1,30 +1,69 @@
-#include "../test_framework.h"
-#include "../../include/items.h"
+#include <gtest/gtest.h>
+#include "items.h"
 
-TEST(ItemData_DefaultConstructor) {
+TEST(ItemDataTest, DefaultConstructor) {
     ItemData data;
-    ASSERT_EQ(data.type, ItemData::MEME);
-    ASSERT_EQ(data.w, 0);
-    ASSERT_EQ(data.h, 0);
+    EXPECT_EQ(data.type, ItemData::MEME);
+    EXPECT_EQ(data.w, 0);
+    EXPECT_EQ(data.h, 0);
+    EXPECT_FALSE(data.isAIGenerated);
 }
 
-TEST(ItemData_Text) {
+TEST(ItemDataTest, TextContent) {
     ItemData data;
     data.type = ItemData::TEXT;
     data.textContent = std::make_shared<std::string>("Hello World");
-    ASSERT_EQ(data.Text(), "Hello World");
+    EXPECT_EQ(data.Text(), "Hello World");
 }
 
-TEST(ItemData_Text_Empty) {
+TEST(ItemDataTest, TextEmpty) {
     ItemData data;
-    ASSERT_EQ(data.Text(), "");
+    EXPECT_EQ(data.Text(), "");
 }
 
-TEST(ItemData_ImageDimensions) {
+TEST(ItemDataTest, ImageDimensions) {
     ItemData data;
     data.type = ItemData::MEME;
     data.w = 100;
     data.h = 50;
-    ASSERT_EQ(data.w, 100);
-    ASSERT_EQ(data.h, 50);
+    EXPECT_EQ(data.w, 100);
+    EXPECT_EQ(data.h, 50);
+}
+
+TEST(ItemDataTest, TextSetThenClear) {
+    ItemData data;
+    data.type = ItemData::TEXT;
+    data.textContent = std::make_shared<std::string>("temporary");
+    EXPECT_EQ(data.Text(), "temporary");
+    data.textContent.reset();
+    EXPECT_EQ(data.Text(), "");
+}
+
+TEST(DroppedItemTest, NotExpiredByDefault) {
+    ItemData data;
+    DroppedItem item;
+    item.data = &data;
+    item.timeDropped = 0.0;
+    item.pinned = false;
+    // With itemLifetime > 0, fresh items should not be expired
+    EXPECT_FALSE(item.isExpired(1.0));
+}
+
+TEST(DroppedItemTest, ExpiredAfterLifetime) {
+    ItemData data;
+    DroppedItem item;
+    item.data = &data;
+    item.timeDropped = 0.0;
+    item.pinned = false;
+    // With default itemLifetime, item dropped at t=0 should be expired well past lifetime
+    EXPECT_TRUE(item.isExpired(1000000.0));
+}
+
+TEST(DroppedItemTest, PinnedNeverExpires) {
+    ItemData data;
+    DroppedItem item;
+    item.data = &data;
+    item.timeDropped = 0.0;
+    item.pinned = true;
+    EXPECT_FALSE(item.isExpired(1000000.0));
 }

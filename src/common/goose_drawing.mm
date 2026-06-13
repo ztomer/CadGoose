@@ -334,14 +334,22 @@ void Goose_DestroyPerGooseWindow(Goose* g) {
     if (g->m_perGooseWindow) {
         void* winPtr = g->m_perGooseWindow;
         void* keyPtr = g->m_perGooseWindowKey;
-        g->m_perGooseWindow = nullptr;
-        g->m_perGooseWindowKey = nullptr;
 
         dispatch_block_t cleanup = ^{
+            // Nil the draw block first so any late drawRect: becomes a no-op.
             BehaviorElementWindow* win = (__bridge_transfer BehaviorElementWindow*)winPtr;
+            BehaviorElementContentView* cv = (BehaviorElementContentView*)win.contentView;
+            cv.drawBlock = nil;
+
             NSNumber* key = (__bridge_transfer NSNumber*)keyPtr;
             [[BehaviorElementWindowManager shared] unregisterWindow:key];
             [win closeAndRemove];
+
+            // Only release the goose's claim on the window AFTER closing it.
+            // This prevents the tick loop from creating a new window for a dying
+            // goose (the old window stays valid through dispatch_sync).
+            g->m_perGooseWindow = nullptr;
+            g->m_perGooseWindowKey = nullptr;
         };
 
         if ([NSThread isMainThread]) {

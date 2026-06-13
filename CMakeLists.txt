@@ -31,6 +31,15 @@ macro(target_enable_asan TARGET)
     endif()
 endmacro()
 
+option(CODE_COVERAGE "Build with LLVM source-based code coverage" OFF)
+if(CODE_COVERAGE AND APPLE)
+    message(STATUS "Code coverage instrumentation enabled")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fprofile-instr-generate -fcoverage-mapping")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fprofile-instr-generate -fcoverage-mapping")
+    set(CMAKE_OBJCXX_FLAGS "${CMAKE_OBJCXX_FLAGS} -fprofile-instr-generate -fcoverage-mapping")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fprofile-instr-generate")
+endif()
+
 find_program(CCACHE_PROGRAM ccache)
 if(CCACHE_PROGRAM)
     message(STATUS "ccache found: ${CCACHE_PROGRAM}")
@@ -266,6 +275,7 @@ if(APPLE)
         tests/test_goose_behavior.cpp
         tests/test_goose_physics.cpp
         tests/test_goose_behaviors.cpp
+        tests/common/test_goose_behaviors_internal.cpp
         tests/test_soak.cpp
         tests/common/test_behavior_helpers.cpp
         tests/common/test_behavior_manager.cpp
@@ -275,6 +285,7 @@ if(APPLE)
         tests/common/test_behavior_registry.cpp
         tests/common/test_behavior_ball.cpp
         tests/common/test_behavior_breadcrumbs.cpp
+        tests/common/test_behavior_core.cpp
         tests/common/test_leafpile_scaling.cpp
         tests/common/test_footprint_registration.cpp
         tests/common/test_behavior_toggle.cpp
@@ -305,6 +316,13 @@ if(APPLE)
         tests/common/presence_stub.cpp
         tests/common/test_regression_portal_leaves_honk.cpp
         tests/common/test_actor_manager.cpp
+        tests/common/test_app_cli.cpp
+        tests/common/test_behavior_sim.cpp
+        tests/common/test_cursor_backend.cpp
+        tests/common/test_items.cpp
+        tests/common/test_log.cpp
+        tests/common/test_math.cpp
+        tests/common/test_world.cpp
         tests/common/test_baby_stalin_spawn.mm
         src/common/app_actions.cpp
         src/common/app_cli.cpp
@@ -486,6 +504,20 @@ if(APPLE)
     add_test(NAME CadGooseTests
              COMMAND CadGooseTests --gtest_filter=-WindowTrailTest.*
              WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+
+    # Standalone E2E targets — require a display server (ScreenCaptureKit).
+    # Excluded in headless CI via `ctest -E "requires_display"`.
+    add_test(NAME trail_detection_test COMMAND trail_detection_test
+             WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+    set_tests_properties(trail_detection_test PROPERTIES LABELS "requires_display")
+
+    add_test(NAME soak_fetch_test COMMAND soak_fetch_test
+             WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+    set_tests_properties(soak_fetch_test PROPERTIES LABELS "requires_display")
+
+    add_test(NAME multi_goose_test COMMAND multi_goose_test
+             WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+    set_tests_properties(multi_goose_test PROPERTIES LABELS "requires_display")
 
     # Trail detection test — standalone binary, not a gtest.
     # Connects to running CadGoose app via Unix socket, captures screenshots,

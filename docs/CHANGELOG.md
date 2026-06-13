@@ -1,5 +1,28 @@
 # Changelog
 
+## June 12, 2026 — Crash fix + Coverage Phase 1
+
+### Race condition crash: `Goose::draw` null dereference + per-goose window deadlock
+
+- **Root cause**: Two concurrent race conditions in per-goose window destruction:
+  1. `ActorManager::destroyAllOfType("goose")` set `g->m_perGooseWindow = nullptr` before closing the window. The main thread's tick loop saw the null pointer and created a brand new window for the dying goose — whose draw block captured a `Goose*` that was about to be freed.
+  2. The dispatch block in `Goose_DestroyPerGooseWindow` closed the window (freeing its backing store) while the main thread's draw was mid-`CGContextSaveGState`, causing heap corruption crash.
+- **Fix** (`goose_drawing.mm`, `actor.cpp`, `tick_manager.mm`):
+  - Moved `m_perGooseWindow = nullptr` inside the cleanup dispatch block (after `[win closeAndRemove]`)
+  - Nilled `cv.drawBlock` before close so any late `drawRect:` is a no-op
+  - Added `setActive(false)` before `delete` in `destroyAllOfType`
+  - Added `isActive()` guards in tick loop and key monitor
+
+### Coverage Phase 1 — Infrastructure Complete
+
+- **Orphaned test reclamation**: Added `tests/common/test_behavior_sim.cpp` (21 tests) to `CMakeLists.txt TEST_SOURCES_COMMON`. Removed 5 duplicate test cases. All 21 pass. `test_window_lifecycle.mm` skipped (macOS 15 deprecated API, cannot reclaim without rewrite).
+- **Standalone ctest registration**: `multi_goose_test`, `soak_fetch_test`, `trail_detection_test` registered with `LABELS "requires_display"`, excluded via `ctest -LE "requires_display"`.
+- **Coverage gate script**: `scripts/check_coverage.sh` — builds with `CODE_COVERAGE=ON`, runs filtered tests, extracts P0 line coverage from `llvm-cov report` column 10, compares against `--p0-min` threshold. P0 baseline: 68.15%.
+- **Coverage eligible list**: `scripts/coverage_eligible.txt` — globs `src/common/*.cpp` + `include/*.h` for P0 metric extraction. P1/P2 excluded.
+- **CI coverage collection**: Added `Coverage Gate` step to `.github/workflows/build_and_release.yml` after `Run Tests`. Uploads `coverage-report/` as build artifact on `if: always()`.
+- **CI ctest filter**: Updated to `ctest --output-on-failure -j... -LE "requires_display"` (was raw `ctest` with name-based exclusions).
+- **Final count**: 797 tests pass, 0 failures (with `-LE requires_display`).
+
 ## May 30, 2026 — Release hardening: assets, AI chat, CI gate, and safety fixes
 
 ### Thread-Safe Idempotent Configuration & Cocoa ARC Hardening

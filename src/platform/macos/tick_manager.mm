@@ -66,6 +66,7 @@ static constexpr float kDisplayLinkDefaultFps = 60;
             unichar key = [[event characters] characterAtIndex:0];
             if (key == 'f' || key == 'F') {
                 for (auto* g : ActorManager::Instance().getGeese()) {
+                    if (!g || !g->isActive()) continue;
                     Honcker_Honk(g, weakSelf.currentTime);
                 }
             }
@@ -112,7 +113,7 @@ static constexpr float kDisplayLinkDefaultFps = 60;
 
     // Phase 3: per-goose window position updates (no full-screen overlay)
     for (auto* g : ActorManager::Instance().getGeese()) {
-        if (!g) continue;
+        if (!g || !g->isActive()) continue;
         float winSize = CalculateGooseWindowSize(g);
         float winX = g->pos.x - winSize / 2.0f;
         float winY = g->pos.y - winSize / 2.0f;
