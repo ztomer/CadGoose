@@ -1,5 +1,13 @@
 #include <gtest/gtest.h>
 #include "app_cli.h"
+#include <string>
+#include <vector>
+
+extern void CommandSocketStub_Reset();
+extern void CommandSocketStub_SetResult(bool success);
+extern void CommandSocketStub_SetResponse(const std::string& response);
+extern void CommandSocketStub_SetError(const std::string& error);
+extern std::vector<std::vector<std::string>> CommandSocketStub_GetCommands();
 
 extern bool g_debugMode;
 
@@ -7,10 +15,10 @@ class AppCliTest : public ::testing::Test {
 protected:
     void SetUp() override {
         g_debugMode = false;
+        CommandSocketStub_Reset();
     }
 
     int runAppCli(int argc, const char* argv[]) {
-        // Build mutable argv as AppCli_HandleCommand expects
         char** mut = new char*[argc];
         for (int i = 0; i < argc; i++) {
             mut[i] = const_cast<char*>(argv[i]);
@@ -26,7 +34,6 @@ TEST_F(AppCliTest, DebugFlagSetsGDebugMode) {
     const char* argv[] = {"CadGoose", "--debug"};
     int ret = runAppCli(2, argv);
     EXPECT_TRUE(g_debugMode);
-    // --debug alone returns value from DaemonizeProcess or argc<=1 branch
 }
 
 TEST_F(AppCliTest, McpFlagReturnsMinusOne) {
@@ -66,11 +73,116 @@ TEST_F(AppCliTest, UnknownCommandReturnsMinusOne) {
 }
 
 TEST_F(AppCliTest, McpIgnoredWhenNotFirstArg) {
-    // --debug before --mcp still processes --mcp
     const char* argv[] = {"CadGoose", "--debug", "--mcp"};
     int appArgc = 3;
     char* mut[] = {const_cast<char*>(argv[0]), const_cast<char*>(argv[1]), const_cast<char*>(argv[2])};
     int ret = AppCli_HandleCommand(3, mut, &appArgc);
     EXPECT_EQ(ret, -1);
     EXPECT_TRUE(g_debugMode);
+}
+
+TEST_F(AppCliTest, StartForegroundReturnsMinusOne) {
+    const char* argv[] = {"CadGoose", "start", "--foreground"};
+    int appArgc = 3;
+    char* mut[] = {const_cast<char*>(argv[0]), const_cast<char*>(argv[1]), const_cast<char*>(argv[2])};
+    int ret = AppCli_HandleCommand(3, mut, &appArgc);
+    EXPECT_EQ(ret, -1);
+    EXPECT_EQ(appArgc, 1);
+}
+
+TEST_F(AppCliTest, StartAppAlreadyRunning) {
+    CommandSocketStub_SetResult(true);
+    CommandSocketStub_SetResponse("goose_count=3");
+    const char* argv[] = {"CadGoose", "start"};
+    int ret = runAppCli(2, argv);
+    EXPECT_EQ(ret, 0);
+    auto cmds = CommandSocketStub_GetCommands();
+    ASSERT_GE(cmds.size(), 1u);
+    EXPECT_EQ(cmds[0][0], "status");
+}
+
+TEST_F(AppCliTest, SpawnViaSocket) {
+    CommandSocketStub_SetResult(true);
+    CommandSocketStub_SetResponse("ok");
+    const char* argv[] = {"CadGoose", "spawn", "TestGoose"};
+    int ret = runAppCli(3, argv);
+    EXPECT_EQ(ret, 0);
+    auto cmds = CommandSocketStub_GetCommands();
+    ASSERT_EQ(cmds.size(), 1u);
+    ASSERT_GE(cmds[0].size(), 2u);
+    EXPECT_EQ(cmds[0][0], "spawn");
+    EXPECT_EQ(cmds[0][1], "TestGoose");
+}
+
+TEST_F(AppCliTest, ClearViaSocket) {
+    CommandSocketStub_SetResult(true);
+    const char* argv[] = {"CadGoose", "clear"};
+    int ret = runAppCli(2, argv);
+    EXPECT_EQ(ret, 0);
+    auto cmds = CommandSocketStub_GetCommands();
+    ASSERT_EQ(cmds.size(), 1u);
+    EXPECT_EQ(cmds[0][0], "clear");
+}
+
+TEST_F(AppCliTest, RamViaSocket) {
+    CommandSocketStub_SetResult(true);
+    const char* argv[] = {"CadGoose", "ram"};
+    int ret = runAppCli(2, argv);
+    EXPECT_EQ(ret, 0);
+    auto cmds = CommandSocketStub_GetCommands();
+    ASSERT_EQ(cmds.size(), 1u);
+    EXPECT_EQ(cmds[0][0], "ram");
+}
+
+TEST_F(AppCliTest, StatusViaSocket) {
+    CommandSocketStub_SetResult(true);
+    CommandSocketStub_SetResponse("goose_count=3");
+    const char* argv[] = {"CadGoose", "status"};
+    int ret = runAppCli(2, argv);
+    EXPECT_EQ(ret, 0);
+    auto cmds = CommandSocketStub_GetCommands();
+    ASSERT_EQ(cmds.size(), 1u);
+    EXPECT_EQ(cmds[0][0], "status");
+}
+
+TEST_F(AppCliTest, QuitViaSocket) {
+    CommandSocketStub_SetResult(true);
+    const char* argv[] = {"CadGoose", "quit"};
+    int ret = runAppCli(2, argv);
+    EXPECT_EQ(ret, 0);
+    auto cmds = CommandSocketStub_GetCommands();
+    ASSERT_EQ(cmds.size(), 1u);
+    EXPECT_EQ(cmds[0][0], "quit");
+}
+
+TEST_F(AppCliTest, FetchViaSocket) {
+    CommandSocketStub_SetResult(true);
+    const char* argv[] = {"CadGoose", "fetch", "meme"};
+    int ret = runAppCli(3, argv);
+    EXPECT_EQ(ret, 0);
+    auto cmds = CommandSocketStub_GetCommands();
+    ASSERT_EQ(cmds.size(), 1u);
+    ASSERT_GE(cmds[0].size(), 2u);
+    EXPECT_EQ(cmds[0][0], "fetch");
+    EXPECT_EQ(cmds[0][1], "meme");
+}
+
+TEST_F(AppCliTest, DragTestViaSocket) {
+    CommandSocketStub_SetResult(true);
+    const char* argv[] = {"CadGoose", "drag_test", "100", "200"};
+    int ret = runAppCli(4, argv);
+    EXPECT_EQ(ret, 0);
+    auto cmds = CommandSocketStub_GetCommands();
+    ASSERT_EQ(cmds.size(), 1u);
+    EXPECT_EQ(cmds[0][0], "drag_test");
+    EXPECT_EQ(cmds[0][1], "100");
+    EXPECT_EQ(cmds[0][2], "200");
+}
+
+TEST_F(AppCliTest, SocketFailureReturnsError) {
+    CommandSocketStub_SetResult(false);
+    CommandSocketStub_SetError("Desktop Goose is not running");
+    const char* argv[] = {"CadGoose", "spawn"};
+    int ret = runAppCli(2, argv);
+    EXPECT_EQ(ret, 1);
 }

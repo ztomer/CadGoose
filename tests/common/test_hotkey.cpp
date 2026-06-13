@@ -170,6 +170,16 @@ TEST(Hotkey, DefaultConfigHotkeysAreValid) {
     EXPECT_EQ(failsafe->modifierMask, kCGEventFlagMaskCommand | kCGEventFlagMaskShift);
 }
 
+TEST(Hotkey, ParseHotkeyStringDoublePlus) {
+    auto parsed = ParseHotkeyString("cmd++a");
+    EXPECT_FALSE(parsed.has_value());
+}
+
+TEST(Hotkey, ParseHotkeyStringAllWhitespace) {
+    auto parsed = ParseHotkeyString("   ");
+    EXPECT_FALSE(parsed.has_value());
+}
+
 TEST(Hotkey, DisplayAllKeyNames) {
     const char* names[] = {
         "a","b","c","d","e","f","g","h","i","j","k","l","m",
