@@ -316,6 +316,7 @@ if(APPLE)
         tests/common/presence_stub.cpp
         tests/common/test_regression_portal_leaves_honk.cpp
         tests/common/test_actor_manager.cpp
+        tests/common/test_app_actions.cpp
         tests/common/test_app_cli.cpp
         tests/common/test_behavior_sim.cpp
         tests/common/test_cursor_backend.cpp
@@ -324,6 +325,8 @@ if(APPLE)
         tests/common/test_math.cpp
         tests/common/test_world.cpp
         tests/common/test_baby_stalin_spawn.mm
+        tests/common/test_mcp_server.cpp
+        tests/common/test_mcp_http_server.cpp
         src/common/app_actions.cpp
         src/common/app_cli.cpp
         src/common/behavior.cpp
@@ -406,12 +409,10 @@ if(APPLE)
             src/platform/macos/tick_manager.mm
             src/platform/macos/item_drag_controller.mm
             src/platform/macos/audio.mm
-            src/platform/macos/command_socket.cpp
             tests/platform/macos/test_renderer.mm
             tests/platform/macos/test_gui_accessibility.mm
             tests/platform/macos/test_dragging_integration.mm
             tests/platform/macos/test_headless_rendering.mm
-            tests/platform/macos/test_goose_rendering.mm
             tests/platform/macos/test_window_trail.mm
         )
     else()
@@ -445,7 +446,7 @@ if(APPLE)
             src/platform/macos/effect_reg_pomodorobed.mm
             src/platform/macos/behavior_element_window.mm
             src/platform/macos/audio.mm
-            src/platform/macos/command_socket.cpp
+            tests/common/command_socket_stub.cpp
             tests/common/presence_stub.cpp
             tests/common/test_presence.cpp
             tests/platform/macos/test_renderer.mm

@@ -67,7 +67,7 @@ jobs:
 
       - name: Coverage Gate
         run: |
-          scripts/check_coverage.sh --p0-min=75
+          scripts/check_coverage.sh --p0-min=80
 
       - name: Upload Coverage Report
         if: always()
