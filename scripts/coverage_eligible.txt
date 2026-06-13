@@ -1,0 +1,5 @@
+# Coverage-eligible source files for P0 (portable C++) gate.
+# Only these files count toward the CI coverage threshold.
+# Platform-specific .mm files and third-party code are excluded.
+src/common/*.cpp
+include/*.h

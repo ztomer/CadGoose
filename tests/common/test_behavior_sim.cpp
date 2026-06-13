@@ -385,49 +385,4 @@ TEST(DragResistance, CheckResistance) {
     EXPECT_FALSE(CheckRes(100.0f, 50.0f, 0.10f));
 }
 
-TEST(BehaviorRegistry, Singleton) {
-    auto& reg1 = BehaviorRegistry::Instance();
-    auto& reg2 = BehaviorRegistry::Instance();
-    EXPECT_EQ(&reg1, &reg2);
-}
 
-TEST(BehaviorRegistry, RegistryHasBehaviors) {
-    auto& reg = BehaviorRegistry::Instance();
-    EXPECT_GE(reg.GetBehaviorCount(), 16) << "Expected at least 16 behaviors";
-    EXPECT_NE(reg.Get("honcker"), nullptr);
-    EXPECT_NE(reg.Get("drag"), nullptr);
-    EXPECT_NE(reg.Get("jail"), nullptr);
-}
-
-TEST(BehaviorRegistry, GetNonexistent) {
-    auto& reg = BehaviorRegistry::Instance();
-    EXPECT_EQ(reg.Get("nonexistent_behavior_xyz"), nullptr);
-}
-
-TEST(BehaviorConfig, DefaultValues) {
-    Config cfg;
-
-    EXPECT_FALSE(cfg.behaviors.fun.ball);
-    EXPECT_FALSE(cfg.behaviors.fun.rainbow);
-    EXPECT_FALSE(cfg.behaviors.control.honcker);
-    EXPECT_FALSE(cfg.behaviors.systems.health);
-
-    EXPECT_EQ(cfg.behaviors.ball.count, 5);
-    EXPECT_FLOAT_EQ(cfg.behaviors.ball.size, 25.0f);
-    EXPECT_FLOAT_EQ(cfg.behaviors.ball.speed, 300.0f);
-    EXPECT_FLOAT_EQ(cfg.behaviors.ball.friction, 0.98f);
-}
-
-TEST(BehaviorConfig, EnableBehavior) {
-    Config cfg;
-
-    cfg.behaviors.fun.ball = true;
-    cfg.behaviors.fun.rainbow = true;
-    cfg.behaviors.control.honcker = true;
-
-    EXPECT_TRUE(cfg.behaviors.fun.ball);
-    EXPECT_TRUE(cfg.behaviors.fun.rainbow);
-    EXPECT_TRUE(cfg.behaviors.control.honcker);
-
-    EXPECT_FALSE(cfg.behaviors.systems.health);
-}

@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 #include <cmath>
 #include <algorithm>
+#include <limits>
 
 #include "goose_math.h"
 #include "goose.h"
@@ -352,4 +353,374 @@ TEST(GooseStateMachine, FetchTimeoutWorks) {
     EXPECT_EQ(g.forceItemFetch, -1) << "Should have cleared forceItemFetch on timeout";
 
     g_config.item.fetchCooldown = origCooldown;
+}
+
+// --- goose_behaviors_interact.cpp coverage ---
+
+TEST(GooseBehaviorDetail, AvoidanceSurprisesGoose) {
+    bool origAvoid = g_config.behaviors.fun.avoidance;
+    g_config.behaviors.fun.avoidance = true;
+
+    Goose g(200, "Avoid", 1920, 1080);
+    g.pos = {500, 500};
+    g.target = {500, 500};
+    g.dir = 0;
+    g.state = GooseState::WANDER;
+    g.cursorChaseChance = 0;
+    g.attackMouseBias = 0;
+    g.lastCursorPos = {0, 500};
+    g.UpdateRig();
+
+    Vector2 headPos = g.GetBeakTipDevice();
+    CursorState c;
+    c.caps = CAP_GET_POS;
+    c.position = Vector2{headPos.x - 10, headPos.y};
+
+    g.Update(0.016, 0.0, 1920, 1080, c);
+    EXPECT_TRUE(g.isSurprised);
+
+    g_config.behaviors.fun.avoidance = origAvoid;
+}
+
+TEST(GooseBehaviorDetail, SurprisedTimeout) {
+    Goose g(201, "Surprised", 1920, 1080);
+    g.pos = {500, 500};
+    g.target = {500, 500};
+    g.dir = 0;
+    g.state = GooseState::WANDER;
+    g.cursorChaseChance = 0;
+    g.attackMouseBias = 0;
+    g.isSurprised = true;
+    g.surprisedTime = 0.0;
+    g.lastCursorPos = {0, 500};
+    g.UpdateRig();
+
+    Vector2 headPos = g.GetBeakTipDevice();
+    CursorState c;
+    c.caps = CAP_GET_POS;
+    c.position = {headPos.x - 10, headPos.y};
+
+    g.Update(0.1, 3.0, 1920, 1080, c);
+
+    EXPECT_FALSE(g.isSurprised);
+}
+
+TEST(GooseBehaviorDetail, HeldItemWanderDropsOnTarget) {
+    Goose g(202, "Return", 1920, 1080);
+    g.state = GooseState::WANDER;
+    g.pos = {100, 100};
+    g.target = {100, 100};
+    g.heldItem = g_assets.GetRandomMeme(1920, 1080, 0.1f);
+    g.cursorChaseChance = 0;
+    g.attackMouseBias = 0;
+
+    CursorState c;
+    g.Update(0.1, 0.0, 1920, 1080, c);
+
+    // heldItem + at target → immediate RETURNING → handleReturning drops item → back to WANDER
+    EXPECT_EQ(g.state, GooseState::WANDER);
+    EXPECT_EQ(g.heldItem, nullptr);
+}
+
+TEST(GooseBehaviorDetail, SnatchCursorWithMoveRel) {
+    Goose g(203, "SnatchRel", 1920, 1080);
+    g.state = GooseState::SNATCH_CURSOR;
+    g.pos = {500, 500};
+    g.target = {500, 500};
+    g.snatchStartTime = 0.0;
+    g.snatchDuration = 3.0f;
+    g.dir = 0;
+    g.UpdateRig();
+
+    CursorState c;
+    c.caps = CAP_GET_POS | CAP_MOVE_REL;
+    c.position = {300, 300};
+
+    g_world.cursorGrabberId = 203;
+    CursorAction action = g.Update(0.1, 0.5, 1920, 1080, c);
+    EXPECT_EQ(action.type, CursorAction::MOVE_REL);
+    g_world.cursorGrabberId = -1;
+}
+
+TEST(GooseBehaviorDetail, SnatchCursorWithoutMoveCaps) {
+    Goose g(204, "SnatchNone", 1920, 1080);
+    g.state = GooseState::SNATCH_CURSOR;
+    g.pos = {500, 500};
+    g.target = {500, 500};
+    g.snatchStartTime = 0.0;
+    g.snatchDuration = 3.0f;
+    g.dir = 0;
+    g.UpdateRig();
+
+    CursorState c;
+    c.caps = CAP_GET_POS;
+    c.position = {300, 300};
+
+    g_world.cursorGrabberId = 204;
+    CursorAction action = g.Update(0.1, 0.5, 1920, 1080, c);
+    EXPECT_EQ(action.type, CursorAction::NONE);
+    g_world.cursorGrabberId = -1;
+}
+
+// --- goose.cpp coverage ---
+
+TEST(GooseBehaviorDetail, ForceFetchTextSetsForcedText) {
+    Goose g(300, "FetchText", 1920, 1080);
+    g.state = GooseState::WANDER;
+    g.pos = {500, 500};
+    g.target = {500, 500};
+
+    g.ForceFetchText("hello world", 1920, 1080);
+    EXPECT_EQ(g.state, GooseState::FETCHING);
+    EXPECT_EQ(g.forcedText, "hello world");
+    EXPECT_EQ(g.forceItemFetch, 1);
+}
+
+TEST(GooseBehaviorDetail, ForceWanderClearsState) {
+    Goose g(301, "ForceWander", 1920, 1080);
+    g.state = GooseState::FETCHING;
+    g.heldItem = (ItemData*)0x1;
+    g.forcedText = "something";
+
+    g.ForceWander(1920, 1080);
+    EXPECT_EQ(g.state, GooseState::WANDER);
+    EXPECT_EQ(g.heldItem, nullptr);
+    EXPECT_TRUE(g.forcedText.empty());
+}
+
+TEST(GooseBehaviorDetail, PickNewTargetReturnsEarlyInFetching) {
+    Goose g(302, "PickNewTarget", 1920, 1080);
+    g.state = GooseState::FETCHING;
+    g.target = {100, 100};
+
+    g.PickNewTarget(1920, 1080);
+    EXPECT_EQ(g.target.x, 100.0f);
+    EXPECT_EQ(g.target.y, 100.0f);
+}
+
+TEST(GooseBehaviorDetail, RestingGooseHasZeroVelocity) {
+    Goose g(303, "RestTest", 1920, 1080);
+    g.pos = {500, 500};
+    g.target = {1000, 500};
+    g.vel = {100, 0};
+    g.isResting = true;
+    g.cursorChaseChance = 0;
+    g.attackMouseBias = 0;
+
+    g.Update(0.1, 0.0, 1920, 1080, CursorState{});
+    EXPECT_EQ(g.vel.x, 0.0f);
+    EXPECT_EQ(g.vel.y, 0.0f);
+    EXPECT_EQ(g.currentSpeed, 0.0f);
+    EXPECT_EQ(g.target.x, g.pos.x);
+    EXPECT_EQ(g.target.y, g.pos.y);
+}
+
+TEST(GooseBehaviorDetail, SolveFeetSentinelInitializesHome) {
+    Goose g(305, "FootInit", 1920, 1080);
+    g.rig.lFoot.currentPos = {0, 0};
+    g.rig.rFoot.currentPos = {0, 0};
+
+    g.SolveFeet(0.0);
+    EXPECT_NE(g.rig.lFoot.currentPos.x, 0.0f);
+    EXPECT_NE(g.rig.rFoot.currentPos.x, 0.0f);
+}
+
+// --- world.cpp coverage ---
+
+TEST(WorldUtil, GetGooseByIdFound) {
+    Goose* g = new Goose(401, "FindMe", 1920, 1080);
+    ActorManager::Instance().add(g);
+
+    Goose* found = GetGooseById(401);
+    ASSERT_NE(found, nullptr);
+    EXPECT_EQ(found->id, 401);
+
+    Goose* notFound = GetGooseById(999);
+    EXPECT_EQ(notFound, nullptr);
+
+    ActorManager::Instance().destroyAllOfType("goose");
+}
+
+// --- goose_forces.cpp coverage (multi-monitor paths) ---
+
+TEST(GooseForceDetail, EdgeAvoidanceWithMultiMonitor) {
+    bool origMulti = g_config.cursor.multiMonitorEnabled;
+    g_config.cursor.multiMonitorEnabled = false;
+    MonitorInfo savedMon = {};
+    if (!g_world.monitors.empty()) savedMon = g_world.monitors.front();
+    g_world.monitors.clear();
+    g_world.monitors.push_back({0, 0, 1920, 1080, nullptr});
+
+    Goose g(410, "EdgeMon", 1920, 1080);
+    g.pos = {10, 10};
+    g.target = {500, 500};
+    g.vel = {100, 100};
+    g.state = GooseState::WANDER;
+    g.cursorChaseChance = 0;
+    g.attackMouseBias = 0;
+
+    g.Update(0.016, 0.0, 1920, 1080, CursorState{});
+    EXPECT_GT(g.pos.x, 0.0f);
+
+    g_world.monitors.clear();
+    if (!g_world.monitors.empty() || savedMon.width > 0) {
+        g_world.monitors.push_back(savedMon);
+    }
+    g_config.cursor.multiMonitorEnabled = origMulti;
+}
+
+TEST(GooseForceDetail, ClampToScreenWithMultiMonitor) {
+    bool origMulti = g_config.cursor.multiMonitorEnabled;
+    g_config.cursor.multiMonitorEnabled = false;
+    MonitorInfo savedMon = {};
+    if (!g_world.monitors.empty()) savedMon = g_world.monitors.front();
+    g_world.monitors.clear();
+    g_world.monitors.push_back({0, 0, 1920, 1080, nullptr});
+
+    Goose g(411, "ClampMon", 1920, 1080);
+    g.pos = {500, 500};
+    g.target = {500, 500};
+    g.state = GooseState::FETCHING;
+    g.cursorChaseChance = 0;
+    g.attackMouseBias = 0;
+
+    g.Update(0.016, 0.0, 1920, 1080, CursorState{});
+
+    g_world.monitors.clear();
+    if (!g_world.monitors.empty() || savedMon.width > 0) {
+        g_world.monitors.push_back(savedMon);
+    }
+    g_config.cursor.multiMonitorEnabled = origMulti;
+}
+
+// --- goose_behaviors_wander.cpp coverage ---
+
+TEST(GooseBehaviorDetail, ChaseCursor_AnotherGooseGrabbing) {
+    int origGrabber = g_world.cursorGrabberId;
+    g_world.cursorGrabberId = 999;
+
+    Goose g(420, "ChaseOther", 1920, 1080);
+    g.state = GooseState::CHASE_CURSOR;
+    g.pos = {500, 500};
+    g.target = {500, 500};
+    g.chaseStartTime = 0.0;
+    g.cursorChaseChance = 0;
+    g.attackMouseBias = 0;
+
+    CursorState c;
+    c.caps = CAP_GET_POS;
+    c.position = {600, 500};
+
+    g.Update(0.1, 0.0, 1920, 1080, c);
+    EXPECT_EQ(g.state, GooseState::WANDER);
+    g_world.cursorGrabberId = origGrabber;
+}
+
+TEST(GooseBehaviorDetail, ChaseCursor_NoCursorPos) {
+    int origGrabber = g_world.cursorGrabberId;
+    g_world.cursorGrabberId = -1;
+
+    Goose g(421, "ChaseNoPos", 1920, 1080);
+    g.state = GooseState::CHASE_CURSOR;
+    g.pos = {500, 500};
+    g.target = {500, 500};
+    g.chaseStartTime = 0.0;
+    g.cursorChaseChance = 0;
+    g.attackMouseBias = 0;
+
+    CursorState c;
+    c.caps = 0; // no position capability
+
+    g.Update(0.1, 0.0, 1920, 1080, c);
+    EXPECT_EQ(g.state, GooseState::WANDER);
+    g_world.cursorGrabberId = origGrabber;
+}
+
+TEST(GooseBehaviorDetail, ChaseCursor_Timeout) {
+    int origGrabber = g_world.cursorGrabberId;
+    g_world.cursorGrabberId = -1;
+
+    Goose g(422, "ChaseTO", 1920, 1080);
+    g.state = GooseState::CHASE_CURSOR;
+    g.pos = {500, 500};
+    g.target = {500, 500};
+    g.chaseStartTime = 0.0;
+    g.cursorChaseChance = 0;
+    g.attackMouseBias = 0;
+
+    CursorState c;
+    c.caps = CAP_GET_POS;
+    c.position = {600, 500};
+
+    g.Update(0.1, 100.0, 1920, 1080, c);
+    EXPECT_EQ(g.state, GooseState::WANDER);
+    g_world.cursorGrabberId = origGrabber;
+}
+
+TEST(GooseBehaviorDetail, Wander_TextOnlyFetch) {
+    bool origMemes = g_config.general.memesEnabled;
+    g_config.general.memesEnabled = false;
+
+    Goose g(423, "WanderText", 1920, 1080);
+    g.state = GooseState::WANDER;
+    g.pos = {500, 500};
+    g.target = {500, 500};
+    g.cursorChaseChance = 0;
+    g.attackMouseBias = 0;
+    g.memeFetchBias = 100;
+    g.noteFetchBias = 100;
+    g.lastDropTime = -1000.0;
+
+    CursorState c;
+    g.Update(0.016, 0.0, 1920, 1080, c);
+    EXPECT_EQ(g.state, GooseState::FETCHING);
+    EXPECT_EQ(g.forceItemFetch, 1); // text-only
+
+    g_config.general.memesEnabled = origMemes;
+}
+
+// --- goose_behaviors_fetch.cpp coverage ---
+
+TEST(GooseBehaviorDetail, HandleFetchingClearsExistingHeldItem) {
+    Goose g(430, "FetchClean", 1920, 1080);
+    g.state = GooseState::FETCHING;
+    g.pos = {500, 500};
+    g.target = {500, 500};
+    g.forceItemFetch = 2;
+    g.heldItem = g_assets.GetRandomMeme(1920, 1080, 0.1f);
+    g.cursorChaseChance = 0;
+    g.attackMouseBias = 0;
+
+    g.Update(0.1, 0.0, 1920, 1080, CursorState{});
+    EXPECT_EQ(g.state, GooseState::RETURNING);
+    EXPECT_NE(g.heldItem, nullptr);
+}
+
+TEST(GooseBehaviorDetail, HandleFetchingTestImage) {
+    Goose g(431, "TestImg", 1920, 1080);
+    g.state = GooseState::FETCHING;
+    g.pos = {500, 500};
+    g.target = {500, 500};
+    g.forceItemFetch = 2;
+    g.cursorChaseChance = 0;
+    g.attackMouseBias = 0;
+
+    g.Update(0.1, 0.0, 1920, 1080, CursorState{});
+    EXPECT_EQ(g.state, GooseState::RETURNING);
+    EXPECT_NE(g.heldItem, nullptr);
+}
+
+TEST(GooseBehaviorDetail, HandleReturningDiscardsNonFiniteItem) {
+    Goose g(432, "Discard", 1920, 1080);
+    g.state = GooseState::RETURNING;
+    g.pos = {500, 500};
+    g.target = {500, 500};
+    g.heldItem = g_assets.GetRandomMeme(1920, 1080, 0.1f);
+    g.dragRot = std::numeric_limits<float>::quiet_NaN();
+    g.cursorChaseChance = 0;
+    g.attackMouseBias = 0;
+
+    g.Update(0.1, 0.0, 1920, 1080, CursorState{});
+    EXPECT_EQ(g.heldItem, nullptr);
+    EXPECT_EQ(g.state, GooseState::WANDER);
 }

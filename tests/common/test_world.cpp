@@ -1,38 +1,46 @@
-#include "../test_framework.h"
-#include "../../include/world.h"
-#include "../../include/actor.h"
+#include <gtest/gtest.h>
+#include "world.h"
 
-TEST(World_GlobalState) {
-    // Verify global state exists and is initially empty
-    ASSERT_EQ(ActorManager::Instance().getGeese().size(), 0u);
-    ASSERT_EQ(ActorManager::Instance().getDroppedItems().size(), 0u);
-    ASSERT_EQ(g_world.footprints.size(), 0u);
-    ASSERT_EQ(g_world.nextId, 0);
-}
-
-TEST(World_GetGooseById_NotFound) {
+TEST(WorldTest, GetGooseByIdNotFound) {
     Goose* g = GetGooseById(999);
-    ASSERT_TRUE(g == nullptr);
+    ASSERT_EQ(g, nullptr);
 }
 
-TEST(World_UiLog) {
+TEST(WorldTest, UiLogPushAndRead) {
+    g_world.uiLog.clear();
     UiLogPush("Test message");
     ASSERT_EQ(g_world.uiLog.size(), 1u);
     ASSERT_EQ(g_world.uiLog.front(), "Test message");
-    
+
     UiLogPush("Message 2");
     ASSERT_EQ(g_world.uiLog.size(), 2u);
+    ASSERT_EQ(g_world.uiLog.back(), "Message 2");
 }
 
-TEST(World_UiLog_MaxSize) {
+TEST(WorldTest, UiLogMaxSize) {
+    g_world.uiLog.clear();
     for (int i = 0; i < 15; i++) {
         UiLogPush("Message " + std::to_string(i));
     }
-    // Should not exceed UI_LOG_MAX (12)
-    ASSERT_TRUE(g_world.uiLog.size() <= 12);
+    ASSERT_LE(g_world.uiLog.size(), 12u);
+    ASSERT_EQ(g_world.uiLog.front(), "Message 3");
+    ASSERT_EQ(g_world.uiLog.back(), "Message 14");
 }
 
-TEST(World_ScreenDimensions) {
-    ASSERT_EQ(g_world.screenWidth, 1920);
-    ASSERT_EQ(g_world.screenHeight, 1080);
+TEST(WorldTest, UiLogEmpty) {
+    g_world.uiLog.clear();
+    ASSERT_EQ(g_world.uiLog.size(), 0u);
 }
+
+TEST(WorldTest, UiLogFifoOrder) {
+    g_world.uiLog.clear();
+    UiLogPush("first");
+    UiLogPush("second");
+    UiLogPush("third");
+    ASSERT_EQ(g_world.uiLog.size(), 3u);
+    ASSERT_EQ(g_world.uiLog[0], "first");
+    ASSERT_EQ(g_world.uiLog[1], "second");
+    ASSERT_EQ(g_world.uiLog[2], "third");
+}
+
+

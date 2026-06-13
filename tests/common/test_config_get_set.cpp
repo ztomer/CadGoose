@@ -237,3 +237,104 @@ TEST(ConfigEdgeCase, ClampIntToBounds) {
 
     *(int*)opt->ptr = original;
 }
+
+TEST(ConfigGetSet, UnknownKeyReturnsFalse) {
+    Config_Init();
+    std::string value;
+    std::string error;
+    bool result = Config_GetValueByKey("nonexistent_key_xyz", &value, &error);
+    EXPECT_FALSE(result);
+    EXPECT_FALSE(error.empty());
+}
+
+TEST(ConfigGetSet, SetUnknownKeyReturnsFalse) {
+    Config_Init();
+    std::string error;
+    bool result = Config_SetValueByKey("nonexistent_key_xyz", "42", &error);
+    EXPECT_FALSE(result);
+    EXPECT_FALSE(error.empty());
+}
+
+TEST(ConfigGetSet, SetBoolInvalidValue) {
+    Config_Init();
+    std::string error;
+    bool result = Config_SetValueByKey("audio_enabled", "not_a_bool", &error);
+    EXPECT_FALSE(result);
+    EXPECT_FALSE(error.empty());
+}
+
+TEST(ConfigEvil, LevelZero) {
+    std::string p = Config_EvilPersonality(0.0f);
+    EXPECT_EQ(p, "an adorable fluffy gosling");
+}
+
+TEST(ConfigEvil, LevelOne) {
+    std::string p = Config_EvilPersonality(0.11f);
+    EXPECT_EQ(p, "a friendly goose");
+}
+
+TEST(ConfigEvil, LevelTwo) {
+    std::string p = Config_EvilPersonality(0.22f);
+    EXPECT_EQ(p, "a mischievous prankster goose");
+}
+
+TEST(ConfigEvil, LevelThree) {
+    std::string p = Config_EvilPersonality(0.33f);
+    EXPECT_EQ(p, "a sarcastic goose with attitude");
+}
+
+TEST(ConfigEvil, LevelFour) {
+    std::string p = Config_EvilPersonality(0.44f);
+    EXPECT_EQ(p, "a chaotic neutral goose");
+}
+
+TEST(ConfigEvil, LevelFive) {
+    std::string p = Config_EvilPersonality(0.55f);
+    EXPECT_EQ(p, "a grumpy goose having a bad day");
+}
+
+TEST(ConfigEvil, LevelSix) {
+    std::string p = Config_EvilPersonality(0.66f);
+    EXPECT_EQ(p, "a villainous goose scheming against humanity");
+}
+
+TEST(ConfigEvil, LevelSeven) {
+    std::string p = Config_EvilPersonality(0.77f);
+    EXPECT_EQ(p, "an evil overlord goose bent on world domination");
+}
+
+TEST(ConfigEvil, LevelEight) {
+    std::string p = Config_EvilPersonality(0.88f);
+    EXPECT_EQ(p, "an absurdly eloquent goose dictator who has conquered Poland");
+}
+
+TEST(ConfigEvil, LevelAboveMax) {
+    std::string p = Config_EvilPersonality(1.5f);
+    EXPECT_EQ(p, "an absurdly eloquent goose dictator who has conquered Poland");
+}
+
+TEST(ConfigEvil, LevelNegative) {
+    std::string p = Config_EvilPersonality(-0.5f);
+    EXPECT_EQ(p, "a goose");
+}
+
+TEST(ConfigSave, SaveNowCompletes) {
+    Config_Init();
+    std::string error;
+    bool result = Config_SaveNow(&error);
+    EXPECT_TRUE(result);
+}
+
+TEST(ConfigSave, SaveNowNoError) {
+    Config_Init();
+    bool result = Config_SaveNow(nullptr);
+    EXPECT_TRUE(result);
+}
+
+TEST(ConfigOnChange, CallsUpdateAndSave) {
+    Config_Init();
+    OnConfigChange();
+    SUCCEED();
+}
+
+

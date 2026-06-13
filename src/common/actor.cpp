@@ -78,6 +78,7 @@ void ActorManager::destroyAllOfType(const char* type) {
     auto newEnd = std::remove_if(actors.begin(), actors.end(),
         [type](Actor* a) {
             if (a && strcmp(a->type(), type) == 0) {
+                a->setActive(false);
                 delete a;
                 return true;
             }
