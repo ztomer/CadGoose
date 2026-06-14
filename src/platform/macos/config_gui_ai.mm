@@ -303,8 +303,14 @@ static constexpr float kRefreshBtnFontSize = 12.0f;
 
     y -= kEvilSliderYGap;
 
-    // Evil slider (compressed: leave 100px margin on right for value label)
-    NSSlider* evilSlider = [[NSSlider alloc] initWithFrame:NSMakeRect(marginX, y, w - marginX*2 - 100, kSliderHeight)];
+    // Evil slider: centered between "Cuddly" (left) and "Invade Poland" (right) labels
+    // Left label ends at: marginX + kEvilTitleWidth + 8 (gap)
+    // Right label starts at: w - marginX - kPolandLabelWidth - 8 (gap)
+    // Value label takes kEvilValueWidth + 8 (gap) on the right
+    CGFloat sliderLeftX = marginX + kEvilTitleWidth + 8;
+    CGFloat sliderRightX = w - marginX - kPolandLabelWidth - 8 - kEvilValueWidth - 8;
+    CGFloat sliderW = sliderRightX - sliderLeftX;
+    NSSlider* evilSlider = [[NSSlider alloc] initWithFrame:NSMakeRect(sliderLeftX, y, sliderW, kSliderHeight)];
     evilSlider.minValue = kEvilMin;
     evilSlider.maxValue = kEvilMax;
     evilSlider.doubleValue = g_config.ai.evilLevel;

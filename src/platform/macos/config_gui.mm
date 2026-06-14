@@ -216,20 +216,20 @@ void s_setBoolValue(const std::string& key, bool value) {
     [self.configItems removeAllObjects];
 
     [self.configItems addObject:@{@"name": @"FUN", @"type": @"header"}];
-    [self addRow:@"Ball" key:@"ball_enabled" desc:@"Pushable balls that bounce around"];
-    [self addRow:@"Breadcrumbs" key:@"breadcrumbs_enabled" desc:@"Hold key to drop breadcrumbs at cursor. Configure lifetime in settings"];
-    [self addRow:@"Hats" key:@"hats_enabled" desc:@"Put various hats on geese"];
+    [self addRow:@"Ball" key:@"ball_enabled" desc:@"Pushable bouncing balls"];
+    [self addRow:@"Breadcrumbs" key:@"breadcrumbs_enabled" desc:@"Hold key to drop crumbs at cursor"];
+    [self addRow:@"Hats" key:@"hats_enabled" desc:@"Put hats on geese"];
     [self addRow:@"Rainbow" key:@"rainbow_enabled" desc:@"Cycle colors on all geese"];
     [self addRow:@"Acid" key:@"acid_enabled" desc:@"Geese spin and honk rapidly"];
-    [self addRow:@"Anger" key:@"anger_enabled" desc:@"Geese get angry and punch things"];
-    [self addRow:@"Autumn Leaves" key:@"autumn_leaves_enabled" desc:@"Piles of leaves accumulate on screen"];
+    [self addRow:@"Anger" key:@"anger_enabled" desc:@"Geese get angry and punch"];
+    [self addRow:@"Autumn Leaves" key:@"autumn_leaves_enabled" desc:@"Leaf piles accumulate on screen"];
     
     [self.configItems addObject:@{@"name": @"JOY", @"type": @"header"}];
-    [self addRow:@"Avoidance" key:@"avoidance_enabled" desc:@"Goose dodges fast-moving cursor"];
-    [self addRow:@"Boredom Sigh" key:@"boredom_enabled" desc:@"Goose sighs dramatically after 10+ minutes idle"];
-    [self addRow:@"Window Peeking" key:@"peeking_enabled" desc:@"Goose peeks head around monitor bezel at screen edges"];
-    [self addRow:@"Interactive Drops" key:@"interactive_drops_enabled" desc:@"Goose drops puddles that splash or flowers that grow"];
-    [self addRow:@"Toys" key:@"toys_enabled" desc:@"Scatter interactive toys for the goose"];
+    [self addRow:@"Avoidance" key:@"avoidance_enabled" desc:@"Dodges fast-moving cursor"];
+    [self addRow:@"Boredom Sigh" key:@"boredom_enabled" desc:@"Sighs after 10+ min idle"];
+    [self addRow:@"Window Peeking" key:@"peeking_enabled" desc:@"Peeks at screen edges"];
+    [self addRow:@"Interactive Drops" key:@"interactive_drops_enabled" desc:@"Drops puddles or flowers"];
+    [self addRow:@"Toys" key:@"toys_enabled" desc:@"Scatter interactive toys"];
 
     [self.configItems addObject:@{@"name": @"CONTROL", @"type": @"header"}];
     {
@@ -239,15 +239,15 @@ void s_setBoolValue(const std::string& key, bool value) {
     {
         NSString* kO = @(g_config.behaviors.jail.hotkeyO.c_str());
         NSString* kP = @(g_config.behaviors.jail.hotkeyP.c_str());
-        [self addRow:@"Jail" key:@"jail_enabled" desc:[NSString stringWithFormat:@"Set traps with %@, trigger with %@", kO, kP]];
+        [self addRow:@"Jail" key:@"jail_enabled" desc:[NSString stringWithFormat:@"Set trap %@, trigger %@", kO, kP]];
     }
     {
         NSString* k1 = @(g_config.portal.hotkey1.c_str());
         NSString* k2 = @(g_config.portal.hotkey2.c_str());
         NSString* k0 = @(g_config.portal.hotkey0.c_str());
-        [self addRow:@"Portals" key:@"portals_enabled" desc:[NSString stringWithFormat:@"Press %@/%@ to place portals, %@ to toggle. Based on PortalGoos by Moonaliss1", k1, k2, k0]];
+        [self addRow:@"Portals" key:@"portals_enabled" desc:[NSString stringWithFormat:@"%@/%@ place, %@ toggle", k1, k2, k0]];
     }
-    [self addRow:@"Drag" key:@"drag_enabled" desc:@"Click and drag geese around"];
+    [self addRow:@"Drag" key:@"drag_enabled" desc:@"Click and drag geese"];
 
     [self.configItems addObject:@{@"name": @"INFO", @"type": @"header"}];
     [self addRow:@"Nametag" key:@"nametag_enabled" desc:@"Show goose name above head"];
