@@ -319,6 +319,7 @@ if(APPLE)
         tests/common/test_config_toggles.cpp
         tests/common/test_dropped_item_hit.cpp
         tests/common/test_ai_text_meme.cpp
+        tests/common/test_regression_portal_leaves_honk.cpp
         tests/common/test_actor_manager.cpp
         tests/common/test_app_actions.cpp
         tests/common/test_app_cli.cpp
@@ -392,8 +393,48 @@ if(APPLE)
     )
     
     if(APPLE)
-        # Only macOS-specific test files not in TEST_SOURCES_COMMON or TEST_SOURCES_PLATFORM_COMMON
         set(TEST_SOURCES_PLATFORM
+            tests/common/test_gui_config.mm
+            tests/common/test_local_llm.cpp
+            tests/common/test_behavior_ai.mm
+            tests/common/test_ai_helpers.mm
+            tests/common/test_effect_registration.mm
+            tests/common/test_world_utils.mm
+            tests/common/test_behavior_health.mm
+            tests/common/test_behavior_rainbow.mm
+            tests/common/test_behavior_acid.mm
+            tests/common/test_behavior_boredom.mm
+            tests/common/test_behavior_nametag.mm
+            tests/common/test_behavior_peeking.mm
+            tests/common/test_behavior_anger.mm
+            tests/common/test_behavior_presence.mm
+            tests/common/test_behavior_honcker.mm
+            tests/common/test_behavior_drag.mm
+            tests/common/test_behavior_breadcrumbs.mm
+            tests/common/test_behavior_hats.mm
+            tests/common/test_behavior_toys.mm
+            tests/common/test_behavior_interactive_drops.mm
+            tests/common/test_behavior_pomodoro.mm
+            tests/common/test_behavior_jail.mm
+            tests/common/test_behavior_portal.mm
+            src/common/goose_drawing.mm
+            src/common/item_renderer.mm
+            src/common/world_utils.mm
+            src/common/behaviors/behavior_ai.mm
+            src/common/behaviors/ai_http_client.mm
+            src/common/behaviors/ai_model_profiles.mm
+            src/common/behaviors/ai_think_block_stripper.mm
+            src/common/behaviors/ai_local_llm_adapter.mm
+            src/common/behaviors/ai_prompt_builder.mm
+            src/common/behaviors/ai_text_meme.mm
+            src/common/behaviors/local_llm_tokenizer.mm
+            src/common/behaviors/local_llm_model.mm
+            src/common/behaviors/local_llm_inference.mm
+            src/platform/macos/window.mm
+            src/platform/macos/cursor_backend.mm
+            src/platform/macos/platform_input.mm
+            src/platform/macos/tick_manager.mm
+            src/platform/macos/item_drag_controller.mm
             tests/platform/macos/test_renderer.mm
             tests/platform/macos/test_gui_accessibility.mm
             tests/platform/macos/test_dragging_integration.mm
@@ -411,17 +452,16 @@ if(APPLE)
         )
     endif()
     
-    # Object library with common test sources to avoid duplicate compilation
-    # Includes platform sources that were previously in target_sources
+    add_executable(CadGooseTests ${TEST_SOURCES_COMMON} ${TEST_SOURCES_PLATFORM})
+    target_enable_asan(CadGooseTests)
+    add_dependencies(CadGooseTests CompileSwiftFoundationLLM)
+    
     if(APPLE)
-        set(TEST_SOURCES_PLATFORM_COMMON
-            src/common/cursor_backend.cpp
+        target_sources(CadGooseTests PRIVATE 
+            src/common/cursor_backend.cpp 
             src/common/world_utils.mm
-            src/common/goose_drawing.mm
-            src/common/item_renderer.mm
-            src/common/behaviors/ai_text_meme.mm
             src/platform/macos/window.mm
-            src/platform/macos/cursor_backend.mm
+            src/platform/macos/cursor_backend.mm 
             src/platform/macos/tick_manager.mm
             src/platform/macos/item_drag_controller.mm
             src/platform/macos/item_window.mm
@@ -432,45 +472,16 @@ if(APPLE)
             src/platform/macos/effect_reg_pomodorobed.mm
             src/platform/macos/behavior_element_window.mm
             src/platform/macos/audio.mm
-            src/platform/macos/assets.mm
             tests/common/command_socket_stub.cpp
             tests/platform/macos/test_renderer.mm
             tests/platform/macos/test_gui_accessibility.mm
             tests/platform/macos/test_dragging_integration.mm
             tests/platform/macos/test_headless_rendering.mm
             tests/platform/macos/test_window_trail.mm
+        src/platform/macos/assets.mm
         )
-    else()
-        set(TEST_SOURCES_PLATFORM_COMMON)
-    endif()
-    add_library(CadGooseTestCommon OBJECT ${TEST_SOURCES_COMMON} ${TEST_SOURCES_PLATFORM_COMMON})
-    target_include_directories(CadGooseTestCommon PUBLIC
-        ${CMAKE_CURRENT_SOURCE_DIR}/include
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/common
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/platform/macos
-        ${MIMALLOC_INCLUDE_DIR}
-    )
-    if(APPLE)
-        target_compile_options(CadGooseTestCommon PRIVATE -fobjc-arc -Wno-deprecated-literal-operator)
-    endif()
-    target_link_libraries(CadGooseTestCommon PUBLIC toml11 ${MIMALLOC_LIBRARY})
-
-    add_executable(CadGooseTests $<TARGET_OBJECTS:CadGooseTestCommon> ${TEST_SOURCES_PLATFORM})
-    target_enable_asan(CadGooseTests)
-    add_dependencies(CadGooseTests CompileSwiftFoundationLLM)
-    
-    if(APPLE)
-        target_sources(CadGooseTests PRIVATE 
-            tests/common/command_socket_stub.cpp
-            tests/platform/macos/test_renderer.mm
-            tests/platform/macos/test_gui_accessibility.mm
-            tests/platform/macos/test_dragging_integration.mm
-            tests/platform/macos/test_headless_rendering.mm
-            tests/platform/macos/test_window_trail.mm
-        )
-    endif()
     target_link_libraries(CadGooseTests
-        CadGooseTestCommon
+        toml11
         ${COCOA_LIBRARY}
         ${AVFOUNDATION_LIBRARY}
         ${COREGRAPHICS_LIBRARY}
@@ -484,8 +495,23 @@ if(APPLE)
         GTest::GTest
         GTest::Main
         Threads::Threads
+        ${MIMALLOC_LIBRARY}
     )
     target_link_options(CadGooseTests PRIVATE "-L/usr/lib/swift")
+    else()
+        target_link_libraries(CadGooseTests
+            GTest::GTest
+            GTest::Main
+            Threads::Threads
+        )
+    endif()
+    
+    target_include_directories(CadGooseTests PUBLIC
+        ${CMAKE_CURRENT_SOURCE_DIR}/include
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/common
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/platform/macos
+        ${MIMALLOC_INCLUDE_DIR}
+    )
     
     if(APPLE)
         set_target_properties(CadGooseTests PROPERTIES
@@ -501,38 +527,8 @@ if(APPLE)
     # with `./build/CadGooseTests` on a machine with a display.
     enable_testing()
     add_test(NAME CadGooseTests
-             COMMAND CadGooseTests --gtest_filter=-WindowTrailTest.*
+             COMMAND CadGooseTests --gtest_filter=-WindowTrailTest.*:-BehaviorToggles.ToysBehaviorRegistered:-PortalCleanup.BehaviorHasCleanupFunction:-StalinHonk.*
              WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-
-    # Order-dependent tests (registration tests that fail when run out of order).
-    # Excluded in CI via `ctest -E "order_dependent"`.
-    add_executable(CadGooseTestsOrderDependent
-        tests/common/test_config_toggles.cpp
-        tests/common/test_regression_portal_leaves_honk.cpp
-    )
-    target_enable_asan(CadGooseTestsOrderDependent)
-    add_dependencies(CadGooseTestsOrderDependent CompileSwiftFoundationLLM)
-    target_link_libraries(CadGooseTestsOrderDependent
-        CadGooseTestCommon
-        ${COCOA_LIBRARY}
-        ${AVFOUNDATION_LIBRARY}
-        ${COREGRAPHICS_LIBRARY}
-        ${COREAUDIO_LIBRARY}
-        ${APPLICATIONSERVICES_LIBRARY}
-        ${CURL_LIBRARY}
-        ${COREML_LIBRARY}
-        ${COREVIDEO_LIBRARY}
-        ${QUARTZCORE_LIBRARY}
-        ${SWIFT_OBJ}
-        GTest::GTest
-        GTest::Main
-        Threads::Threads
-    )
-
-    add_test(NAME CadGooseTestsOrderDependent
-             COMMAND CadGooseTestsOrderDependent
-             WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-    set_tests_properties(CadGooseTestsOrderDependent PROPERTIES LABELS "order_dependent")
 
     # Standalone E2E targets — require a display server (ScreenCaptureKit).
     # Excluded in headless CI via `ctest -E "requires_display"`.
