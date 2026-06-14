@@ -452,7 +452,29 @@ if(APPLE)
     endif()
     
     # Object library with common test sources to avoid duplicate compilation
-    add_library(CadGooseTestCommon OBJECT ${TEST_SOURCES_COMMON})
+    # Includes platform sources that were previously in target_sources
+    if(APPLE)
+        set(TEST_SOURCES_PLATFORM_COMMON
+            src/common/cursor_backend.cpp
+            src/common/world_utils.mm
+            src/platform/macos/window.mm
+            src/platform/macos/cursor_backend.mm
+            src/platform/macos/tick_manager.mm
+            src/platform/macos/item_drag_controller.mm
+            src/platform/macos/item_window.mm
+            src/platform/macos/item_window_test.mm
+            src/platform/macos/effect_window.mm
+            src/platform/macos/effect_registration.mm
+            src/platform/macos/effect_reg_footprint.mm
+            src/platform/macos/effect_reg_pomodorobed.mm
+            src/platform/macos/behavior_element_window.mm
+            src/platform/macos/audio.mm
+            src/platform/macos/assets.mm
+        )
+    else()
+        set(TEST_SOURCES_PLATFORM_COMMON)
+    endif()
+    add_library(CadGooseTestCommon OBJECT ${TEST_SOURCES_COMMON} ${TEST_SOURCES_PLATFORM_COMMON})
     target_include_directories(CadGooseTestCommon PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/include
         ${CMAKE_CURRENT_SOURCE_DIR}/src/common
@@ -470,27 +492,12 @@ if(APPLE)
     
     if(APPLE)
         target_sources(CadGooseTests PRIVATE 
-            src/common/cursor_backend.cpp 
-            src/common/world_utils.mm
-            src/platform/macos/window.mm
-            src/platform/macos/cursor_backend.mm 
-            src/platform/macos/tick_manager.mm
-            src/platform/macos/item_drag_controller.mm
-            src/platform/macos/item_window.mm
-            src/platform/macos/item_window_test.mm
-            src/platform/macos/effect_window.mm
-            src/platform/macos/effect_registration.mm
-            src/platform/macos/effect_reg_footprint.mm
-            src/platform/macos/effect_reg_pomodorobed.mm
-            src/platform/macos/behavior_element_window.mm
-            src/platform/macos/audio.mm
             tests/common/command_socket_stub.cpp
             tests/platform/macos/test_renderer.mm
             tests/platform/macos/test_gui_accessibility.mm
             tests/platform/macos/test_dragging_integration.mm
             tests/platform/macos/test_headless_rendering.mm
             tests/platform/macos/test_window_trail.mm
-        src/platform/macos/assets.mm
         )
     endif()
     target_link_libraries(CadGooseTests
