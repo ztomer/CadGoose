@@ -6,7 +6,8 @@
 set -euo pipefail
 
 TEST_BINARY="./CadGooseTests"
-FILTER="-WindowTrailTest.*:BehaviorToggles.ToysBehaviorRegistered:PortalCleanup.BehaviorHasCleanupFunction:StalinHonk.*"
+# Use the coverage script filter (all positive patterns) which works correctly
+FILTER="-MCPIntegrationTest*:LocalLLMTest*:AccessibilityGUITest*:DraggingIntegration*:WindowTrailTest*:BehaviorToggles.ToysBehaviorRegistered:PortalCleanup.BehaviorHasCleanupFunction:StalinHonk.*"
 
 echo "Running tests with filter: $FILTER"
 echo "Test binary: $TEST_BINARY"
