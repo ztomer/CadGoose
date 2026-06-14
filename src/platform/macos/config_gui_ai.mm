@@ -215,7 +215,7 @@ static constexpr float kRefreshBtnFontSize = 12.0f;
     [self addSubview:_modelPopup];
 
     _refreshBtn = [[NSButton alloc] initWithFrame:NSMakeRect(kRefreshBtnX, y, kRefreshBtnSize, kRefreshBtnSize)];
-    [_refreshBtn setTitle:@"\U0001F504"];
+    [_refreshBtn setTitle:@"Refresh"];
     [_refreshBtn setFont:[NSFont fontWithName:@"Maple Mono" size:kRefreshBtnFontSize] ?: [NSFont systemFontOfSize:kRefreshBtnFontSize]];
     [_refreshBtn setTarget:self];
     [_refreshBtn setAction:@selector(refreshModels:)];
@@ -283,7 +283,7 @@ static constexpr float kRefreshBtnFontSize = 12.0f;
 
     // Evil slider
     NSTextField* evilTitle = [[NSTextField alloc] initWithFrame:NSMakeRect(marginX, y, kEvilTitleWidth, kSectionTitleHeight)];
-    evilTitle.stringValue = @"\U0001F607 Cuddly";
+    evilTitle.stringValue = @"Cuddly";
     evilTitle.font = [NSFont fontWithName:@"Maple Mono" size:kNameFontSize] ?: [NSFont systemFontOfSize:kNameFontSize];
     evilTitle.textColor = [NSColor whiteColor];
     evilTitle.backgroundColor = [NSColor clearColor];
@@ -292,7 +292,7 @@ static constexpr float kRefreshBtnFontSize = 12.0f;
     [self addSubview:evilTitle];
 
     NSTextField* polandLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(w - marginX - kPolandLabelWidth, y + kPolandLabelYOffset, kPolandLabelWidth, kSectionTitleHeight)];
-    polandLabel.stringValue = @"\U0001F608 Invade Poland";
+    polandLabel.stringValue = @"Invade Poland";
     polandLabel.font = [NSFont fontWithName:@"Maple Mono" size:kNameFontSize] ?: [NSFont systemFontOfSize:kNameFontSize];
     polandLabel.textColor = [NSColor whiteColor];
     polandLabel.backgroundColor = [NSColor clearColor];
@@ -347,7 +347,7 @@ static constexpr float kRefreshBtnFontSize = 12.0f;
     y -= kPostNoteGap;
 
     NSTextField* promptTitle = [[NSTextField alloc] initWithFrame:NSMakeRect(marginX, y, kSectionTitleWidth, kPromptTitleHeight)];
-    promptTitle.stringValue = @"\U0001F9E0 System Prompt Preview:";
+    promptTitle.stringValue = @"System Prompt Preview:";
     promptTitle.font = [NSFont fontWithName:@"Maple Mono" size:kPromptFontSize] ?: [NSFont systemFontOfSize:kPromptFontSize weight:NSFontWeightSemibold];
     promptTitle.textColor = [NSColor colorWithWhite:0.7 alpha:1.0];
     promptTitle.backgroundColor = [NSColor clearColor];

@@ -32,7 +32,7 @@ static constexpr float kHighlightAlpha = 0.08f;
 @implementation BehaviorRowView
 
 + (NSString*)iconForConfigKey:(NSString*)key {
-    return nil;
+    return @"";
 }
 
 - (instancetype)initWithFrame:(NSRect)frame {
