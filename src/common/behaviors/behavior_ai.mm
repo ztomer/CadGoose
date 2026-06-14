@@ -147,20 +147,14 @@ static constexpr float kStatusBarHeight = 12.0f;
 static constexpr float kStatusBarFontSize = 10.0f;
 static constexpr float kInputFieldMarginX = 12.0f;
 static constexpr float kInputFieldY = 16.0f;
-static constexpr float kInputFieldWidth = kChatWindowWidth - 2 * kInputFieldMarginX - 58.0f;
+static constexpr float kInputFieldWidth = kChatWindowWidth - 2 * kInputFieldMarginX;
 static constexpr float kInputFieldHeight = 30.0f;
-static constexpr float kSendButtonX = kInputFieldMarginX + kInputFieldWidth + 6.0f;
-static constexpr float kSendButtonY = kInputFieldY;
-static constexpr float kSendButtonWidth = 46.0f;
-static constexpr float kSendButtonHeight = kInputFieldHeight;
-static constexpr float kSendButtonFontSize = 16.0f;
 static constexpr float kChatFontSize = 13.0f;
 
 @interface AIChatWindowController : NSWindowController <NSWindowDelegate>
 @property (nonatomic, copy) NSString* gooseName;
 @property (nonatomic, strong) NSTextField* inputField;
 @property (nonatomic, strong) NSTextView* chatView;
-@property (nonatomic, strong) NSButton* sendButton;
 @property (nonatomic, strong) NSButton* pinButton;
 @property (nonatomic, strong) NSPopUpButton* goosePopup;
 @property (nonatomic, strong) NSTextField* statusBar;
@@ -237,7 +231,7 @@ static constexpr float kChatFontSize = 13.0f;
 
     // Pin button (far right)
     self.pinButton = [[NSButton alloc] initWithFrame:NSMakeRect(appBar.frame.size.width - kPinButtonRightMargin, kPinButtonY, kPinButtonSize, kPinButtonSize)];
-    [self.pinButton setTitle:@"Pin"];
+    [self.pinButton setTitle:@"^"];
     [self.pinButton setFont:[NSFont systemFontOfSize:kPinButtonFontSize]];
     [self.pinButton setTarget:self];
     [self.pinButton setAction:@selector(togglePin:)];
@@ -290,16 +284,6 @@ static constexpr float kChatFontSize = 13.0f;
     self.inputField.autoresizingMask = NSViewWidthSizable;
     [contentView addSubview:self.inputField];
 
-    self.sendButton = [[NSButton alloc] initWithFrame:NSMakeRect(kSendButtonX, kSendButtonY, kSendButtonWidth, kSendButtonHeight)];
-    [self.sendButton setTitle:@"Send"];
-    [self.sendButton setFont:[NSFont systemFontOfSize:kSendButtonFontSize]];
-    [self.sendButton setTarget:self];
-    [self.sendButton setAction:@selector(sendMessage:)];
-    self.sendButton.bezelStyle = NSBezelStyleRounded;
-    self.sendButton.controlSize = NSControlSizeLarge;
-    self.sendButton.autoresizingMask = NSViewMinXMargin;
-    [contentView addSubview:self.sendButton];
-
     self.httpClient = [[AIHTTPClient alloc] init];
     self.window.delegate = self;
     [self updateModelDisplay];
@@ -339,7 +323,6 @@ static constexpr float kChatFontSize = 13.0f;
     self.chatView.string = chatText;
     self.chatView.string = [self.chatView.string stringByAppendingString:IsStalinMode() ? @"Comrade: GULAG...\n" : @"Goose: HONK...\n"];
 
-    self.sendButton.enabled = NO;
     [self.spinner startAnimation:nil];
     self.spinner.hidden = NO;
 
@@ -350,7 +333,6 @@ static constexpr float kChatFontSize = 13.0f;
             if (!strong) return;
             auto* s = BehaviorStateManager::Instance().GetOrCreate<AIState>(0, "ai");
             s->awaitingResponse = false;
-            strong.sendButton.enabled = YES;
             if (response && response.length > 0 && !error) {
                 [strong appendResponse:response];
             } else {
@@ -397,10 +379,10 @@ static constexpr float kChatFontSize = 13.0f;
 - (void)togglePin:(id)sender {
     if (self.window.level == NSFloatingWindowLevel) {
         self.window.level = NSNormalWindowLevel;
-        self.pinButton.title = @"Pin";
+        self.pinButton.title = @"^";
     } else {
         self.window.level = NSFloatingWindowLevel;
-        self.pinButton.title = @"Unpin";
+        self.pinButton.title = @"v";
     }
 }
 
