@@ -132,9 +132,9 @@ static float* ColorFieldForIdentifier(NSString* ident) {
 
     y -= 22;
 
-    // --- Goose preview positioned to the RIGHT of color selectors ---
+    // --- Goose preview positioned to the RIGHT of color selectors (compressed) ---
     float previewX = swatchX + 30; // Right of swatches
-    float previewW = w - previewX - 12; // Remaining width with margin
+    float previewW = w - previewX - 12 - 120; // Remaining width with margin, reduced by 120px
     float colorRowsHeight = 6 * 26 + 22; // 6 color rows + headers
     float previewY = y - colorRowsHeight + 20; // Align with top of color rows
     float previewH = colorRowsHeight - 30; // Slightly shorter than color section

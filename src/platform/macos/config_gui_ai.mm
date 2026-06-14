@@ -303,7 +303,8 @@ static constexpr float kRefreshBtnFontSize = 12.0f;
 
     y -= kEvilSliderYGap;
 
-    NSSlider* evilSlider = [[NSSlider alloc] initWithFrame:NSMakeRect(marginX, y, w - marginX*2, kSliderHeight)];
+    // Evil slider (compressed: leave 100px margin on right for value label)
+    NSSlider* evilSlider = [[NSSlider alloc] initWithFrame:NSMakeRect(marginX, y, w - marginX*2 - 100, kSliderHeight)];
     evilSlider.minValue = kEvilMin;
     evilSlider.maxValue = kEvilMax;
     evilSlider.doubleValue = g_config.ai.evilLevel;
@@ -330,7 +331,7 @@ static constexpr float kRefreshBtnFontSize = 12.0f;
     // slider instead of extending upward over it.
     y -= kPostSliderYGap;
     y -= kFoundationNoteHeight;
-    _foundationNote = [[NSTextField alloc] initWithFrame:NSMakeRect(marginX, y, w - marginX*2, kFoundationNoteHeight)];
+    _foundationNote = [[NSTextField alloc] initWithFrame:NSMakeRect(marginX, y, w - marginX*2 - 100, kFoundationNoteHeight)];
     _foundationNote.stringValue = FoundationPersonaCapNote();
     _foundationNote.font = [NSFont fontWithName:@"Maple Mono" size:kSmallFontSize] ?: [NSFont systemFontOfSize:kSmallFontSize];
     _foundationNote.textColor = [NSColor systemOrangeColor];
@@ -413,7 +414,8 @@ static constexpr float kRefreshBtnFontSize = 12.0f;
 
     y -= kEvilSliderYGap;
 
-    NSSlider* tempSlider = [[NSSlider alloc] initWithFrame:NSMakeRect(marginX, y, w - marginX*2, kSliderHeight)];
+    // Temperature slider (compressed: leave 100px margin on right for value label)
+    NSSlider* tempSlider = [[NSSlider alloc] initWithFrame:NSMakeRect(marginX, y, w - marginX*2 - 100, kSliderHeight)];
     tempSlider.minValue = kTempMin;
     tempSlider.maxValue = kTempMax;
     tempSlider.doubleValue = g_config.ai.textMemeTemperature;

@@ -23,12 +23,12 @@ static constexpr float kRowToggleX = kRowIconX + kRowIconWidth + kRowIconGap;
 static constexpr float kRowToggleWidth = 36.0f;
 static constexpr float kRowNameX = kRowToggleX + kRowToggleWidth + kRowIconGap;
 static constexpr float kRowDescGap = 12.0f;
-static constexpr float kRowDescPaddingX = 16.0f;
-static constexpr float kDetailLeftPad = 16.0f;
-static constexpr float kDetailLabelGap = 8.0f;
-static constexpr float kDetailSliderMinWidth = 160.0f;
-static constexpr float kDetailValuePad = 16.0f;
-static constexpr float kDetailRightPad = 16.0f;
+static constexpr float kRowDescPaddingX = 8.0f;
+static constexpr float kDetailLeftPad = 12.0f;
+static constexpr float kDetailLabelGap = 6.0f;
+static constexpr float kDetailSliderMinWidth = 100.0f;
+static constexpr float kDetailValuePad = 10.0f;
+static constexpr float kDetailRightPad = 10.0f;
 static constexpr float kSeparatorWidth = 1.0f;
 static constexpr float kTabBarWidth = 260.0f;
 static constexpr float kTabBarY = 10.0f;
@@ -94,8 +94,8 @@ void s_setBoolValue(const std::string& key, bool value) {
         NSFont* nameFont = [NSFont fontWithName:@"Maple Mono" size:kNameFontSize] ?: [NSFont systemFontOfSize:kNameFontSize weight:NSFontWeightSemibold];
         NSFont* descFont = [NSFont fontWithName:@"Maple Mono" size:kDescFontSize] ?: [NSFont systemFontOfSize:kDescFontSize];
         CGFloat maxNW = [@"Interactive Drops" sizeWithAttributes:@{NSFontAttributeName: nameFont}].width + 4;
-        // Measure longest description to ensure no truncation
-        CGFloat maxDW = [@"Create portals with P+1/2, teleport with P+0. Based on PortalGoos by Moonaliss1" sizeWithAttributes:@{NSFontAttributeName: descFont}].width + kRowDescPaddingX;
+        // Measure longest description to ensure no truncation (use shorter ref to save ~180px)
+        CGFloat maxDW = [@"Press O/P to set/trigger jail. Based on PortalGoos by Moonaliss1" sizeWithAttributes:@{NSFontAttributeName: descFont}].width + kRowDescPaddingX;
         self.descLabelX = kRowNameX + maxNW + kRowDescGap;
         self.listWidth = self.descLabelX + maxDW + kRowDescPaddingX;
         fprintf(stderr, "[config] listWidth=%.0f descLabelX=%.0f maxNW=%.0f maxDW=%.0f\n",
