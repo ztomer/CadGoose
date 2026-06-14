@@ -392,48 +392,8 @@ if(APPLE)
     )
     
     if(APPLE)
+        # Only macOS-specific test files not in TEST_SOURCES_COMMON or TEST_SOURCES_PLATFORM_COMMON
         set(TEST_SOURCES_PLATFORM
-            tests/common/test_gui_config.mm
-            tests/common/test_local_llm.cpp
-            tests/common/test_behavior_ai.mm
-            tests/common/test_ai_helpers.mm
-            tests/common/test_effect_registration.mm
-            tests/common/test_world_utils.mm
-            tests/common/test_behavior_health.mm
-            tests/common/test_behavior_rainbow.mm
-            tests/common/test_behavior_acid.mm
-            tests/common/test_behavior_boredom.mm
-            tests/common/test_behavior_nametag.mm
-            tests/common/test_behavior_peeking.mm
-            tests/common/test_behavior_anger.mm
-            tests/common/test_behavior_presence.mm
-            tests/common/test_behavior_honcker.mm
-            tests/common/test_behavior_drag.mm
-            tests/common/test_behavior_breadcrumbs.mm
-            tests/common/test_behavior_hats.mm
-            tests/common/test_behavior_toys.mm
-            tests/common/test_behavior_interactive_drops.mm
-            tests/common/test_behavior_pomodoro.mm
-            tests/common/test_behavior_jail.mm
-            tests/common/test_behavior_portal.mm
-            src/common/goose_drawing.mm
-            src/common/item_renderer.mm
-            src/common/world_utils.mm
-            src/common/behaviors/behavior_ai.mm
-            src/common/behaviors/ai_http_client.mm
-            src/common/behaviors/ai_model_profiles.mm
-            src/common/behaviors/ai_think_block_stripper.mm
-            src/common/behaviors/ai_local_llm_adapter.mm
-            src/common/behaviors/ai_prompt_builder.mm
-            src/common/behaviors/ai_text_meme.mm
-            src/common/behaviors/local_llm_tokenizer.mm
-            src/common/behaviors/local_llm_model.mm
-            src/common/behaviors/local_llm_inference.mm
-            src/platform/macos/window.mm
-            src/platform/macos/cursor_backend.mm
-            src/platform/macos/platform_input.mm
-            src/platform/macos/tick_manager.mm
-            src/platform/macos/item_drag_controller.mm
             tests/platform/macos/test_renderer.mm
             tests/platform/macos/test_gui_accessibility.mm
             tests/platform/macos/test_dragging_integration.mm
