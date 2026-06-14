@@ -63,7 +63,7 @@ jobs:
       - name: Run Tests
         run: |
           cd build
-          ../../scripts/run_tests_ci.sh
+          bash ../scripts/run_tests_ci.sh
 
       - name: Coverage Gate
         run: |
