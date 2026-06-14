@@ -42,35 +42,35 @@ static NSString* s_fallbackResponseForMessage(NSString* message, NSString* goose
             }
         }];
 
-        if ([keywords containsObject:@"honk"]) return @"HONK! HONK HONK! 🦆";
+        if ([keywords containsObject:@"honk"]) return @"HONK! HONK HONK!";
         if ([keywords containsObject:@"sad"] || [keywords containsObject:@"mad"] || [keywords containsObject:@"angry"])
-            return @"HONK! Why so mad? Have some bread crumbs. 🍞";
+            return @"HONK! Why so mad? Have some bread crumbs.";
         if ([keywords containsObject:@"happy"] || [keywords containsObject:@"love"] || [keywords containsObject:@"great"])
-            return @"HONK! You seem happy! Me too! HONK! 🎉";
+            return @"HONK! You seem happy! Me too! HONK!";
         if ([keywords intersectsSet:[NSSet setWithObjects:@"food", @"bread", @"seed", @"feed", @"eat", nil]])
-            return @"HONK! FOOD?! Where?! HONK HONK! 🍞";
+            return @"HONK! FOOD?! Where?! HONK HONK!";
         if ([keywords containsObject:@"name"]) return [NSString stringWithFormat:@"HONK! I'm %@, a goose! HONK!", gooseName ?: @"a goose"];
         if ([keywords containsObject:@"goose"]) return @"HONK! Yes, I'm a goose! The best goose! HONK!";
         if ([keywords containsObject:@"bye"] || [keywords containsObject:@"goodbye"])
-            return @"HONK! Bye bye! Don't forget to feed the geese! 🦆";
+            return @"HONK! Bye bye! Don't forget to feed the geese!";
         if ([keywords containsObject:@"hello"] || [keywords containsObject:@"hi"] || [keywords containsObject:@"hey"])
-            return @"HONK! Hello to you too! 🦆";
+            return @"HONK! Hello to you too!";
         if ([keywords containsObject:@"help"] || [keywords containsObject:@"what"])
             return @"HONK! I'm a goose. I walk, I honk, I steal things. What else do you need to know?";
         if ([keywords containsObject:@"dance"] || [keywords containsObject:@"spin"])
-            return @"HONK! *goose does a little dance* HONK HONK! 🕺";
+            return @"HONK! *goose does a little dance* HONK HONK!";
         if ([keywords containsObject:@"sing"] || [keywords containsObject:@"song"])
-            return @"HONK HONK HOOOOONK! *a beautiful goose song* 🎶";
+            return @"HONK HONK HOOOOONK! *a beautiful goose song*";
 
         static NSArray* defaults = @[
-            @"HONK! 🦆",
+            @"HONK!",
             @"HONK HONK!",
-            @"🦆 The goose acknowledges your presence. HONK!",
+            @"The goose acknowledges your presence. HONK!",
             @"HONK! I'm a goose, what did you expect?",
             @"*goose tilts head* HONK?",
             @"HONK! That's nice. Anyway, HONK!",
             @"HONK! I don't understand but I support you!",
-            @"🦆 HONK! Have you tried turning it off and on again?",
+            @"HONK! Have you tried turning it off and on again?",
         ];
         return defaults[arc4random_uniform((uint32_t)defaults.count)];
     }
@@ -184,8 +184,8 @@ static constexpr float kChatFontSize = 13.0f;
                                                backing:NSBackingStoreBuffered
                                                  defer:NO];
     self.window.title = IsStalinMode()
-        ? [NSString stringWithFormat:@"💬 Chat with Comrade %@ ☭", name]
-        : [NSString stringWithFormat:@"💬 Chat with %@ 🦆", name];
+        ? [NSString stringWithFormat:@"Chat with Comrade %@", name]
+        : [NSString stringWithFormat:@"Chat with %@", name];
     self.window.titleVisibility = NSWindowTitleHidden;
     self.window.titlebarAppearsTransparent = YES;
     self.window.backgroundColor = [NSColor clearColor];
@@ -237,7 +237,7 @@ static constexpr float kChatFontSize = 13.0f;
 
     // Pin button (far right)
     self.pinButton = [[NSButton alloc] initWithFrame:NSMakeRect(appBar.frame.size.width - kPinButtonRightMargin, kPinButtonY, kPinButtonSize, kPinButtonSize)];
-    [self.pinButton setTitle:@"📌"];
+    [self.pinButton setTitle:@"Pin"];
     [self.pinButton setFont:[NSFont systemFontOfSize:kPinButtonFontSize]];
     [self.pinButton setTarget:self];
     [self.pinButton setAction:@selector(togglePin:)];
@@ -256,8 +256,8 @@ static constexpr float kChatFontSize = 13.0f;
     textView.font = chatFont;
     textView.backgroundColor = [NSColor clearColor];
     textView.string = IsStalinMode()
-        ? [NSString stringWithFormat:@"☭ %@: GULAG! What do you want?\n", name]
-        : [NSString stringWithFormat:@"🦆 %@: HONK! What do you want?\n", name];
+        ? [NSString stringWithFormat:@"%@: GULAG! What do you want?\n", name]
+        : [NSString stringWithFormat:@"%@: HONK! What do you want?\n", name];
     self.chatView = textView;
     scrollView.documentView = textView;
     [contentView addSubview:scrollView];
@@ -291,7 +291,7 @@ static constexpr float kChatFontSize = 13.0f;
     [contentView addSubview:self.inputField];
 
     self.sendButton = [[NSButton alloc] initWithFrame:NSMakeRect(kSendButtonX, kSendButtonY, kSendButtonWidth, kSendButtonHeight)];
-    [self.sendButton setTitle:@"🪿"];
+    [self.sendButton setTitle:@"Send"];
     [self.sendButton setFont:[NSFont systemFontOfSize:kSendButtonFontSize]];
     [self.sendButton setTarget:self];
     [self.sendButton setAction:@selector(sendMessage:)];
@@ -315,7 +315,7 @@ static constexpr float kChatFontSize = 13.0f;
             AIChatWindowController* strong = weakSelf;
             if (!strong) return;
             if (!connected) {
-                strong.statusBar.stringValue = [NSString stringWithFormat:@"⚠️ %@", message];
+                strong.statusBar.stringValue = [NSString stringWithFormat:@"Error: %@", message];
                 strong.statusBar.textColor = [NSColor systemRedColor];
                 fprintf(stderr, "[AI] Connection check failed: %s\n", message.UTF8String);
             } else {
@@ -397,10 +397,10 @@ static constexpr float kChatFontSize = 13.0f;
 - (void)togglePin:(id)sender {
     if (self.window.level == NSFloatingWindowLevel) {
         self.window.level = NSNormalWindowLevel;
-        self.pinButton.title = @"📌";
+        self.pinButton.title = @"Pin";
     } else {
         self.window.level = NSFloatingWindowLevel;
-        self.pinButton.title = @"📍";
+        self.pinButton.title = @"Unpin";
     }
 }
 

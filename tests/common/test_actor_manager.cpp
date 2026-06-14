@@ -184,3 +184,45 @@ TEST_F(ActorManagerSafetyTest, NextDeletionDuringRenderIsSafe) {
     EXPECT_EQ(a1->m_renderCount, 1);
     EXPECT_EQ(a3->m_renderCount, 1);
 }
+
+TEST_F(ActorManagerSafetyTest, FindByTypeReturnsCorrectActor) {
+    auto& mgr = ActorManager::Instance();
+    auto* a1 = new MockModifyActor("mock_type_a", 1);
+    auto* a2 = new MockModifyActor("mock_type_b", 2);
+    mgr.add(a1);
+    mgr.add(a2);
+
+    Actor* found = mgr.findByType("mock_type_a");
+    ASSERT_NE(found, nullptr);
+    EXPECT_EQ(found->id(), 1);
+
+    found = mgr.findByType("mock_type_a", 1);
+    ASSERT_NE(found, nullptr);
+    EXPECT_EQ(found->id(), 1);
+
+    found = mgr.findByType("mock_type_b", 2);
+    ASSERT_NE(found, nullptr);
+    EXPECT_EQ(found->id(), 2);
+}
+
+TEST_F(ActorManagerSafetyTest, FindByTypeNotFound) {
+    auto& mgr = ActorManager::Instance();
+    EXPECT_EQ(mgr.findByType("nonexistent"), nullptr);
+    EXPECT_EQ(mgr.findByType("nonexistent", 99), nullptr);
+}
+
+TEST_F(ActorManagerSafetyTest, FindByTypeWithId) {
+    auto& mgr = ActorManager::Instance();
+    auto* a1 = new MockModifyActor("mock_type_a", 1);
+    auto* a2 = new MockModifyActor("mock_type_a", 2);
+    mgr.add(a1);
+    mgr.add(a2);
+
+    Actor* found = mgr.findByType("mock_type_a", 1);
+    ASSERT_NE(found, nullptr);
+    EXPECT_EQ(found->id(), 1);
+
+    found = mgr.findByType("mock_type_a", 2);
+    ASSERT_NE(found, nullptr);
+    EXPECT_EQ(found->id(), 2);
+}

@@ -51,6 +51,7 @@ void JailActor::render(IRenderer* renderer) {
     if (!m_active) return;
 
 #ifdef __APPLE__
+    if (getenv("CADGOOSE_HEADLESS_TEST")) return;
     float winSize = JAIL_SIZE;
     float winX = m_position.x - winSize / 2.0f;
     float winY = m_position.y - winSize / 2.0f;

@@ -4,9 +4,15 @@
 #include "mcp_server.h"
 #include "config.h"
 
+extern void CommandSocketStub_Reset();
+extern void CommandSocketStub_SetResult(bool success);
+extern void CommandSocketStub_SetResponse(const std::string& response);
+extern void CommandSocketStub_SetError(const std::string& error);
+
 class AIMCPIntegrationTest : public ::testing::Test {
 protected:
     void SetUp() override {
+        CommandSocketStub_Reset();
         Config_Init();
         savedBall = g_config.behaviors.fun.ball;
         savedHoncker = g_config.behaviors.control.honcker;
@@ -37,6 +43,78 @@ private:
     bool savedBall, savedHoncker, savedHats, savedRainbow, savedAcid;
     bool savedBreadcrumbs, savedJail, savedNametag, savedHealth, savedAi, savedPomodoro;
 };
+
+// --- Error path tests (MCP_CallTool failure branches in ai_mcp_bridge.cpp) ---
+
+TEST_F(AIMCPIntegrationTest, EnableCommandErrorReturnsCouldntEnable) {
+    CommandSocketStub_SetResponse("error: unknown behavior");
+    std::string response;
+    EXPECT_TRUE(AI_TryMCPCommand("enable ball", response));
+    EXPECT_NE(response.find("Couldn't enable"), std::string::npos) << response;
+}
+
+TEST_F(AIMCPIntegrationTest, TurnOnCommandErrorReturnsCouldntEnable) {
+    CommandSocketStub_SetResponse("error: unknown behavior");
+    std::string response;
+    EXPECT_TRUE(AI_TryMCPCommand("turn on ball", response));
+    EXPECT_NE(response.find("Couldn't enable"), std::string::npos) << response;
+}
+
+TEST_F(AIMCPIntegrationTest, DisableCommandErrorReturnsCouldntDisable) {
+    CommandSocketStub_SetResponse("error: behavior not found");
+    std::string response;
+    EXPECT_TRUE(AI_TryMCPCommand("disable ball", response));
+    EXPECT_NE(response.find("Couldn't disable"), std::string::npos) << response;
+}
+
+TEST_F(AIMCPIntegrationTest, TurnOffCommandErrorReturnsCouldntDisable) {
+    CommandSocketStub_SetResponse("error: behavior not found");
+    std::string response;
+    EXPECT_TRUE(AI_TryMCPCommand("turn off ball", response));
+    EXPECT_NE(response.find("Couldn't disable"), std::string::npos) << response;
+}
+
+TEST_F(AIMCPIntegrationTest, HonkCommandErrorReturnsSendingHonk) {
+    CommandSocketStub_SetResponse("error: socket disconnected");
+    std::string response;
+    EXPECT_TRUE(AI_TryMCPCommand("honk", response));
+    EXPECT_NE(response.find("sending honk"), std::string::npos) << response;
+}
+
+TEST_F(AIMCPIntegrationTest, SpawnCommandErrorReturnsSpawnFailed) {
+    CommandSocketStub_SetResponse("error: max geese reached");
+    std::string response;
+    EXPECT_TRUE(AI_TryMCPCommand("spawn", response));
+    EXPECT_NE(response.find("Spawn failed"), std::string::npos) << response;
+}
+
+TEST_F(AIMCPIntegrationTest, ClearGeeseErrorReturnsClearedWithError) {
+    CommandSocketStub_SetResponse("error: no geese to clear");
+    std::string response;
+    EXPECT_TRUE(AI_TryMCPCommand("clear geese", response));
+    EXPECT_NE(response.find("Cleared"), std::string::npos) << response;
+}
+
+TEST_F(AIMCPIntegrationTest, StatusCommandErrorReturnsStatusCheck) {
+    CommandSocketStub_SetResponse("error: server busy");
+    std::string response;
+    EXPECT_TRUE(AI_TryMCPCommand("status", response));
+    EXPECT_NE(response.find("Status check"), std::string::npos) << response;
+}
+
+TEST_F(AIMCPIntegrationTest, OpenPreferencesErrorReturnsCantOpen) {
+    CommandSocketStub_SetResponse("error: window not available");
+    std::string response;
+    EXPECT_TRUE(AI_TryMCPCommand("open preferences", response));
+    EXPECT_NE(response.find("Can't open prefs"), std::string::npos) << response;
+}
+
+TEST_F(AIMCPIntegrationTest, FetchCommandErrorReturnsFetchFailed) {
+    CommandSocketStub_SetResponse("error: no items to fetch");
+    std::string response;
+    EXPECT_TRUE(AI_TryMCPCommand("fetch", response));
+    EXPECT_NE(response.find("Fetch failed"), std::string::npos) << response;
+}
 
 TEST_F(AIMCPIntegrationTest, EnableCommandRoutesCorrectly) {
     std::string response;

@@ -186,3 +186,13 @@ TEST_F(AppCliTest, SocketFailureReturnsError) {
     int ret = runAppCli(2, argv);
     EXPECT_EQ(ret, 1);
 }
+
+TEST_F(AppCliTest, BareCallWhenRunningReturnsZero) {
+    CommandSocketStub_SetResult(true);
+    CommandSocketStub_SetResponse("goose_count=3");
+    const char* argv[] = {"CadGoose"};
+    int ret = runAppCli(1, argv);
+    EXPECT_EQ(ret, 0);
+}
+
+

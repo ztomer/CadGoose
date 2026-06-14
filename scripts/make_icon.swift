@@ -1,5 +1,5 @@
 #!/usr/bin/env swift
-// make_icon.swift — Generate app.icns from the 🪿 goose emoji.
+// make_icon.swift — Generate app.icns from the goose emoji.
 //
 // Renders the emoji centered on a rounded-rect gradient tile at every size
 // macOS needs, then runs iconutil to produce app.icns at the repo root.

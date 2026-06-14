@@ -67,6 +67,8 @@ void ToyActor::render(IRenderer* renderer) {
     if (!m_active) return;
 
 #ifdef __APPLE__
+    if (getenv("CADGOOSE_HEADLESS_TEST")) return;
+
     double age = g_time - m_spawnTime;
     float alpha = std::min(1.0f, (float)age / 0.5f);
 

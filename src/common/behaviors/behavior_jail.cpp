@@ -14,38 +14,13 @@
 #include "actor.h"
 #include "actor_jail.h"
 #include "behaviors/states/jail_state.h"
-
-#ifdef __APPLE__
-#include <ApplicationServices/ApplicationServices.h>
-#elif defined(__linux__)
-#include <X11/Xlib.h>
-#include <X11/keysym.h>
-#endif
+#include "platform_input.h"
 
 static bool s_oWasKeyDown = false;
 static bool s_pWasKeyDown = false;
 static RingBuffer<Vector2, kMaxJails> s_jails;
 static bool s_jailsActive = false;
 static double s_lastInputTime = 0;
-
-static bool IsKeyPressed(int keyCode) {
-#ifdef __APPLE__
-    return CGEventSourceKeyState(kCGEventSourceStateHIDSystemState, (CGKeyCode)keyCode);
-#elif defined(__linux__)
-    Display* dpy = XOpenDisplay(nullptr);
-    if (!dpy) return false;
-    char keys[32];
-    XQueryKeymap(dpy, keys);
-    int keyIndex = keyCode / 8;
-    int keyBit = keyCode % 8;
-    bool pressed = (keys[keyIndex] & (1 << keyBit)) != 0;
-    XCloseDisplay(dpy);
-    return pressed;
-#else
-    (void)keyCode;
-    return false;
-#endif
-}
 
 static void init(BehaviorContext& ctx) {
     auto* state = BehaviorStateManager::Instance().GetOrCreate<JailState>(ctx.goose->id, "jail");
@@ -81,7 +56,7 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
             }
         }
 
-        bool oDown = IsKeyPressed(KeyNameToKeyCode(g_config.behaviors.jail.hotkeyO));
+        bool oDown = Platform_IsKeyPressed(KeyNameToKeyCode(g_config.behaviors.jail.hotkeyO));
         if (oDown && !s_oWasKeyDown) {
             if (s_jailsActive) {
                 s_jails.clear();
@@ -102,7 +77,7 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
         }
         s_oWasKeyDown = oDown;
 
-        bool pDown = IsKeyPressed(KeyNameToKeyCode(g_config.behaviors.jail.hotkeyP));
+        bool pDown = Platform_IsKeyPressed(KeyNameToKeyCode(g_config.behaviors.jail.hotkeyP));
         if (pDown && !s_pWasKeyDown && !s_jails.empty()) {
             s_jailsActive = !s_jailsActive;
             goose->onHonk();
@@ -140,6 +115,15 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
 
 static void render(Goose* goose, BehaviorContext& ctx, IRenderer* irenderer) {
     (void)goose; (void)ctx; (void)irenderer;
+}
+
+// Test helper: reset all static state between test cases
+void Jail_ResetForTest() {
+    s_oWasKeyDown = false;
+    s_pWasKeyDown = false;
+    s_jails.clear();
+    s_jailsActive = false;
+    s_lastInputTime = 0;
 }
 
 static Behavior g_jailBehavior = BEHAVIOR_DEF_CUSTOM(

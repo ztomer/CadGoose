@@ -360,3 +360,60 @@ TEST(AppActions, HandleCommandQuit) {
     EXPECT_EQ(r, "ok cleared and quitting\n");
     EXPECT_TRUE(ActorManager::Instance().getGeese().empty());
 }
+
+TEST(AppActions, GetStatusWithHeldItem) {
+    Goose* g = AppActions_SpawnGoose("HoldTest");
+    g_world.screenWidth = 1920;
+    g_world.screenHeight = 1080;
+    g->heldItem = g_assets.GetRandomMeme(1920, 1080, 0.1f);
+    g->state = GooseState::WANDER;
+
+    std::string status = AppActions_GetStatus();
+    EXPECT_NE(status.find("goose_heldItem=yes"), std::string::npos);
+
+    ActorManager::Instance().removeAllDroppedItems();
+    AppActions_ClearGeese();
+}
+
+TEST(AppActions, GetStatusWithUnpinnedItem) {
+    Goose* g = AppActions_SpawnGoose("Unpin");
+    g_world.screenWidth = 1920;
+    g_world.screenHeight = 1080;
+
+    ItemData* data = g_assets.GetRandomMeme();
+    ASSERT_NE(data, nullptr);
+
+    DroppedItem item;
+    item.data = data;
+    item.pos = {200, 300};
+    item.rotation = 0.0f;
+    item.timeDropped = 0;
+    item.pinned = false;
+    new DroppedItemActor(item);
+
+    std::string status = AppActions_GetStatus();
+    EXPECT_NE(status.find("pinned=0"), std::string::npos);
+
+    ActorManager::Instance().removeAllDroppedItems();
+    AppActions_ClearGeese();
+}
+
+TEST(AppActions, HandleCommandFetchNumericMeme) {
+    AppActions_SpawnGoose("FetchMemeNum");
+    std::string r = AppActions_HandleCommand({"fetch", "0", "meme"});
+    EXPECT_NE(r.find("ok force_fetch goose=0 type=0"), std::string::npos);
+    AppActions_ClearGeese();
+}
+
+TEST(AppActions, SpawnGooseEmptyNameAtNonZeroIndex) {
+    g_config.gooseNames.clear();
+    g_config.gooseNames.push("");
+    g_config.gooseNames.push("RealName");
+
+    Goose* g = AppActions_SpawnGoose("");
+    ASSERT_NE(g, nullptr);
+    EXPECT_EQ(g->name, "Goose 0");
+
+    g_config.gooseNames.clear();
+    AppActions_ClearGeese();
+}

@@ -44,14 +44,9 @@ static constexpr float kDragResistanceProbability = 0.05f;
 // Behavior Registry Implementation
 // ===========================
 
-void EnsureBehaviorsRestored() {
-}
-
-void EnsureBehaviorsRestoredForce() {
-}
-
 void BehaviorRegistry::Register(Behavior& behavior) {
     behaviors.push_back(&behavior);
+    _registry.push_back(&behavior);
 }
 
 Behavior* BehaviorRegistry::Get(const char* id) {
@@ -178,7 +173,9 @@ void BehaviorRegistry::CleanupAll(Goose* goose) {
         if (behavior->cleanup) {
             try {
                 behavior->cleanup(ctx);
-            } catch (...) {}
+            } catch (...) {
+                fprintf(stderr, "[BEHAVIOR] Cleanup failed (unknown exception): %s\n", behavior->id);
+            }
         }
     }
 
@@ -187,6 +184,10 @@ void BehaviorRegistry::CleanupAll(Goose* goose) {
 
 void BehaviorRegistry::Clear() {
     behaviors.clear();
+}
+
+void BehaviorRegistry::Restore() {
+    behaviors = _registry;
 }
 
 // ===========================

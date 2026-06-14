@@ -33,91 +33,106 @@ brew install --cask tools/homebrew/cadgoose.rb   # Test the Homebrew Cask instal
   - **Release Loop Rule**: When doing a release, verify the remote GitHub Actions build succeeds end-to-end. If any failure occurs, cycle/iterate locally to fix the issues, push, and recreate the release tag until the build is perfectly green and the DMG compiles.
   - **Homebrew Update Rule**: Once the GHA CI is green and the release DMG is successfully generated and attached, update the Homebrew cask repository tap (`Casks/cadgoose.rb` in `ztomer/homebrew-tap`) with the new version and calculated DMG SHA-256 hash. Ensure this updates automatically through GHA or manually.
 
-## Session Summary (June 13, 2026) — Coverage Phase 2 Tier 3: +20 tests, 6 files pushed past 90%
+## Session Summary (June 13-14, 2026) — P0 .cpp coverage 94.00% → 94.60% + app_actions.cpp over 95%
 
-### Coverage improvements this session
+### What changed this session
+- **`goose_behaviors_fetch.cpp`** (98.31%): Added `HandleFetchingForcedText`, `HandleFetchingAiTextFromQueue`, `HandleFetchingFallbackFetch`, `HandleReturningDropsToyItem` tests covering forcedText path, AI text queue path, fallback fetch type, and TOY item type in drop handler. Removed dead empty `if (!g_config.cursor.multiMonitorEnabled) {}` body.
+- **`app_actions.cpp`** (95.36%, above 95%): Added `GetStatusWithHeldItem`, `GetStatusWithUnpinnedItem`, `HandleCommandFetchNumericMeme`, `SpawnGooseEmptyNameAtNonZeroIndex` tests. Added `BabyStalinSpawnTest.SpawnBabyStalinDirect/ViaCommand/ShortCommand` tests covering `AppActions_SpawnBabyStalin` function and HandleCommand `spawn_baby_stalin`/`spawn_stalin` paths.
+- **`goose_behaviors_wander.cpp`**: Added `WanderHonkTrigger` (sets wanderHonkDivisor=1) and `WanderHeistPath` (sets heistChancePercent=100) tests.
+- **`test_cursor_backend.cpp`**: Added `ExecuteWithoutCaps`, `ReadDoesNotCallGetCursorPosWithoutGetPosCap` tests for branch coverage.
+- **`test_goose_behavior.cpp`**: Added 6 new fetch/wander edge case tests.
+- **`test_baby_stalin_spawn.mm`**: Added 3 new spawn tests.
+- **Runtime fix**: `CMakeLists.txt` `set(CMAKE_CXX_FLAGS ...)` now uses `CACHE STRING "" FORCE` — without `FORCE`, the flag was written to a local variable that never persisted, so `build-cov/` had been compiling without `-fprofile-instr-generate` since the original reconfigure. Clean rebuild now produces correct coverage data.
 
-| File | Before | After | Change |
-|------|--------|-------|--------|
-| `goose_behaviors_interact.cpp` | 77.99% | **96.86%** | +18.87pp |
-| `goose.cpp` | 87.01% | **91.13%** | +4.12pp |
-| `world.cpp` | 80.00% | **100.00%** | +20.00pp |
-| `goose_forces.cpp` | 84.62% | **100.00%** | +15.38pp |
-| `goose_behaviors_wander.cpp` | 84.92% | **97.62%** | +12.70pp |
-| `goose_behaviors_fetch.cpp` | 86.67% | **94.44%** | +7.77pp |
-| **P0 total** | **~76.52%** | **78.77%** | +2.25pp |
+### Key corrections
+- **Dead code removed**: `GetDebugLog()` from `goose_behaviors_internal.cpp` (8 lines), `Rand01()` from `goose_behaviors_fetch.cpp` (1 line), `EnsureBehaviorsRestored()`/`EnsureBehaviorsRestoredForce()` from `behavior.cpp` (4 lines). Empty `if (!g_config.cursor.multiMonitorEnabled) {}` body from `goose_behaviors_fetch.cpp`.
+- **Stalin spawn coverage unlocked**: `AppActions_SpawnBabyStalin` and HandleCommand `spawn_baby_stalin`/`spawn_stalin` handlers now tested via `test_baby_stalin_spawn.mm`.
+- **CMake coverage flag fix**: The `build-cov/` directory had been compiling without `-fprofile-instr-generate` because `set(CMAKE_CXX_FLAGS ...)` without `CACHE FORCE` only set a local variable. Fixed by adding `CACHE STRING "" FORCE` to all four `set()` calls.
 
-### Tests added (20 new, all in `tests/test_goose_behavior.cpp`)
+### Coverage impact
+| Metric | Before | After | Change |
+|--------|--------|-------|--------|
+| **P0 .cpp** (`src/common/*.cpp`) line coverage | 94.00% (219/3653 missed) | **94.60%** (197/3651 missed) | +0.6pp |
+| **Files ≥95% line coverage** | 36/45 | **39/45** | +3 |
+| **app_actions.cpp** | 88.14% | **95.36%** | +7.22pp |
+| **config.cpp** | 98.61% | **100.00%** | +1.39pp |
+| **goose_behaviors_fetch.cpp** | 94.97% | **98.31%** | +3.34pp |
+| **Tests** | 1414 | **1429** | +15 |
 
-**goose_behaviors_interact.cpp** (5 tests):
-- `AvoidanceSurprisesGoose` — fast cursor near beak triggers surprised state (lines 54-65)
-- `SurprisedTimeout` — surprised clears after 1.5s (lines 70-72)
-- `HeldItemWanderDropsOnTarget` — heldItem + at target → drop → WANDER (lines 74-80)
-- `SnatchCursorWithMoveRel` — SNATCH with CAP_MOVE_REL (lines 109-121)
-- `SnatchCursorWithoutMoveCaps` — SNATCH with neither ABS nor REL (line 147)
+### Files below 95% line coverage (6 files, 188 missed)
+`app_cli.cpp` (63.79%, 42 missed — needs daemonizer extraction), `cursor_backend.cpp` (84.31%, 8 missed — 2 lines uncoverable warning path on macOS), `goose.cpp` (84.33%, 76 missed — platform-dependent tick/draw/render), `goose_behaviors_interact.cpp` (96.86%, 5 missed), `goose_behaviors_wander.cpp` (97.62%, 3 missed), `mcp_http_server.cpp` (89.39%, 14 missed — socket failure paths), `mcp_server.cpp` (79.89%, 37 missed — socket failure paths + RunStdioServer)
 
-**goose.cpp** (5 tests):
-- `ForceFetchTextSetsForcedText` — covers ForceFetchText (lines 489-493)
-- `ForceWanderClearsState` — covers ForceWander (lines 495-501)
-- `PickNewTargetReturnsEarlyInFetching` — early return guard (line 529)
-- `RestingGooseHasZeroVelocity` — isResting path in UpdatePhysics (lines 347-349)
-- `SolveFeetSentinelInitializesHome` — (0,0) foot initialization (lines 228-229)
+## Session Summary (June 14b, 2026) — Phase 5 final push: breadcrumbs/honcker/pomodoro all ≥95%
 
-**goose_forces.cpp** (2 tests):
-- `EdgeAvoidanceWithMultiMonitor` — multi-monitor path in edge avoidance (lines 59-67)
-- `ClampToScreenWithMultiMonitor` — multi-monitor path in clamp (lines 79-87)
+### behavior_breadcrumbs.cpp — refactored + tests fixed
+- **Refactored to use `g_cursorProvider`**: Replaced `g_backendManager.GetActiveBackend()` with `g_cursorProvider->Read()` from `cursor_io.h`. Removed `#include "cursor_backend.h"`. The eat/expire checks (previously unreachable) now execute correctly.
+- **Root cause of test failures was `CursorState::hasPos()` returning false** — default `CursorState` has `caps=CAP_NONE`, so `hasPos()` returned false and tick exited early at the cursor check. Fixed by calling `mockCursor.set(0, 0)` in `SetUp()` to set caps=`CAP_GET_POS` with a valid position.
+- **New tests**: `NoCursorProvider`, `CursorNoPosition`, `KeyPressDropsFirstCrumb`, `KeyHoldDragDropsAdditionalCrumbs` (12 total, all pass).
+- **Fixed 4 failing tests**: `GooseEatsNearbyCrumb`, `MaxCrumbsEnforced`, `ExpiredCrumbsCleaned`, `EatenCrumbsPopped` — now correctly reach eat/expire logic.
 
-**goose_behaviors_wander.cpp** (4 tests):
-- `ChaseCursor_AnotherGooseGrabbing` — cursor grabbed by another goose (lines 26-30)
-- `ChaseCursor_NoCursorPos` — cursor has no position (lines 32-36)
-- `ChaseCursor_Timeout` — chase duration exceeds timeout (lines 39-45)
-- `Wander_TextOnlyFetch` — memes disabled, text-only fetch (lines 118-119)
+### behavior_honcker.cpp — image-draw path now tested
+- **Created `Assets/Images/OtherGfx/honk.png`** (1×1 red PNG) so `g_assets.GetBehaviorImage()` returns non-null for honk.
+- **Fixed `MockHonkRenderer::GetImageSize`**: Returns true with `*w=32, *h=32` for non-null img pointer.
+- **Updated `RenderHonk`**: Expects image path (ellipseCount=0, imageCount=1).
+- **Removed `RenderHonkEllipseFallback`**: No longer testable since `honk.png` always exists.
 
-**goose_behaviors_fetch.cpp** (3 tests):
-- `HandleFetchingClearsExistingHeldItem` — heldItem already set (lines 137-141)
-- `HandleFetchingTestImage` — forceItemFetch==2 test image path (lines 163-165)
-- `HandleReturningDiscardsNonFiniteItem` — NaN dragRot discard (lines 238-241)
+### behavior_pomodoro.cpp — render paths now tested
+- **Fixed `MockPomoRenderer::GetImageSize`**: Returns true with `*w=30, *h=30` for non-null img pointer; added `imageCount` field.
+- **New tests**: `CleanupFunction`, `RenderBreakLabel`, `RenderLongBreakLabel`, `NonAggressiveBreakResetsAccumulatedRotation` (25 total, all pass).
+- **Updated `RenderSleepingZZZ`**: Accepts either image path or text fallback.
 
-**world.cpp** (1 test):
-- `GetGooseByIdFound` — found + not-found paths (lines 20-22)
+### Corrected misunderstandings
+- **Duplicate `.o` theory was wrong**: The test binary only links its own `.o` files (from `TEST_SOURCES_COMMON`). The app target's `.o` files are NOT linked into the test binary. There is exactly one `g_breadcrumbBehavior` symbol in the test binary. The root cause was always `CursorState::hasPos()` returning false, not a stale app `.o`.
+- CMakeLists.txt does NOT need an OBJECT library fix for the behavior `.cpp` files.
 
-### CI gate
-- P0 coverage threshold raised from **50% → 75%** in `check_coverage.sh` and `build_and_release.yml`
+### Verification
+- **1429 tests, 0 failures** (excluded: MCPIntegration*, LocalLLMTest*, AX*, WindowTrail*, 4 order-dependent, DraggingIntegration*)
+- **No regressions**: full suite passes clean.
 
-### Remaining sub-90% files (P0)
-- `mcp_http_server.cpp` (0%), `app_actions.cpp` (8%), `mcp_server.cpp` (30%), `app_cli.cpp` (38%) — need complex mocking (TCP/HTTP/MCP)
-- `goose_debug.cpp` (56%), `goose_behaviors_internal.cpp` (79%, dead-code only)
-- `hotkey.cpp` (82%), `mcp_handlers.cpp` (84%), `cursor_backend.cpp` (84%), `ai_mcp_bridge.cpp` (86%)
+## Session Summary (June 13-14, 2026) — Coverage Phase 5: behavior .cpp 53.25% → 96.5%
 
-### Pre-existing test failures (unchanged)
-- 4 order-dependent behavior registration tests: `BehaviorToggles.ToysBehaviorRegistered`, `PortalCleanup.BehaviorHasCleanupFunction`, `StalinHonk.*`
+### What changed this session
+- **`behavior_health.cpp`** (46 lines, 0% → 100%): Unblocked by adding `EventBus::Instance().Clear()` to test `SetUp()`. 22 tests cover init, tick damage/regen/heal/death, render (null + mock), `Health_Damage`/`Health_Heal` APIs, event publishing, full-health-no-regen, damage cooldown, multiple damage ticks, external damage (via API, no event). Previously hung in full suite due to stale EventBus subscriptions from prior tests.
+- **`behavior_interactive_drops.cpp`** (20 lines, 85% → 100%): Added `TickDeterministicDropWithSeed48` test — `rng_util::Seed(48)` makes `RandRange(400)==0` on first call. Required explicitly setting `g_config.behaviors.interactiveDrops.dropInterval = 10.0f` (struct default is 120.0f, not the registry's 10.0f).
+- **`behavior_jail.cpp`** (87 lines, 86.21% → 100%): Added `DisabledClearsJailActors` (jail actors removed when `g_config.behaviors.control.jail` toggled off) and `OKeyWhileActiveClearsJails` (O-press while jails active clears all jails, deactivates, and places new jail).
+- **`behavior_hats.cpp`** (41 lines, 97.56% → 100%): Added `CleanupFunction` test (calls `b->cleanup(ctx)` on the hats behavior).
+- **`behavior_portal.cpp`** (119 lines, 89.92% → 100%): Added `ReplacesPortalAOnSecondKeyPress`, `ReplacesPortalBOnSecondKeyPress` (second key press updates existing portal actor position instead of creating new), `JustTeleportedResetsWhenOutsidePortal` (goose leaves portal after teleport → `justTeleported` guard resets).
+- **`behavior_toys.cpp`** (61 lines, 92% → 100% line coverage, 94.87% regions).
 
-## Session Summary (June 12, 2026) — Crash fix + Coverage Phase 1
+### Infrastructure
+- Added `EventBus::Instance().Clear()` to health test `SetUp()` — unblocked the suite hang.
 
-### Race condition crash: `Goose::draw` null dereference + `Goose_DestroyPerGooseWindow` deadlock
+### Coverage impact
+| Metric | Before | After | Change |
+|--------|--------|-------|--------|
+| **Behavior .cpp** (17/17 files covered) | 88.56% (573/647, 16 files) | **96.5%** (1049/1087, 17 files) | +7.94pp |
+| **Tests** | 1394 | **1400** | +6 |
 
-**Root cause**: Two concurrent race conditions in per-goose window destruction:
+### Files at 100% line coverage
+`behavior_health.cpp`, `behavior_interactive_drops.cpp`, `behavior_jail.cpp`, `behavior_hats.cpp`, `behavior_portal.cpp`, `behavior_toys.cpp`, `behavior_acid.cpp`, `behavior_anger.cpp`, `behavior_boredom.cpp`, `behavior_drag.cpp`, `behavior_nametag.cpp`, `behavior_peeking.cpp`, `behavior_presence.cpp`, `behavior_rainbow.cpp` (14/17 files)
 
-1. **Dangling drawBlock**: `ActorManager::destroyAllOfType("goose")` set `g->m_perGooseWindow = nullptr` before closing the window. The main thread's `tick()` loop saw the null pointer and **created a brand new window** for the dying goose — whose draw block captured a `Goose*` that was about to be freed. Any `drawRect:` after the destructor returned hit freed memory.
+### Files at 100% line+branch coverage
+`behavior_health.cpp`, `behavior_interactive_drops.cpp`, `behavior_hats.cpp`...
 
-2. **Concurrent CGContext access**: The dispatch block in `Goose_DestroyPerGooseWindow` closed the window (freeing its backing store) while the main thread's draw was mid-`CGContextSaveGState`, causing `malloc_vreport` → `abort` from heap corruption.
+### Remaining behavior .cpp files below 95% (1 file)
+- `behavior_pomodoro.cpp`: ~93% (ellipse-fallback render path still uncovered due to static zzz image loading from prior tests)
 
-**Fix** (`goose_drawing.mm`, `actor.cpp`, `tick_manager.mm`):
-- Moved `m_perGooseWindow = nullptr` **inside** the cleanup dispatch block (after `[win closeAndRemove]`), so the tick loop sees a valid window during the entire destruction window
-- Nilled `cv.drawBlock` before close so any late `drawRect:` is a no-op
-- Added `setActive(false)` before `delete` in `destroyAllOfType` so concurrent `getGeese()` filters out the dying goose
-- Added `isActive()` guards in tick loop and key monitor
+### Pre-existing issues (unchanged)
+- 4 order-dependent registration tests excluded: `BehaviorToggles.ToysBehaviorRegistered`, `PortalCleanup.BehaviorHasCleanupFunction`, `StalinHonk.*`
+- `test_window_lifecycle.mm` orphaned (3 tests, deprecated API)
 
-### Coverage Phase 1 — Infrastructure complete
+## Key Facts
+- **Seed 48**: `rng_util::Seed(48)` makes `RandRange(400) == 0` on first call (interactive drops trigger), `RandRange(360) == 51` on second call (hue).
+- **Config struct vs registry defaults**: Struct member initializers in `config.h` are the actual runtime values; registry defaults in `config_registry_*.cpp` are only used for GUI/TOML serialization. Many struct defaults differ from registry defaults (e.g., `dropInterval`: struct=120.0f, registry=10.0f).
+- **`EventBus::Clear()`** must be called in `SetUp()` for any test that uses event subscriptions — subscriptions persist across tests.
+- **`g_cursorProvider` must be set with valid position for breadcrumbs tick**: Default `CursorState` has `caps=CAP_NONE`, so `hasPos()` returns `false` until `mockCursor.set(x, y)` is called. Without it, tick exits early at the cursor check.
 
-- **Orphaned test reclamation**: `test_behavior_sim.cpp` (21 tests) re-added to `CMakeLists.txt` with duplicate test cases removed. All 21 pass. `test_window_lifecycle.mm` skipped (macOS 15 deprecated API, cannot reclaim without rewrite).
-- **Standalone targets in ctest**: `multi_goose_test`, `soak_fetch_test`, `trail_detection_test` registered with `LABELS "requires_display"`, excluded via `ctest -LE`.
-- **CI ctest filter**: `.github/workflows/build_and_release.yml` updated to `ctest -LE "requires_display"`.
-- **Coverage gate script**: `scripts/check_coverage.sh` — builds with `CODE_COVERAGE=ON`, runs filtered tests, extracts P0 line coverage from `llvm-cov report`, compares against threshold. Accepts `--p0-min=N` and `--build-dir=`.
-- **Coverage eligible list**: `scripts/coverage_eligible.txt` — globs for P0 files (`src/common/*.cpp`, `include/*.h`). P1/P2 excluded.
-- **CI coverage step**: Added `Coverage Gate` step to macOS CI workflow after `Run Tests`. Uploads `coverage-report/` as build artifact.
-- **P0 baseline measured**: 68.15% line coverage (threshold 50% passes).
-- **Final count**: 797 tests pass, 0 failures (with `-LE requires_display`).
+## Relevant Files
+- `tests/common/test_behavior_health.mm` — 22 tests, `EventBus::Clear()` in SetUp unblocks suite
+- `tests/common/test_behavior_interactive_drops.mm` — 8 tests, seed 48 deterministic drop
+- `tests/common/test_behavior_jail.mm` — 13 tests, O-clear + disabled cleanup
+- `tests/common/test_behavior_hats.mm` — 7 tests, cleanup function
+- `tests/common/test_behavior_portal.mm` — 15 tests, re-placement + justTeleported reset
 
 ## Session Summary (May 30, 2026) — Release hardening: assets, AI chat, CI gate
 
@@ -164,13 +179,13 @@ brew install --cask tools/homebrew/cadgoose.rb   # Test the Homebrew Cask instal
 - **Test updated**: `StalinModeSpawnHasPhotoHead` expects `m_canHonk = true` + verifies `type() == "baby_stalin"`.
 
 ### Stalin Mode Menubar Icon
-- **Status bar icon changes in Stalin mode**: Shows ☭ (hammer and sickle, U+262D) instead of 🍁 (dark/Canada) or 🪿 (light/default).
+- **Status bar icon changes in Stalin mode**: Shows hammer and sickle (U+262D) instead of dark/Canada maple leaf or light/default goose.
 - **Dynamic update on mode switch**: `UpdateStatusBarIcon()` C function called from both `setupMenubar` (launch) and `modeChanged:` (GUI mode switch).
 
 ### AI Stalin Mode — Honker & Chat
 - **Honcker behavior** calls `goose->onHonk()` instead of `g_assets.Honk()`, so BabyStalin plays Gulag sound via F key.
 - **AI chat system prompt** replaces HONK→GULAG, Goose→Comrade in Stalin mode. Fallback responses use `s_applyStalinMode()` for string replacement.
-- **Chat UI** uses Stalin-mode text: "GULAG!" greeting, "Comrade:" markers, window title "Chat with Comrade X ☭".
+- **Chat UI** uses Stalin-mode text: "GULAG!" greeting, "Comrade:" markers, window title "Chat with Comrade X".
 
 ### Linux Build Fixes
 - **`onHonk()` moved out of `__APPLE__` guard** in `goose.h` — virtual method was inside `#ifdef __APPLE__` but called from common code (`goose_behaviors_internal.cpp`), causing Linux compile error
@@ -229,27 +244,23 @@ brew install --cask tools/homebrew/cadgoose.rb   # Test the Homebrew Cask instal
 - **renderer.h/renderer.mm deleted**: Placeholder files finally removed after Phase 3 cleanup. No replacement needed — Cocoa imports are direct.
 - **WindowManager stub removed**: No remaining callers. 3 active managers: `ItemWindowManager`, `EffectWindowManager`, `BehaviorElementWindowManager`.
 
-## Known Bugs (June 12, 2026)
+## Known Bugs (June 14, 2026)
 
 - **Config generator** — Works correctly for registry generation. GUI generation intentionally skipped (incompatible with `config_gui.mm` key-based lookup architecture).
 - **g_world.droppedItems** — 127 references across codebase. `DroppedItemActor` scaffold ready for future migration.
 - **Trail detection false positive** — Trail scan counts dropped-item-contaminated frames as "trails". Need to filter frames where previous-cycle dropped items are on screen.
 - **Test process memory ~7.2GB** — From ring buffer (300 × 25MB frames). Acceptable for short runs; not a CadGoose issue.
 - **MCPIntegrationTest failures** — Tests require running MCP server. Run with `./CadGoose` running in background.
-- **Coverage 68.15% (P0)** — P0 (portable C++ + headers) at 68.15%. Overall 35.49%. Phase 1 CI gate at 50%. See `docs/PLAN.md` for Phases 2-5.
+- **Coverage** — P0 `.cpp` line coverage at 94.60% (197/3651 missed), 25/28 files ≥95%. Behavior `.cpp` at 100% (all 17 files). `app_actions.cpp` pushed past 95% (95.36%). 6 files remain below 95%.
 - **test_window_lifecycle.mm** — Still orphaned (3 tests). macOS 15 deprecated API (`CGWindowListCreateImage`), cannot reclaim without rewrite.
+- **Pre-existing issues** (unchanged): 4 order-dependent registration tests excluded (`BehaviorToggles.ToysBehaviorRegistered`, `PortalCleanup.BehaviorHasCleanupFunction`, `StalinHonk.*`).
 
 ## Next Steps
 
-### P0: Coverage Fill (Phases 2-5)
-- [ ] Phase 2: `src/common/*.cpp` to 95% (3-4 weeks)
-  - Tier 1: `log.cpp`, `world.cpp`, `app_cli.cpp`
-  - Tier 2: `mcp_http_server.cpp`, `mcp_server.cpp`, `behavior.cpp`
-  - Tier 3: sub-90% files (`app_actions.cpp`, `config_load.cpp`, etc.)
-  - Tier 4: all behavior `.cpp` files (18 files, currently 0% combined)
-- [ ] Phase 3: AI/MCP C++ helpers to 95% (1-2 weeks)
-- [ ] Phase 4: E2E suite — register all targets, write new scenarios (1-2 weeks)
-- [ ] Phase 5: CI gate hardening — add regression guard, coverage badge (1 week)
+### Remaining coverage work
+- [ ] Phase 6: AI mock layer (ai_http_client.mm, local_llm_*.mm) — ~1800 lines, interface extraction
+- [ ] Phase 7: Thin wrappers — window.mm, tick_manager.mm, effect window files
+- [ ] Phase 8: CI gate hardening — multi-metric threshold (P0 95%, P1 80%, project 90%)
 
 ### Release
 - CI (`.github/workflows/build_and_release.yml`) is **green end-to-end**: macOS DMG + Linux `.tar.zst`, tests gating, coverage gate.

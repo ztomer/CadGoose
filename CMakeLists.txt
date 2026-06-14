@@ -34,10 +34,10 @@ endmacro()
 option(CODE_COVERAGE "Build with LLVM source-based code coverage" OFF)
 if(CODE_COVERAGE AND APPLE)
     message(STATUS "Code coverage instrumentation enabled")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fprofile-instr-generate -fcoverage-mapping")
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fprofile-instr-generate -fcoverage-mapping")
-    set(CMAKE_OBJCXX_FLAGS "${CMAKE_OBJCXX_FLAGS} -fprofile-instr-generate -fcoverage-mapping")
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fprofile-instr-generate")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fprofile-instr-generate -fcoverage-mapping" CACHE STRING "C++ compiler flags" FORCE)
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fprofile-instr-generate -fcoverage-mapping" CACHE STRING "C compiler flags" FORCE)
+    set(CMAKE_OBJCXX_FLAGS "${CMAKE_OBJCXX_FLAGS} -fprofile-instr-generate -fcoverage-mapping" CACHE STRING "ObjC++ compiler flags" FORCE)
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fprofile-instr-generate" CACHE STRING "Linker flags" FORCE)
 endif()
 
 find_program(CCACHE_PROGRAM ccache)
@@ -303,17 +303,22 @@ if(APPLE)
         tests/common/test_mcp_protocol.cpp
         tests/common/test_mcp_config.cpp
         tests/common/test_mcp_resources.cpp
+        tests/common/test_mcp_json_rpc.cpp
+        tests/common/test_ring_buffer.cpp
+        tests/common/test_random.cpp
+        tests/common/test_coordinate.cpp
         tests/common/test_mcp_integration.cpp
         tests/common/test_ai_tokens.cpp
         tests/common/test_ai_routing.cpp
         tests/common/test_ai_bridge.cpp
         tests/common/test_config_registry.cpp
         tests/common/test_config_get_set.cpp
+        tests/common/test_config_path.cpp
         tests/common/test_config_load_save.cpp
+        tests/common/test_actor.cpp
         tests/common/test_config_toggles.cpp
         tests/common/test_dropped_item_hit.cpp
         tests/common/test_ai_text_meme.cpp
-        tests/common/presence_stub.cpp
         tests/common/test_regression_portal_leaves_honk.cpp
         tests/common/test_actor_manager.cpp
         tests/common/test_app_actions.cpp
@@ -327,6 +332,7 @@ if(APPLE)
         tests/common/test_baby_stalin_spawn.mm
         tests/common/test_mcp_server.cpp
         tests/common/test_mcp_http_server.cpp
+        tests/common/platform_input_mock.cpp
         src/common/app_actions.cpp
         src/common/app_cli.cpp
         src/common/behavior.cpp
@@ -391,6 +397,26 @@ if(APPLE)
             tests/common/test_gui_config.mm
             tests/common/test_local_llm.cpp
             tests/common/test_behavior_ai.mm
+            tests/common/test_ai_helpers.mm
+            tests/common/test_effect_registration.mm
+            tests/common/test_world_utils.mm
+            tests/common/test_behavior_health.mm
+            tests/common/test_behavior_rainbow.mm
+            tests/common/test_behavior_acid.mm
+            tests/common/test_behavior_boredom.mm
+            tests/common/test_behavior_nametag.mm
+            tests/common/test_behavior_peeking.mm
+            tests/common/test_behavior_anger.mm
+            tests/common/test_behavior_presence.mm
+            tests/common/test_behavior_honcker.mm
+            tests/common/test_behavior_drag.mm
+            tests/common/test_behavior_breadcrumbs.mm
+            tests/common/test_behavior_hats.mm
+            tests/common/test_behavior_toys.mm
+            tests/common/test_behavior_interactive_drops.mm
+            tests/common/test_behavior_pomodoro.mm
+            tests/common/test_behavior_jail.mm
+            tests/common/test_behavior_portal.mm
             src/common/goose_drawing.mm
             src/common/item_renderer.mm
             src/common/world_utils.mm
@@ -406,9 +432,9 @@ if(APPLE)
             src/common/behaviors/local_llm_inference.mm
             src/platform/macos/window.mm
             src/platform/macos/cursor_backend.mm
+            src/platform/macos/platform_input.mm
             src/platform/macos/tick_manager.mm
             src/platform/macos/item_drag_controller.mm
-            src/platform/macos/audio.mm
             tests/platform/macos/test_renderer.mm
             tests/platform/macos/test_gui_accessibility.mm
             tests/platform/macos/test_dragging_integration.mm
@@ -447,8 +473,6 @@ if(APPLE)
             src/platform/macos/behavior_element_window.mm
             src/platform/macos/audio.mm
             tests/common/command_socket_stub.cpp
-            tests/common/presence_stub.cpp
-            tests/common/test_presence.cpp
             tests/platform/macos/test_renderer.mm
             tests/platform/macos/test_gui_accessibility.mm
             tests/platform/macos/test_dragging_integration.mm

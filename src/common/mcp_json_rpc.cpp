@@ -63,8 +63,13 @@ std::string ExtractArg(const std::string& json, const std::string& key) {
     pos = json.find_first_not_of(" \t", pos + 1);
     if (pos == std::string::npos) return "";
     if (json[pos] == '"') {
-        auto end = json.find('"', pos + 1);
-        if (end == std::string::npos) return "";
+        size_t end = pos + 1;
+        while (end < json.size()) {
+            if (json[end] == '\\') { end += 2; }
+            else if (json[end] == '"') { break; }
+            else { end++; }
+        }
+        if (end >= json.size()) return "";
         std::string val = json.substr(pos + 1, end - pos - 1);
         std::string unescaped;
         for (size_t i = 0; i < val.size(); i++) {

@@ -127,3 +127,11 @@ TEST_F(McpServerTest, NotificationsInitializedReturnsEmpty) {
         "{\"jsonrpc\":\"2.0\",\"method\":\"notifications/initialized\"}");
     EXPECT_TRUE(resp.empty());
 }
+
+TEST_F(McpServerTest, RequestTooLarge) {
+    ASSERT_TRUE(MCP_StartInternalServer());
+    std::string big(66000, 'A');
+    std::string json = "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"" + big + "\"}";
+    std::string resp = SendRequest(json);
+    EXPECT_TRUE(resp.empty());
+}

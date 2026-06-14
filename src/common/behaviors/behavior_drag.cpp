@@ -9,12 +9,7 @@
 #include "goose.h"
 #include "config.h"
 #include "world.h"
-
-#ifdef __APPLE__
-#include <ApplicationServices/ApplicationServices.h>
-#elif defined(__linux__)
-#include <X11/Xlib.h>
-#endif
+#include "platform_input.h"
 
 static constexpr float DRAG_RADIUS = 45.0f;
 static constexpr int kDragDirectionJitterMax = 10;
@@ -35,21 +30,7 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
     bool onGoose = (dx > -g_config.behaviors.drag.radius && dx < g_config.behaviors.drag.radius &&
                     dy > -g_config.behaviors.drag.radius && dy < g_config.behaviors.drag.radius);
 
-    bool mouseDown = false;
-#ifdef __APPLE__
-    mouseDown = CGEventSourceButtonState(kCGEventSourceStateHIDSystemState, kCGMouseButtonLeft);
-#elif defined(__linux__)
-    Display* dpy = XOpenDisplay(nullptr);
-    if (dpy) {
-        Window root, child;
-        int rootX, rootY, winX, winY;
-        unsigned int mask;
-        if (XQueryPointer(dpy, DefaultRootWindow(dpy), &root, &child, &rootX, &rootY, &winX, &winY, &mask)) {
-            mouseDown = (mask & Button1Mask) != 0;
-        }
-        XCloseDisplay(dpy);
-    }
-#endif
+    bool mouseDown = Platform_IsMouseButtonDown(0);
 
     if (onGoose && mouseDown && goose->state != GooseState:: SNATCH_CURSOR) {
         goose->pos.x = cursorPos.x - 5.0f;

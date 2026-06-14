@@ -32,28 +32,7 @@ static constexpr float kHighlightAlpha = 0.08f;
 @implementation BehaviorRowView
 
 + (NSString*)iconForConfigKey:(NSString*)key {
-    if ([key isEqualToString:@"ball_enabled"]) return @"⚽";
-    if ([key isEqualToString:@"breadcrumbs_enabled"]) return @"🍞";
-    if ([key isEqualToString:@"hats_enabled"]) return @"🎩";
-    if ([key isEqualToString:@"rainbow_enabled"]) return @"🌈";
-    if ([key isEqualToString:@"acid_enabled"]) return @"🧪";
-    if ([key isEqualToString:@"anger_enabled"]) return @"😠";
-    if ([key isEqualToString:@"autumn_leaves_enabled"]) return @"🍂";
-    if ([key isEqualToString:@"honcker_enabled"]) return @"📯";
-    if ([key isEqualToString:@"jail_enabled"]) return @"🔒";
-    if ([key isEqualToString:@"portals_enabled"]) return @"🌀";
-    if ([key isEqualToString:@"drag_enabled"]) return @"🖱️";
-    if ([key isEqualToString:@"nametag_enabled"]) return @"🏷️";
-    if ([key isEqualToString:@"health_enabled"]) return @"❤️";
-    if ([key isEqualToString:@"ai_enabled"]) return @"🤖";
-    if ([key isEqualToString:@"pomodoro_enabled"]) return @"⏰";
-    if ([key isEqualToString:@"toys_enabled"]) return @"🧸";
-    if ([key isEqualToString:@"avoidance_enabled"]) return @"🏃";
-    if ([key isEqualToString:@"boredom_enabled"]) return @"😮‍💨";
-    if ([key isEqualToString:@"peeking_enabled"]) return @"👀";
-    if ([key isEqualToString:@"interactive_drops_enabled"]) return @"💧";
-    if ([key isEqualToString:@"appearance.colors"]) return @"🎨";
-    return @"🦆";
+    return nil;
 }
 
 - (instancetype)initWithFrame:(NSRect)frame {

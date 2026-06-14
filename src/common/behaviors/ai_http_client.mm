@@ -214,8 +214,8 @@ static NSString* GetModelsEndpoint() {
             // any other transport error means it's genuinely unreachable.
             if (!timedOut) self.connected = NO;
             NSString* m = timedOut
-                ? @"🦆 HONK! The brain is taking too long — server busy? Try again."
-                : @"🦆 HONK! The brain is sleeping. Check if your AI server is running.";
+                ? @"HONK! The brain is taking too long — server busy? Try again."
+                : @"HONK! The brain is sleeping. Check if your AI server is running.";
             if (completion) completion(m, error);
             if (onDone) onDone(NO);
             return;
@@ -228,8 +228,8 @@ static NSString* GetModelsEndpoint() {
             // request problem (bad model name, etc.).
             self.connected = YES;
             NSString* m = (httpResp.statusCode >= 500)
-                ? @"🦆 HONK! The server is busy or still loading the model. Try again in a moment."
-                : @"🦆 HONK! The goose can't reach its brain. Check the model name / provider in settings.";
+                ? @"HONK! The server is busy or still loading the model. Try again in a moment."
+                : @"HONK! The goose can't reach its brain. Check the model name / provider in settings.";
             if (completion) completion(m, httpError);
             if (onDone) onDone(NO);
             return;
@@ -239,7 +239,7 @@ static NSString* GetModelsEndpoint() {
         NSDictionary* json = [NSJSONSerialization JSONObjectWithData:data options:0 error:&parseError];
         if (parseError) {
             self.connected = NO;
-            if (completion) completion(@"🦆 HONK! The goose speaks nonsense. Try a different model.", parseError);
+            if (completion) completion(@"HONK! The goose speaks nonsense. Try a different model.", parseError);
             if (onDone) onDone(NO);
             return;
         }

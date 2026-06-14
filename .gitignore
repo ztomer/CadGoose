@@ -23,3 +23,6 @@ FoundationLLM.*
 !PLAN.md
 !docs/CLEANUP_PLAN.md
 config/logs/
+*.profdata
+*.profraw
+tools/Extractor/obj/

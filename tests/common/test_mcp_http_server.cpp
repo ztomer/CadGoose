@@ -147,3 +147,17 @@ TEST_F(McpHttpServerTest, PostNotificationReturnsFallbackResponse) {
     EXPECT_TRUE(resp.find("HTTP/1.1 200") != std::string::npos);
     EXPECT_NE(resp.find("id\":null"), std::string::npos);
 }
+
+TEST_F(McpHttpServerTest, PostLargeBodyTriggersContentRead) {
+    ASSERT_TRUE(MCP_StartHTTPServer());
+    std::string body(5000, 'X');
+    std::string req =
+        "POST / HTTP/1.1\r\n"
+        "Host: localhost\r\n"
+        "Content-Type: application/json\r\n"
+        "Content-Length: " + std::to_string(body.size()) + "\r\n"
+        "\r\n" + body;
+    std::string resp = SendRequest(req);
+    ASSERT_FALSE(resp.empty());
+    EXPECT_TRUE(resp.find("HTTP/1.1 200") != std::string::npos);
+}

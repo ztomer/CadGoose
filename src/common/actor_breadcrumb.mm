@@ -60,6 +60,8 @@ void BreadcrumbActor::render(IRenderer* renderer) {
     if (!m_active) return;
 
 #ifdef __APPLE__
+    if (getenv("CADGOOSE_HEADLESS_TEST")) return;
+
     double age = g_time - m_spawnTime;
     float alpha = std::min(1.0f, (float)(m_lifetime - age) / 2.0f);
     if (alpha < 0) alpha = 0;
