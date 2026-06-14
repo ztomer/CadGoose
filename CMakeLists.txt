@@ -527,7 +527,7 @@ if(APPLE)
     # with `./build/CadGooseTests` on a machine with a display.
     enable_testing()
     add_test(NAME CadGooseTests
-             COMMAND CadGooseTests --gtest_filter=-WindowTrailTest.*:BehaviorToggles.ToysBehaviorRegistered:PortalCleanup.BehaviorHasCleanupFunction:StalinHonk.*
+             COMMAND CadGooseTests --gtest_filter=-WindowTrailTest.*
              WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
     # Standalone E2E targets — require a display server (ScreenCaptureKit).
