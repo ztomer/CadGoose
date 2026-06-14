@@ -430,6 +430,12 @@ if(APPLE)
             src/platform/macos/behavior_element_window.mm
             src/platform/macos/audio.mm
             src/platform/macos/assets.mm
+            tests/common/command_socket_stub.cpp
+            tests/platform/macos/test_renderer.mm
+            tests/platform/macos/test_gui_accessibility.mm
+            tests/platform/macos/test_dragging_integration.mm
+            tests/platform/macos/test_headless_rendering.mm
+            tests/platform/macos/test_window_trail.mm
         )
     else()
         set(TEST_SOURCES_PLATFORM_COMMON)
@@ -519,10 +525,7 @@ if(APPLE)
         GTest::Main
         Threads::Threads
     )
-    if(APPLE)
-        target_sources(CadGooseTestsOrderDependent PRIVATE ${TEST_SOURCES_PLATFORM})
-        target_compile_options(CadGooseTestsOrderDependent PRIVATE -fobjc-arc -Wno-deprecated-literal-operator)
-    endif()
+
     add_test(NAME CadGooseTestsOrderDependent
              COMMAND CadGooseTestsOrderDependent
              WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
