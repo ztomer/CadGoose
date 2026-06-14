@@ -13,6 +13,7 @@
 #include "config.h"
 #include "goose.h"
 #include "items.h"
+#include "platform_input.h"
 #include "renderer_interface.h"
 #include "world.h"
 #include <cairo.h>
@@ -258,4 +259,24 @@ void Goose::DrawLine(cairo_t* cr, Vector2 a, Vector2 b, float w, const float col
 void Goose::DrawLine(cairo_t* cr, Vector2 a, Vector2 b, float w, float r, float g, float bl) {
     float color[] = {r, g, bl, 1.0f};
     DrawLine(cr, a, b, w, color);
+}
+
+// ---------------------------------------------------------------------------
+// Platform input stubs (overridden by test mocks on macOS)
+// ---------------------------------------------------------------------------
+
+bool Platform_IsKeyPressed(int keyCode) {
+    (void)keyCode;
+    return false;
+}
+
+bool Platform_IsMouseButtonDown(int button) {
+    (void)button;
+    return false;
+}
+
+bool Platform_GetMousePosition(double* outX, double* outY) {
+    (void)outX;
+    (void)outY;
+    return false;
 }
