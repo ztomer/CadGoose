@@ -151,7 +151,7 @@ static NSArray* FindElementsByRoleAndTitle(AXUIElementRef root, NSString* role, 
     return results;
 }
 
-// Open Preferences via the status bar menu (🍁 → Preferences...)
+// Open Preferences via the status bar menu (maple leaf icon -> Preferences...)
 static bool OpenPreferencesViaMenu(AXUIElementRef appElem) {
     CFTypeRef extras;
     if (AXUIElementCopyAttributeValue(appElem, CFSTR("AXExtrasMenuBar"), &extras) != kAXErrorSuccess)
@@ -1013,7 +1013,7 @@ TEST_F(AccessibilityGUITest, AIChatWindowAccessible) {
     for (id obj in buttons) {
         AXUIElementRef el = (__bridge AXUIElementRef)obj;
         NSString* title = AXStr(el, kAXTitleAttribute);
-        if ([title isEqualToString:@"Send"] || [title isEqualToString:@"🪿"]) {
+        if ([title isEqualToString:@"Send"]) {
             hasSendButton = true;
             break;
         }

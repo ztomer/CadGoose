@@ -119,13 +119,13 @@ void completeWithLocalLLM(NSArray* history, float evilLevel, void(^completion)(N
         NSString* why = (code == 0)
             ? @"no local model found — add one in settings or enable Apple Intelligence"
             : FoundationUnavailableMessage(code);
-        if (completion) completion([NSString stringWithFormat:@"🦆 HONK! Can't reach the local brain: %@.", why], nil);
+        if (completion) completion([NSString stringWithFormat:@"HONK! Can't reach the local brain: %@.", why], nil);
         return;
     }
     if (state == LocalLLMState::Error) {
         CG_ERROR("AI", "Local LLM in error state");
         connectedCallback(NO);
-        if (completion) completion(@"🦆 HONK! The local brain hit an error. Check settings.", nil);
+        if (completion) completion(@"HONK! The local brain hit an error. Check settings.", nil);
         return;
     }
 

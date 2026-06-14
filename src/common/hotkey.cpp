@@ -110,34 +110,8 @@ std::optional<ParsedHotkey> ParseHotkeyString(const std::string& hotkey) {
         } else {
             int code = KeyNameToKeyCode(token);
             if (code < 0) {
-                // Try single ASCII letter/digit
-                if (token.length() == 1) {
-                    char c = token[0];
-                    if (c >= 'a' && c <= 'z') {
-                        // Map a-z to ANSI kVK: a=0x00, b=0x0B, etc.
-                        // Use a simple linear search since it's small
-                        for (const auto& m : s_keyNames) {
-                            if (token == m.name && strlen(m.name) == 1 && m.name[0] >= 'a' && m.name[0] <= 'z') {
-                                code = m.code;
-                                break;
-                            }
-                        }
-                        // If still not found, try direct: 'a' -> 0x00 via offset
-                        // kVK mapping is not alphabetical, so we need the table
-                        // Let's just use the table above
-                    } else if (c >= '0' && c <= '9') {
-                        for (const auto& m : s_keyNames) {
-                            if (token == m.name) {
-                                code = m.code;
-                                break;
-                            }
-                        }
-                    }
-                }
-                if (code < 0) {
-                    fprintf(stderr, "[Hotkey] Unknown key \"%s\" in \"%s\"\n", token.c_str(), hotkey.c_str());
-                    return std::nullopt;
-                }
+                fprintf(stderr, "[Hotkey] Unknown key \"%s\" in \"%s\"\n", token.c_str(), hotkey.c_str());
+                return std::nullopt;
             }
             result.keyCode = code;
             keyTokens++;

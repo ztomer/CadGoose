@@ -56,8 +56,13 @@ public:
 
     void Clear();
 
+    // Re-register all behaviors that were registered via static init.
+    // Needed after Clear() to restore the registry for subsequent tests.
+    void Restore();
+
 private:
     std::vector<Behavior*> behaviors;
+    std::vector<Behavior*> _registry; // permanent copy, never cleared
 };
 
 #define REGISTER_BEHAVIOR(b) \

@@ -13,6 +13,7 @@
 #include "assets.h"
 #include "hotkey.h"
 #include "behaviors/states/honcker_state.h"
+#include "platform_input.h"
 
 static constexpr float kHonkYOffset = 20.0f;
 static constexpr float kHonkBubbleRadius = 15.0f;
@@ -24,14 +25,9 @@ static constexpr float kHonkBubbleAlpha = 0.8f;
 #ifdef __APPLE__
 #include "renderer_interface.h"
 #include "cg_renderer.h"
-#include <ApplicationServices/ApplicationServices.h>
 
 static bool s_wasPressed = false;
 static CGImageRef s_honkImage = nullptr;
-
-static bool IsKeyPressed(int keyCode) {
-    return CGEventSourceKeyState(kCGEventSourceStateHIDSystemState, (CGKeyCode)keyCode);
-}
 
 static void init(BehaviorContext& ctx) {
     if (!s_honkImage) {
@@ -41,7 +37,7 @@ static void init(BehaviorContext& ctx) {
 
 static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
     int keyCode = KeyNameToKeyCode(g_config.behaviors.honcker.hotkey);
-    bool pressed = IsKeyPressed(keyCode);
+    bool pressed = Platform_IsKeyPressed(keyCode);
 
     if (pressed && !s_wasPressed) {
         goose->onHonk();

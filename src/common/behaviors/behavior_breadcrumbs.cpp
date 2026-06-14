@@ -5,56 +5,20 @@
 #include "config.h"
 #include "world.h"
 #include "assets.h"
-#include "cursor_backend.h"
+#include "cursor_io.h"
 #include "hotkey.h"
 #include "renderer_interface.h"
 #include "render_colors.h"
 #include "ring_buffer.h"
 #include "actor.h"
 #include "actor_breadcrumb.h"
+#include "platform_input.h"
 #include <cmath>
 
-
-
-#ifdef __APPLE__
-#include "cg_renderer.h"
-#include <CoreGraphics/CoreGraphics.h>
-#include <ApplicationServices/ApplicationServices.h>
-#include <TargetConditionals.h>
-#elif defined(__linux__)
-#include "cairo_renderer.h"
-#include <X11/Xlib.h>
-#endif
-
-#ifdef __APPLE__
-static CGImageRef s_crumbImage = nullptr;
-#elif defined(__linux__)
 static void* s_crumbImage = nullptr;
-#else
-static void* s_crumbImage = nullptr;
-#endif
 static bool s_wasKeyDown = false;
 static double s_lastKeyCheck = 0;
 static int s_nextCrumbId = 0;
-
-static bool IsKeyDown(int keyCode) {
-#ifdef __APPLE__
-    return CGEventSourceKeyState(kCGEventSourceStateHIDSystemState, (CGKeyCode)keyCode);
-#elif defined(__linux__)
-    Display* dpy = XOpenDisplay(nullptr);
-    if (!dpy) return false;
-    char keys[32];
-    XQueryKeymap(dpy, keys);
-    int keyIndex = keyCode / 8;
-    int keyBit = keyCode % 8;
-    bool pressed = (keys[keyIndex] & (1 << keyBit)) != 0;
-    XCloseDisplay(dpy);
-    return pressed;
-#else
-    (void)keyCode;
-    return false;
-#endif
-}
 
 static void LogCrumb(const char* msg) {
     fprintf(stderr, "[Breadcrumbs] %s\n", msg);
@@ -77,12 +41,12 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
     if (time - s_lastKeyCheck < 0.016) return;
     s_lastKeyCheck = time;
 
-    auto* backend = g_backendManager.GetActiveBackend();
-    if (!backend) return;
-
-    Vector2 cursorPos = backend->GetCursorPos();
+    if (!g_cursorProvider) return;
+    CursorState cs = g_cursorProvider->Read();
+    if (!cs.hasPos()) return;
+    Vector2 cursorPos = cs.position;
     int keyCode = KeyNameToKeyCode(g_config.behaviors.breadCrumbs.hotkey);
-    bool keyDown = IsKeyDown(keyCode);
+    bool keyDown = Platform_IsKeyPressed(keyCode);
 
     if (keyDown && !s_wasKeyDown) {
         s_wasKeyDown = true;

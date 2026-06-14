@@ -24,21 +24,21 @@ user_template = "You are {personality}. Generate ONE short, funny text message t
 [ai_chat]
 # Fallback responses when LLM is unavailable
 fallback_honk = "HONK! HONK HONK!"
-fallback_sad = "HONK! Why so mad? Have some bread crumbs. 🍞"
-fallback_happy = "HONK! You seem happy! Me too! HONK! 🎉"
-fallback_food = "HONK! FOOD?! Where?! HONK HONK! 🍞"
+fallback_sad = "HONK! Why so mad? Have some bread crumbs."
+fallback_happy = "HONK! You seem happy! Me too! HONK!"
+fallback_food = "HONK! FOOD?! Where?! HONK HONK!"
 fallback_name = "HONK! I'm a goose, what did you expect?"
-fallback_goodbye = "HONK! Bye bye! Don't forget to feed the geese! 🦆"
-fallback_hello = "HONK! Hello to you too! 🦆"
+fallback_goodbye = "HONK! Bye bye! Don't forget to feed the geese!"
+fallback_hello = "HONK! Hello to you too!"
 fallback_help = "HONK! I'm a goose. I walk, I honk, I steal things. What else do you need to know?"
-fallback_default_0 = "HONK! 🦆"
+fallback_default_0 = "HONK!"
 fallback_default_1 = "HONK HONK!"
-fallback_default_2 = "🦆 The goose acknowledges your presence. HONK!"
+fallback_default_2 = "The goose acknowledges your presence. HONK!"
 fallback_default_3 = "HONK! I'm a goose, what did you expect?"
 fallback_default_4 = "*goose tilts head* HONK?"
 fallback_default_5 = "HONK! That's nice. Anyway, HONK!"
 fallback_default_6 = "HONK! I don't understand but I support you!"
-fallback_default_7 = "🦆 HONK! Have you tried turning it off and on again?"
+fallback_default_7 = "HONK! Have you tried turning it off and on again?"
 
 [local_llm]
 # Default search paths for CoreML models (in addition to config paths)

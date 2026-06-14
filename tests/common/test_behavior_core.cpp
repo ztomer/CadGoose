@@ -65,6 +65,10 @@ namespace {
         BehaviorRegistry::Instance().Clear();
         BehaviorStateManager::Instance().ClearAll();
     }
+
+    void RestoreRegistry() {
+        BehaviorRegistry::Instance().Restore();
+    }
 }
 
 // ===========================
@@ -108,12 +112,14 @@ TEST(BehaviorRegistryTest, ClearEmptiesBehaviors) {
 
     reg.Clear();
     EXPECT_EQ(reg.GetBehaviorCount(), 0u);
+    reg.Restore();
 }
 
 TEST(BehaviorRegistryTest, GetReturnsNullAfterClear) {
     auto& reg = BehaviorRegistry::Instance();
     reg.Clear();
     EXPECT_EQ(reg.Get("ball"), nullptr);
+    reg.Restore();
 }
 
 // ===========================

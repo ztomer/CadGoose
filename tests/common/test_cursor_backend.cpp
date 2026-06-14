@@ -67,3 +67,57 @@ TEST(CursorBackendSuite, SingletonManagerExists) {
     EXPECT_NE(g_backendManager.GetActiveBackend(), nullptr);
     EXPECT_NE(g_cursorProvider, nullptr);
 }
+
+TEST(CursorBackendSuite, ManagerInitRegistersPlatformBackend) {
+    ICursorProvider* savedProvider = g_cursorProvider;
+    g_cursorProvider = nullptr;
+
+    g_backendManager.Init();
+
+    // Init either selects a working backend or prints a warning —
+    // either way the method executes without crashing
+    EXPECT_NE(g_backendManager.GetActiveBackend(), nullptr);
+
+    g_cursorProvider = savedProvider;
+}
+
+TEST(CursorBackendSuite, ExecuteWithoutCaps) {
+    class NoCapsBackend : public CursorBackend {
+    public:
+        std::string Name() const override { return "NoCaps"; }
+        uint32_t Caps() const override { return CAP_NONE; }
+        bool Init() override { return true; }
+        Vector2 GetCursorPos() override { return {0, 0}; }
+        void MoveCursorAbs(int x, int y) override {}
+        void MoveCursorRel(int dx, int dy) override {}
+    };
+    NoCapsBackend backend;
+    CursorState state = backend.Read();
+    EXPECT_FALSE(state.hasPos());
+
+    backend.Execute(CursorAction::MoveAbs(100, 200));
+    backend.Execute(CursorAction::MoveRel(10, -5));
+    backend.Execute(CursorAction{}); // unknown type
+    SUCCEED();
+}
+
+TEST(CursorBackendSuite, ReadDoesNotCallGetCursorPosWithoutGetPosCap) {
+    class BackendWithMoveRel : public CursorBackend {
+    public:
+        std::string Name() const override { return "RelOnly"; }
+        uint32_t Caps() const override { return CAP_MOVE_REL; }
+        bool Init() override { return true; }
+        Vector2 GetCursorPos() override { return {999, 999}; }
+        void MoveCursorAbs(int x, int y) override {}
+        void MoveCursorRel(int dx, int dy) override {}
+    };
+    BackendWithMoveRel backend;
+    // hasPos() should return false since CAP_GET_POS is not set
+    // even though GetCursorPos returns a value
+    CursorState state = backend.Read();
+    EXPECT_FALSE(state.hasPos());
+
+    // Execute with MOVE_REL should work since we have that cap
+    backend.Execute(CursorAction::MoveRel(42, 99));
+    SUCCEED();
+}

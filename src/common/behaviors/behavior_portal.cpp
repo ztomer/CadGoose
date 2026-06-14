@@ -14,21 +14,16 @@
 #include "actor.h"
 #include "actor_portal.h"
 #include "behaviors/states/portal_state.h"
+#include "platform_input.h"
 
 #ifdef __APPLE__
 #include "renderer_interface.h"
 #include "cg_renderer.h"
-#include <CoreGraphics/CoreGraphics.h>
-#include <ApplicationServices/ApplicationServices.h>
 
 static bool s_portalsOn = true;
 static bool s_p0Pressed = false;
 static bool s_p1Pressed = false;
 static bool s_p2Pressed = false;
-
-static bool IsKeyHeld(int keyCode) {
-    return CGEventSourceKeyState(kCGEventSourceStateHIDSystemState, (CGKeyCode)keyCode);
-}
 
 static void init(BehaviorContext& ctx) {
     auto* state = BehaviorStateManager::Instance().GetOrCreate<PortalState>(ctx.goose->id, "portal");
@@ -80,27 +75,17 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
         }
     }
 
-    CGEventSourceRef source = CGEventSourceCreate(kCGEventSourceStateCombinedSessionState);
-    CGPoint mousePos = {0, 0};
-    bool haveMouse = false;
-    if (source) {
-        CGEventRef event = CGEventCreate(source);
-        if (event) {
-            mousePos = CGEventGetLocation(event);
-            haveMouse = true;
-            CFRelease(event);
-        }
-        CFRelease(source);
-    }
+    double mouseX = 0, mouseY = 0;
+    bool haveMouse = Platform_GetMousePosition(&mouseX, &mouseY);
 
-    bool d1Pressed = IsKeyHeld(KeyNameToKeyCode(g_config.portal.hotkey1));
-    bool d2Pressed = IsKeyHeld(KeyNameToKeyCode(g_config.portal.hotkey2));
-    bool d0Pressed = IsKeyHeld(KeyNameToKeyCode(g_config.portal.hotkey0));
+    bool d1Pressed = Platform_IsKeyPressed(KeyNameToKeyCode(g_config.portal.hotkey1));
+    bool d2Pressed = Platform_IsKeyPressed(KeyNameToKeyCode(g_config.portal.hotkey2));
+    bool d0Pressed = Platform_IsKeyPressed(KeyNameToKeyCode(g_config.portal.hotkey0));
 
     if (d1Pressed && !s_p1Pressed) {
         s_p1Pressed = true;
-        state->portalA.x = haveMouse ? (float)mousePos.x : goose->pos.x;
-        state->portalA.y = haveMouse ? (float)mousePos.y : goose->pos.y;
+        state->portalA.x = haveMouse ? (float)mouseX : goose->pos.x;
+        state->portalA.y = haveMouse ? (float)mouseY : goose->pos.y;
         state->portalA.active = true;
         state->portalA.portalId = 1;
         fprintf(stderr, "[Portal] Portal 1 placed at (%.0f, %.0f)\n", state->portalA.x, state->portalA.y);
@@ -126,8 +111,8 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
     }
     if (d2Pressed && !s_p2Pressed) {
         s_p2Pressed = true;
-        state->portalB.x = haveMouse ? (float)mousePos.x : goose->pos.x;
-        state->portalB.y = haveMouse ? (float)mousePos.y : goose->pos.y;
+        state->portalB.x = haveMouse ? (float)mouseX : goose->pos.x;
+        state->portalB.y = haveMouse ? (float)mouseY : goose->pos.y;
         state->portalB.active = true;
         state->portalB.portalId = 2;
         fprintf(stderr, "[Portal] Portal 2 placed at (%.0f, %.0f)\n", state->portalB.x, state->portalB.y);
@@ -162,6 +147,14 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
 
 static void render(Goose* goose, BehaviorContext& ctx, IRenderer* irenderer) {
     (void)goose; (void)ctx; (void)irenderer;
+}
+
+// Test helper: reset all static state between test cases
+void Portal_ResetForTest() {
+    s_portalsOn = true;
+    s_p0Pressed = false;
+    s_p1Pressed = false;
+    s_p2Pressed = false;
 }
 
 static void cleanup(BehaviorContext& ctx) {

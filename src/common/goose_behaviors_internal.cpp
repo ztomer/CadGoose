@@ -10,15 +10,6 @@
 
 static inline double Rand01() { return static_cast<double>(rng_util::RandRange(1000)) / 1000.0; }
 
-static FILE* GetDebugLog() {
-    static FILE* f = nullptr;
-    if (!f) {
-        f = fopen("/tmp/goose_debug.log", "a");
-        if (!f) f = stderr;
-    }
-    return f;
-}
-
 Vector2 GetSnatchForward(float dir, const Vector2& isoScale) {
     float rad = dir * DEG_TO_RAD;
     return {std::cos(rad) * isoScale.x, std::sin(rad) * isoScale.y};

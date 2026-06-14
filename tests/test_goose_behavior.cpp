@@ -6,8 +6,9 @@
 #include "goose_math.h"
 #include "goose.h"
 #include "world.h"
-#include "assets.h"
+#include "actor.h"
 #include "config.h"
+#include "ai_text_meme.h"
 #include "actor.h"
 #include "actor_dropped_item.h"
 
@@ -723,4 +724,131 @@ TEST(GooseBehaviorDetail, HandleReturningDiscardsNonFiniteItem) {
     g.Update(0.1, 0.0, 1920, 1080, CursorState{});
     EXPECT_EQ(g.heldItem, nullptr);
     EXPECT_EQ(g.state, GooseState::WANDER);
+}
+
+TEST(GooseBehaviorDetail, HandleFetchingForcedText) {
+    Goose g(440, "FetchForced", 1920, 1080);
+    g.state = GooseState::FETCHING;
+    g.pos = {500, 500};
+    g.target = {500, 500};
+    g.forcedText = "forced text item";
+    g.forceItemFetch = 0;
+    g.cursorChaseChance = 0;
+    g.attackMouseBias = 0;
+
+    g.Update(0.1, 0.0, 1920, 1080, CursorState{});
+    EXPECT_EQ(g.state, GooseState::RETURNING);
+    ASSERT_NE(g.heldItem, nullptr);
+    EXPECT_TRUE(g.forcedText.empty());
+    EXPECT_EQ(g.forceItemFetch, -1);
+}
+
+TEST(GooseBehaviorDetail, HandleFetchingAiTextFromQueue) {
+    AI_TextMeme_Reset();
+    AI_TextMeme_Inject("AI generated text");
+
+    Goose g(441, "FetchAI", 1920, 1080);
+    g.state = GooseState::FETCHING;
+    g.pos = {500, 500};
+    g.target = {500, 500};
+    g.forceItemFetch = 1;
+    g.cursorChaseChance = 0;
+    g.attackMouseBias = 0;
+
+    g.Update(0.1, 0.0, 1920, 1080, CursorState{});
+    EXPECT_EQ(g.state, GooseState::RETURNING);
+    ASSERT_NE(g.heldItem, nullptr);
+    EXPECT_EQ(g.forceItemFetch, -1);
+
+    AI_TextMeme_Reset();
+}
+
+TEST(GooseBehaviorDetail, HandleFetchingFallbackFetch) {
+    Goose g(442, "FetchFallback", 1920, 1080);
+    g.state = GooseState::FETCHING;
+    g.pos = {500, 500};
+    g.target = {500, 500};
+    g.forceItemFetch = 99;
+    g.cursorChaseChance = 0;
+    g.attackMouseBias = 0;
+
+    g.Update(0.1, 0.0, 1920, 1080, CursorState{});
+    EXPECT_EQ(g.state, GooseState::RETURNING);
+    ASSERT_NE(g.heldItem, nullptr);
+    EXPECT_EQ(g.forceItemFetch, -1);
+}
+
+TEST(GooseBehaviorDetail, HandleReturningDropsToyItem) {
+    ActorManager::Instance().destroyAllOfType("goose");
+
+    Goose g(443, "DropToy", 1920, 1080);
+    g.state = GooseState::RETURNING;
+    g.pos = {500, 500};
+    g.target = {500, 500};
+    g.heldItem = g_assets.CreateToyItem(false);
+    g.cursorChaseChance = 0;
+    g.attackMouseBias = 0;
+
+    g.Update(0.1, 0.0, 1920, 1080, CursorState{});
+    EXPECT_EQ(g.state, GooseState::WANDER);
+    EXPECT_EQ(g.heldItem, nullptr);
+}
+
+TEST(GooseBehaviorDetail, WanderHonkTrigger) {
+    Goose g(450, "WanderHonk", 1920, 1080);
+    g.state = GooseState::WANDER;
+    g.pos = {500, 500};
+    g.target = {500, 500};
+    g.cursorChaseChance = 0;
+    g.attackMouseBias = 0;
+
+    float origDivisor = g_config.honk.wanderHonkDivisor;
+    g_config.honk.wanderHonkDivisor = 1; // RandRange(1) === 0, guaranteed honk
+
+    g.lastDropTime = 0.0;
+    g.randomOffset = 1000.0; // prevent fetch (cooldown won't have elapsed)
+
+    CursorState c;
+    g.Update(0.016, 0.1, 1920, 1080, c);
+    EXPECT_EQ(g.state, GooseState::WANDER);
+
+    g_config.honk.wanderHonkDivisor = origDivisor;
+}
+
+TEST(GooseBehaviorDetail, WanderHeistPath) {
+    bool origMemes = g_config.general.memesEnabled;
+    g_config.general.memesEnabled = true;
+
+    ItemData* data = g_assets.GetRandomMeme(1920, 1080, 0.1f);
+    ASSERT_NE(data, nullptr);
+
+    DroppedItem drop;
+    drop.data = data;
+    drop.pos = {100, 100};
+    drop.rotation = 0.0f;
+    drop.timeDropped = 0;
+    drop.pinned = false;
+    new DroppedItemActor(drop);
+
+    float origHeistPct = g_config.item.heistChancePercent;
+    g_config.item.heistChancePercent = 100;
+
+    Goose g(451, "WanderHeist", 1920, 1080);
+    g.state = GooseState::WANDER;
+    g.pos = {500, 500};
+    g.target = {500, 500};
+    g.cursorChaseChance = 0;
+    g.attackMouseBias = 0;
+    g.memeFetchBias = 0;
+    g.noteFetchBias = 0;
+    g.lastDropTime = 0.0;
+    g.randomOffset = 1000.0;
+
+    CursorState c;
+    g.Update(0.016, 0.1, 1920, 1080, c);
+    EXPECT_EQ(g.state, GooseState::WANDER);
+
+    ActorManager::Instance().removeAllDroppedItems();
+    g_config.item.heistChancePercent = origHeistPct;
+    g_config.general.memesEnabled = origMemes;
 }

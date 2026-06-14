@@ -69,6 +69,8 @@ void FlowerActor::render(IRenderer* renderer) {
     if (!m_active || m_growth < GROWTH_THRESHOLD) return;
 
 #ifdef __APPLE__
+    if (getenv("CADGOOSE_HEADLESS_TEST")) return;
+
     float winSize = m_stemHeight + m_petalSize * 2.0f + 10.0f;
     float winX = m_position.x - winSize / 2.0f;
     float winY = m_position.y - m_stemHeight - m_petalSize * 2.0f;

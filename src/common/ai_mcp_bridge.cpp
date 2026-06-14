@@ -90,7 +90,7 @@ bool AI_TryMCPCommand(const std::string& message, std::string& response) {
         if (result.find("error") != std::string::npos) {
             response = "HONK! HONK! (sending honk: " + result + ")";
         } else {
-            response = "*HONK!* 🦆";
+            response = "*HONK!*";
         }
         return true;
     }

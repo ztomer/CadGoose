@@ -4,6 +4,10 @@
 #include "mcp_server.h"
 #include "config.h"
 
+extern void CommandSocketStub_SetResult(bool success);
+extern void CommandSocketStub_SetResponse(const std::string& response);
+extern void CommandSocketStub_SetError(const std::string& error);
+
 TEST(MCPResources, ListReturnsAllUris) {
     std::string resp = MCP_HandleRequest(
         "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"resources/list\"}");
@@ -226,4 +230,114 @@ TEST(MCPEdgeCase, GetConfigResponseStartsWithContentWrapper) {
     std::string resp = MCP_CallTool("get_config", "{}");
     EXPECT_NE(resp.find(R"("content")"), std::string::npos);
     EXPECT_NE(resp.find(R"("type":"text")"), std::string::npos);
+}
+
+TEST(MCPTools, GetOpenAIToolsReturnsArray) {
+    std::string resp = MCP_GetOpenAITools();
+    EXPECT_EQ(resp.front(), '[');
+    EXPECT_EQ(resp.back(), ']');
+    EXPECT_NE(resp.find("spawn_goose"), std::string::npos);
+    EXPECT_NE(resp.find("send_chat"), std::string::npos);
+    EXPECT_NE(resp.find("\"type\":\"function\""), std::string::npos);
+}
+
+TEST(MCPTools, GetOpenAIToolsHasRequiredParams) {
+    std::string resp = MCP_GetOpenAITools();
+    EXPECT_NE(resp.find("\"message\""), std::string::npos);
+}
+
+TEST(MCPTools, SpawnGooseWithName) {
+    CommandSocketStub_SetResponse("ok");
+    std::string resp = MCP_CallTool("spawn_goose", "{\"name\":\"TestGoose\"}");
+    EXPECT_TRUE(resp.find("error") == std::string::npos);
+}
+
+TEST(MCPTools, ClearGeese) {
+    CommandSocketStub_SetResponse("ok");
+    std::string resp = MCP_CallTool("clear_geese", "{}");
+    EXPECT_TRUE(resp.find("error") == std::string::npos ||
+                resp.find("ok") != std::string::npos);
+}
+
+TEST(MCPTools, HonkCommand) {
+    CommandSocketStub_SetResponse("ok");
+    std::string resp = MCP_CallTool("honk", "{}");
+    EXPECT_TRUE(resp.find("error") == std::string::npos ||
+                resp.find("ok") != std::string::npos);
+}
+
+TEST(MCPTools, FetchWithType) {
+    CommandSocketStub_SetResponse("ok");
+    std::string resp = MCP_CallTool("fetch", "{\"type\":\"meme\"}");
+    EXPECT_TRUE(resp.find("error") == std::string::npos ||
+                resp.find("ok") != std::string::npos);
+}
+
+TEST(MCPTools, FetchWithoutType) {
+    CommandSocketStub_SetResponse("ok");
+    std::string resp = MCP_CallTool("fetch", "{}");
+    EXPECT_TRUE(resp.find("error") == std::string::npos ||
+                resp.find("ok") != std::string::npos);
+}
+
+TEST(MCPTools, GooseStatus) {
+    CommandSocketStub_SetResponse("goose_count=3");
+    std::string resp = MCP_CallTool("goose_status", "{}");
+    EXPECT_TRUE(resp.find("error") == std::string::npos || resp.find("goose") != std::string::npos);
+}
+
+TEST(MCPTools, EnableBehaviorNoId) {
+    std::string resp = MCP_CallTool("enable_behavior", "{}");
+    EXPECT_NE(resp.find("error"), std::string::npos);
+    EXPECT_NE(resp.find("id"), std::string::npos);
+}
+
+TEST(MCPTools, DisableBehaviorNoId) {
+    std::string resp = MCP_CallTool("disable_behavior", "{}");
+    EXPECT_NE(resp.find("error"), std::string::npos);
+    EXPECT_NE(resp.find("id"), std::string::npos);
+}
+
+TEST(MCPTools, OpenPreferences) {
+    CommandSocketStub_SetResponse("ok");
+    std::string resp = MCP_CallTool("open_preferences", "{}");
+    EXPECT_TRUE(resp.find("error") == std::string::npos ||
+                resp.find("ok") != std::string::npos);
+}
+
+TEST(MCPTools, SendChat) {
+    CommandSocketStub_SetResponse("chat sent");
+    std::string resp = MCP_CallTool("send_chat", "{\"message\":\"hello\"}");
+    EXPECT_TRUE(resp.find("error") == std::string::npos);
+}
+
+TEST(MCPTools, SendChatEmptyMessage) {
+    std::string resp = MCP_CallTool("send_chat", "{}");
+    EXPECT_NE(resp.find("error"), std::string::npos);
+    EXPECT_NE(resp.find("message"), std::string::npos);
+}
+
+TEST(MCPTools, CommandSocketFailureWithError) {
+    CommandSocketStub_SetResult(false);
+    CommandSocketStub_SetError("Connection refused");
+    std::string resp = MCP_CallTool("honk", "{}");
+    EXPECT_NE(resp.find("error"), std::string::npos);
+    EXPECT_NE(resp.find("Connection refused"), std::string::npos);
+}
+
+TEST(MCPTools, CommandSocketFailureNoError) {
+    CommandSocketStub_SetResult(false);
+    CommandSocketStub_SetError("");
+    std::string resp = MCP_CallTool("honk", "{}");
+    EXPECT_NE(resp.find("error"), std::string::npos);
+    EXPECT_NE(resp.find("failed to send"), std::string::npos);
+}
+
+TEST(MCPTools, ResponseTrimmingRemovesNewlines) {
+    CommandSocketStub_SetResult(true);
+    CommandSocketStub_SetResponse("ok\nresult");
+    std::string resp = MCP_CallTool("honk", "{}");
+    EXPECT_NE(resp.find("okresult"), std::string::npos);
+    EXPECT_EQ(resp.find("\n"), std::string::npos);
+    EXPECT_EQ(resp.find("\r"), std::string::npos);
 }

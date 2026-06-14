@@ -50,3 +50,19 @@ TEST_F(BabyStalinSpawnTest, NormalModeSpawnCanHonk) {
     ASSERT_NE(g, nullptr);
     EXPECT_TRUE(g->m_canHonk);
 }
+
+TEST_F(BabyStalinSpawnTest, SpawnBabyStalinDirect) {
+    Goose* g = AppActions_SpawnBabyStalin("direct_stalin");
+    ASSERT_NE(g, nullptr);
+    EXPECT_STREQ(g->type(), "baby_stalin");
+}
+
+TEST_F(BabyStalinSpawnTest, SpawnBabyStalinViaCommand) {
+    std::string r = AppActions_HandleCommand({"spawn_baby_stalin", "cmd_stalin"});
+    EXPECT_NE(r.find("ok id="), std::string::npos);
+}
+
+TEST_F(BabyStalinSpawnTest, SpawnStalinViaShortCommand) {
+    std::string r = AppActions_HandleCommand({"spawn_stalin"});
+    EXPECT_NE(r.find("ok id="), std::string::npos);
+}
