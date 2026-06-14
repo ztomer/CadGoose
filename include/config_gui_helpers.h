@@ -63,6 +63,8 @@ extern NSMutableArray* g_configItemsForAccess;
 @property (nonatomic, strong) NSPopUpButton* modelPopup;
 @property (nonatomic, strong) NSButton* refreshBtn;
 @property (nonatomic, strong) NSTextField* foundationNote;
+@property (nonatomic) CGFloat personalitySliderWidth;
+@property (nonatomic) CGFloat personalitySliderLeftX;
 - (NSInteger)currentProvider;
 - (void)setProvider:(NSInteger)idx;
 - (int)currentPort;

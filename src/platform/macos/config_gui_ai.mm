@@ -310,6 +310,8 @@ static constexpr float kRefreshBtnFontSize = 12.0f;
     CGFloat sliderLeftX = marginX + kEvilTitleWidth + 8;
     CGFloat sliderRightX = w - marginX - kPolandLabelWidth - 8 - kEvilValueWidth - 8;
     CGFloat sliderW = sliderRightX - sliderLeftX;
+    _personalitySliderWidth = sliderW;
+    _personalitySliderLeftX = sliderLeftX;
     NSSlider* evilSlider = [[NSSlider alloc] initWithFrame:NSMakeRect(sliderLeftX, y, sliderW, kSliderHeight)];
     evilSlider.minValue = kEvilMin;
     evilSlider.maxValue = kEvilMax;
@@ -420,8 +422,8 @@ static constexpr float kRefreshBtnFontSize = 12.0f;
 
     y -= kEvilSliderYGap;
 
-    // Temperature slider (compressed: leave 100px margin on right for value label)
-    NSSlider* tempSlider = [[NSSlider alloc] initWithFrame:NSMakeRect(marginX, y, w - marginX*2 - 100, kSliderHeight)];
+    // Temperature slider: same size and position as personality (evil) slider
+    NSSlider* tempSlider = [[NSSlider alloc] initWithFrame:NSMakeRect(_personalitySliderLeftX, y, _personalitySliderWidth, kSliderHeight)];
     tempSlider.minValue = kTempMin;
     tempSlider.maxValue = kTempMax;
     tempSlider.doubleValue = g_config.ai.textMemeTemperature;
