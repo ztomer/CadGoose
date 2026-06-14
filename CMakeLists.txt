@@ -319,7 +319,6 @@ if(APPLE)
         tests/common/test_config_toggles.cpp
         tests/common/test_dropped_item_hit.cpp
         tests/common/test_ai_text_meme.cpp
-        tests/common/test_regression_portal_leaves_honk.cpp
         tests/common/test_actor_manager.cpp
         tests/common/test_app_actions.cpp
         tests/common/test_app_cli.cpp
@@ -527,8 +526,58 @@ if(APPLE)
     # with `./build/CadGooseTests` on a machine with a display.
     enable_testing()
     add_test(NAME CadGooseTests
-             COMMAND CadGooseTests --gtest_filter=-WindowTrailTest.*:-ToysBehavior.ToysBehaviorRegistered:-PortalCleanup.BehaviorHasCleanupFunction:-StalinHonk.*
+             COMMAND CadGooseTests --gtest_filter=-WindowTrailTest.*
              WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+
+    # Order-dependent tests (registration tests that fail when run out of order).
+    # Excluded in CI via `ctest -E "order_dependent"`.
+    add_executable(CadGooseTestsOrderDependent
+        tests/common/test_config_toggles.cpp
+        tests/common/test_regression_portal_leaves_honk.cpp
+    )
+    target_enable_asan(CadGooseTestsOrderDependent)
+    add_dependencies(CadGooseTestsOrderDependent CompileSwiftFoundationLLM)
+    if(APPLE)
+        target_sources(CadGooseTestsOrderDependent PRIVATE
+            src/common/cursor_backend.cpp
+            src/common/world_utils.mm
+            src/platform/macos/window.mm
+            src/platform/macos/cursor_backend.mm
+            src/platform/macos/tick_manager.mm
+            src/platform/macos/item_drag_controller.mm
+            src/platform/macos/item_window.mm
+            src/platform/macos/item_window_test.mm
+            src/platform/macos/effect_window.mm
+            src/platform/macos/effect_registration.mm
+            src/platform/macos/effect_reg_footprint.mm
+            src/platform/macos/effect_reg_pomodorobed.mm
+            src/platform/macos/behavior_element_window.mm
+            src/platform/macos/audio.mm
+            tests/common/command_socket_stub.cpp
+            src/platform/macos/assets.mm
+        )
+    endif()
+    target_link_libraries(CadGooseTestsOrderDependent
+        toml11
+        ${COCOA_LIBRARY}
+        ${AVFOUNDATION_LIBRARY}
+        ${COREGRAPHICS_LIBRARY}
+        ${COREAUDIO_LIBRARY}
+        ${APPLICATIONSERVICES_LIBRARY}
+        ${CURL_LIBRARY}
+        ${COREML_LIBRARY}
+        ${COREVIDEO_LIBRARY}
+        ${QUARTZCORE_LIBRARY}
+        ${SWIFT_OBJ}
+        GTest::GTest
+        GTest::Main
+        Threads::Threads
+        ${MIMALLOC_LIBRARY}
+    )
+    add_test(NAME CadGooseTestsOrderDependent
+             COMMAND CadGooseTestsOrderDependent
+             WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+    set_tests_properties(CadGooseTestsOrderDependent PROPERTIES LABELS "order_dependent")
 
     # Standalone E2E targets — require a display server (ScreenCaptureKit).
     # Excluded in headless CI via `ctest -E "requires_display"`.
