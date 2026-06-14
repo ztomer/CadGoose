@@ -451,7 +451,20 @@ if(APPLE)
         )
     endif()
     
-    add_executable(CadGooseTests ${TEST_SOURCES_COMMON} ${TEST_SOURCES_PLATFORM})
+    # Object library with common test sources to avoid duplicate compilation
+    add_library(CadGooseTestCommon OBJECT ${TEST_SOURCES_COMMON})
+    target_include_directories(CadGooseTestCommon PUBLIC
+        ${CMAKE_CURRENT_SOURCE_DIR}/include
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/common
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/platform/macos
+        ${MIMALLOC_INCLUDE_DIR}
+    )
+    if(APPLE)
+        target_compile_options(CadGooseTestCommon PRIVATE -fobjc-arc -Wno-deprecated-literal-operator)
+    endif()
+    target_link_libraries(CadGooseTestCommon PUBLIC toml11 ${MIMALLOC_LIBRARY})
+
+    add_executable(CadGooseTests $<TARGET_OBJECTS:CadGooseTestCommon> ${TEST_SOURCES_PLATFORM})
     target_enable_asan(CadGooseTests)
     add_dependencies(CadGooseTests CompileSwiftFoundationLLM)
     
@@ -479,8 +492,9 @@ if(APPLE)
             tests/platform/macos/test_window_trail.mm
         src/platform/macos/assets.mm
         )
+    endif()
     target_link_libraries(CadGooseTests
-        toml11
+        CadGooseTestCommon
         ${COCOA_LIBRARY}
         ${AVFOUNDATION_LIBRARY}
         ${COREGRAPHICS_LIBRARY}
@@ -494,23 +508,8 @@ if(APPLE)
         GTest::GTest
         GTest::Main
         Threads::Threads
-        ${MIMALLOC_LIBRARY}
     )
     target_link_options(CadGooseTests PRIVATE "-L/usr/lib/swift")
-    else()
-        target_link_libraries(CadGooseTests
-            GTest::GTest
-            GTest::Main
-            Threads::Threads
-        )
-    endif()
-    
-    target_include_directories(CadGooseTests PUBLIC
-        ${CMAKE_CURRENT_SOURCE_DIR}/include
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/common
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/platform/macos
-        ${MIMALLOC_INCLUDE_DIR}
-    )
     
     if(APPLE)
         set_target_properties(CadGooseTests PROPERTIES
@@ -537,28 +536,8 @@ if(APPLE)
     )
     target_enable_asan(CadGooseTestsOrderDependent)
     add_dependencies(CadGooseTestsOrderDependent CompileSwiftFoundationLLM)
-    if(APPLE)
-        target_sources(CadGooseTestsOrderDependent PRIVATE
-            src/common/cursor_backend.cpp
-            src/common/world_utils.mm
-            src/platform/macos/window.mm
-            src/platform/macos/cursor_backend.mm
-            src/platform/macos/tick_manager.mm
-            src/platform/macos/item_drag_controller.mm
-            src/platform/macos/item_window.mm
-            src/platform/macos/item_window_test.mm
-            src/platform/macos/effect_window.mm
-            src/platform/macos/effect_registration.mm
-            src/platform/macos/effect_reg_footprint.mm
-            src/platform/macos/effect_reg_pomodorobed.mm
-            src/platform/macos/behavior_element_window.mm
-            src/platform/macos/audio.mm
-            tests/common/command_socket_stub.cpp
-            src/platform/macos/assets.mm
-        )
-    endif()
     target_link_libraries(CadGooseTestsOrderDependent
-        toml11
+        CadGooseTestCommon
         ${COCOA_LIBRARY}
         ${AVFOUNDATION_LIBRARY}
         ${COREGRAPHICS_LIBRARY}
@@ -572,8 +551,10 @@ if(APPLE)
         GTest::GTest
         GTest::Main
         Threads::Threads
-        ${MIMALLOC_LIBRARY}
     )
+    if(APPLE)
+        target_compile_options(CadGooseTestsOrderDependent PRIVATE -fobjc-arc -Wno-deprecated-literal-operator)
+    endif()
     add_test(NAME CadGooseTestsOrderDependent
              COMMAND CadGooseTestsOrderDependent
              WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
