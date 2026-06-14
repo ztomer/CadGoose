@@ -37,7 +37,6 @@ static constexpr float kNameFontSize = 14.0f;
 static constexpr float kDescFontSize = 11.0f;
 static constexpr float kDetailLabelFontSize = 12.0f;
 static constexpr float kDetailValueFontSize = 11.0f;
-static constexpr float kDescLabelVerticalOffset = 2.0f;
 
 bool s_getBoolForKey(const std::string& key) {
     const ConfigOption* opt = Config_FindOptionByKey(key);
@@ -374,10 +373,6 @@ void s_setBoolValue(const std::string& key, bool value) {
         NSString* descText = item[@"desc"] ?: @"";
         rowView.nameLabel.stringValue = nameText;
         rowView.descLabel.stringValue = descText;
-        NSFont* df = rowView.descLabel.font;
-        CGFloat descAvailableWidth = self.listWidth - self.descLabelX - kRowDescPaddingX;
-        CGFloat dw = MIN([descText sizeWithAttributes:@{NSFontAttributeName: df}].width + kRowDescPaddingX, descAvailableWidth);
-        rowView.descLabel.frame = NSMakeRect(self.descLabelX, (kRowHeight - kDescFontSize) / 2 - kDescLabelVerticalOffset, dw, kDescFontSize + kDescLabelVerticalOffset);
         rowView.iconLabel.stringValue = [BehaviorRowView iconForConfigKey:item[@"key"]];
         rowView.target = self;
         rowView.detailAction = @selector(showDetailForBehavior:);
