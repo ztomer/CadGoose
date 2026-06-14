@@ -520,6 +520,7 @@ if(APPLE)
         Threads::Threads
     )
     if(APPLE)
+        target_sources(CadGooseTestsOrderDependent PRIVATE ${TEST_SOURCES_PLATFORM})
         target_compile_options(CadGooseTestsOrderDependent PRIVATE -fobjc-arc -Wno-deprecated-literal-operator)
     endif()
     add_test(NAME CadGooseTestsOrderDependent
