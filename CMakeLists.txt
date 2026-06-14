@@ -417,6 +417,9 @@ if(APPLE)
         set(TEST_SOURCES_PLATFORM_COMMON
             src/common/cursor_backend.cpp
             src/common/world_utils.mm
+            src/common/goose_drawing.mm
+            src/common/item_renderer.mm
+            src/common/behaviors/ai_text_meme.mm
             src/platform/macos/window.mm
             src/platform/macos/cursor_backend.mm
             src/platform/macos/tick_manager.mm
