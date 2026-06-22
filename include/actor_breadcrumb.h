@@ -13,6 +13,7 @@ public:
     ~BreadcrumbActor() override;
 
     const char* type() const override { return "breadcrumb"; }
+    ActorType actorType() const override { return ActorType::Breadcrumb; }
     void tick(WorldContext& ctx, double dt, double time) override;
     void render(IRenderer* renderer) override;
     bool isAlive() const override { return m_active; }

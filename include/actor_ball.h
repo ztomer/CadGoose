@@ -18,6 +18,7 @@ public:
     ~BallActor() override;
 
     const char* type() const override { return "ball"; }
+    ActorType actorType() const override { return ActorType::Ball; }
     void tick(WorldContext& ctx, double dt, double time) override;
     void render(IRenderer* renderer) override;
     bool isAlive() const override { return m_active; }

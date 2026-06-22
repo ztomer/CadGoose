@@ -13,6 +13,7 @@ public:
     ~JailActor() override;
 
     const char* type() const override { return "jail"; }
+    ActorType actorType() const override { return ActorType::Jail; }
     void tick(WorldContext& ctx, double dt, double time) override;
     void render(IRenderer* renderer) override;
     bool isAlive() const override { return m_active; }

@@ -130,7 +130,7 @@ TEST(GooseStateMachine, FetchingCreatesItem) {
     g.state = GooseState::FETCHING;
     g.pos = {0, 0};
     g.target = {-40, 500};
-    g.forceItemFetch = 1;
+    g.forceItemFetch = FetchType::Text;
     g.memeFetchBias = 100;
     g.noteFetchBias = 100;
 

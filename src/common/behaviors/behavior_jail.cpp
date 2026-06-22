@@ -38,7 +38,7 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
         auto& mgr = ActorManager::Instance();
         for (int i = mgr.totalCount() - 1; i >= 0; i--) {
             Actor* a = mgr.getByIndex(i);
-            if (a && strcmp(a->type(), "jail") == 0) {
+            if (a && a->actorType() == ActorType::Jail) {
                 a->setActive(false);
             }
         }
@@ -65,7 +65,7 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
                 auto& mgr = ActorManager::Instance();
                 for (int i = mgr.totalCount() - 1; i >= 0; i--) {
                     Actor* a = mgr.getByIndex(i);
-                    if (a && strcmp(a->type(), "jail") == 0) {
+                    if (a && a->actorType() == ActorType::Jail) {
                         a->setActive(false);
                     }
                 }

@@ -11,6 +11,7 @@ public:
         : m_type(actorType), m_id(actorId), m_tickCount(0), m_renderCount(0), m_alive(true) {}
 
     const char* type() const override { return m_type; }
+    ActorType actorType() const override { return ActorType::Goose; }
     int id() const override { return m_id; }
     bool isAlive() const override { return m_alive; }
     void setAlive(bool alive) { m_alive = alive; }

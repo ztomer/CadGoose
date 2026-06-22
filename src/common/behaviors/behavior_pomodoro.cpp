@@ -189,7 +189,7 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
             }
             goose->state = GooseState::WANDER;
         }
-        goose->forceItemFetch = -1;
+        goose->forceItemFetch = FetchType::Random;
 
         if (!state->isSleeping) {
             float bedMargin = kBedMarginX;

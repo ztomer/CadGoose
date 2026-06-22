@@ -7,5 +7,6 @@ void Audio_PlayGulag();
 void Audio_PlayBite();
 void Audio_PlayMudSquish();
 void Audio_PlayPat();
+void Audio_SetMuted(bool muted);
 
 #endif

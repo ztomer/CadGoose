@@ -27,7 +27,7 @@ static void render(Goose* goose, BehaviorContext& ctx, IRenderer* irenderer) {
     if (!irenderer || !s_hatImage) return;
     IRenderer& renderer = *irenderer;
 
-    float headScale = (std::strcmp(goose->type(), "baby_stalin") == 0) ? 2.0f : 1.0f;
+    float headScale = (goose->actorType() == ActorType::BabyStalin) ? 2.0f : 1.0f;
     float hatSize = g_config.behaviors.hats.sizeX * headScale;
     float offsetX = g_config.behaviors.hats.offsetX * headScale;
     float offsetY = g_config.behaviors.hats.offsetY * headScale;

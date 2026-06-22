@@ -109,7 +109,7 @@ TEST_F(BehaviorJailTest, OKeyPlacesJailAtCursor) {
     auto& mgr = ActorManager::Instance();
     for (int i = 0; i < mgr.totalCount(); i++) {
         Actor* a = mgr.getByIndex(i);
-        if (a && strcmp(a->type(), "jail") == 0) {
+        if (a && a->actorType() == ActorType::Jail) {
             jailFound = true;
             EXPECT_FLOAT_EQ(a->position().x, 300);
             EXPECT_FLOAT_EQ(a->position().y, 400);

@@ -6,6 +6,7 @@ class TestActor : public Actor {
 public:
     TestActor() : Actor() {}
     const char* type() const override { return "test"; }
+    ActorType actorType() const override { return ActorType::Goose; }
     void tick(WorldContext&, double, double) override {}
     void render(IRenderer*) override {}
     bool isAlive() const override { return true; }

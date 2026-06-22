@@ -35,7 +35,7 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
     auto& mgr = ActorManager::Instance();
 
     // Count active toys
-    int activeCount = mgr.countByType("toy");
+    int activeCount = mgr.countByType(ActorType::Toy);
 
     // Spawn new toy if needed
     static double lastSpawnTime = 0;
@@ -63,10 +63,9 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
     for (int i = 0; i < mgr.totalCount(); i++) {
         Actor* a = mgr.getByIndex(i);
         if (!a) continue;
-        if (strcmp(a->type(), "toy") != 0) continue;
+        if (a->actorType() != ActorType::Toy) continue;
 
-        ToyActor* toy = dynamic_cast<ToyActor*>(a);
-        if (!toy) continue;
+        ToyActor* toy = static_cast<ToyActor*>(a);
         if (!toy->isAlive()) continue;
 
         float dist = Vector2::Distance(goose->pos, toy->position().toVector2());

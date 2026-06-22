@@ -278,7 +278,7 @@ TEST(Integration, Goose_ReturningItem) {
     g.state = GooseState::FETCHING;
     g.pos = {100, 100};
     g.target = {100, 100};
-    g.forceItemFetch = 0;
+    g.forceItemFetch = FetchType::Meme;
 
     CursorState c;
 
@@ -313,7 +313,7 @@ TEST(GooseStateMachine, FetchStartTimeSetOnForceFetch) {
     g.cursorChaseChance = 0;
     g.attackMouseBias = 0;
 
-    g.ForceFetch(0, 1920, 1080, 42.0);
+    g.ForceFetch(FetchType::Meme, 1920, 1080, 42.0);
     EXPECT_EQ(g.state, GooseState::FETCHING);
     // Target should be off-screen (one of 4 sides)
     bool offScreen = g.target.x < 0 || g.target.x > 1920 || g.target.y < 0 || g.target.y > 1080;
@@ -339,19 +339,19 @@ TEST(GooseStateMachine, FetchTimeoutWorks) {
     g.state = GooseState::FETCHING;
     g.pos = {1000, 500};
     g.target = {1000, 500};
-    g.forceItemFetch = 0;
+    g.forceItemFetch = FetchType::Meme;
 
     float origCooldown = g_config.item.fetchCooldown;
     g_config.item.fetchCooldown = 1.0f;
 
     CursorState c;
     // ForceFetch with positive time sets fetchStartTime
-    g.ForceFetch(0, 1920, 1080, 1.0);
+    g.ForceFetch(FetchType::Meme, 1920, 1080, 1.0);
 
     // Tick at time well beyond cooldown*4 — should trigger timeout
     g.Update(0.1, 100.0, 1920, 1080, c);
     EXPECT_EQ(g.state, GooseState::WANDER) << "Should have timed out of FETCHING";
-    EXPECT_EQ(g.forceItemFetch, -1) << "Should have cleared forceItemFetch on timeout";
+    EXPECT_EQ(g.forceItemFetch, FetchType::Random) << "Should have cleared forceItemFetch on timeout";
 
     g_config.item.fetchCooldown = origCooldown;
 }
@@ -474,7 +474,7 @@ TEST(GooseBehaviorDetail, ForceFetchTextSetsForcedText) {
     g.ForceFetchText("hello world", 1920, 1080);
     EXPECT_EQ(g.state, GooseState::FETCHING);
     EXPECT_EQ(g.forcedText, "hello world");
-    EXPECT_EQ(g.forceItemFetch, 1);
+    EXPECT_EQ(g.forceItemFetch, FetchType::Text);
 }
 
 TEST(GooseBehaviorDetail, ForceWanderClearsState) {
@@ -675,7 +675,7 @@ TEST(GooseBehaviorDetail, Wander_TextOnlyFetch) {
     CursorState c;
     g.Update(0.016, 0.0, 1920, 1080, c);
     EXPECT_EQ(g.state, GooseState::FETCHING);
-    EXPECT_EQ(g.forceItemFetch, 1); // text-only
+    EXPECT_EQ(g.forceItemFetch, FetchType::Text); // text-only
 
     g_config.general.memesEnabled = origMemes;
 }
@@ -687,7 +687,7 @@ TEST(GooseBehaviorDetail, HandleFetchingClearsExistingHeldItem) {
     g.state = GooseState::FETCHING;
     g.pos = {500, 500};
     g.target = {500, 500};
-    g.forceItemFetch = 2;
+    g.forceItemFetch = FetchType::TestImage;
     g.heldItem = g_assets.GetRandomMeme(1920, 1080, 0.1f);
     g.cursorChaseChance = 0;
     g.attackMouseBias = 0;
@@ -702,7 +702,7 @@ TEST(GooseBehaviorDetail, HandleFetchingTestImage) {
     g.state = GooseState::FETCHING;
     g.pos = {500, 500};
     g.target = {500, 500};
-    g.forceItemFetch = 2;
+    g.forceItemFetch = FetchType::TestImage;
     g.cursorChaseChance = 0;
     g.attackMouseBias = 0;
 
@@ -732,7 +732,7 @@ TEST(GooseBehaviorDetail, HandleFetchingForcedText) {
     g.pos = {500, 500};
     g.target = {500, 500};
     g.forcedText = "forced text item";
-    g.forceItemFetch = 0;
+    g.forceItemFetch = FetchType::Meme;
     g.cursorChaseChance = 0;
     g.attackMouseBias = 0;
 
@@ -740,7 +740,7 @@ TEST(GooseBehaviorDetail, HandleFetchingForcedText) {
     EXPECT_EQ(g.state, GooseState::RETURNING);
     ASSERT_NE(g.heldItem, nullptr);
     EXPECT_TRUE(g.forcedText.empty());
-    EXPECT_EQ(g.forceItemFetch, -1);
+    EXPECT_EQ(g.forceItemFetch, FetchType::Random);
 }
 
 TEST(GooseBehaviorDetail, HandleFetchingAiTextFromQueue) {
@@ -751,14 +751,14 @@ TEST(GooseBehaviorDetail, HandleFetchingAiTextFromQueue) {
     g.state = GooseState::FETCHING;
     g.pos = {500, 500};
     g.target = {500, 500};
-    g.forceItemFetch = 1;
+    g.forceItemFetch = FetchType::Text;
     g.cursorChaseChance = 0;
     g.attackMouseBias = 0;
 
     g.Update(0.1, 0.0, 1920, 1080, CursorState{});
     EXPECT_EQ(g.state, GooseState::RETURNING);
     ASSERT_NE(g.heldItem, nullptr);
-    EXPECT_EQ(g.forceItemFetch, -1);
+    EXPECT_EQ(g.forceItemFetch, FetchType::Random);
 
     AI_TextMeme_Reset();
 }
@@ -768,14 +768,14 @@ TEST(GooseBehaviorDetail, HandleFetchingFallbackFetch) {
     g.state = GooseState::FETCHING;
     g.pos = {500, 500};
     g.target = {500, 500};
-    g.forceItemFetch = 99;
+    g.forceItemFetch = static_cast<FetchType>(99);
     g.cursorChaseChance = 0;
     g.attackMouseBias = 0;
 
     g.Update(0.1, 0.0, 1920, 1080, CursorState{});
     EXPECT_EQ(g.state, GooseState::RETURNING);
     ASSERT_NE(g.heldItem, nullptr);
-    EXPECT_EQ(g.forceItemFetch, -1);
+    EXPECT_EQ(g.forceItemFetch, FetchType::Random);
 }
 
 TEST(GooseBehaviorDetail, HandleReturningDropsToyItem) {

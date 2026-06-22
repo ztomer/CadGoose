@@ -152,10 +152,10 @@ CursorAction Goose::UpdateBehaviors(double dt, double time, int w, int h, const 
         if (fetchDuration > g_config.item.fetchCooldown * 4.0f) {
             FILE* df = GetDebugLog();
             fprintf(df, "[FETCH] t=%.1f g%d: fetch TIMEOUT (%.1fs > %.1fs), forceItemFetch=%d -> WANDER\n",
-                    time, id, fetchDuration, g_config.item.fetchCooldown * 4.0f, forceItemFetch);
+                    time, id, fetchDuration, g_config.item.fetchCooldown * 4.0f, static_cast<int>(forceItemFetch));
             state = GooseState::WANDER;
             PickNewTarget(w, h);
-            forceItemFetch = -1;
+            forceItemFetch = FetchType::Random;
             fetchStartTime = -999.0;
         }
     }

@@ -13,6 +13,7 @@ public:
     ~FlowerActor() override;
 
     const char* type() const override { return "flower"; }
+    ActorType actorType() const override { return ActorType::Flower; }
     void tick(WorldContext& ctx, double dt, double time) override;
     void render(IRenderer* renderer) override;
     bool isAlive() const override { return m_active; }

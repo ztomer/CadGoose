@@ -130,7 +130,7 @@ void tryPickupItem(Goose& g, double time, int w, int h) {
 
 void handleFetching(Goose& g, double time, int w, int h) {
     FETCH_LOG("[FETCH] handleFetching g%d called state=%d forceItemFetch=%d forcedTextEmpty=%d\n",
-            g.id, (int)g.state, g.forceItemFetch, g.forcedText.empty());
+            g.id, (int)g.state, static_cast<int>(g.forceItemFetch), g.forcedText.empty());
 
     if (g.heldItem) {
         FETCH_LOG("[FETCH] handleFetching g%d deleting existing heldItem\n", g.id);
@@ -141,14 +141,10 @@ void handleFetching(Goose& g, double time, int w, int h) {
     if (!g.forcedText.empty()) {
         FETCH_LOG("[FETCH] handleFetching g%d creating text item from forcedText (len=%zu)\n", g.id, g.forcedText.size());
         g.heldItem = g_assets.CreateTextItem(g.forcedText);
-    } else if (g.forceItemFetch == 0) {
+    } else if (g.forceItemFetch == FetchType::Meme) {
         FETCH_LOG("[FETCH] handleFetching g%d getting random meme\n", g.id);
-        // 0.2 of screen-points: macOS `frame.size` is in points (post-Retina),
-        // so 0.1 yielded memes ~half the original DesktopGoose size on
-        // modern displays. 0.2 brings them back to the original perceived
-        // scale on the M4 Max 14" (1512pt wide -> ~300pt max meme).
         g.heldItem = g_assets.GetRandomMeme(w, h, 0.2f);
-    } else if (g.forceItemFetch == 1) {
+    } else if (g.forceItemFetch == FetchType::Text) {
         FETCH_LOG("[FETCH] handleFetching g%d dequeuing AI text\n", g.id);
         std::string text = AI_TextMeme_Dequeue();
         if (!text.empty()) {
@@ -158,18 +154,18 @@ void handleFetching(Goose& g, double time, int w, int h) {
             FETCH_LOG("[FETCH] handleFetching g%d AI text empty, falling back to file text\n", g.id);
             g.heldItem = g_assets.GetRandomText();
         }
-    } else if (g.forceItemFetch == 2) {
+    } else if (g.forceItemFetch == FetchType::TestImage) {
         FETCH_LOG("[FETCH] handleFetching g%d creating test image\n", g.id);
         g.heldItem = g_assets.CreateTestImage(100, 50);
     } else {
-        FETCH_LOG("[FETCH] handleFetching g%d random fetch (forceItemFetch=%d)\n", g.id, g.forceItemFetch);
+        FETCH_LOG("[FETCH] handleFetching g%d random fetch (forceItemFetch=%d)\n", g.id, static_cast<int>(g.forceItemFetch));
         g.heldItem = (rng_util::RandRange(2) == 0) ? g_assets.GetRandomMeme() : g_assets.GetRandomText();
     }
 
     FETCH_LOG("[FETCH] handleFetching g%d heldItem=%p after creation\n",
             g.id, (void*)g.heldItem);
 
-    g.forceItemFetch = -1;
+    g.forceItemFetch = FetchType::Random;
     g.forcedText.clear();
 
     if (g.heldItem) {

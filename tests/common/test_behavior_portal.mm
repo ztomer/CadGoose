@@ -85,7 +85,7 @@ TEST_F(BehaviorPortalTest, KeyOnePlacesPortalA) {
     auto& mgr = ActorManager::Instance();
     for (int i = 0; i < mgr.totalCount(); i++) {
         Actor* a = mgr.getByIndex(i);
-        if (a && strcmp(a->type(), "portal") == 0 && a->id() == 1) {
+        if (a && a->actorType() == ActorType::Portal && a->id() == 1) {
             actorFound = true;
             EXPECT_FLOAT_EQ(a->position().x, 300);
             EXPECT_FLOAT_EQ(a->position().y, 400);
@@ -114,7 +114,7 @@ TEST_F(BehaviorPortalTest, KeyTwoPlacesPortalB) {
     auto& mgr = ActorManager::Instance();
     for (int i = 0; i < mgr.totalCount(); i++) {
         Actor* a = mgr.getByIndex(i);
-        if (a && strcmp(a->type(), "portal") == 0 && a->id() == 2) {
+        if (a && a->actorType() == ActorType::Portal && a->id() == 2) {
             actorFound = true;
             EXPECT_FLOAT_EQ(a->position().x, 700);
             EXPECT_FLOAT_EQ(a->position().y, 800);
@@ -331,7 +331,7 @@ TEST_F(BehaviorPortalTest, CleanupRemovesPortalActors) {
     int portalCount = 0;
     for (int i = 0; i < ActorManager::Instance().totalCount(); i++) {
         Actor* a = ActorManager::Instance().getByIndex(i);
-        if (a && strcmp(a->type(), "portal") == 0) portalCount++;
+        if (a && a->actorType() == ActorType::Portal) portalCount++;
     }
     EXPECT_GT(portalCount, 0);
 
@@ -341,7 +341,7 @@ TEST_F(BehaviorPortalTest, CleanupRemovesPortalActors) {
     portalCount = 0;
     for (int i = 0; i < ActorManager::Instance().totalCount(); i++) {
         Actor* a = ActorManager::Instance().getByIndex(i);
-        if (a && strcmp(a->type(), "portal") == 0) portalCount++;
+        if (a && a->actorType() == ActorType::Portal) portalCount++;
     }
     EXPECT_EQ(portalCount, 0);
 }
