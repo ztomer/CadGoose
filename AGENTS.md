@@ -33,6 +33,36 @@ brew install --cask tools/homebrew/cadgoose.rb   # Test the Homebrew Cask instal
   - **Release Loop Rule**: When doing a release, verify the remote GitHub Actions build succeeds end-to-end. If any failure occurs, cycle/iterate locally to fix the issues, push, and recreate the release tag until the build is perfectly green and the DMG compiles.
   - **Homebrew Update Rule**: Once the GHA CI is green and the release DMG is successfully generated and attached, update the Homebrew cask repository tap (`Casks/cadgoose.rb` in `ztomer/homebrew-tap`) with the new version and calculated DMG SHA-256 hash. Ensure this updates automatically through GHA or manually.
 
+## Session Summary (June 22e, 2026) — Algorithmic integrity review: 28 oracle tests + 1 fix, 0 regressions
+
+### What changed this session
+- **Algo review** applied the `algo-review` skill to 4 core algorithms: RingBuffer, ActorManager, Goose state machine (isTargetReached, ClampToScreen, handleReturning), and EventBus. All verified correct except one fix listed below.
+- **RingBuffer oracle tests (11 new)**: wrap-around size/order invariants, full-buffer overwrite, wrap-and-pop, wrap-iterator, clear-after-wrap, size-never-exceeds-capacity. `/Users/ztomer/Projects/CadGoose/tests/common/test_ring_buffer.cpp`
+- **ActorManager oracle tests (8 new)**: add-during-tick isolation, remove-non-existent, empty tick/render, multiple concurrent removals, add-remove-add during tick, findByType skipping inactive, destroyAllOfType specificity, geese-cache invalidation. `/Users/ztomer/Projects/CadGoose/tests/common/test_actor_manager.cpp`
+- **isTargetReached oracle tests (7 new)**: at-target, close, far, overshoot, overshoot-too-far, zero-velocity-within-threshold-bandwidth, strict-less-than-at-boundary. `/Users/ztomer/Projects/CadGoose/tests/test_goose_physics.cpp`
+- **ClampToScreen oracle tests (2 new)**: tiny-screen degenerate-case (documents inverted-bounds gap), fetch-state-expanded-bounds. `/Users/ztomer/Projects/CadGoose/tests/test_goose_physics.cpp`
+
+### Fix — handleReturning clamp ordering (goose_behaviors_fetch.cpp:194-203)
+- **Bug**: When a DroppedItem is wider than the screen (`itemHalf.x * 2 > w`), `maxX` could be negative and less than `minX` (0). The sequential min-then-max clamping produced `drop.pos.x = maxX` = negative (offscreen). Fixed by using `std::max(minX, ...)` for max bounds and `std::clamp` for a single correct result.
+
+### Algorithmic review — findings
+| Algorithm | Lines | Verdict | Notes |
+|-----------|-------|---------|-------|
+| **RingBuffer** | `ring_buffer.h` | ✅ correct | `back()` on empty returns stale slot (UB); all callers guard with `!empty()` |
+| **ActorManager tickAll** | `actor.cpp:23-43` | ✅ correct | Snapshot+existence pattern; dangling pointer never dereferenced |
+| **ActorManager cleanup** | `actor.cpp:45-55` | ✅ correct | stable_partition + erase is O(n); dead actors deleted after tick |
+| **isTargetReached** | `goose_behaviors_interact.cpp:31-39` | ✅ correct | Zero-vel, overshoot, at-target all handled. `Normalize({0,0})` returns `{0,0}` |
+| **ClampToScreen** | `goose_forces.cpp:77-121` | ✅ correct | Fetch expands bounds; non-fetch clamps tight. Degenerate case at tiny screens documented |
+| **EventBus Publish** | `event_bus.h:181-200` | ✅ correct | Snapshot+invoke pattern; handler can subscribe/unsubscribe during dispatch |
+| **EventBus Unsubscribe** | `event_bus.cpp:3-20` | ✅ correct | unique_lock excludes concurrent Publish; erase-remove on handler list |
+| **Config_Init** | `config.cpp:168-179` | ✅ correct | Mutex + atomic guard prevents reentrant init; lookup rebuild after registry init |
+| **Drag physics** | `goose.cpp:531-565` | ✅ correct | Spring+damping; NaN guard not present but only matters for degenerate rig configs |
+| **Seek/Separation/Curve forces** | `goose_forces.cpp` | ✅ correct | Zero-target, zero-vel, edge-avoid divide-by-zero all guarded |
+
+### Verification
+- **1520 tests, 0 failures** (excluding 4 pre-existing order-dependent: `BehaviorToggles.ToysBehaviorRegistered`, `PortalCleanup.BehaviorHasCleanupFunction`, `StalinHonk.*`, and display-dependent: WindowTrail, MCPIntegration, LocalLLMTest, AXTest, DraggingIntegration)
+- Same baseline preserved — no regressions
+
 ## Session Summary (June 13-14, 2026) — P0 .cpp coverage 94.00% → 94.60% + app_actions.cpp over 95%
 
 ### What changed this session
@@ -361,7 +391,7 @@ brew install --cask tools/homebrew/cadgoose.rb   # Test the Homebrew Cask instal
 - **renderer.h/renderer.mm deleted**: Placeholder files finally removed after Phase 3 cleanup. No replacement needed — Cocoa imports are direct.
 - **WindowManager stub removed**: No remaining callers. 3 active managers: `ItemWindowManager`, `EffectWindowManager`, `BehaviorElementWindowManager`.
 
-## Known Bugs (June 22, 2026)
+## Known Bugs (June 22e, 2026)
 
 - **Config generator** — Works correctly for registry generation. GUI generation intentionally skipped (incompatible with `config_gui.mm` key-based lookup architecture).
 - **g_world.droppedItems** — 127 references across codebase. `DroppedItemActor` scaffold ready for future migration.
