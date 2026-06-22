@@ -6,7 +6,6 @@
 #include "world.h"
 #include "goose_math.h"
 #include "renderer_interface.h"
-#include "cg_renderer.h"
 #include "behaviors/states/boredom_state.h"
 #include <cmath>
 

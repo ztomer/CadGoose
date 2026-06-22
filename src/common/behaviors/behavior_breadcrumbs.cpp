@@ -15,7 +15,6 @@
 #include "platform_input.h"
 #include <cmath>
 
-static void* s_crumbImage = nullptr;
 static bool s_wasKeyDown = false;
 static double s_lastKeyCheck = 0;
 static int s_nextCrumbId = 0;
@@ -25,9 +24,6 @@ static void LogCrumb(const char* msg) {
 }
 
 static void init(BehaviorContext& ctx) {
-    if (!s_crumbImage) {
-        s_crumbImage = g_assets.GetBehaviorImage("Assets/Images/OtherGfx/crumbs.png");
-    }
     s_wasKeyDown = false;
     s_lastKeyCheck = 0;
     s_nextCrumbId = 0;

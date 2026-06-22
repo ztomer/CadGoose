@@ -16,7 +16,6 @@
 #include "actor_toy.h"
 #include <cmath>
 #include <vector>
-#include <typeinfo>
 
 static constexpr int MAX_TOYS = 5;
 static constexpr float TOY_SPAWN_INTERVAL = 5.0f;
@@ -38,8 +37,8 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
     int activeCount = mgr.countByType(ActorType::Toy);
 
     // Spawn new toy if needed
-    static double lastSpawnTime = 0;
-    if (time - lastSpawnTime >= TOY_SPAWN_INTERVAL && activeCount < MAX_TOYS) {
+    auto* state = BehaviorStateManager::Instance().GetOrCreate<ToysState>(goose->id, "toys");
+    if (time - state->lastSpawnTime >= TOY_SPAWN_INTERVAL && activeCount < MAX_TOYS) {
         float margin = kToySpawnMargin;
         float screenW = (float)g_world.screenWidth;
         float screenH = (float)g_world.screenHeight;
@@ -53,7 +52,7 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
         ToyActor* toy = new ToyActor(type, spawnPos, s_nextToyId++);
         mgr.add(toy);
         EventBus::Instance().Publish(ToySpawnedEvent{spawnPos.x, spawnPos.y, static_cast<int>(type)});
-        lastSpawnTime = time;
+        state->lastSpawnTime = time;
     }
 
     // Find nearest active toy

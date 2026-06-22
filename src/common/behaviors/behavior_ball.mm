@@ -9,7 +9,7 @@
 #include "world.h"
 #include "actor.h"
 #include "actor_ball.h"
-#include "cursor_backend.h"
+#include "cursor_io.h"
 #include <cmath>
 
 static BallActor* s_ballActor = nullptr;
@@ -41,16 +41,17 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
     }
 
     // Check cursor kick
-    auto* backend = g_backendManager.GetActiveBackend();
-    if (backend) {
-        Vector2 cursorPos = backend->GetCursorPos();
-        s_ballActor->onCursorKick(cursorPos, time);
+    if (g_cursorProvider) {
+        CursorState cs = g_cursorProvider->Read();
+        if (cs.hasPos()) {
+            s_ballActor->onCursorKick(cs.position, time);
 
-        // If ball was kicked by cursor, update goose state
-        if (s_ballActor->wasKicked()) {
-            s_ballActor->clearKickedFlag();
-            if (goose->state == GooseState::WANDER) {
-                goose->state = GooseState::CHASE_CURSOR;
+            // If ball was kicked by cursor, update goose state
+            if (s_ballActor->wasKicked()) {
+                s_ballActor->clearKickedFlag();
+                if (goose->state == GooseState::WANDER) {
+                    goose->state = GooseState::CHASE_CURSOR;
+                }
             }
         }
     }

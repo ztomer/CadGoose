@@ -4,6 +4,12 @@
 #include <string>
 
 MacCursorBackend::MacCursorBackend() : m_eventSource(nullptr) {}
+MacCursorBackend::~MacCursorBackend() {
+    if (m_eventSource) {
+        CFRelease((CGEventSourceRef)m_eventSource);
+        m_eventSource = nullptr;
+    }
+}
 
 std::string MacCursorBackend::Name() const { return "MacCGEvent"; }
 
