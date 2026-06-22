@@ -7,6 +7,7 @@
 #include <vector>
 #include <cstring>
 #include <cstdio>
+#include <iostream>
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <unistd.h>
@@ -33,13 +34,14 @@ static std::thread g_serverThread;
 static std::atomic<bool> g_serverRunning{false};
 static int g_serverFd = -1;
 
-static void WriteAll(int fd, const std::string& data) {
+static bool WriteAll(int fd, const std::string& data) {
     size_t written = 0;
     while (written < data.size()) {
         ssize_t rc = write(fd, data.data() + written, data.size() - written);
-        if (rc <= 0) return;
+        if (rc <= 0) return false;
         written += (size_t)rc;
     }
+    return true;
 }
 
 static constexpr size_t kMaxRequestSize = 64 * 1024; // 64KB max request
@@ -49,11 +51,15 @@ static void HandleConnection(int clientFd) {
     char buffer[4096];
     while (true) {
         ssize_t rc = read(clientFd, buffer, sizeof(buffer) - 1);
-        if (rc <= 0) break;
-        buffer[rc] = '\0';
-        data += buffer;
+        if (rc == 0) break;
+        if (rc < 0) {
+            if (errno == EINTR) continue;
+            break;
+        }
+        data.append(buffer, (size_t)rc);
         if (data.size() > kMaxRequestSize) {
             fprintf(stderr, "[MCP] Request too large (%zu bytes), closing connection\n", data.size());
+            close(clientFd);
             return;
         }
         if (data.find('\n') != std::string::npos) break;
@@ -144,16 +150,22 @@ bool MCP_StartInternalServer() {
 
     const std::string socketPath = MCP_SOCKET_PATH;
 
+    struct sockaddr_un addr;
+    memset(&addr, 0, sizeof(addr));
+
+    if (socketPath.size() >= sizeof(addr.sun_path)) {
+        fprintf(stderr, "[MCP] Socket path too long: %zu\n", socketPath.size());
+        return false;
+    }
+
     g_serverFd = socket(AF_UNIX, SOCK_STREAM, 0);
     if (g_serverFd < 0) {
         fprintf(stderr, "[MCP] Failed to create socket\n");
         return false;
     }
 
-    struct sockaddr_un addr;
-    memset(&addr, 0, sizeof(addr));
     addr.sun_family = AF_UNIX;
-    strncpy(addr.sun_path, socketPath.c_str(), sizeof(addr.sun_path) - 1);
+    memcpy(addr.sun_path, socketPath.c_str(), socketPath.size() + 1);
 
     unlink(socketPath.c_str());
     if (bind(g_serverFd, (struct sockaddr*)&addr, sizeof(addr)) != 0) {
@@ -196,6 +208,7 @@ void MCP_StopInternalServer() {
     if (!g_serverRunning.exchange(false)) return;
 
     if (g_serverFd >= 0) {
+        shutdown(g_serverFd, SHUT_RDWR);
         close(g_serverFd);
         g_serverFd = -1;
     }
@@ -214,22 +227,14 @@ bool MCP_IsInternalRunning() {
 int MCP_RunStdioServer() {
     fprintf(stderr, "[MCP] Starting stdio MCP server\n");
     std::string buffer;
-    while (true) {
-        char c;
-        ssize_t rc = read(STDIN_FILENO, &c, 1);
-        if (rc <= 0) break;
-
-        if (c == '\n') {
-            if (!buffer.empty()) {
-                std::string response = MCP_HandleRequest(buffer);
-                if (!response.empty()) {
-                    WriteAll(STDOUT_FILENO, response);
-                    fflush(stdout);
-                }
-                buffer.clear();
+    while (std::getline(std::cin, buffer)) {
+        if (!buffer.empty()) {
+            std::string response = MCP_HandleRequest(buffer);
+            if (!response.empty()) {
+                std::string out = response + "\n";
+                WriteAll(STDOUT_FILENO, out);
+                fflush(stdout);
             }
-        } else {
-            buffer += c;
         }
     }
     return 0;

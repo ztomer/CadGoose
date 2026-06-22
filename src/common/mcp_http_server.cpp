@@ -5,6 +5,7 @@
 #include <string>
 #include <cstring>
 #include <cstdio>
+#include <cstdlib>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <unistd.h>
@@ -13,6 +14,8 @@ static std::thread g_httpThread;
 static std::atomic<bool> g_httpRunning{false};
 static int g_httpFd = -1;
 
+static constexpr size_t kHTTPMaxSize = 1024 * 1024; // 1MB max request
+
 static std::string ReadHTTP(int fd) {
     std::string data;
     char buf[4096];
@@ -20,6 +23,10 @@ static std::string ReadHTTP(int fd) {
     while (data.find("\r\n\r\n") == std::string::npos) {
         ssize_t rc = read(fd, buf, sizeof(buf));
         if (rc <= 0) return data;
+        if (data.size() + (size_t)rc > kHTTPMaxSize) {
+            fprintf(stderr, "[MCP-HTTP] Request too large, closing\n");
+            return "";
+        }
         data.append(buf, (size_t)rc);
     }
     // Parse Content-Length and read the body
@@ -28,12 +35,22 @@ static std::string ReadHTTP(int fd) {
         auto valStart = data.find_first_of("0123456789", clPos);
         auto valEnd = data.find_first_not_of("0123456789", valStart);
         if (valStart != std::string::npos) {
-            int cl = std::stoi(data.substr(valStart, valEnd - valStart));
+            char* end = nullptr;
+            long rawCl = strtol(data.c_str() + valStart, &end, 10);
+            if (end == data.c_str() + valStart || rawCl < 0 || (size_t)rawCl > kHTTPMaxSize) {
+                fprintf(stderr, "[MCP-HTTP] Invalid Content-Length\n");
+                return "";
+            }
+            size_t cl = (size_t)rawCl;
             size_t bodyStart = data.find("\r\n\r\n") + 4;
-            size_t needed = bodyStart + (size_t)cl;
+            size_t needed = bodyStart + cl;
             while (data.size() < needed) {
                 ssize_t n = read(fd, buf, sizeof(buf));
                 if (n <= 0) break;
+                if (data.size() + (size_t)n > kHTTPMaxSize) {
+                    fprintf(stderr, "[MCP-HTTP] Body too large\n");
+                    return "";
+                }
                 data.append(buf, (size_t)n);
             }
         }
@@ -102,7 +119,7 @@ bool MCP_StartHTTPServer() {
     struct sockaddr_in addr;
     memset(&addr, 0, sizeof(addr));
     addr.sin_family = AF_INET;
-    addr.sin_addr.s_addr = INADDR_ANY;
+    addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
     addr.sin_port = htons((uint16_t)g_config.ai.mcpPort);
 
     if (bind(g_httpFd, (struct sockaddr*)&addr, sizeof(addr)) != 0) {
@@ -143,6 +160,7 @@ void MCP_StopHTTPServer() {
     if (!g_httpRunning.exchange(false)) return;
 
     if (g_httpFd >= 0) {
+        shutdown(g_httpFd, SHUT_RDWR);
         close(g_httpFd);
         g_httpFd = -1;
     }

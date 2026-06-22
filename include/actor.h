@@ -23,6 +23,9 @@ public:
     // Unique ID within type (0 for singletons, index for multiples)
     virtual int id() const { return 0; }
 
+    // Type helpers (avoid RTTI / dynamic_cast overhead)
+    virtual bool isGoose() const { return false; }
+
     // Lifecycle
     virtual void tick(WorldContext& ctx, double dt, double time) = 0;
     virtual void render(IRenderer* renderer) = 0;

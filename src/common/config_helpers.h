@@ -58,7 +58,7 @@ inline bool get_float(const toml::basic_value<toml::type_config>& config, const 
         if (key_it->second.is_integer()) dest = static_cast<float>(toml::get<int>(key_it->second));
         else dest = toml::get<float>(key_it->second);
         return true;
-    } catch (...) {
+    } catch (const std::exception&) {
         return false;
     }
 }
@@ -73,7 +73,7 @@ inline bool get_string(const toml::basic_value<toml::type_config>& config, const
     try {
         dest = toml::get<std::string>(key_it->second);
         return true;
-    } catch (...) {
+    } catch (const std::exception&) {
         return false;
     }
 }
@@ -87,7 +87,7 @@ inline bool get_color_rgb(const toml::basic_value<toml::type_config>& config, co
         if (color_tbl.at("g").is_integer()) g = static_cast<float>(toml::get<int>(color_tbl.at("g"))); else g = toml::get<float>(color_tbl.at("g"));
         if (color_tbl.at("b").is_integer()) b = static_cast<float>(toml::get<int>(color_tbl.at("b"))); else b = toml::get<float>(color_tbl.at("b"));
         return true;
-    } catch (...) {
+    } catch (const std::exception&) {
         return false;
     }
 }
@@ -100,7 +100,7 @@ inline bool get_color_rgb_flat(const toml::basic_value<toml::type_config>& confi
         if (color_tbl.at("g").is_integer()) g = static_cast<float>(toml::get<int>(color_tbl.at("g"))); else g = toml::get<float>(color_tbl.at("g"));
         if (color_tbl.at("b").is_integer()) b = static_cast<float>(toml::get<int>(color_tbl.at("b"))); else b = toml::get<float>(color_tbl.at("b"));
         return true;
-    } catch (...) {
+    } catch (const std::exception&) {
         return false;
     }
 }
@@ -115,7 +115,7 @@ inline bool get_color_rgba(const toml::basic_value<toml::type_config>& config, c
         b = toml::get<float>(color_tbl.at("b"));
         a = toml::get<float>(color_tbl.at("a"));
         return true;
-    } catch (...) {
+    } catch (const std::exception&) {
         return false;
     }
 }
