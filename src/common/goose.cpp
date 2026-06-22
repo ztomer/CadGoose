@@ -9,9 +9,9 @@
 #include "goose_math.h"
 #include "world.h"
 #include "cursor_backend.h"
-#include "behaviors/states/jail_state.h"
 #include <cmath>
 #include <cstdio>
+#include <mutex>
 
 #ifdef __APPLE__
 #include "goose_drawing.h"
@@ -35,13 +35,15 @@ static constexpr float kShudderDirChangeThreshold = 90.0f;
 static constexpr int kNighttimeCheckIntervalSec = 60;
 
 static bool IsNighttime() {
+    static std::mutex s_mutex;
     static time_t s_lastCheck = 0;
     static bool s_isNight = false;
     time_t now = std::time(nullptr);
+    std::lock_guard<std::mutex> lock(s_mutex);
     if (now - s_lastCheck >= kNighttimeCheckIntervalSec) {
-        struct tm* tm_info = std::localtime(&now);
-        if (tm_info) {
-            s_isNight = (tm_info->tm_hour >= kNighttimeStartHour || tm_info->tm_hour < kNighttimeEndHour);
+        struct tm tm_info;
+        if (localtime_r(&now, &tm_info)) {
+            s_isNight = (tm_info.tm_hour >= kNighttimeStartHour || tm_info.tm_hour < kNighttimeEndHour);
         }
         s_lastCheck = now;
     }
@@ -563,9 +565,9 @@ void Goose::UpdateDrag(double dt) {
   if (Vector2::Length(dragVel) > g_config.physics.dragVelocityThreshold) {
       float targetRot = std::atan2(dragVel.y, dragVel.x);
       
-      float rotDiff = targetRot - dragRot;
-      while (rotDiff > PI) rotDiff -= kTwoPi;
-      while (rotDiff < -PI) rotDiff += kTwoPi;
+      float rotDiff = std::fmod(targetRot - dragRot + PI, kTwoPi);
+      if (rotDiff < 0) rotDiff += kTwoPi;
+      rotDiff -= PI;
       
       dragRot += rotDiff * g_config.physics.dragRotationSpeed * (float)dt;
   }
@@ -598,7 +600,6 @@ void Goose::drawBody(CGContextRef ctx) {
 #endif
 
 void Goose::render(IRenderer* renderer) {
-    if (g_cutoverMode) return;
     draw(renderer);
 }
 
@@ -606,22 +607,6 @@ void Goose::draw(IRenderer* renderer) {
 #ifdef __APPLE__
     CGContextRef ctx = (CGContextRef)renderer->nativeContext();
     if (!ctx) return;
-
-    // Track transition from held→null to correlate with window creation timing
-    static bool s_prevHeldItem = false;
-    static double s_lastHoldLog = 0;
-    bool nowHeld = (heldItem != nullptr);
-    if (s_prevHeldItem && !nowHeld) {
-        static mach_timebase_info_data_t info = {0};
-        if (info.denom == 0) mach_timebase_info(&info);
-        uint64_t now = mach_absolute_time();
-        double tMs = (double)now * (double)info.numer / (double)info.denom / 1e6;
-        if (tMs - s_lastHoldLog > 100.0) {
-            fprintf(stderr, "[DROP_TIMING] Goose::render g%d HELD_TRANSITION held->null t=%.6f\n", id, tMs);
-            s_lastHoldLog = tMs;
-        }
-    }
-    s_prevHeldItem = nowHeld;
 
     CGContextSaveGState(ctx);
     CGContextTranslateCTM(ctx, pos.x, pos.y);

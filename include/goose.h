@@ -35,6 +35,7 @@ struct Rig {
 
 class Goose : public Actor {
 public:
+    bool isGoose() const override { return true; }
     void PickNewTarget(int w, int h);
     
     int id;

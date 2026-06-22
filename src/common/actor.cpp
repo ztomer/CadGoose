@@ -24,7 +24,7 @@ void ActorManager::tickAll(WorldContext& ctx, double dt, double time) {
     std::vector<Actor*> snapshot = actors;
     for (auto* actor : snapshot) {
         if (std::find(actors.begin(), actors.end(), actor) != actors.end()) {
-            if (actor && actor->isActive()) {
+            if (actor && actor->isActive() && actor->isAlive()) {
                 actor->tick(ctx, dt, time);
             }
         }
@@ -46,10 +46,11 @@ void ActorManager::cleanup() {
     auto partition = std::stable_partition(actors.begin(), actors.end(),
         [](Actor* a) { return a->isAlive(); });
     bool changed = (partition != actors.end());
-    for (auto it = partition; it != actors.end(); ++it) {
-        delete *it;
-    }
+    std::vector<Actor*> dead(partition, actors.end());
     actors.erase(partition, actors.end());
+    for (auto* a : dead) {
+        delete a;
+    }
     if (changed) invalidateCaches();
 }
 
@@ -75,18 +76,21 @@ int ActorManager::countByType(const char* type) const {
 }
 
 void ActorManager::destroyAllOfType(const char* type) {
-    auto newEnd = std::remove_if(actors.begin(), actors.end(),
-        [type](Actor* a) {
-            if (a && strcmp(a->type(), type) == 0) {
-                a->setActive(false);
-                delete a;
-                return true;
-            }
-            return false;
-        });
-    bool changed = (newEnd != actors.end());
-    actors.erase(newEnd, actors.end());
-    if (changed) invalidateCaches();
+    std::vector<Actor*> dead;
+    for (auto it = actors.begin(); it != actors.end();) {
+        Actor* a = *it;
+        if (a && strcmp(a->type(), type) == 0) {
+            a->setActive(false);
+            dead.push_back(a);
+            it = actors.erase(it);
+        } else {
+            ++it;
+        }
+    }
+    for (auto* a : dead) {
+        delete a;
+    }
+    if (!dead.empty()) invalidateCaches();
 }
 
 const std::vector<Goose*>& ActorManager::getGeese() const {
@@ -94,7 +98,7 @@ const std::vector<Goose*>& ActorManager::getGeese() const {
         geeseCache.clear();
         geeseCache.reserve(actors.size());
         for (auto* actor : actors) {
-            if (actor->isActive() && dynamic_cast<Goose*>(actor)) {
+            if (actor->isActive() && actor->isGoose()) {
                 geeseCache.push_back(static_cast<Goose*>(actor));
             }
         }

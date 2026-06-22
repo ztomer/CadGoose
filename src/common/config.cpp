@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cctype>
 #include <cstdlib>
+#include <atomic>
 #include <mutex>
 #include <sstream>
 #include <unordered_map>
@@ -13,7 +14,7 @@ Config g_config;
 double g_time = 0.0;
 std::vector<ConfigOption> g_configRegistry;
 
-bool g_cutoverMode = true;std::unordered_map<std::string, ConfigOption*> g_configLookup;
+std::unordered_map<std::string, ConfigOption*> g_configLookup;
 
 static std::string ToLower(std::string s) {
     std::transform(s.begin(), s.end(), s.begin(), [](unsigned char c) { return std::tolower(c); });
@@ -76,6 +77,7 @@ static bool ParseBoolValue(const std::string& rawValue, bool* outValue) {
 }
 
 static std::string OptionValueToString(const ConfigOption& opt) {
+    if (!opt.ptr) return "";
     if (opt.type == CFG_BOOL) return *(bool*)opt.ptr ? "1" : "0";
     if (opt.type == CFG_INT) return std::to_string(*(int*)opt.ptr);
     if (opt.type == CFG_FLOAT) { std::ostringstream stream; stream << *(float*)opt.ptr; return stream.str(); }
@@ -89,6 +91,10 @@ const ConfigOption* Config_FindOptionByKey(const std::string& key) {
 }
 
 static bool AssignValueToOption(const ConfigOption& opt, const std::string& rawValue, std::string* errorOut) {
+    if (!opt.ptr) {
+        if (errorOut) *errorOut = "Null pointer for " + std::string(opt.key);
+        return false;
+    }
     try {
         if (opt.type == CFG_BOOL) {
             bool parsed = false;
@@ -101,20 +107,27 @@ static bool AssignValueToOption(const ConfigOption& opt, const std::string& rawV
         }
         if (opt.type == CFG_INT) {
             int val = std::stoi(Trim(rawValue));
-            val = std::clamp(val, static_cast<int>(opt.min), static_cast<int>(opt.max));
+            if (opt.min <= opt.max) {
+                val = std::clamp(val, static_cast<int>(opt.min), static_cast<int>(opt.max));
+            }
             *(int*)opt.ptr = val;
             return true;
         }
         if (opt.type == CFG_FLOAT) {
             float val = std::stof(Trim(rawValue));
-            val = std::clamp(val, opt.min, opt.max);
+            if (opt.min <= opt.max) {
+                val = std::clamp(val, opt.min, opt.max);
+            }
             *(float*)opt.ptr = val;
             return true;
         }
         *(std::string*)opt.ptr = rawValue;
         return true;
-    } catch (const std::exception&) {
+    } catch (const std::invalid_argument&) {
         if (errorOut) *errorOut = "Invalid value for " + std::string(opt.key);
+        return false;
+    } catch (const std::out_of_range&) {
+        if (errorOut) *errorOut = "Value out of range for " + std::string(opt.key);
         return false;
     }
 }
@@ -136,21 +149,25 @@ bool Config_SetValueByKey(const std::string& key, const std::string& value, std:
 
 void OnConfigChange() {
     Config_UpdateActiveTheme();
-    // (Rest of the function will just save, so we put it before saving)
     Config_SaveAll();
 }
 
 bool Config_SaveNow(std::string* errorOut) {
-    Config_SaveAll();
-    return true;
+    try {
+        Config_SaveAll();
+        return true;
+    } catch (const std::exception& e) {
+        if (errorOut) *errorOut = e.what();
+        return false;
+    }
 }
 
 static std::mutex g_configMutex;
-static bool g_configInitialized = false;
+static std::atomic<bool> g_configInitialized{false};
 
 void Config_Init() {
     std::lock_guard<std::mutex> lock(g_configMutex);
-    if (g_configInitialized) {
+    if (g_configInitialized.load()) {
         return;
     }
     Config_InitRegistry();
@@ -158,7 +175,7 @@ void Config_Init() {
     for (auto& opt : g_configRegistry) {
         g_configLookup[ToLower(opt.key)] = &opt;
     }
-    g_configInitialized = true;
+    g_configInitialized.store(true);
 }
 
 std::string Config_EvilPersonality(float level) {
