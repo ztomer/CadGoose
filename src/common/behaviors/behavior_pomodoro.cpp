@@ -77,12 +77,6 @@ static void* s_bedImage = nullptr;
 static void* s_zzzImages[3] = {nullptr, nullptr, nullptr};
 #endif
 
-#ifdef __APPLE__
-extern void Audio_PlayHonk();
-#else
-#define Audio_PlayHonk() fprintf(stderr, "[POMODORO] Honk!\n")
-#endif
-
 // Exposed for EffectWindowManager
 PomodoroBedInfo Pomodoro_GetBedInfo(int gooseId) {
     auto* state = BehaviorStateManager::Instance().Get<PomodoroState>(gooseId, "pomodoro");
@@ -272,7 +266,20 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
     }
 }
 
-static void cleanupPomoFont(BehaviorContext&) {}
+static void cleanupPomoFont(BehaviorContext&) {
+#ifdef __APPLE__
+    if (s_bedImage) {
+        CGImageRelease(s_bedImage);
+        s_bedImage = nullptr;
+    }
+    for (int i = 0; i < 3; i++) {
+        if (s_zzzImages[i]) {
+            CGImageRelease(s_zzzImages[i]);
+            s_zzzImages[i] = nullptr;
+        }
+    }
+#endif
+}
 
 static void render(Goose* goose, BehaviorContext& ctx, IRenderer* irenderer) {
     if (!irenderer) return;

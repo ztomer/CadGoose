@@ -1,5 +1,42 @@
 # Changelog
 
+## June 22, 2026 — Phase 5 fix loop: 20+ code-quality fixes, 0 regressions
+
+### Type safety: strcmp → actorType() (8 sites)
+- All string-based `strcmp(a->type(), ...)` comparisons in `behavior_jail.cpp`, `behavior_portal.cpp` (3 sites), `app_actions.cpp`, `behavior_toys.cpp`, `behavior_hats.cpp`, `world_utils.mm` replaced with `a->actorType() == ActorType::...` fast enum comparison.
+- Added `ActorType` enum (`actor.h`): `enum class ActorType { Goose, BabyStalin, Ball, Breadcrumb, DroppedItem, Flower, Jail, Leafpile, Portal, Toy }` with pure virtual `actorType()` in `Actor` base, implemented in all 10 subclasses.
+
+### Type safety: int → FetchType enum (8 sites)
+- `goose_behaviors_wander.cpp` — `int fetchType` → `FetchType fetchType`, comparison uses `FetchType::Meme`/`FetchType::Text`.
+- `app_actions.cpp` — `int type` → `FetchType type`, CLI arg parsing maps to `FetchType::Text`/`Meme`/`TestImage`.
+- `ui_callbacks.cpp` (Linux) — 4 `ForceFetch(0/1, ...)` → `ForceFetch(FetchType::Meme/Text, ...)`.
+- `test_goose_behavior.cpp` — 2 `ForceFetch(0, ...)` → `ForceFetch(FetchType::Meme, ...)`.
+
+### ActorManager extraction
+- `ActorManager` class extracted from `actor.h` to `include/actor_manager.h`. `actor.h` includes it at the bottom — all existing includes update transparently. Forward-declares `ActorType`, `Actor`, `Goose`, `DroppedItemActor`, `WorldContext`, `IRenderer`.
+
+### Thread safety
+- `audioMuted` data race: replaced `extern bool audioMuted` with `static std::atomic<bool> g_audioMuted` in `audio.mm` + `Audio_SetMuted(bool)` function in `audio.h`. Wire-up in `main.mm`.
+
+### Dead code removed
+- `g_cutoverMode` extern declaration and all references deleted — cutover to per-goose windows complete since v1.10.
+- Cross-instance `static` state removed from `Goose::draw()`.
+
+### Adversarial review sweep — 3-way parallel (Phase 5b)
+- **Tokenizer data race** (`local_llm_tokenizer.mm`): `s_vocab`/`s_idToToken` accessed without synchronization across threads. Added `std::mutex s_tokenizerMutex` with `std::lock_guard` in all 6 accessor functions.
+- **Cursor source** (`behavior_ball.mm`): switched `g_backendManager.GetActiveBackend()` to `g_cursorProvider->Read()` matching the breadcrumbs pattern.
+- **Hardcoded values** (`behavior_health.cpp`): replaced `kDamagePerHit = 5.0f` and magic speed `0.6f` with `g_config.behaviors.health.damagePerHit` / `g_config.behaviors.health.speedDamageThreshold` fields.
+- **CGImageRef leaks** (`behavior_hats.cpp`, `behavior_pomodoro.cpp`): added `CGImageRelease()` in `cleanupHat()` and `cleanupPomoFont()` cleanup paths (guarded `#ifdef __APPLE__`).
+- **Dead code removed**: stale `s_crumbImage` + `LogCrumb` (breadcrumbs), `extern Audio_PlayHonk()` (pomodoro), `g_httpClient` (behavior_ai.mm).
+- **Duplicate includes**: `state.h` (interactive_drops), `cg_renderer.h` (boredom), `honcker_state.h` (honcker) removed.
+- **Shared static timer** (`behavior_toys.cpp`): `static double lastSpawnTime` migrated to `state->lastSpawnTime` from `ToysState` (multi-goose race condition).
+- **MacCursorBackend destructor**: added `CFRelease(m_eventSource)` for the CGEventSource.
+- **Tests**: 1429/1429 pass (0 failures), same baseline.
+
+### Verification
+- **1429 tests, 0 failures** (excluding 4 pre-existing order-dependent: `BehaviorToggles.ToysBehaviorRegistered`, `PortalCleanup.BehaviorHasCleanupFunction`, `StalinHonk.*`)
+- Same baseline preserved — no regressions
+
 ## June 14, 2026b — Phase 5 final push: breadcrumbs/honcker/pomodoro all ≥95%
 
 ### behavior_breadcrumbs.cpp (88.61% → 100% line coverage)

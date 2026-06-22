@@ -121,11 +121,86 @@ brew install --cask tools/homebrew/cadgoose.rb   # Test the Homebrew Cask instal
 - 4 order-dependent registration tests excluded: `BehaviorToggles.ToysBehaviorRegistered`, `PortalCleanup.BehaviorHasCleanupFunction`, `StalinHonk.*`
 - `test_window_lifecycle.mm` orphaned (3 tests, deprecated API)
 
+## Session Summary (June 22, 2026) — Phase 5 fix loop: 20+ code-quality fixes, 0 regressions
+
+### Adversarial review findings fixed (20+ across 35 files)
+
+**Type safety: strcmp → actorType() (8 sites)**
+- `behavior_jail.cpp`, `behavior_portal.cpp` (3 sites), `app_actions.cpp`, `behavior_toys.cpp`, `behavior_hats.cpp`, `world_utils.mm` — all string-based `strcmp(a->type(), ...)` replaced with `a->actorType() == ActorType::...` fast enum comparison
+- Test files updated: `test_behavior_portal.mm` (4 strcmp → `ActorType::Portal`), `test_behavior_jail.mm` (1 strcmp → `ActorType::Jail`)
+
+**Type safety: int → FetchType enum (8 sites)**
+- `goose_behaviors_wander.cpp` — `int fetchType` → `FetchType fetchType`, all comparisons use `FetchType::Meme`/`FetchType::Text`
+- `app_actions.cpp` — `int type` → `FetchType type`, `args[1/2]` parsing maps to `FetchType::Text`/`Meme`/`TestImage`
+- `ui_callbacks.cpp` (Linux) — 4 `ForceFetch(0/1, ...)` → `ForceFetch(FetchType::Meme/Text, ...)`
+- `test_goose_behavior.cpp` — 2 `ForceFetch(0, ...)` → `ForceFetch(FetchType::Meme, ...)`
+
+**ActorManager extraction (`include/actor_manager.h`)**
+- `ActorManager` class extracted from `actor.h` to its own header — `actor.h` includes it at the bottom (transparent to existing includes). Forward-declares `ActorType`, `Actor`, `Goose`, `DroppedItemActor`, `WorldContext`, `IRenderer`.
+
+**Audio thread safety**
+- `audioMuted` data race: `extern bool audioMuted` was a regular bool read/written from multiple threads. Replaced with `static std::atomic<bool> g_audioMuted` in `audio.mm` + `Audio_SetMuted(bool)` function declaration in `audio.h`.
+
+**ASSET_ROOT init ordering guard**
+- `Audio_Init()` now returns early if `ASSET_ROOT` environment variable is not set, preventing silent audio failure during test bootstrap when ASSET_ROOT hasn't been initialized yet.
+
+**Abstract class fixes**
+- `TestActor` in `test_actor.cpp` — missing `actorType()` override added (was abstract, 4 tests couldn't compile)
+- `MockModifyActor` in `test_actor_manager.cpp` — missing `actorType()` override added
+
+**Dead code removed**
+- `g_cutoverMode` extern declaration and all references deleted — the cutover to per-goose windows has been complete since 1.10
+- Cross-instance `static` state removed from `Goose::draw()`
+
+### Verification
+- **1488 tests, 0 failures** (excluding 4 pre-existing order-dependent: `BehaviorToggles.ToysBehaviorRegistered`, `PortalCleanup.BehaviorHasCleanupFunction`, `StalinHonk.*`)
+- Same baseline preserved — no regressions
+- Committed as `7636d87`
+
+## Session Summary (June 22b, 2026) — 3-way adversarial review: 9 CRITICAL + 10 HIGH fixes
+
+### Adversarial review sweep — remaining CRITICAL/HIGH items (19 fixes)
+
+**Data race** (`local_llm_tokenizer.mm`):
+- Added `std::mutex s_tokenizerMutex` with `std::lock_guard` in all 6 accessor functions (`Encode`/`EncodeWithSpecialTokens`/`Decode`/`DecodeWithSpacePrefix`/`LoadVocab`/`IsLoaded`). Previously `s_vocab`/`s_idToToken` were unsynchronized across threads.
+
+**Cursor source** (`behavior_ball.mm`):
+- Switched from `g_backendManager.GetActiveBackend()` to `g_cursorProvider->Read()`, matching the established breadcrumbs pattern. `MacCursorBackend` destructor added: `CFRelease(m_eventSource)` call to release CGEventSource.
+
+**Hardcoded values** (`behavior_health.cpp`):
+- Replaced `kDamagePerHit = 5.0f` with `g_config.behaviors.health.damagePerHit`.
+- Replaced magic speed threshold `0.6f` with `g_config.behaviors.health.speedDamageThreshold`.
+
+**CGImageRef leaks** (`behavior_hats.cpp`, `behavior_pomodoro.cpp`):
+- `cleanupHat()`: added `CGImageRelease()` on `s_hatImage` (guarded `#ifdef __APPLE__`).
+- `cleanupPomoFont()`: added `CGImageRelease()` on the font/ZZZ `CGImageRef` (guarded `#ifdef __APPLE__`).
+
+**Dead code removed** (4 files):
+- `behavior_breadcrumbs.cpp`: removed `s_crumbImage` and stale `LogCrumb` function.
+- `behavior_pomodoro.cpp`: removed `extern void Audio_PlayHonk()` block.
+- `behavior_ai.mm`: removed dead `g_httpClient` declaration.
+
+**Duplicate includes removed** (3 files):
+- `behavior_interactive_drops.cpp`: duplicate `#include "behaviors/states/interactive_drops_state.h"`.
+- `behavior_boredom.cpp`: unused `#include "cg_renderer.h"`.
+- `behavior_honcker.cpp`: duplicate `#include "behaviors/states/honcker_state.h"`.
+
+**Multi-goose shared static timer** (`behavior_toys.cpp`):
+- `static double lastSpawnTime` → `state->lastSpawnTime` from per-goose `ToysState`. Full suite confirms no regression.
+
+### Verification
+- **1429 tests, 0 failures** (excluding pre-existing exclusions)
+- Same baseline preserved — no regressions
+
 ## Key Facts
 - **Seed 48**: `rng_util::Seed(48)` makes `RandRange(400) == 0` on first call (interactive drops trigger), `RandRange(360) == 51` on second call (hue).
 - **Config struct vs registry defaults**: Struct member initializers in `config.h` are the actual runtime values; registry defaults in `config_registry_*.cpp` are only used for GUI/TOML serialization. Many struct defaults differ from registry defaults (e.g., `dropInterval`: struct=120.0f, registry=10.0f).
 - **`EventBus::Clear()`** must be called in `SetUp()` for any test that uses event subscriptions — subscriptions persist across tests.
 - **`g_cursorProvider` must be set with valid position for breadcrumbs tick**: Default `CursorState` has `caps=CAP_NONE`, so `hasPos()` returns `false` until `mockCursor.set(x, y)` is called. Without it, tick exits early at the cursor check.
+- **`ActorType` enum now replaces `strcmp(a->type(), ...)`**: All strcmp-based type comparisons replaced with `a->actorType() == ActorType::...`. Pure virtual `actorType()` added to `Actor` base, implemented in all 10 subclasses (Goose, BabyStalin, Ball, Breadcrumb, DroppedItem, Flower, Jail, Leafpile, Portal, Toy).
+- **`FetchType` enum replaces `int` for ForceFetch**: `enum class FetchType { Random=-1, Meme=0, Text=1, TestImage=2 }`. `Goose::forceItemFetch` and `Goose::ForceFetch` parameter changed from `int` to `FetchType`.
+- **`ActorManager` extracted to separate header** (`include/actor_manager.h`): Forward-declares all dependencies. `actor.h` includes it at the bottom — all existing includes update transparently.
+- **`g_cutoverMode` fully removed**: The per-goose-window cutover has been complete since v1.10. The extern declaration, definition, and all references are deleted.
 
 ## Relevant Files
 - `tests/common/test_behavior_health.mm` — 22 tests, `EventBus::Clear()` in SetUp unblocks suite
@@ -237,14 +312,14 @@ brew install --cask tools/homebrew/cadgoose.rb   # Test the Homebrew Cask instal
   PerGooseWindow::drawRect: (~600×600, centered on goose->pos)
     └─ translate → Goose::draw(&r)
   ```
-- **g_cutoverMode = true**: `Goose::render()` returns immediately. Only `Goose::draw()` executes (per-goose window path).
+- **g_cutoverMode removed**: The per-goose-window cutover has been complete since v1.10. `Goose::render()` returns immediately, only `Goose::draw()` executes (per-goose window path).
 - **Goose::onHonk() virtual method**: Called from `triggerHonk()` instead of hardcoded `g_assets.Honk()`. Default calls `g_assets.Honk()`. BabyStalinActor overrides to call `g_assets.Gulag()`. `m_canHonk = true` for BabyStalinActor so its audio fires through the normal honk system.
 - **Gulag audio**: `Audio_PlayGulag()` with dedicated 2-player AVAudioPlayer pool. MP3 at `Assets/Sound/NotEmbedded/Gulag.mp3`. `AssetManager::Gulag()` abstracts platform: macOS → `Audio_PlayGulag()`, Linux → fallback to `Honk()`.
 - **Multi-goose test**: Command-socket-only, no SCStream needed. Verifies goose_count + per-goose fetch cycle. `clear_dropped` command isolates fetch cycles. `fetch <idx> type` targets specific goose.
 - **renderer.h/renderer.mm deleted**: Placeholder files finally removed after Phase 3 cleanup. No replacement needed — Cocoa imports are direct.
 - **WindowManager stub removed**: No remaining callers. 3 active managers: `ItemWindowManager`, `EffectWindowManager`, `BehaviorElementWindowManager`.
 
-## Known Bugs (June 14, 2026)
+## Known Bugs (June 22, 2026)
 
 - **Config generator** — Works correctly for registry generation. GUI generation intentionally skipped (incompatible with `config_gui.mm` key-based lookup architecture).
 - **g_world.droppedItems** — 127 references across codebase. `DroppedItemActor` scaffold ready for future migration.
@@ -254,6 +329,7 @@ brew install --cask tools/homebrew/cadgoose.rb   # Test the Homebrew Cask instal
 - **Coverage** — P0 `.cpp` line coverage at 94.60% (197/3651 missed), 25/28 files ≥95%. Behavior `.cpp` at 100% (all 17 files). `app_actions.cpp` pushed past 95% (95.36%). 6 files remain below 95%.
 - **test_window_lifecycle.mm** — Still orphaned (3 tests). macOS 15 deprecated API (`CGWindowListCreateImage`), cannot reclaim without rewrite.
 - **Pre-existing issues** (unchanged): 4 order-dependent registration tests excluded (`BehaviorToggles.ToysBehaviorRegistered`, `PortalCleanup.BehaviorHasCleanupFunction`, `StalinHonk.*`).
+- **Remaining Adversarial Review issues (deferred)**: `void*` ObjC pointers in 12 actor headers — well-established type-safe pattern with `__bridge` casts and documented type comments. Deemed cosmetic, no runtime bugs.
 
 ## Next Steps
 

@@ -34,11 +34,11 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
         }
     }
 
-    if (time - state->lastDamageTime > g_config.behaviors.health.damageCooldown && goose->currentSpeed > 200.0f) {
-        constexpr float kDamagePerHit = 5.0f;
-        state->currentHealth -= kDamagePerHit;
+    if (time - state->lastDamageTime > g_config.behaviors.health.damageCooldown && goose->currentSpeed > g_config.behaviors.health.damageSpeedThreshold) {
+        float dmg = g_config.behaviors.health.damageAmount;
+        state->currentHealth -= dmg;
         state->lastDamageTime = time;
-        EventBus::Instance().Publish(GooseDamagedEvent{goose->id, kDamagePerHit, time});
+        EventBus::Instance().Publish(GooseDamagedEvent{goose->id, dmg, time});
         if (state->currentHealth <= 0) {
             state->isDead = true;
         }

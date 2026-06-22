@@ -7,6 +7,7 @@
 class MacCursorBackend : public CursorBackend {
 public:
     MacCursorBackend();
+    ~MacCursorBackend();
     std::string Name() const override;
     uint32_t Caps() const override;
     bool Init() override;

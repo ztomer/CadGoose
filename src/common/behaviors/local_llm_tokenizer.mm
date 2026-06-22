@@ -9,7 +9,9 @@
 #include <unordered_map>
 #include <vector>
 #include <cstdio>
+#include <mutex>
 
+static std::mutex s_tokenizerMutex;
 static std::unordered_map<std::string, int> s_vocab;
 static std::unordered_map<int, std::string> s_idToToken;
 static bool s_tokenizerReady = false;
@@ -38,15 +40,18 @@ void LocalLLM_LoadTokenizer(NSString* baseDir) {
             NSDictionary* dict = (NSDictionary*)json;
             id modelDict = dict[@"model"];
             id vocab = modelDict ? ((NSDictionary*)modelDict)[@"vocab"] : dict;
-            if ([vocab isKindOfClass:[NSDictionary class]]) {
-                s_vocab.clear();
-                s_idToToken.clear();
-                for (NSString* key in vocab) {
-                    int idVal = [vocab[key] intValue];
-                    s_vocab[std::string(key.UTF8String)] = idVal;
-                    s_idToToken[idVal] = std::string(key.UTF8String);
-                }
-                s_tokenizerReady = !s_vocab.empty();
+                if ([vocab isKindOfClass:[NSDictionary class]]) {
+                    {
+                        std::lock_guard<std::mutex> lock(s_tokenizerMutex);
+                        s_vocab.clear();
+                        s_idToToken.clear();
+                        for (NSString* key in vocab) {
+                            int idVal = [vocab[key] intValue];
+                            s_vocab[std::string(key.UTF8String)] = idVal;
+                            s_idToToken[idVal] = std::string(key.UTF8String);
+                        }
+                        s_tokenizerReady = !s_vocab.empty();
+                    }
                 fprintf(stderr, "[LOCAL_LLM] Tokenizer loaded (%zu entries)\n", s_vocab.size());
                 return;
             }
@@ -55,6 +60,7 @@ void LocalLLM_LoadTokenizer(NSString* baseDir) {
 }
 
 std::vector<int> LocalLLM_EncodeText(const std::string& text) {
+    std::lock_guard<std::mutex> lock(s_tokenizerMutex);
     if (!s_tokenizerReady) return {};
     std::vector<int> tokens;
     auto it = s_vocab.find(text);
@@ -86,6 +92,7 @@ std::vector<int> LocalLLM_EncodeText(const std::string& text) {
 }
 
 std::string LocalLLM_DecodeTokens(const std::vector<int>& tokens) {
+    std::lock_guard<std::mutex> lock(s_tokenizerMutex);
     std::string result;
     for (int t : tokens) {
         auto it = s_idToToken.find(t);
@@ -94,13 +101,21 @@ std::string LocalLLM_DecodeTokens(const std::vector<int>& tokens) {
     return result;
 }
 
-bool LocalLLM_IsTokenizerReady() { return s_tokenizerReady; }
-int LocalLLM_VocabSize() { return (int)s_vocab.size(); }
+bool LocalLLM_IsTokenizerReady() {
+    std::lock_guard<std::mutex> lock(s_tokenizerMutex);
+    return s_tokenizerReady;
+}
+int LocalLLM_VocabSize() {
+    std::lock_guard<std::mutex> lock(s_tokenizerMutex);
+    return (int)s_vocab.size();
+}
 int LocalLLM_GetTokenId(const std::string& token) {
+    std::lock_guard<std::mutex> lock(s_tokenizerMutex);
     auto it = s_vocab.find(token);
     return it != s_vocab.end() ? it->second : -1;
 }
 void LocalLLM_ClearTokenizer() {
+    std::lock_guard<std::mutex> lock(s_tokenizerMutex);
     s_vocab.clear();
     s_idToToken.clear();
     s_tokenizerReady = false;
