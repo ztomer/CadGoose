@@ -192,6 +192,23 @@ brew install --cask tools/homebrew/cadgoose.rb   # Test the Homebrew Cask instal
 - **1429 tests, 0 failures** (excluding pre-existing exclusions)
 - Same baseline preserved — no regressions
 
+## Session Summary (June 22c, 2026) — MEDIUM/LOW sweep: 8 more fixes, 0 regressions
+
+### MEDIUM
+- **Ghost windows** (`effect_window.mm`): `addWindow:` used `addObject:` growing pre-allocated array. Fixed to `replaceObjectAtIndex:` with computed insert index.
+- **Breadcrumb zombie actors** (`behavior_breadcrumbs.cpp`): Eaten/popped crumbs left BreadcrumbActor alive. Added `deactivateCrumbActor()` position-match helper.
+- **Rainbow dead store** (`behavior_rainbow.cpp`, `rainbow_state.h`): Removed `lastUpdate` field and its lone write-site.
+- **Jail always-true guard** (`behavior_jail.cpp`): Removed `if (time > s_lastInputTime)` — always true, no actual throttling.
+- **Portal O(n)** (`behavior_portal.cpp`): Manual actor scan → `mgr.findByType(ActorType::Portal, id)`.
+
+### LOW
+- **app_actions null-check** (`app_actions.cpp`): Dead ternary `goose ? goose->id : -1` simplified to `goose->id`.
+- **Duplicate includes** (3 files): `jail_state.h`, `portal_state.h`, `rainbow_state.h` — all had duplicates.
+- **Test cleanup** (`test_behaviors_visual.cpp`): Removed orphaned `lastUpdate` assertion.
+
+### Verification
+- **1429 tests, 0 failures** — same baseline preserved
+
 ## Key Facts
 - **Seed 48**: `rng_util::Seed(48)` makes `RandRange(400) == 0` on first call (interactive drops trigger), `RandRange(360) == 51` on second call (hue).
 - **Config struct vs registry defaults**: Struct member initializers in `config.h` are the actual runtime values; registry defaults in `config_registry_*.cpp` are only used for GUI/TOML serialization. Many struct defaults differ from registry defaults (e.g., `dropInterval`: struct=120.0f, registry=10.0f).

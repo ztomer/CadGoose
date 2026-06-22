@@ -33,6 +33,16 @@
 - **MacCursorBackend destructor**: added `CFRelease(m_eventSource)` for the CGEventSource.
 - **Tests**: 1429/1429 pass (0 failures), same baseline.
 
+### MEDIUM/LOW fixes (8 more items)
+- **Ghost windows** (`effect_window.mm`): `addWindow:` used `addObject:` when `_count < kMaxEffectWindows`, growing the pre-allocated array beyond capacity. Fixed to use `replaceObjectAtIndex:` with computed insert index.
+- **Breadcrumb zombie actors** (`behavior_breadcrumbs.cpp`): When a crumb is eaten or dropped by max-crumbs enforcement, the matching `BreadcrumbActor` remained alive. Added `deactivateCrumbActor()` that finds and deactivates the actor by position match.
+- **Rainbow dead store** (`behavior_rainbow.cpp`, `rainbow_state.h`): `state->lastUpdate = time` was written but never read. Removed field from struct and assignment from tick.
+- **Jail always-true guard** (`behavior_jail.cpp`): `if (time > s_lastInputTime)` was always true — no actual throttling. Removed the conditional.
+- **Portal O(n) iteration** (`behavior_portal.cpp`): Manual actor scan for portal lookup replaced with `mgr.findByType(ActorType::Portal, id)` (same O(n) but cleaner intent).
+- **app_actions null-check** (`app_actions.cpp`): Dead ternary `goose ? goose->id : -1` — `new` never returns nullptr. Simplified to `goose->id`.
+- **Duplicate includes** (3 files): `jail_state.h` in behavior_jail.cpp, `portal_state.h` in behavior_portal.cpp, `rainbow_state.h` in behavior_rainbow.cpp — all removed.
+- **Test cleanup** (`test_behaviors_visual.cpp`): Removed `lastUpdate` check that matched deleted struct field.
+
 ### Verification
 - **1429 tests, 0 failures** (excluding 4 pre-existing order-dependent: `BehaviorToggles.ToysBehaviorRegistered`, `PortalCleanup.BehaviorHasCleanupFunction`, `StalinHonk.*`)
 - Same baseline preserved — no regressions

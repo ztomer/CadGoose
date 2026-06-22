@@ -13,7 +13,6 @@
 #include "ring_buffer.h"
 #include "actor.h"
 #include "actor_jail.h"
-#include "behaviors/states/jail_state.h"
 #include "platform_input.h"
 
 static bool s_oWasKeyDown = false;
@@ -45,45 +44,43 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
         return;
     }
 
-    if (time > s_lastInputTime) {
-        s_lastInputTime = time;
+    s_lastInputTime = time;
 
-        Vector2 cursorPos{-1, -1};
-        if (g_cursorProvider) {
-            CursorState cs = g_cursorProvider->Read();
-            if (cs.hasPos()) {
-                cursorPos = cs.position;
-            }
+    Vector2 cursorPos{-1, -1};
+    if (g_cursorProvider) {
+        CursorState cs = g_cursorProvider->Read();
+        if (cs.hasPos()) {
+            cursorPos = cs.position;
         }
+    }
 
-        bool oDown = Platform_IsKeyPressed(KeyNameToKeyCode(g_config.behaviors.jail.hotkeyO));
-        if (oDown && !s_oWasKeyDown) {
-            if (s_jailsActive) {
-                s_jails.clear();
-                s_jailsActive = false;
-                // Remove all jail actors
-                auto& mgr = ActorManager::Instance();
-                for (int i = mgr.totalCount() - 1; i >= 0; i--) {
-                    Actor* a = mgr.getByIndex(i);
-                    if (a && a->actorType() == ActorType::Jail) {
-                        a->setActive(false);
-                    }
+    bool oDown = Platform_IsKeyPressed(KeyNameToKeyCode(g_config.behaviors.jail.hotkeyO));
+    if (oDown && !s_oWasKeyDown) {
+        if (s_jailsActive) {
+            s_jails.clear();
+            s_jailsActive = false;
+            // Remove all jail actors
+            auto& mgr = ActorManager::Instance();
+            for (int i = mgr.totalCount() - 1; i >= 0; i--) {
+                Actor* a = mgr.getByIndex(i);
+                if (a && a->actorType() == ActorType::Jail) {
+                    a->setActive(false);
                 }
             }
-            s_jails.push(cursorPos);
-            // Create jail actor
-            JailActor* jail = new JailActor(cursorPos);
-            ActorManager::Instance().add(jail);
         }
-        s_oWasKeyDown = oDown;
-
-        bool pDown = Platform_IsKeyPressed(KeyNameToKeyCode(g_config.behaviors.jail.hotkeyP));
-        if (pDown && !s_pWasKeyDown && !s_jails.empty()) {
-            s_jailsActive = !s_jailsActive;
-            goose->onHonk();
-        }
-        s_pWasKeyDown = pDown;
+        s_jails.push(cursorPos);
+        // Create jail actor
+        JailActor* jail = new JailActor(cursorPos);
+        ActorManager::Instance().add(jail);
     }
+    s_oWasKeyDown = oDown;
+
+    bool pDown = Platform_IsKeyPressed(KeyNameToKeyCode(g_config.behaviors.jail.hotkeyP));
+    if (pDown && !s_pWasKeyDown && !s_jails.empty()) {
+        s_jailsActive = !s_jailsActive;
+        goose->onHonk();
+    }
+    s_pWasKeyDown = pDown;
 
     bool wasJailed = state->isJailed;
     state->isJailed = s_jailsActive && !s_jails.empty();
