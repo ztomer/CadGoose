@@ -13,9 +13,10 @@
 
 static constexpr int kDragDirectionJitterMax = 10;
 
-static void init(BehaviorContext& ctx) {}
+static void init(BehaviorContext&) {}
 
 static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
+    (void)ctx; (void)dt; (void)time;
     Vector2 cursorPos{-1, -1};
     if (g_cursorProvider) {
         CursorState state = g_cursorProvider->Read();
@@ -41,7 +42,7 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
     }
 }
 
-static void render(Goose* goose, BehaviorContext& ctx, IRenderer* irenderer) {
+static void render(Goose*, BehaviorContext&, IRenderer*) {
 }
 
 static Behavior g_dragBehavior = BEHAVIOR_DEF_STARTER(

@@ -32,6 +32,7 @@ static void init(BehaviorContext& ctx) {
 }
 
 static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
+    (void)goose; (void)ctx; (void)dt; (void)time;
 }
 
 static void render(Goose* goose, BehaviorContext& ctx, IRenderer* irenderer) {

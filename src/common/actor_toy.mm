@@ -56,6 +56,7 @@ ToyActor::~ToyActor() {
 
 void ToyActor::tick(WorldContext& ctx, double dt, double time) {
     if (!m_active) return;
+    (void)ctx; (void)dt;
 
     double age = time - m_spawnTime;
     if (age > TOY_LIFETIME) {

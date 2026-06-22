@@ -14,6 +14,7 @@ static void init(BehaviorContext& ctx) {
 }
 
 static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
+    (void)time;
     auto* state = BehaviorStateManager::Instance().GetOrCreate<RainbowState>(goose->id, "rainbow");
     
     state->hue += g_config.behaviors.rainbow.hueSpeed * dt;
@@ -22,7 +23,7 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
     }
 }
 
-static void render(Goose* goose, BehaviorContext& ctx, IRenderer* irenderer) {
+static void render(Goose*, BehaviorContext&, IRenderer*) {
 }
 
 float Rainbow_GetHue(int gooseId) {

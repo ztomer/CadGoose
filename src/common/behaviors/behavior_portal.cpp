@@ -30,6 +30,7 @@ static void init(BehaviorContext& ctx) {
 }
 
 static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
+    (void)ctx; (void)dt; (void)time;
     auto* state = BehaviorStateManager::Instance().GetOrCreate<PortalState>(goose->id, "portal");
     auto& mgr = ActorManager::Instance();
 

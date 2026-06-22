@@ -45,7 +45,7 @@ static void init(BehaviorContext& ctx) {
 }
 
 static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
-    (void)ctx;
+    (void)ctx; (void)dt;
 
     if (time - s_lastKeyCheck < 0.016) return;
     s_lastKeyCheck = time;

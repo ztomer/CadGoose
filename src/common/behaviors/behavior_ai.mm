@@ -493,10 +493,10 @@ static void init(BehaviorContext& ctx) {
     state->Reset();
 }
 
-static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
+static void tick(Goose*, BehaviorContext&, double, double) {
 }
 
-static void render(Goose* goose, BehaviorContext& ctx, IRenderer* irenderer) {
+static void render(Goose*, BehaviorContext&, IRenderer*) {
 }
 
 static Behavior g_aiBehavior = BEHAVIOR_DEF(

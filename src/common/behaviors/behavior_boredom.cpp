@@ -25,6 +25,7 @@ static void init(BehaviorContext& ctx) {
 }
 
 static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
+    (void)dt;
     auto* state = BehaviorStateManager::Instance().GetOrCreate<BoredomState>(goose->id, "boredom");
 
     if (state->isLyingDown) {

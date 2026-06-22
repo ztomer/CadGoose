@@ -35,6 +35,7 @@ static void init(BehaviorContext& ctx) {
 }
 
 static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
+    (void)dt;
     int keyCode = KeyNameToKeyCode(g_config.behaviors.honcker.hotkey);
     bool pressed = Platform_IsKeyPressed(keyCode);
 

@@ -17,10 +17,10 @@
 // ===========================
 // Physics Constants
 // ===========================
-constexpr float GRAVITY = 400.0f;
-constexpr float BOUNCE_FACTOR = 0.7f;
-constexpr float FRICTION = 0.98f;
-constexpr float AIR_RESISTANCE = 0.995f;
+static constexpr float GRAVITY = 400.0f;
+static constexpr float BOUNCE_FACTOR = 0.7f;
+static constexpr float FRICTION = 0.98f;
+static constexpr float AIR_RESISTANCE = 0.995f;
 static constexpr float kReferenceFrameRate = 60.0f;
 static constexpr float kBallBounceThreshold = 20.0f;
 static constexpr float kDragResistanceProbability = 0.05f;
