@@ -1,5 +1,6 @@
 #include "gtest/gtest.h"
 #include "actor.h"
+#include "goose.h"
 #include "world.h"
 #include <functional>
 
@@ -226,4 +227,114 @@ TEST_F(ActorManagerSafetyTest, FindByTypeWithId) {
     found = mgr.findByType("mock_type_a", 2);
     ASSERT_NE(found, nullptr);
     EXPECT_EQ(found->id(), 2);
+}
+
+// ── Oracle: edge cases ──
+
+TEST_F(ActorManagerSafetyTest, AddDuringTickDoesNotTickNewActor) {
+    auto& mgr = ActorManager::Instance();
+    WorldContext ctx{};
+    auto* existing = new MockModifyActor("mock_type_a", 1);
+    auto* latecomer = new MockModifyActor("mock_type_b", 2);
+    mgr.add(existing);
+
+    existing->m_tickCallback = [&mgr, latecomer](MockModifyActor*) {
+        mgr.add(latecomer);
+    };
+
+    mgr.tickAll(ctx, 1.0/60.0, 0.0);
+    EXPECT_EQ(existing->m_tickCount, 1);
+    EXPECT_EQ(latecomer->m_tickCount, 0) << "Actor added during tick should not be ticked until next frame";
+}
+
+TEST_F(ActorManagerSafetyTest, RemoveNonExistentIsSafe) {
+    auto& mgr = ActorManager::Instance();
+    WorldContext ctx{};
+    auto* a = new MockModifyActor("mock_type_a", 1);
+    // Remove without ever adding
+    EXPECT_NO_THROW(mgr.remove(a));
+    delete a;
+}
+
+TEST_F(ActorManagerSafetyTest, TickWithNoActorsIsNoOp) {
+    auto& mgr = ActorManager::Instance();
+    WorldContext ctx{};
+    EXPECT_NO_THROW(mgr.tickAll(ctx, 0.016, 0.0));
+    EXPECT_NO_THROW(mgr.renderAll(nullptr));
+}
+
+TEST_F(ActorManagerSafetyTest, MultipleDeletionsDuringTick) {
+    auto& mgr = ActorManager::Instance();
+    WorldContext ctx{};
+    auto* a1 = new MockModifyActor("mock_type_a", 1);
+    auto* a2 = new MockModifyActor("mock_type_b", 2);
+    auto* a3 = new MockModifyActor("mock_type_c", 3);
+    auto* a4 = new MockModifyActor("mock_type_c", 4);
+    mgr.add(a1);
+    mgr.add(a2);
+    mgr.add(a3);
+    mgr.add(a4);
+
+    std::vector<MockModifyActor*> dead;
+    a2->m_tickCallback = [&mgr, &dead, a1, a4](MockModifyActor*) {
+        mgr.remove(a1);    // remove previous
+        dead.push_back(a1);
+        mgr.remove(a4);    // remove later (after a3 in snapshot)
+        dead.push_back(a4);
+    };
+
+    EXPECT_NO_THROW(mgr.tickAll(ctx, 0.016, 0.0));
+    EXPECT_EQ(a2->m_tickCount, 1);
+    EXPECT_EQ(a3->m_tickCount, 1);
+}
+
+TEST_F(ActorManagerSafetyTest, AddAndRemoveSameActorDuringTick) {
+    auto& mgr = ActorManager::Instance();
+    WorldContext ctx{};
+    auto* a1 = new MockModifyActor("mock_type_a", 1);
+    auto* a2 = new MockModifyActor("mock_type_b", 2);
+    mgr.add(a1);
+    mgr.add(a2);
+
+    a1->m_tickCallback = [&mgr](MockModifyActor* self) {
+        mgr.remove(self);
+        mgr.add(self);
+    };
+
+    EXPECT_NO_THROW(mgr.tickAll(ctx, 0.016, 0.0));
+}
+
+TEST_F(ActorManagerSafetyTest, FindByTypeSkippedForNonActive) {
+    auto& mgr = ActorManager::Instance();
+    auto* a = new MockModifyActor("mock_type_a", 1);
+    mgr.add(a);
+    a->setActive(false);
+
+    EXPECT_EQ(mgr.findByType("mock_type_a"), nullptr);
+    EXPECT_EQ(mgr.findByType(ActorType::Goose), nullptr);
+}
+
+TEST_F(ActorManagerSafetyTest, DestroyAllOfTypeRemovesCorrectly) {
+    auto& mgr = ActorManager::Instance();
+    mgr.destroyAllOfType("mock_type_a");
+    auto* a1 = new MockModifyActor("mock_type_a", 1);
+    auto* a2 = new MockModifyActor("mock_type_b", 2);
+    mgr.add(a1);
+    mgr.add(a2);
+
+    mgr.destroyAllOfType("mock_type_a");
+    EXPECT_EQ(mgr.findByType("mock_type_a"), nullptr);
+    EXPECT_NE(mgr.findByType("mock_type_b"), nullptr);
+}
+
+TEST_F(ActorManagerSafetyTest, GeeseCacheInvalidatesOnRemove) {
+    auto& mgr = ActorManager::Instance();
+    EXPECT_TRUE(mgr.getGeese().empty());
+    Goose* g = new Goose(1, "Gander", 1920, 1080);
+    mgr.add(g);
+    EXPECT_EQ(mgr.getGeese().size(), 1u);
+
+    mgr.remove(g);
+    delete g;
+    EXPECT_TRUE(mgr.getGeese().empty());
 }

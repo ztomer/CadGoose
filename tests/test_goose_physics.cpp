@@ -4,6 +4,7 @@
 
 #include "goose_math.h"
 #include "goose.h"
+#include "goose_behaviors.h"
 #include "world.h"
 
 TEST(GoosePhysics, SeekForcePointsTowardTarget) {
@@ -363,4 +364,132 @@ TEST(FeetStability, SolveFeetNanGuardRecovers) {
 
     EXPECT_LT(Vector2::Distance(g.rig.lFoot.currentPos, g.pos), 100.0f);
     EXPECT_LT(Vector2::Distance(g.rig.rFoot.currentPos, g.pos), 100.0f);
+}
+
+// ── Oracle: isTargetReached edge cases ──
+// These test the reach-detection used in UpdateBehaviors independently of the
+// full Update() loop, so we set cursorChaseChance=0 and attackMouseBias=0 to
+// avoid the wander-path triggering other state transitions.
+
+TEST(GooseBehavior, TargetReachedWhenAtTarget) {
+    Goose g(400, "TgtAt", 1920, 1080);
+    g.pos = {500, 500};
+    g.target = {500, 500};
+    g.vel = {0, 0};
+    g.currentSpeed = 0.0f;
+    EXPECT_TRUE(isTargetReached(g, 10.0f));
+}
+
+TEST(GooseBehavior, TargetReachedWhenClose) {
+    Goose g(401, "TgtClose", 1920, 1080);
+    g.pos = {500, 500};
+    g.target = {505, 502};
+    g.vel = {0, 0};
+    g.currentSpeed = 0.0f;
+    EXPECT_TRUE(isTargetReached(g, 10.0f));
+}
+
+TEST(GooseBehavior, TargetNotReachedWhenFar) {
+    Goose g(402, "TgtFar", 1920, 1080);
+    g.pos = {500, 500};
+    g.target = {600, 600};
+    g.vel = {0, 0};
+    g.currentSpeed = 0.0f;
+    EXPECT_FALSE(isTargetReached(g, 10.0f));
+}
+
+TEST(GooseBehavior, TargetReachedOvershoot) {
+    Goose g(403, "TgtOvershoot", 1920, 1080);
+    g.pos = {510, 500};
+    g.target = {500, 500};
+    g.vel = {100, 0};   // moving away (right) from target (left)
+    g.currentSpeed = 100.0f;
+    // dist=10, dist < threshold*3 (30) AND dot < 0 → reached
+    EXPECT_TRUE(isTargetReached(g, 10.0f));
+}
+
+TEST(GooseBehavior, TargetNotReachedOvershootTooFar) {
+    Goose g(404, "TgtOvershootFar", 1920, 1080);
+    g.pos = {600, 500};
+    g.target = {500, 500};
+    g.vel = {100, 0};
+    g.currentSpeed = 100.0f;
+    // dist=100 > threshold*3 (30) → not reached despite overshoot
+    EXPECT_FALSE(isTargetReached(g, 10.0f));
+}
+
+TEST(GooseBehavior, TargetReachedZeroVelocityInsideThreshold) {
+    Goose g(405, "TgtZeroVel", 1920, 1080);
+    g.pos = {515, 500};
+    g.target = {500, 500};
+    g.vel = {0, 0};
+    g.currentSpeed = 0.0f;
+    // dist=15 > 10, dot=0 (zero vel), so only dist < threshold matters
+    // 15 < 10 → false
+    EXPECT_FALSE(isTargetReached(g, 10.0f));
+    // With a larger threshold (20+15):
+    EXPECT_TRUE(isTargetReached(g, 18.0f));
+}
+
+TEST(GooseBehavior, TargetReachedExactlyAtDistThreshold) {
+    Goose g(406, "TgtExactly", 1920, 1080);
+    g.pos = {500, 500};
+    g.target = {510, 500};
+    g.vel = {0, 0};
+    g.currentSpeed = 0.0f;
+    // dist=10, threshold=10 → dist < 10 is false → not reached
+    EXPECT_FALSE(isTargetReached(g, 10.0f)) << "Strict less-than, not <= at threshold boundary";
+}
+
+// ── Oracle: ClampToScreen inverted-bounds edge case ──
+// When screenClampTight*2 >= screenDimension, the non-FETCHING clamp bounds
+// invert (min > max), causing oscillation. Documenting the gap.
+
+TEST(GoosePhysics, ClampToScreenTinyScreen) {
+    float origClamp = g_config.physics.screenClampTight;
+    g_config.physics.screenClampTight = 30.0f;
+
+    Goose g(410, "TinyClamp", 50, 50);
+    g.pos = {50, 25};
+    g.target = {25, 25};
+    g.state = GooseState::WANDER;
+    g.vel = {-200, 0};
+    g.currentSpeed = 200.0f;
+    g.cursorChaseChance = 0;
+    g.attackMouseBias = 0;
+
+    for (int i = 0; i < 120; i++) {
+        CursorState c;
+        c.caps = CAP_NONE;
+        g.Update(1.0/60.0, i / 60.0, 50, 50, c);
+        EXPECT_TRUE(std::isfinite(g.pos.x)) << "i=" << i;
+        EXPECT_TRUE(std::isfinite(g.pos.y)) << "i=" << i;
+    }
+
+    g_config.physics.screenClampTight = origClamp;
+}
+
+TEST(GoosePhysics, ClampToScreenFetchStateExpandsBounds) {
+    float origExpand = g_config.physics.screenClampExpanded;
+    float origMargin = g_config.spawn.fetchEdgeMargin;
+    g_config.physics.screenClampExpanded = 5.0f;
+    g_config.spawn.fetchEdgeMargin = 10.0f;
+
+    Goose g(411, "FetchClampExpand", 1920, 1080);
+    g.state = GooseState::FETCHING;
+    g.pos = {-15, 500};
+    g.target = {-300, 500};
+    g.vel = {-200, 0};
+    g.currentSpeed = 200.0f;
+    g.cursorChaseChance = 0;
+    g.attackMouseBias = 0;
+
+    CursorState c;
+    c.caps = CAP_NONE;
+    g.Update(0.016, 0.0, 1920, 1080, c);
+    // FETCHING expands clamp by max(screenClampExpanded, fetchEdgeMargin) = 10
+    EXPECT_LE(g.pos.x, -5.0f) << "Fetching clamp should allow movement past screen edge";
+
+    g_config.physics.screenClampExpanded = origExpand;
+    g_config.spawn.fetchEdgeMargin = origMargin;
 }

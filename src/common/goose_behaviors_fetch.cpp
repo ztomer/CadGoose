@@ -194,13 +194,10 @@ void handleReturning(Goose& g, double time, int w, int h) {
         if (std::isfinite(drop.pos.x) && std::isfinite(drop.pos.y) && std::isfinite(drop.rotation)) {
             float minX = 0.0f, minY = 0.0f;
             Vector2 itemHalf = WorldCoord::ItemHalfSize(g.heldItem).toVector2();
-            float maxX = static_cast<float>(w) - itemHalf.x * 2.0f;
-            float maxY = static_cast<float>(h) - itemHalf.y * 2.0f;
-
-            if (drop.pos.x < minX) drop.pos.x = minX;
-            if (drop.pos.y < minY) drop.pos.y = minY;
-            if (drop.pos.x > maxX) drop.pos.x = maxX;
-            if (drop.pos.y > maxY) drop.pos.y = maxY;
+            float maxX = std::max(minX, static_cast<float>(w) - itemHalf.x * 2.0f);
+            float maxY = std::max(minY, static_cast<float>(h) - itemHalf.y * 2.0f);
+            drop.pos.x = std::clamp(drop.pos.x, minX, maxX);
+            drop.pos.y = std::clamp(drop.pos.y, minY, maxY);
 
 
             // Actor takes ownership of drop.data

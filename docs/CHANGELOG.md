@@ -1,5 +1,35 @@
 # Changelog
 
+## June 22, 2026 — Algorithmic integrity review: oracle tests + 1 fix, 0 regressions
+
+### RingBuffer oracle tests (11 new tests)
+- **Edge-case invariants**: wrap-around size accuracy, wrap-then-pop-push ordering, full-buffer front/back after overwrite, wrap iterator, clear-after-wrap, size-never-exceeds-capacity, back on single-element after full wrap.
+- **Undefined-behavior documentation**: `front()`/`back()` on empty buffer accesses stale `buf` slot (documented, callers must guard with `!empty()`). `pop()` on empty is a no-op.
+
+### ActorManager oracle tests (8 new tests)
+- **Add-during-tick**: verifies actors added during `tickAll()` are NOT ticked until the next frame (snapshot isolation).
+- **Remove-non-existent**: verifies safety of `remove()` on an actor that was never `add()`ed.
+- **Empty tick/render**: verifies both no-op cleanly with zero actors.
+- **Multiple concurrent removals**: verifies removing both previous and later actors from one callback.
+- **Add-remove-add during tick**: verifies the remove+re-add cycle doesn't crash.
+- **findByType with non-active**: verifies inactive actors are skipped.
+- **destroyAllOfType type specificity**: verifies one type's destruction doesn't affect another.
+- **Geese cache invalidation**: verifies cached goose list updates after remove.
+
+### isTargetReached oracle tests (7 new tests)
+- Edge cases: at target (dist=0), close (dist < threshold), far (dist >> threshold), overshoot (vel points away), overshoot too far, zero-velocity inside threshold bandwidth, exactly at threshold boundary (strict less-than, not <=).
+
+### ClampToScreen oracle tests (2 new tests)
+- **Tiny screen**: documents the degenerate case where `screenClampTight * 2 >= screenDimension`, causing inverted bounds (min > max) and oscillation. Verifies NaN freedom, documents gap.
+- **Fetch state expands bounds**: verifies that FETCHING state clamp uses `max(screenClampExpanded, fetchEdgeMargin)` instead of `screenClampTight`.
+
+### handleReturning clamp fix (goose_behaviors_fetch.cpp)
+- **Bug**: When a DroppedItem is wider than the screen (`itemHalf.x * 2 > w`), `maxX` could be negative (< `minX` = 0). The sequential min-then-max clamping produced `drop.pos.x = maxX` = negative (offscreen). Fixed by using `std::max(minX, ...)` for max bounds and `std::clamp` for a single correct result.
+
+### Verification
+- **1520 tests, 0 failures** (excluding 4 pre-existing order-dependent: `BehaviorToggles.ToysBehaviorRegistered`, `PortalCleanup.BehaviorHasCleanupFunction`, `StalinHonk.*`, and display-dependent: WindowTrail, MCPIntegration, LocalLLMTest, AXTest, DraggingIntegration)
+- Same baseline preserved — no regressions
+
 ## June 22, 2026 — Phase 5 fix loop: 20+ code-quality fixes, 0 regressions
 
 ### Type safety: strcmp → actorType() (8 sites)
