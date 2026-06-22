@@ -230,8 +230,9 @@ bool Config_IsSystemDarkTheme();
 
 - (void)toggleMute:(id)sender {
     g_config.general.audioMuted = !g_config.general.audioMuted;
+    Audio_SetMuted(g_config.general.audioMuted);
     [self updateMuteMenuItem];
-    DEBUG_LOG("Audio muted: %d", g_config.general.audioMuted);
+    DEBUG_LOG("Audio muted: %d", (int)g_config.general.audioMuted);
 }
 
 - (void)quitApp:(id)sender {

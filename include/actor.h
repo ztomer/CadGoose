@@ -6,19 +6,24 @@
 
 #include "coordinate_system.h"
 #include "renderer_interface.h"
-#include <vector>
 #include <cstring>
 
-class Goose; // forward declaration
-class DroppedItemActor; // forward declaration
 struct WorldContext; // forward declaration
+
+enum class ActorType {
+    Goose, BabyStalin, Ball, Breadcrumb, DroppedItem,
+    Flower, Jail, Leafpile, Portal, Toy
+};
 
 class Actor {
 public:
     virtual ~Actor() = default;
 
-    // Type identifier ("goose", "ball", "toy", "flower", etc.)
+    // Type identifier for debug/logging ("goose", "ball", etc.)
     virtual const char* type() const = 0;
+
+    // Compile-time type ID (fast integer comparison, replaces strcmp)
+    virtual ActorType actorType() const = 0;
 
     // Unique ID within type (0 for singletons, index for multiples)
     virtual int id() const { return 0; }
@@ -53,61 +58,4 @@ protected:
     bool m_active;
 };
 
-// ActorManager — owns all actors, ticks/renders/cleans them up.
-class ActorManager {
-public:
-    static ActorManager& Instance();
-
-    void add(Actor* actor);
-    void remove(Actor* actor);
-
-    void tickAll(WorldContext& ctx, double dt, double time);
-    void renderAll(IRenderer* renderer);
-    void cleanup();  // remove dead actors
-
-    // Find actors by type (returns first match, or nullptr)
-    Actor* findByType(const char* type, int id = -1);
-
-    // Count actors by type
-    int countByType(const char* type) const;
-
-    // Total actor count
-    int totalCount() const { return (int)actors.size(); }
-
-    // Get actor by index (for iteration)
-    Actor* getByIndex(int index) const {
-        if (index < 0 || index >= (int)actors.size()) return nullptr;
-        return actors[index];
-    }
-
-    // Get all Goose actors. Returns a reference to a cached vector that's
-    // rebuilt only when the actor set changes — safe to call many times
-    // per frame without per-call allocation.
-    const std::vector<Goose*>& getGeese() const;
-
-    // Get all DroppedItem actors (cached like getGeese).
-    const std::vector<DroppedItemActor*>& getDroppedItems() const;
-
-    // Delete and remove all dropped-item actors. Convenience for tests /
-    // session resets — equivalent to destroyAllOfType("dropped_item").
-    void removeAllDroppedItems() { destroyAllOfType("dropped_item"); }
-
-    // Delete and remove all actors of a given type (owning cleanup)
-    void destroyAllOfType(const char* type);
-
-    // Mark dropped-items cache dirty so getDroppedItems() rebuilds on next call
-    void invalidateDroppedItemsCache() { droppedItemsCacheDirty = true; }
-
-private:
-    ActorManager() = default;
-    std::vector<Actor*> actors;
-    mutable std::vector<Goose*> geeseCache;
-    mutable std::vector<DroppedItemActor*> droppedItemsCache;
-    mutable bool geeseCacheDirty = true;
-    mutable bool droppedItemsCacheDirty = true;
-
-    void invalidateCaches() {
-        geeseCacheDirty = true;
-        droppedItemsCacheDirty = true;
-    }
-};
+#include "actor_manager.h"

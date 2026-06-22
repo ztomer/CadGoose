@@ -481,7 +481,7 @@ CursorAction Goose::Update(double dt, double time, int w, int h,
   return action;
 }
 
-void Goose::ForceFetch(int type, int w, int h, double time) {
+void Goose::ForceFetch(FetchType type, int w, int h, double time) {
   DebugLog("[FF] g%d ForceFetch type=%d w=%d h=%d\n", id, type, w, h);
   forceItemFetch = type;
   StartFetch(w, h, time);
@@ -489,7 +489,7 @@ void Goose::ForceFetch(int type, int w, int h, double time) {
 }
 
 void Goose::ForceFetchText(const std::string &text, int w, int h) {
-  forceItemFetch = 1;
+  forceItemFetch = FetchType::Text;
   forcedText = text;
   StartFetch(w, h);
 }

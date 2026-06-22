@@ -7,6 +7,7 @@ public:
     BabyStalinActor(int id_, const std::string& name_, int screenW, int screenH);
 
     const char* type() const override { return "baby_stalin"; }
+    ActorType actorType() const override { return ActorType::BabyStalin; }
 
     void onHonk() override;
 

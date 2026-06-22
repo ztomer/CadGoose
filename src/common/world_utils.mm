@@ -78,7 +78,7 @@ void World_TickLeafPiles(double currentTime, float dt, Goose* nearestGoose) {
     auto& mgr = ActorManager::Instance();
     for (int i = 0; i < mgr.totalCount(); i++) {
         Actor* a = mgr.getByIndex(i);
-        if (!a || strcmp(a->type(), "leafpile") != 0) continue;
+        if (!a || a->actorType() != ActorType::Leafpile) continue;
 
         LeafPileActor* pile = static_cast<LeafPileActor*>(a);
         if (!pile->isAlive()) continue;
@@ -101,14 +101,14 @@ void World_SpawnRandomLeafPile(float screenWidth, float screenHeight, double cur
     if (!g_config.behaviors.fun.autumnLeaves) return;
 
     auto& mgr = ActorManager::Instance();
-    int activeCount = mgr.countByType("leafpile");
+    int activeCount = mgr.countByType(ActorType::Leafpile);
     fprintf(stderr, "[INFO] World_SpawnRandomLeafPile: activeCount=%d, kMax=%d\n", activeCount, kMaxLeafPiles);
     while (activeCount >= kMaxLeafPiles) {
         LeafPileActor* oldest = nullptr;
         double oldestTime = 1e30;
         for (int i = 0; i < mgr.totalCount(); i++) {
             Actor* a = mgr.getByIndex(i);
-            if (a && strcmp(a->type(), "leafpile") == 0 && a->isActive()) {
+            if (a && a->actorType() == ActorType::Leafpile && a->isActive()) {
                 LeafPileActor* lp = static_cast<LeafPileActor*>(a);
                 if (lp->timeCreated() < oldestTime) {
                     oldestTime = lp->timeCreated();

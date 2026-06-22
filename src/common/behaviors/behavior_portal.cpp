@@ -94,7 +94,7 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
         PortalActor* portalA = nullptr;
         for (int i = 0; i < mgr.totalCount(); i++) {
             Actor* a = mgr.getByIndex(i);
-            if (a && strcmp(a->type(), "portal") == 0 && a->id() == 1) {
+            if (a && a->actorType() == ActorType::Portal && a->id() == 1) {
                 portalA = static_cast<PortalActor*>(a);
                 break;
             }
@@ -121,7 +121,7 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
         PortalActor* portalB = nullptr;
         for (int i = 0; i < mgr.totalCount(); i++) {
             Actor* a = mgr.getByIndex(i);
-            if (a && strcmp(a->type(), "portal") == 0 && a->id() == 2) {
+            if (a && a->actorType() == ActorType::Portal && a->id() == 2) {
                 portalB = static_cast<PortalActor*>(a);
                 break;
             }
@@ -159,7 +159,7 @@ void Portal_ResetForTest() {
 
 static void cleanup(BehaviorContext& ctx) {
     (void)ctx;
-    ActorManager::Instance().destroyAllOfType("portal");
+    ActorManager::Instance().destroyAllOfType(ActorType::Portal);
 }
 
 static Behavior g_portalBehavior = BEHAVIOR_DEF_CUSTOM(

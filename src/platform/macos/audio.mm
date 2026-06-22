@@ -3,6 +3,7 @@
 #import <Foundation/Foundation.h>
 #import "config.h"
 #include "assets.h"
+#include <atomic>
 
 extern bool g_debugMode;
 
@@ -26,6 +27,7 @@ static AVAudioPlayer* g_gulagPool[2]               = {nullptr};
 static AVAudioPlayer* g_bitePlayer = nullptr;
 static AVAudioPlayer* g_mudPlayer = nullptr;
 static bool g_audioInitialized = false;
+static std::atomic<bool> g_audioMuted{false};
 
 #define DEBUG_LOG(fmt, ...) do { \
     if (g_debugMode) fprintf(stderr, "[DEBUG] " fmt "\n", ##__VA_ARGS__); } while(0)
@@ -52,6 +54,13 @@ static AVAudioPlayer* MakePlayer(NSString* path) {
 
 void Audio_Init() {
     if (g_audioInitialized) return;
+
+    if (ASSET_ROOT.empty()) {
+        fprintf(stderr, "[AUDIO] ASSET_ROOT not initialized — sounds unavailable\n");
+        g_audioInitialized = true;
+        g_audioMuted.store(true);
+        return;
+    }
 
     NSString* assetsPath = GetAssetsPath();
     DEBUG_LOG("Assets path: %s", [assetsPath UTF8String]);
@@ -87,6 +96,7 @@ void Audio_Init() {
                                @"Sound/NotEmbedded/MudSquith.mp3"]);
 
     g_audioInitialized = true;
+    g_audioMuted.store(g_config.general.audioMuted);
     DEBUG_LOG("Audio initialized");
 }
 
@@ -101,35 +111,44 @@ static void PlayFromPool(AVAudioPlayer* const* pool, int count) {
 }
 
 void Audio_PlayHonk() {
-    if (g_config.general.audioMuted) return;
+    if (g_audioMuted.load()) return;
     if (!g_audioInitialized) Audio_Init();
+    if (g_audioMuted.load()) return;
     PlayFromPool(g_honkPool, kHonkPoolDepth);
 }
 
 void Audio_PlayGulag() {
-    if (g_config.general.audioMuted) return;
+    if (g_audioMuted.load()) return;
     if (!g_audioInitialized) Audio_Init();
+    if (g_audioMuted.load()) return;
     PlayFromPool(g_gulagPool, 2);
 }
 
 void Audio_PlayPat() {
-    if (g_config.general.audioMuted) return;
+    if (g_audioMuted.load()) return;
     if (!g_audioInitialized) Audio_Init();
+    if (g_audioMuted.load()) return;
     PlayFromPool(g_patPool, kPatPoolDepth);
 }
 
 void Audio_PlayBite() {
-    if (g_config.general.audioMuted) return;
+    if (g_audioMuted.load()) return;
     if (!g_audioInitialized) Audio_Init();
+    if (g_audioMuted.load()) return;
     if (g_bitePlayer && !g_bitePlayer.isPlaying) {
         [g_bitePlayer play];
     }
 }
 
 void Audio_PlayMudSquish() {
-    if (g_config.general.audioMuted) return;
+    if (g_audioMuted.load()) return;
     if (!g_audioInitialized) Audio_Init();
+    if (g_audioMuted.load()) return;
     if (g_mudPlayer && !g_mudPlayer.isPlaying) {
         [g_mudPlayer play];
     }
+}
+
+void Audio_SetMuted(bool muted) {
+    g_audioMuted.store(muted);
 }

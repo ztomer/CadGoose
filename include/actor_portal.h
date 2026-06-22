@@ -15,6 +15,7 @@ public:
     ~PortalActor() override;
 
     const char* type() const override { return "portal"; }
+    ActorType actorType() const override { return ActorType::Portal; }
     int id() const override { return m_portalId; }
     void tick(WorldContext& ctx, double dt, double time) override;
     void render(IRenderer* renderer) override;

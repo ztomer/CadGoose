@@ -65,10 +65,31 @@ Actor* ActorManager::findByType(const char* type, int id) {
     return nullptr;
 }
 
+Actor* ActorManager::findByType(ActorType type, int id) {
+    for (auto* actor : actors) {
+        if (actor->isActive() && actor->actorType() == type) {
+            if (id < 0 || actor->id() == id) {
+                return actor;
+            }
+        }
+    }
+    return nullptr;
+}
+
 int ActorManager::countByType(const char* type) const {
     int count = 0;
     for (auto* actor : actors) {
         if (actor->isActive() && strcmp(actor->type(), type) == 0) {
+            count++;
+        }
+    }
+    return count;
+}
+
+int ActorManager::countByType(ActorType type) const {
+    int count = 0;
+    for (auto* actor : actors) {
+        if (actor->isActive() && actor->actorType() == type) {
             count++;
         }
     }
@@ -80,6 +101,24 @@ void ActorManager::destroyAllOfType(const char* type) {
     for (auto it = actors.begin(); it != actors.end();) {
         Actor* a = *it;
         if (a && strcmp(a->type(), type) == 0) {
+            a->setActive(false);
+            dead.push_back(a);
+            it = actors.erase(it);
+        } else {
+            ++it;
+        }
+    }
+    for (auto* a : dead) {
+        delete a;
+    }
+    if (!dead.empty()) invalidateCaches();
+}
+
+void ActorManager::destroyAllOfType(ActorType type) {
+    std::vector<Actor*> dead;
+    for (auto it = actors.begin(); it != actors.end();) {
+        Actor* a = *it;
+        if (a && a->actorType() == type) {
             a->setActive(false);
             dead.push_back(a);
             it = actors.erase(it);
@@ -112,7 +151,7 @@ const std::vector<DroppedItemActor*>& ActorManager::getDroppedItems() const {
         droppedItemsCache.clear();
         droppedItemsCache.reserve(actors.size());
         for (auto* actor : actors) {
-            if (actor->isActive() && strcmp(actor->type(), "dropped_item") == 0) {
+            if (actor->isActive() && actor->actorType() == ActorType::DroppedItem) {
                 droppedItemsCache.push_back(static_cast<DroppedItemActor*>(actor));
             }
         }

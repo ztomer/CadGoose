@@ -101,11 +101,11 @@ void cb_clear_log(GtkButton*, gpointer) { g_world.uiLog.clear(); }
 
 void cb_fetch_meme(GtkButton*, gpointer) {
     Goose* g = GetGooseById(g_world.selectedGooseId);
-    if (g) g->ForceFetch(0, g_world.screenWidth, g_world.screenHeight);
+    if (g) g->ForceFetch(FetchType::Meme, g_world.screenWidth, g_world.screenHeight);
 }
 void cb_fetch_text(GtkButton*, gpointer) {
     Goose* g = GetGooseById(g_world.selectedGooseId);
-    if (g) g->ForceFetch(1, g_world.screenWidth, g_world.screenHeight);
+    if (g) g->ForceFetch(FetchType::Text, g_world.screenWidth, g_world.screenHeight);
 }
 void cb_fetch_text_custom(GtkButton*, gpointer) {
     Goose* g = GetGooseById(g_world.selectedGooseId);
@@ -168,8 +168,8 @@ void cb_action_apply(GtkButton*, gpointer user_data) {
     GtkWidget* combo = GTK_WIDGET(user_data);
     int idx = gtk_drop_down_get_selected(GTK_DROP_DOWN(combo));
     if (idx == 0) g->ForceWander(g_world.screenWidth, g_world.screenHeight);
-    else if (idx == 1) g->ForceFetch(0, g_world.screenWidth, g_world.screenHeight);
-    else if (idx == 2) g->ForceFetch(1, g_world.screenWidth, g_world.screenHeight);
+    else if (idx == 1) g->ForceFetch(FetchType::Meme, g_world.screenWidth, g_world.screenHeight);
+    else if (idx == 2) g->ForceFetch(FetchType::Text, g_world.screenWidth, g_world.screenHeight);
 }
 
 void cb_set_mouse_bias(GtkRange* r, gpointer) {

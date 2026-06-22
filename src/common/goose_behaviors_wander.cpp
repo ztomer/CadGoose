@@ -110,14 +110,12 @@ void handleWander(Goose& g, double time, const CursorState& cursor, int w, int h
                 time, g.id, trigger, fetchRoll, fetchCount, g_config.item.maxFetchGeese);
 
         if (canFetch && fetchCount < g_config.item.maxFetchGeese && fetchRoll < trigger) {
-            int fetchType;
+            FetchType fetchType = FetchType::Text;
             if (g_config.general.memesEnabled && totalBias > 0) {
                 int memeShare = memeProb * 100 / (totalBias + 1);
-                fetchType = (rng_util::RandRange(100) < memeShare) ? 0 : 1;
-            } else {
-                fetchType = 1;
+                fetchType = (rng_util::RandRange(100) < memeShare) ? FetchType::Meme : FetchType::Text;
             }
-            fprintf(f, "[FETCH] t=%.1f g%d: TRIGGERED fetch type=%s\n", time, g.id, fetchType == 0 ? "MEME" : "TEXT");
+            fprintf(f, "[FETCH] t=%.1f g%d: TRIGGERED fetch type=%s\n", time, g.id, fetchType == FetchType::Meme ? "MEME" : "TEXT");
             g.ForceFetch(fetchType, w, h, time);
         } else {
             if (!canFetch) fprintf(f, "[FETCH] g%d: skipped (cooldown, lastDrop=%.1f)\n", g.id, g.lastDropTime);

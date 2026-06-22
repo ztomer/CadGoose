@@ -15,6 +15,7 @@ public:
     ~ToyActor() override;
 
     const char* type() const override { return "toy"; }
+    ActorType actorType() const override { return ActorType::Toy; }
     int id() const override { return m_instanceId; }
     void tick(WorldContext& ctx, double dt, double time) override;
     void render(IRenderer* renderer) override;

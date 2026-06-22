@@ -380,12 +380,12 @@ TEST_F(BehaviorPomodoroTest, WorkPhaseForceItemFetchNegative) {
     ASSERT_NE(b, nullptr);
     b->init(ctx);
 
-    goose->forceItemFetch = 5;
+    goose->forceItemFetch = static_cast<FetchType>(5);
 
     ctx.time = 0.1;
     b->tick(goose, ctx, 0.016, 0.1);
 
-    EXPECT_EQ(goose->forceItemFetch, -1);
+    EXPECT_EQ(goose->forceItemFetch, FetchType::Random);
 }
 
 TEST_F(BehaviorPomodoroTest, WorkPhaseCancelsFetchingWithHeldItem) {

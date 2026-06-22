@@ -73,9 +73,9 @@ void AppActions_ClearGeese() {
     g_world.footprints.clear();
 
     Config_SaveGooseNames();
+    ActorManager::Instance().destroyAllOfType(ActorType::Goose);
 
-    ActorManager::Instance().destroyAllOfType("goose");
-    ActorManager::Instance().destroyAllOfType("baby_stalin");
+    ActorManager::Instance().destroyAllOfType(ActorType::BabyStalin);
 
     g_world.cursorGrabberId = -1;
     g_world.selectedGooseId = 0;
@@ -232,7 +232,7 @@ std::string AppActions_HandleCommand(const std::vector<std::string>& args) {
     if (command == "fetch") {
         auto geese = ActorManager::Instance().getGeese();
         if (geese.empty()) return "error no goose\n";
-        int type = 0;
+        FetchType type = FetchType::Meme;
         int gooseIdx = 0;
         if (args.size() > 1) {
             char* end = nullptr;
@@ -240,20 +240,18 @@ std::string AppActions_HandleCommand(const std::vector<std::string>& args) {
             if (end && *end == '\0' && idx >= 0 && idx < (long)geese.size()) {
                 gooseIdx = (int)idx;
                 if (args.size() > 2) {
-                    if (args[2] == "text") type = 1;
-                    else if (args[2] == "meme") type = 0;
-                    else if (args[2] == "test") type = 2;
+                    if (args[2] == "text") type = FetchType::Text;
+                    else if (args[2] == "meme") type = FetchType::Meme;
+                    else if (args[2] == "test") type = FetchType::TestImage;
                 }
             } else {
-                if (args[1] == "text") type = 1;
-                else if (args[1] == "meme") type = 0;
-                else if (args[1] == "test") type = 2;
+                if (args[1] == "text") type = FetchType::Text;
+                else if (args[1] == "meme") type = FetchType::Meme;
+                else if (args[1] == "test") type = FetchType::TestImage;
             }
         }
-        fprintf(stderr, "[CLI] fetch gooseIdx=%d type=%d geese.size=%zu\n", gooseIdx, type, geese.size());
         geese[gooseIdx]->ForceFetch(type, g_world.screenWidth, g_world.screenHeight);
-        fprintf(stderr, "[CLI] after ForceFetch g%d state=%d heldItem=%p\n", geese[gooseIdx]->id, (int)geese[gooseIdx]->state, (void*)geese[gooseIdx]->heldItem);
-        return "ok force_fetch goose=" + std::to_string(gooseIdx) + " type=" + std::to_string(type) + "\n";
+        return "ok force_fetch goose=" + std::to_string(gooseIdx) + " type=" + std::to_string((int)type) + "\n";
     }
 
     if (command == "clear_dropped") {

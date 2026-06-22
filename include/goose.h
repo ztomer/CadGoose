@@ -18,6 +18,7 @@
 #include "actor.h"
 
 enum class GooseState { WANDER, FETCHING, RETURNING, CHASE_CURSOR, SNATCH_CURSOR };
+enum class FetchType : int { Random = -1, Meme = 0, Text = 1, TestImage = 2 };
 
 struct FootState {
     Vector2 currentPos{};
@@ -50,7 +51,7 @@ public:
     // State
     GooseState state = GooseState::WANDER;
     ItemData* heldItem = nullptr;
-    int forceItemFetch = -1; // -1: Random, 0: Meme, 1: Text
+    FetchType forceItemFetch = FetchType::Random;
     std::string forcedText;
 
     float currentSpeed = 0;
@@ -160,6 +161,7 @@ public:
 
     // Actor interface
     const char* type() const override { return "goose"; }
+    ActorType actorType() const override { return ActorType::Goose; }
     void tick(WorldContext& ctx, double dt, double time) override;
     void render(IRenderer* renderer) override;
     void draw(IRenderer* renderer);
@@ -174,7 +176,7 @@ public:
     ~Goose() override;
 
     CursorAction Update(double dt, double time, int scrW, int scrH, const CursorState& cursor);
-    void ForceFetch(int type, int w, int h, double time = -1.0);
+    void ForceFetch(FetchType type, int w, int h, double time = -1.0);
     void ForceFetchText(const std::string& text, int w, int h);
     void ForceWander(int w, int h);
 

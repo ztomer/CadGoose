@@ -14,6 +14,7 @@ public:
     ~DroppedItemActor() override;
 
     const char* type() const override { return "dropped_item"; }
+    ActorType actorType() const override { return ActorType::DroppedItem; }
     void tick(WorldContext& ctx, double dt, double time) override;
     void render(IRenderer* renderer) override;
     bool isAlive() const override { return m_active && m_item.data != nullptr && !isExpired(); }
