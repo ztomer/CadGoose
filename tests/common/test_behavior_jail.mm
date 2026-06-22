@@ -47,7 +47,7 @@ protected:
     void TearDown() override {
         g_config.behaviors.control.jail = savedControlJail;
         g_cursorProvider = savedProvider;
-        ActorManager::Instance().destroyAllOfType("jail");
+        ActorManager::Instance().destroyAllOfType(ActorType::Jail);
         delete goose;
         PlatformInputMock_Reset();
     }
@@ -282,13 +282,13 @@ TEST_F(BehaviorJailTest, DisabledClearsJailActors) {
     ctx.time = 2.0;
     b->tick(goose, ctx, 0.016, 2.0);
 
-    EXPECT_GT(ActorManager::Instance().countByType("jail"), 0);
+    EXPECT_GT(ActorManager::Instance().countByType(ActorType::Jail), 0);
 
     g_config.behaviors.control.jail = false;
     ctx.time = 3.0;
     b->tick(goose, ctx, 0.016, 3.0);
 
-    EXPECT_EQ(ActorManager::Instance().countByType("jail"), 0);
+    EXPECT_EQ(ActorManager::Instance().countByType(ActorType::Jail), 0);
 }
 
 TEST_F(BehaviorJailTest, OKeyWhileActiveClearsJails) {
@@ -319,7 +319,7 @@ TEST_F(BehaviorJailTest, OKeyWhileActiveClearsJails) {
     b->tick(goose, ctx, 0.016, 4.0);
 
     EXPECT_FALSE(state->isJailed);
-    EXPECT_GT(ActorManager::Instance().countByType("jail"), 0);
+    EXPECT_GT(ActorManager::Instance().countByType(ActorType::Jail), 0);
 }
 
 TEST_F(BehaviorJailTest, MultipleJailsNearestUsed) {

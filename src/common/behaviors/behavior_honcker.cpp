@@ -12,7 +12,6 @@
 #include "world.h"
 #include "assets.h"
 #include "hotkey.h"
-#include "behaviors/states/honcker_state.h"
 #include "platform_input.h"
 
 static constexpr float kHonkYOffset = 20.0f;

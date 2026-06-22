@@ -8,14 +8,14 @@
 class BabyStalinSpawnTest : public ::testing::Test {
 protected:
     void SetUp() override {
-        ActorManager::Instance().destroyAllOfType("goose");
-        ActorManager::Instance().destroyAllOfType("baby_stalin");
+        ActorManager::Instance().destroyAllOfType(ActorType::Goose);
+        ActorManager::Instance().destroyAllOfType(ActorType::BabyStalin);
         g_world.nextId = 100;
     }
 
     void TearDown() override {
-        ActorManager::Instance().destroyAllOfType("goose");
-        ActorManager::Instance().destroyAllOfType("baby_stalin");
+        ActorManager::Instance().destroyAllOfType(ActorType::Goose);
+        ActorManager::Instance().destroyAllOfType(ActorType::BabyStalin);
         g_world.nextId = 100;
     }
 };

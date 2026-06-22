@@ -8,7 +8,6 @@
 #include "wlroots_backend.h"
 #endif
 
-#include <algorithm>
 #include <iostream>
 
 ICursorProvider* g_cursorProvider = nullptr;

@@ -146,7 +146,7 @@ TEST(GooseStateMachine, FetchingCreatesItem) {
 }
 
 TEST(MultiGoose, SeparationForcePushesApart) {
-    ActorManager::Instance().destroyAllOfType("goose");
+    ActorManager::Instance().destroyAllOfType(ActorType::Goose);
     g_world.nextId = 100;
 
     Goose* g1ptr = new Goose(100, "Sep1", 1920, 1080);
@@ -186,7 +186,7 @@ TEST(MultiGoose, SeparationForcePushesApart) {
 
     EXPECT_GT(totalDist, 10.0f) << "Geese should move (separation or seek)";
 
-    ActorManager::Instance().destroyAllOfType("goose");
+    ActorManager::Instance().destroyAllOfType(ActorType::Goose);
 }
 
 TEST(ConfigValidation, SliderKeysMatchConfigKeys) {

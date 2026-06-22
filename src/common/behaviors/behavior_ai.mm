@@ -10,7 +10,6 @@
 #include "actor.h"
 #include <string>
 #include <vector>
-#include <cstring>
 
 #ifdef __APPLE__
 #import <Cocoa/Cocoa.h>

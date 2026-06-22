@@ -7,7 +7,6 @@
 #include "goose_math.h"
 #include "actor.h"
 #include "actor_flower.h"
-#include <ctime>
 #include <cmath>
 #include <vector>
 

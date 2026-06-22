@@ -11,7 +11,6 @@
 #include "world.h"
 #include "platform_input.h"
 
-static constexpr float DRAG_RADIUS = 45.0f;
 static constexpr int kDragDirectionJitterMax = 10;
 
 static void init(BehaviorContext& ctx) {}

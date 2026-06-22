@@ -42,7 +42,7 @@ protected:
 
     void TearDown() override {
         g_cursorProvider = savedProvider;
-        ActorManager::Instance().destroyAllOfType("breadcrumb");
+        ActorManager::Instance().destroyAllOfType(ActorType::Breadcrumb);
         delete goose;
         PlatformInputMock_Reset();
     }

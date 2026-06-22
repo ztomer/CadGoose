@@ -16,7 +16,7 @@ void World_SpawnRandomLeafPile(float screenWidth, float screenHeight, double cur
 
 static void ResetState() {
     BehaviorStateManager::Instance().ClearAll();
-    ActorManager::Instance().destroyAllOfType("leafpile");
+    ActorManager::Instance().destroyAllOfType(ActorType::Leafpile);
     g_config.behaviors.control.portals = false;
     g_config.behaviors.fun.autumnLeaves = false;
 }
@@ -52,11 +52,11 @@ TEST(PortalCleanup, StateResetOnDisable) {
 TEST(PortalCleanup, DestroyAllOfTypeIsSafe) {
     ResetState();
     // Should not crash when no portal actors exist
-    ActorManager::Instance().destroyAllOfType("portal");
+    ActorManager::Instance().destroyAllOfType(ActorType::Portal);
 
     // Should not crash when called multiple times
-    ActorManager::Instance().destroyAllOfType("portal");
-    ActorManager::Instance().destroyAllOfType("portal");
+    ActorManager::Instance().destroyAllOfType(ActorType::Portal);
+    ActorManager::Instance().destroyAllOfType(ActorType::Portal);
 }
 
 // ============================================================
@@ -100,14 +100,14 @@ TEST(AutumnLeaves, SpawnCreatesActor) {
     g_config.behaviors.fun.autumnLeaves = true;
 
     auto& mgr = ActorManager::Instance();
-    mgr.destroyAllOfType("leafpile");
+    mgr.destroyAllOfType(ActorType::Leafpile);
 
-    int before = mgr.countByType("leafpile");
+    int before = mgr.countByType(ActorType::Leafpile);
     EXPECT_EQ(before, 0);
 
     World_SpawnRandomLeafPile(1920, 1080, 0.0);
 
-    int after = mgr.countByType("leafpile");
+    int after = mgr.countByType(ActorType::Leafpile);
     EXPECT_EQ(after, 1) << "World_SpawnRandomLeafPile must create a LeafPileActor";
 }
 
@@ -116,13 +116,13 @@ TEST(AutumnLeaves, SpawnCapAtMax) {
     g_config.behaviors.fun.autumnLeaves = true;
 
     auto& mgr = ActorManager::Instance();
-    mgr.destroyAllOfType("leafpile");
+    mgr.destroyAllOfType(ActorType::Leafpile);
 
     for (int i = 0; i < 20; i++) {
         World_SpawnRandomLeafPile(1920, 1080, (double)i);
     }
 
-    int count = mgr.countByType("leafpile");
+    int count = mgr.countByType(ActorType::Leafpile);
     EXPECT_GE(count, 0);
     EXPECT_LE(count, 3) << "Should not exceed kMaxLeafPiles";
 
@@ -132,17 +132,17 @@ TEST(AutumnLeaves, SpawnCapAtMax) {
     }
 
     // Cleanup
-    mgr.destroyAllOfType("leafpile");
+    mgr.destroyAllOfType(ActorType::Leafpile);
 }
 
 TEST(AutumnLeaves, InitialSpawnOnEnable) {
     ResetState();
     g_config.behaviors.fun.autumnLeaves = false;
     auto& mgr = ActorManager::Instance();
-    mgr.destroyAllOfType("leafpile");
+    mgr.destroyAllOfType(ActorType::Leafpile);
 
     // When disabled, no leaf piles should appear
-    EXPECT_EQ(mgr.countByType("leafpile"), 0);
+    EXPECT_EQ(mgr.countByType(ActorType::Leafpile), 0);
 
     // After enabling, spawn initial piles (simulating TickManager startup)
     g_config.behaviors.fun.autumnLeaves = true;
@@ -150,7 +150,7 @@ TEST(AutumnLeaves, InitialSpawnOnEnable) {
         World_SpawnRandomLeafPile(1920, 1080, (double)i);
     }
 
-    EXPECT_GT(mgr.countByType("leafpile"), 0)
+    EXPECT_GT(mgr.countByType(ActorType::Leafpile), 0)
         << "leaf piles should be spawnable after autumnLeaves is enabled";
 }
 
@@ -158,19 +158,19 @@ TEST(AutumnLeaves, DisableThenReenable) {
     ResetState();
     g_config.behaviors.fun.autumnLeaves = false;
     auto& mgr = ActorManager::Instance();
-    mgr.destroyAllOfType("leafpile");
+    mgr.destroyAllOfType(ActorType::Leafpile);
 
     // Enable, spawn some piles
     g_config.behaviors.fun.autumnLeaves = true;
     World_SpawnRandomLeafPile(1920, 1080, 0.0);
-    EXPECT_EQ(mgr.countByType("leafpile"), 1);
+    EXPECT_EQ(mgr.countByType(ActorType::Leafpile), 1);
 
     // Disable — piles should persist (or be cleaned up, depending on design)
     // Current behavior: they persist until removed by the cap mechanism.
     // This test documents that spawning still works after re-enable.
-    mgr.destroyAllOfType("leafpile");
-    EXPECT_EQ(mgr.countByType("leafpile"), 0);
+    mgr.destroyAllOfType(ActorType::Leafpile);
+    EXPECT_EQ(mgr.countByType(ActorType::Leafpile), 0);
 
     World_SpawnRandomLeafPile(1920, 1080, 1.0);
-    EXPECT_EQ(mgr.countByType("leafpile"), 1);
+    EXPECT_EQ(mgr.countByType(ActorType::Leafpile), 1);
 }

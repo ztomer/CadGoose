@@ -12,7 +12,6 @@
 #include "world.h"
 #include "assets.h"
 #include "renderer_interface.h"
-#include "behaviors/states/pomodoro_state.h"
 #ifdef __APPLE__
 #include "cg_renderer.h"
 #endif

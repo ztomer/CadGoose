@@ -95,7 +95,7 @@ void UpdateEscapeHoldHud() {
 void ClearAllGooseState() {
     ActorManager::Instance().removeAllDroppedItems();
     g_world.footprints.clear();
-    ActorManager::Instance().destroyAllOfType("goose");
+    ActorManager::Instance().destroyAllOfType(ActorType::Goose);
     g_world.cursorGrabberId = -1;
     g_world.selectedGooseId = 0;
     g_world.nextId = 0;

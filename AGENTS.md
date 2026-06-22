@@ -209,6 +209,31 @@ brew install --cask tools/homebrew/cadgoose.rb   # Test the Homebrew Cask instal
 ### Verification
 - **1429 tests, 0 failures** — same baseline preserved
 
+## Session Summary (June 22d, 2026) — Round 3: include/dead-code sweep, 31 files
+
+### Duplicate includes (9 files, 16 pairs)
+- `behavior.cpp`: 6 duplicate state includes removed.
+- `goose_behaviors_fetch.cpp`: duplicate `actor_dropped_item.h` removed.
+- `behavior_acid/anger/boredom/health/honcker/peeking/pomodoro.cpp`: each had a duplicate state `#include`.
+
+### String→ActorType enum (54 sites, 10 files)
+- **`ui_escape.cpp`**: `destroyAllOfType("goose")` → `ActorType::Goose`.
+- **9 test files**: all `destroyAllOfType("X")` / `countByType("X")` replaced with `ActorType::X` (goose, baby_stalin, portal, jail, toy, flower, leafpile, breadcrumb).
+
+### Dead code removed (5 items)
+- `DRAG_RADIUS` (behavior_drag.cpp), `kStuckRecoveryMargin` + `CloseDebugLog()` (goose.cpp — separate from `goose_debug.h`'s `CloseDebugLog` which is the one actually called).
+- `kMinMcpPort`/`kMaxMcpPort`/`kDefaultMcpPort`/`kTestTimeout` (config_gui_ai.mm — unused duplicates).
+- `kModelRefreshDelay`/`kModelPopupTag` (config_gui_ai_connection.mm — unused duplicates).
+
+### Unused standard includes (7 files)
+- `<cstring>` (behavior_hats, hotkey, behavior_ai).
+- `<cstdio>` (goose_behaviors_internal, local_llm_model).
+- `<ctime>` (behavior_interactive_drops).
+- `<algorithm>` (hotkey, cursor_backend).
+
+### Verification
+- **1429 tests, 0 failures** — same baseline
+
 ## Key Facts
 - **Seed 48**: `rng_util::Seed(48)` makes `RandRange(400) == 0` on first call (interactive drops trigger), `RandRange(360) == 51` on second call (hue).
 - **Config struct vs registry defaults**: Struct member initializers in `config.h` are the actual runtime values; registry defaults in `config_registry_*.cpp` are only used for GUI/TOML serialization. Many struct defaults differ from registry defaults (e.g., `dropInterval`: struct=120.0f, registry=10.0f).
