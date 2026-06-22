@@ -42,7 +42,7 @@ static constexpr float kWave2ArcX = 15, kWave2ArcY1 = 3, kWave2ArcY2 = 13, kWave
 
 extern bool g_debugMode;
 static bool g_mcpMode = false;
-FILE* g_logFile = nullptr;
+static FILE* g_logFile = nullptr;
 
 void OpenLogFile() {
     if (g_logFile) return;

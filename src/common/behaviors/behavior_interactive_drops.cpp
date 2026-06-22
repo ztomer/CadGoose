@@ -17,7 +17,7 @@ static void init(BehaviorContext& ctx) {
 }
 
 static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
-    (void)ctx;
+    (void)ctx; (void)dt; (void)time;
 
     if (goose->heldItem) return;
     if (goose->state != GooseState::WANDER) return;

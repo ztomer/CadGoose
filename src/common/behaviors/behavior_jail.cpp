@@ -27,6 +27,7 @@ static void init(BehaviorContext& ctx) {
 }
 
 static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
+    (void)dt;
     auto* state = BehaviorStateManager::Instance().GetOrCreate<JailState>(goose->id, "jail");
 
     if (!g_config.behaviors.control.jail) {

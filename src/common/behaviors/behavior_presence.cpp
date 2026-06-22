@@ -13,10 +13,12 @@ extern "C" void Presence_SetGooseWindowVisible(bool visible);
 static bool s_lastVisible = true;
 
 static void init(BehaviorContext& ctx) {
+    (void)ctx;
     s_lastVisible = true;
 }
 
 static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
+    (void)dt;
     static double lastUpdate = 0.0;
     if (time - lastUpdate < 0.5) return;
     lastUpdate = time;
@@ -41,7 +43,7 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
     }
 }
 
-static void render(Goose* goose, BehaviorContext& ctx, IRenderer* irenderer) {
+static void render(Goose*, BehaviorContext&, IRenderer*) {
 }
 
 static Behavior g_presenceBehavior = BEHAVIOR_DEF(

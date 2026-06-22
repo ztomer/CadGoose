@@ -44,6 +44,7 @@ FlowerActor::~FlowerActor() {
 
 void FlowerActor::tick(WorldContext& ctx, double dt, double time) {
     if (!m_active) return;
+    (void)ctx; (void)dt;
 
     double age = time - m_spawnTime;
     float growTime = g_config.behaviors.interactiveDrops.flowerGrowTime;

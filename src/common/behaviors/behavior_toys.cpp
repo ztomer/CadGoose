@@ -31,6 +31,7 @@ static void init(BehaviorContext& ctx) {
 }
 
 static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
+    (void)dt;
     auto& mgr = ActorManager::Instance();
 
     // Count active toys
