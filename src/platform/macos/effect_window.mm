@@ -237,7 +237,8 @@ static constexpr float kEffectWindowMinSize = 40.0f;
         [_windows replaceObjectAtIndex:_head withObject:window];
         _head = (_head + 1) % kMaxEffectWindows;
     } else {
-        [_windows addObject:window];
+        size_t insertIdx = (_head + _count) % kMaxEffectWindows;
+        [_windows replaceObjectAtIndex:insertIdx withObject:window];
         _count++;
     }
 }

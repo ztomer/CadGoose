@@ -31,7 +31,6 @@ TEST(RainbowBehavior, StateCreation) {
     ASSERT_NE(state, nullptr);
     state->Reset();
     EXPECT_FLOAT_EQ(state->hue, 0.0f);
-    EXPECT_EQ(state->lastUpdate, 0);
 }
 
 TEST(RainbowBehavior, HueCycling) {

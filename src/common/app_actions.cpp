@@ -198,13 +198,13 @@ std::string AppActions_HandleCommand(const std::vector<std::string>& args) {
     const std::string& command = args.front();
     if (command == "spawn") {
         Goose* goose = AppActions_SpawnGoose(args.size() > 1 ? args[1] : "");
-        return "ok id=" + std::to_string(goose ? goose->id : -1) + "\n";
+        return "ok id=" + std::to_string(goose->id) + "\n";
     }
 
     if (command == "spawn_baby_stalin" || command == "spawn_stalin") {
 #ifdef __APPLE__
         Goose* stalin = AppActions_SpawnBabyStalin(args.size() > 1 ? args[1] : "");
-        return "ok id=" + std::to_string(stalin ? stalin->id : -1) + "\n";
+        return "ok id=" + std::to_string(stalin->id) + "\n";
 #else
         return "error only supported on macOS\n";
 #endif

@@ -23,6 +23,19 @@ static void LogCrumb(const char* msg) {
     fprintf(stderr, "[Breadcrumbs] %s\n", msg);
 }
 
+// Deactivate the BreadcrumbActor matching a crumb position.
+static void deactivateCrumbActor(const Vector2& crumbPos) {
+    auto& mgr = ActorManager::Instance();
+    for (int i = mgr.totalCount() - 1; i >= 0; i--) {
+        Actor* a = mgr.getByIndex(i);
+        if (a && a->actorType() == ActorType::Breadcrumb &&
+            a->position().x == crumbPos.x && a->position().y == crumbPos.y) {
+            a->setActive(false);
+            break;
+        }
+    }
+}
+
 static void init(BehaviorContext& ctx) {
     s_wasKeyDown = false;
     s_lastKeyCheck = 0;
@@ -80,7 +93,9 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
 
     int maxCrumbs = g_config.behaviors.breadCrumbs.maxCrumbs;
     while (g_world.crumbs.size() > (size_t)maxCrumbs) {
+        Vector2 frontPos = g_world.crumbs.front().pos;
         g_world.crumbs.pop();
+        deactivateCrumbActor(frontPos);
     }
 
     while (!g_world.crumbs.empty() && time - g_world.crumbs.front().time > g_world.crumbs.front().lifetime) {
@@ -94,6 +109,7 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
         float dist = std::hypot(goose->pos.x - crumb.pos.x, goose->pos.y - crumb.pos.y);
         if (dist < eatRadius) {
             crumb.eaten = true;
+            deactivateCrumbActor(crumb.pos);
             EventBus::Instance().Publish(ItemEatenEvent{goose->id, crumb.pos.x, crumb.pos.y, "breadcrumb"});
             g_assets.Bite();
             goose->isChewing = true;

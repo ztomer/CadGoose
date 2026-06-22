@@ -6,7 +6,6 @@
 #include "behaviors/states/rainbow_state.h"
 #include "goose.h"
 #include "config.h"
-#include "behaviors/states/rainbow_state.h"
 
 
 static void init(BehaviorContext& ctx) {
@@ -21,7 +20,6 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
     if (state->hue >= 360.0f) {
         state->hue -= 360.0f;
     }
-    state->lastUpdate = time;
 }
 
 static void render(Goose* goose, BehaviorContext& ctx, IRenderer* irenderer) {

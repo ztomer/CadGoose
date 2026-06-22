@@ -5,11 +5,9 @@
 
 struct RainbowState : public BehaviorState {
     float hue = 0.0f;
-    double lastUpdate = 0;
 
     void Reset() override {
         hue = 0.0f;
-        lastUpdate = 0;
     }
 };
 

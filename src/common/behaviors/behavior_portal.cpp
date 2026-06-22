@@ -13,7 +13,6 @@
 #include "hotkey.h"
 #include "actor.h"
 #include "actor_portal.h"
-#include "behaviors/states/portal_state.h"
 #include "platform_input.h"
 
 #ifdef __APPLE__
@@ -91,14 +90,7 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
         fprintf(stderr, "[Portal] Portal 1 placed at (%.0f, %.0f)\n", state->portalA.x, state->portalA.y);
 
         // Update or create PortalActor A
-        PortalActor* portalA = nullptr;
-        for (int i = 0; i < mgr.totalCount(); i++) {
-            Actor* a = mgr.getByIndex(i);
-            if (a && a->actorType() == ActorType::Portal && a->id() == 1) {
-                portalA = static_cast<PortalActor*>(a);
-                break;
-            }
-        }
+        PortalActor* portalA = static_cast<PortalActor*>(mgr.findByType(ActorType::Portal, 1));
         if (portalA) {
             portalA->setPosition({state->portalA.x, state->portalA.y});
             portalA->setActive(true);
@@ -118,14 +110,7 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
         fprintf(stderr, "[Portal] Portal 2 placed at (%.0f, %.0f)\n", state->portalB.x, state->portalB.y);
 
         // Update or create PortalActor B
-        PortalActor* portalB = nullptr;
-        for (int i = 0; i < mgr.totalCount(); i++) {
-            Actor* a = mgr.getByIndex(i);
-            if (a && a->actorType() == ActorType::Portal && a->id() == 2) {
-                portalB = static_cast<PortalActor*>(a);
-                break;
-            }
-        }
+        PortalActor* portalB = static_cast<PortalActor*>(mgr.findByType(ActorType::Portal, 2));
         if (portalB) {
             portalB->setPosition({state->portalB.x, state->portalB.y});
             portalB->setActive(true);
