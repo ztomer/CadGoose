@@ -41,7 +41,13 @@
 - **Portal O(n) iteration** (`behavior_portal.cpp`): Manual actor scan for portal lookup replaced with `mgr.findByType(ActorType::Portal, id)` (same O(n) but cleaner intent).
 - **app_actions null-check** (`app_actions.cpp`): Dead ternary `goose ? goose->id : -1` — `new` never returns nullptr. Simplified to `goose->id`.
 - **Duplicate includes** (3 files): `jail_state.h` in behavior_jail.cpp, `portal_state.h` in behavior_portal.cpp, `rainbow_state.h` in behavior_rainbow.cpp — all removed.
-- **Test cleanup** (`test_behaviors_visual.cpp`): Removed `lastUpdate` check that matched deleted struct field.
+- **Test cleanup** (`test_behaviors_visual.cpp`): Removed orphaned `lastUpdate` assertion.
+
+### Cleanup: huge include/dead-code sweep (31 files)
+- **Duplicate includes** (9 files, 16 pairs): `behavior.cpp` (6 pairs), plus 8 behavior files each had a duplicate state include.
+- **String-based type checks → ActorType enum (54 sites)**: `ui_escape.cpp` + 9 test files — all `destroyAllOfType("goose")` / `countByType("toy")` etc. replaced with `ActorType::Goose` / `ActorType::Toy`.
+- **Unused static variables removed** (5 items): `DRAG_RADIUS` (behavior_drag), `kStuckRecoveryMargin` + `CloseDebugLog()` (goose.cpp), `kMinMcpPort`/`kMaxMcpPort`/`kDefaultMcpPort`/`kTestTimeout` (config_gui_ai.mm), `kModelRefreshDelay`/`kModelPopupTag` (config_gui_ai_connection.mm).
+- **Unused standard includes removed** (7 files): `<cstring>` (behavior_hats, hotkey, behavior_ai), `<cstdio>` (goose_behaviors_internal, local_llm_model), `<ctime>` (behavior_interactive_drops), `<algorithm>` (hotkey, cursor_backend).
 
 ### Verification
 - **1429 tests, 0 failures** (excluding 4 pre-existing order-dependent: `BehaviorToggles.ToysBehaviorRegistered`, `PortalCleanup.BehaviorHasCleanupFunction`, `StalinHonk.*`)

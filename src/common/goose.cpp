@@ -57,8 +57,6 @@ static constexpr float kRadToDeg = 180.0f / PI;
 static constexpr float kDegToRad = PI / 180.0f;
 static constexpr double kStuckThresholdTime = 3.0;
 static constexpr float kStuckMinMovementThreshold = 10.0f;
-static constexpr float kStuckRecoveryMargin = 50.0f;
-
 static FILE *s_debugLog = nullptr;
 
 static FILE *GetDebugLog() {
@@ -105,13 +103,6 @@ static void LogTick(double time, const CursorState &cursor) {
 
 static bool s_stateChanged = true;
 static double s_lastLogTime = 0;
-
-static void CloseDebugLog() {
-    if (s_debugLog && s_debugLog != stderr) {
-        fclose(s_debugLog);
-    }
-    s_debugLog = nullptr;
-}
 
 Goose::Goose(int id_, const std::string &name_, int screenW, int screenH)
     : id(id_), name(name_) {

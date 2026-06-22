@@ -8,7 +8,6 @@
 #include "behaviors/states/acid_state.h"
 #include "goose.h"
 #include "config.h"
-#include "behaviors/states/acid_state.h"
 
 static void init(BehaviorContext& ctx) {
     auto* state = BehaviorStateManager::Instance().GetOrCreate<AcidState>(ctx.goose->id, "acid");

@@ -5,7 +5,6 @@
 #include "assets.h"
 #include "renderer_interface.h"
 #include <cmath>
-#include <cstring>
 
 static constexpr float kFacingLeftMin = 90.0f;
 static constexpr float kFacingLeftMax = 270.0f;

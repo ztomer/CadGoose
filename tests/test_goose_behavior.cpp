@@ -539,7 +539,7 @@ TEST(WorldUtil, GetGooseByIdFound) {
     Goose* notFound = GetGooseById(999);
     EXPECT_EQ(notFound, nullptr);
 
-    ActorManager::Instance().destroyAllOfType("goose");
+    ActorManager::Instance().destroyAllOfType(ActorType::Goose);
 }
 
 // --- goose_forces.cpp coverage (multi-monitor paths) ---
@@ -779,7 +779,7 @@ TEST(GooseBehaviorDetail, HandleFetchingFallbackFetch) {
 }
 
 TEST(GooseBehaviorDetail, HandleReturningDropsToyItem) {
-    ActorManager::Instance().destroyAllOfType("goose");
+    ActorManager::Instance().destroyAllOfType(ActorType::Goose);
 
     Goose g(443, "DropToy", 1920, 1080);
     g.state = GooseState::RETURNING;

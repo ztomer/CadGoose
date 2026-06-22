@@ -27,7 +27,7 @@ protected:
     }
 
     void TearDown() override {
-        ActorManager::Instance().destroyAllOfType("flower");
+        ActorManager::Instance().destroyAllOfType(ActorType::Flower);
         delete goose;
         PlatformInputMock_Reset();
     }
@@ -57,7 +57,7 @@ TEST_F(BehaviorInteractiveDropsTest, TickSkipsIfHeldItem) {
 
     b->tick(goose, ctx, 0.016, 100.0);
 
-    EXPECT_EQ(ActorManager::Instance().countByType("flower"), 0);
+    EXPECT_EQ(ActorManager::Instance().countByType(ActorType::Flower), 0);
 }
 
 TEST_F(BehaviorInteractiveDropsTest, TickSkipsIfNotWander) {
@@ -69,7 +69,7 @@ TEST_F(BehaviorInteractiveDropsTest, TickSkipsIfNotWander) {
 
     b->tick(goose, ctx, 0.016, 100.0);
 
-    EXPECT_EQ(ActorManager::Instance().countByType("flower"), 0);
+    EXPECT_EQ(ActorManager::Instance().countByType(ActorType::Flower), 0);
 }
 
 TEST_F(BehaviorInteractiveDropsTest, TickWithinDropIntervalNoDrop) {
@@ -81,7 +81,7 @@ TEST_F(BehaviorInteractiveDropsTest, TickWithinDropIntervalNoDrop) {
 
     b->tick(goose, ctx, 0.016, 100.0);
 
-    EXPECT_EQ(ActorManager::Instance().countByType("flower"), 0);
+    EXPECT_EQ(ActorManager::Instance().countByType(ActorType::Flower), 0);
 }
 
 TEST_F(BehaviorInteractiveDropsTest, TickPastIntervalWithRngHit) {
@@ -96,7 +96,7 @@ TEST_F(BehaviorInteractiveDropsTest, TickPastIntervalWithRngHit) {
 
     b->tick(goose, ctx, 0.016, 100.0);
 
-    int count = ActorManager::Instance().countByType("flower");
+    int count = ActorManager::Instance().countByType(ActorType::Flower);
     EXPECT_GE(count, 0);
     EXPECT_LE(count, 1);
 }
@@ -115,7 +115,7 @@ TEST_F(BehaviorInteractiveDropsTest, TickDeterministicDropWithSeed48) {
 
     b->tick(goose, ctx, 0.016, 100.0);
 
-    EXPECT_EQ(ActorManager::Instance().countByType("flower"), 1);
+    EXPECT_EQ(ActorManager::Instance().countByType(ActorType::Flower), 1);
     g_config.behaviors.interactiveDrops.dropInterval = saveInterval;
 }
 
@@ -130,5 +130,5 @@ TEST_F(BehaviorInteractiveDropsTest, TickPastIntervalWithRngMiss) {
 
     b->tick(goose, ctx, 0.016, 100.0);
 
-    EXPECT_EQ(ActorManager::Instance().countByType("flower"), 0);
+    EXPECT_EQ(ActorManager::Instance().countByType(ActorType::Flower), 0);
 }

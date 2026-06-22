@@ -33,7 +33,7 @@ protected:
 
     void TearDown() override {
         g_config.behaviors.control.portals = savedControlPortals;
-        ActorManager::Instance().destroyAllOfType("portal");
+        ActorManager::Instance().destroyAllOfType(ActorType::Portal);
         delete goose;
         PlatformInputMock_Reset();
     }

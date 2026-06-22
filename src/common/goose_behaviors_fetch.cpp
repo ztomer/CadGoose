@@ -11,7 +11,6 @@
 #include "goose_behaviors.h"
 #include "actor.h"
 #include "actor_dropped_item.h"
-#include "actor_dropped_item.h"
 #include <cmath>
 #include <cstdio>
 #include <algorithm>

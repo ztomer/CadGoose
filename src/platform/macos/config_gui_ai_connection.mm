@@ -6,9 +6,7 @@
 #include "behaviors/ai_local_llm_adapter.h"
 
 static constexpr float kTestTimeout = 30.0f;
-static constexpr float kModelRefreshDelay = 0.5f;
 static constexpr float kErrorDescMaxLength = 30;
-static constexpr float kModelPopupTag = 101;
 
 @implementation AITabView (Connection)
 

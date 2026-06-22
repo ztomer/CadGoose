@@ -6,7 +6,6 @@
 #include "config.h"
 #include "goose_math.h"
 #include "event_bus.h"
-#include <cstdio>
 
 static inline double Rand01() { return static_cast<double>(rng_util::RandRange(1000)) / 1000.0; }
 

@@ -16,7 +16,7 @@ protected:
         if (!BehaviorRegistry::Instance().Get("toys")) {
             BehaviorRegistry::Instance().Restore();
         }
-        ActorManager::Instance().destroyAllOfType("toy");
+        ActorManager::Instance().destroyAllOfType(ActorType::Toy);
         goose = new Goose(1, "goose", 1920, 1080);
         goose->behaviorsEnabled = true;
         goose->pos = {500, 500};
@@ -29,7 +29,7 @@ protected:
     }
 
     void TearDown() override {
-        ActorManager::Instance().destroyAllOfType("toy");
+        ActorManager::Instance().destroyAllOfType(ActorType::Toy);
         delete goose;
         PlatformInputMock_Reset();
     }
@@ -59,11 +59,11 @@ TEST_F(BehaviorToysTest, TickSpawnsToyAfterInterval) {
     ASSERT_NE(b, nullptr);
     b->init(ctx);
 
-    EXPECT_EQ(ActorManager::Instance().countByType("toy"), 0);
+    EXPECT_EQ(ActorManager::Instance().countByType(ActorType::Toy), 0);
 
     b->tick(goose, ctx, 0.016, 100.0);
 
-    EXPECT_EQ(ActorManager::Instance().countByType("toy"), 1);
+    EXPECT_EQ(ActorManager::Instance().countByType(ActorType::Toy), 1);
 }
 
 TEST_F(BehaviorToysTest, TickNoToyIfMaxToys) {
@@ -78,7 +78,7 @@ TEST_F(BehaviorToysTest, TickNoToyIfMaxToys) {
 
     b->tick(goose, ctx, 0.016, 100.0);
 
-    EXPECT_EQ(ActorManager::Instance().countByType("toy"), 5);
+    EXPECT_EQ(ActorManager::Instance().countByType(ActorType::Toy), 5);
 }
 
 TEST_F(BehaviorToysTest, ToySpawnPublishesEvent) {

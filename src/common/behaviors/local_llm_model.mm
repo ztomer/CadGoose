@@ -7,7 +7,6 @@
 #import <CoreML/CoreML.h>
 #import <Foundation/Foundation.h>
 
-#include <cstdio>
 #include <mutex>
 
 static MLModel* s_model = nil;

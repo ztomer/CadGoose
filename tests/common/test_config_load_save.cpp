@@ -479,7 +479,7 @@ TEST(ConfigSave, SaveGooseNamesWithGoose) {
     setenv("CADGOOSE_CONFIG_DIR", tmpDir.string().c_str(), 1);
 
     Config_Init();
-    ActorManager::Instance().destroyAllOfType("goose");
+    ActorManager::Instance().destroyAllOfType(ActorType::Goose);
     g_world.nextId = 42;
 
     Goose* goose = new Goose(42, "Gussie", 1920, 1080);
@@ -495,7 +495,7 @@ TEST(ConfigSave, SaveGooseNamesWithGoose) {
     EXPECT_EQ(arr[0].as_string(), "Gussie");
 
     g_config.gooseNames.clear();
-    ActorManager::Instance().destroyAllOfType("goose");
+    ActorManager::Instance().destroyAllOfType(ActorType::Goose);
     std::filesystem::remove_all(tmpDir, ec);
     if (!savedDir.empty()) {
         setenv("CADGOOSE_CONFIG_DIR", savedDir.c_str(), 1);
