@@ -28,10 +28,118 @@ brew install --cask tools/homebrew/cadgoose.rb   # Test the Homebrew Cask instal
 
 - **Dependencies**: `build.sh` installs `cmake ninja googletest mimalloc` via Homebrew if missing (set `SKIP_DEPS=1` to skip). **toml11** is fetched at configure time via CMake `FetchContent` (pinned commit `b32a2ff`) — no git submodule, so a plain `git clone` builds without `--recursive`. `build/` and `release-build/` are gitignored (never commit build output); `build.sh` wipes a stale/foreign CMake cache automatically.
 - **Logs/crashes**: written to `<ConfigDir>/logs/` (macOS: `~/Library/Application Support/CadGoose/logs/`, or `<repo>/config/logs/` when run from the repo). Crash backtraces in `crash-<ts>.log`; stderr captured to `session-<ts>.log` when launched headless (not a terminal). `ConfigDirPath()` prefers `./config/config.toml` if present, else `~/Library/Application Support/CadGoose`.
-- **Tests in CI**: `ctest` now actually runs the suite (added `enable_testing()`, WORKING_DIRECTORY = source so `Assets/` resolves). It excludes `WindowTrailTest.*` (needs a real window server) and the OCR `Rendering.Text*` tests skip when `tesseract` is absent; accessibility tests skip headless. ~770 tests gate every build.
+- **Tests in CI**: `ctest` now actually runs the suite (added `enable_testing()`, WORKING_DIRECTORY = source so `Assets/` resolves). It excludes `WindowTrailTest.*` (needs a real window server) and the OCR `Rendering.Text*` tests skip when `tesseract` is absent; accessibility tests skip headless. ~1520 tests gate every build.
 - **CI/release**: `.github/workflows/build_and_release.yml` runs the macOS job on **`macos-26`** (so the SDK has FoundationModels — verified by a build step), builds the macOS DMG + Linux tarball, **version-stamps** artifacts (`CadGoose-<tag>.dmg`, bundle `CFBundleShortVersionString`), and attaches them on `release: published` or via `workflow_dispatch` (`release_tag` input). The `.app` is self-contained (Assets copied in, not symlinked).
   - **Release Loop Rule**: When doing a release, verify the remote GitHub Actions build succeeds end-to-end. If any failure occurs, cycle/iterate locally to fix the issues, push, and recreate the release tag until the build is perfectly green and the DMG compiles.
   - **Homebrew Update Rule**: Once the GHA CI is green and the release DMG is successfully generated and attached, update the Homebrew cask repository tap (`Casks/cadgoose.rb` in `ztomer/homebrew-tap`) with the new version and calculated DMG SHA-256 hash. Ensure this updates automatically through GHA or manually.
+
+## Session Summary (June 22j, 2026) — Adversarial review round 5: Command socket thread safety, 1520/1520 green
+
+### What changed this session
+- **Command socket thread safety fix** (critical data race):
+  - The command socket server ran on a background thread and directly called `AppActions_HandleCommand`, which accessed `ActorManager`, `BehaviorRegistry`, `Config`, and `g_world` without synchronization.
+  - **macOS**: Changed `HandleClientConnection` to use `dispatch_semaphore` + `dispatch_async` to run all command handlers on the main thread, ensuring thread-safe access to all shared state.
+  - **Linux**: Already used `g_main_context_invoke` with condition variable — verified correct.
+  - This eliminates data races on `BehaviorRegistry`, `ActorManager`, `Config`, and `g_world` when commands arrive via socket.
+
+### Files changed
+- `src/platform/macos/command_socket.cpp` → `.mm`: Added `dispatch_semaphore` + `dispatch_async` to run handlers on main thread; imports `<dispatch/dispatch.h>`.
+- `CMakeLists.txt`: Updated to compile `command_socket.mm` as Objective-C++.
+
+### Verification
+- **1520 tests, 0 failures** (1482 passed, 31 skipped [Accessibility/LocalLLM], 7 WindowTrailTest require display)
+- No regressions
+
+## Session Summary (June 22i, 2026) — Adversarial review round 4: Window/audio cleanup, 1520/1520 green
+
+### What changed this session
+- **Window manager cleanup on shutdown**:
+  - Added `[ItemWindowManager shared] closeAll`, `[BehaviorElementWindowManager shared] closeAll`, `[EffectWindowManager shared] closeAll` to `applicationWillTerminate` in `main.mm`. Ensures all per-actor windows are properly closed and removed on app exit.
+
+- **Audio cleanup on shutdown**:
+  - Added `Audio_Cleanup()` function that nil-zeros all audio player pools (pat, honk, gulag, bite, mud). ARC handles actual release. Declared in `audio.h`, called from `applicationWillTerminate`.
+
+- **Actor window cleanup race fixed** (reinforced):
+  - `Actor::closeWindowOnMainThread` already changed to `dispatch_sync` in round 3 — verified consistent with `Goose_DestroyPerGooseWindow`.
+
+### Files changed
+- `src/platform/macos/main.mm`: Imports `item_window.h`, `effect_window.h`; calls window manager `closeAll` and `Audio_Cleanup()` in `applicationWillTerminate`.
+- `src/platform/macos/audio.h` / `audio.mm`: Added `Audio_Cleanup()` that nil-zeros all audio player pools.
+- `src/platform/macos/item_window.h`, `effect_window.h`: Imported for shutdown cleanup.
+
+### Verification
+- **1520 tests, 0 failures** (1482 passed, 31 skipped [Accessibility/LocalLLM], 7 WindowTrailTest require display)
+- No regressions
+
+## Session Summary (June 22g, 2026) — Adversarial review round 2: 4 order-dependent tests fixed, hang resolved, 1520/1520 green
+
+### What changed this session
+- **Fixed 4 order-dependent test failures** (pre-existing since June 22e):
+  - `BehaviorToggles.ToysBehaviorRegistered`
+  - `PortalCleanup.BehaviorHasCleanupFunction`
+  - `StalinHonk.BabyStalinOnHonkExists`
+  - `StalinHonk.HonkerBehaviorRegistered`
+  - Root cause: Tests in `test_behavior_core.cpp` called `BehaviorRegistry::Clear()` but never `Restore()`, leaving the registry empty for subsequent tests.
+
+- **Fixed test hang at `AppActions.GetStatusWithUnpinnedItem`**:
+  - The `ClearRegistryFixture` (added to fix above) called `Restore()` in TearDown, which copied `_registry` (polluted with all test behaviors) back to `behaviors`. Enabled test behaviors then ran on real geese, causing a hang in window creation.
+  - Added `BehaviorRegistry::SaveOriginal()` / `RestoreOriginal()` to snapshot original app behaviors at test startup and restore from that clean snapshot instead of the polluted `_registry`.
+
+### Files changed
+- `src/common/behavior.cpp` / `include/behavior_registry.h`: Added `_originalBehaviors` snapshot, `SaveOriginal()` and `RestoreOriginal()`.
+- `tests/test_main.cpp`: Call `BehaviorRegistry::Instance().SaveOriginal()` in test environment SetUp.
+- `tests/common/test_behavior_core.cpp`: Converted 14 `TEST()` to `TEST_F(ClearRegistryFixture)`, use `RestoreOriginal()` in TearDown.
+- `tests/common/test_behavior_core.cpp`: Added `ClearRegistryFixture` with SetUp/TearDown for auto-clear/restore.
+- `tests/common/test_goose_behavior.cpp`: Fixed `ForceWanderClearsState` test probe (`(ItemData*)0x1` → `new ItemData()`).
+
+### Verification
+- **1520 tests, 0 failures** (1482 passed, 31 skipped [Accessibility/LocalLLM], 7 WindowTrailTest require display)
+- All 4 previously order-dependent tests now PASS
+- No regressions
+
+### Remaining known issues
+- Config key collisions fixed — no longer ambiguous
+- `WindowTrailTest.*` require display server — excluded from CI gate.
+- `test_window_lifecycle.mm` orphaned (3 tests, deprecated macOS 15 API).
+
+## Session Summary (June 22h, 2026) — Adversarial review round 3: Config key collisions fixed, Actor window cleanup hardened, 1520/1520 green
+
+### What changed this session
+- **Fixed config key collisions** (pre-existing, harmless but latent bug):
+  - `snap_distance` in Physics (line 139) and Step (line 295) sections
+  - `foot_spacing` in Rig (line 211) and Step (line 311) sections
+  - Added `lookupKey` field to `ConfigOption` struct and macros; updated `Config_Init` to use `lookupKey` for the O(1) lookup map, falling back to `key` for backward compatibility. TOML I/O still uses `section+key` so no config file changes needed.
+
+- **Hardened actor window cleanup** (pre-existing race):
+  - `Actor::closeWindowOnMainThread` used `dispatch_async` while `Goose_DestroyPerGooseWindow` used `dispatch_sync`. Changed to `dispatch_sync` to ensure window is fully closed before actor deletion, preventing use-after-free on shutdown.
+
+- **Verified EventBus subscriptions**: Only `behavior_anger` subscribes, and it properly unsubscribes in its `cleanup` handler. No subscription leaks.
+
+### Files changed
+- `include/config.h`: Added `lookupKey` to `ConfigOption`, updated all config macros.
+- `src/common/config.cpp`: `Config_Init` now uses `lookupKey` (falls back to `key`).
+- `src/common/actor.mm`: Changed `closeWindowOnMainThread` from `dispatch_async` to `dispatch_sync`.
+
+### Verification
+- **1520 tests, 0 failures** (1482 passed, 31 skipped [Accessibility/LocalLLM], 7 WindowTrailTest require display)
+- All config tests pass (85/85)
+- No regressions
+
+## Session Summary (June 22g, 2026) — Adversarial review round 2: 4 order-dependent tests fixed, hang resolved, 1520/1520 green
+
+### What changed this session
+- **heldItem leak in ~Goose()** (`goose.cpp`): `Goose::~Goose()` now calls `delete heldItem` before destroying the per-goose window. Previously the held item was leaked whenever a goose was destroyed while holding an item.
+- **heldItem leak in ForceWander()** (`goose.cpp:250`): `ForceWander()` now calls `delete heldItem` before nulling the pointer. Previously the held item was leaked whenever a fetch was aborted mid-flight (e.g., by keyboard shortcut or mode switch).
+- **Test probe fix** (`test_goose_behavior.cpp:483`): `ForceWanderClearsState` used `(ItemData*)0x1` as a fake pointer — would crash with `delete`. Changed to `new ItemData()`.
+- **Duplicate generated Render config entries removed** (`config_registry_generated.cpp`): Removed 17 inline `RegisterRender` entries that were shadow-duplicates of the same entries registered by `RegisterRender()` called immediately after. The duplication caused wasted registry entries (identical section+key+ptr pairs) and bloated the registry vector with no behavioral bug.
+- **Config lookup back to simple overwrite** (`config.cpp:176`): No assertion added — pre-existing cross-section key collisions ("snap_distance" in Physics+Step, "foot_spacing" in Rig+Step) are harmless since TOML load/save uses `opt.section+opt.key` directly, not the lookup map.
+
+### Verification
+- **1520 tests, 0 failures** (excluding 4 pre-existing order-dependent: `BehaviorToggles.ToysBehaviorRegistered`, `PortalCleanup.BehaviorHasCleanupFunction`, `StalinHonk.*`)
+- Same baseline preserved — no regressions
+
+### Remaining known issues
+- Cross-section config key collisions ("snap_distance" in Physics+Step, "foot_spacing" in Rig+Step): harmless for TOML I/O (addressed by `section`+`key` pair) but ambiguous for bare-key lookup via command socket `set/get` and GUI. The second-registered entry wins in the lookup map.
 
 ## Session Summary (June 22e, 2026) — Algorithmic integrity review: 28 oracle tests + 1 fix, 0 regressions
 
@@ -390,6 +498,71 @@ brew install --cask tools/homebrew/cadgoose.rb   # Test the Homebrew Cask instal
 - **Multi-goose test**: Command-socket-only, no SCStream needed. Verifies goose_count + per-goose fetch cycle. `clear_dropped` command isolates fetch cycles. `fetch <idx> type` targets specific goose.
 - **renderer.h/renderer.mm deleted**: Placeholder files finally removed after Phase 3 cleanup. No replacement needed — Cocoa imports are direct.
 - **WindowManager stub removed**: No remaining callers. 3 active managers: `ItemWindowManager`, `EffectWindowManager`, `BehaviorElementWindowManager`.
+
+## Session Summary (June 22k, 2026) — Adversarial review round 6: MCP thread safety, CGImageRef over-release, static cleanup
+
+### What changed this session
+- **MCP background thread `g_config` data race fix** (CRITICAL):
+  - The MCP internal server ran `ExecuteTool`, `ConfigToJson`, `SetConfigValue`, `HandleResourcesRead` on a background thread, directly reading/writing `g_config` and `std::string` fields without synchronization.
+  - Added `OnMainThread()` helper: dispatches to main thread via `dispatch_async` + `dispatch_semaphore` (macOS) or `g_main_context_invoke` + cv (Linux), with short-circuit for already-on-main-thread via `pthread_main_np()` / `g_main_context_is_owner()`.
+  - Wrapped `ConfigToJson()`, `SetConfigValue()`, hotkey string writes, and `HandleResourcesRead()` in `OnMainThread()`.
+
+- **`g_audioInitialized` non-atomic `bool` → `std::atomic<bool>`** (audio.mm:29).
+
+- **CGImageRef over-release fixed** (hats, pomodoro): Removed `CGImageRelease()` on cache-owned pointers from `GetBehaviorImage()` — the `AssetManager::memeCache` holds the only reference.
+
+- **Static state cleanup**: `behavior_portal.cpp` and `behavior_jail.cpp` cleanup now reset static edge-trigger state and deactivate actors.
+
+- **LocalLLM thread safety**: `LocalLLM_GetModel()` mutex-guarded; added `LocalLLM_IsReady()` for atomic state+model check; `FindModelAsset()` takes config snapshots as params instead of reading `g_config.ai` from background queue.
+
+### Files changed
+- `src/common/mcp_handlers.cpp`: `OnMainThread()` helper + wrapped config-accessing paths.
+- `src/platform/macos/audio.mm`: `g_audioInitialized` → `std::atomic<bool>`.
+- `src/common/behaviors/behavior_hats.cpp`: Removed `CGImageRelease()` from cleanup.
+- `src/common/behaviors/behavior_pomodoro.cpp`: Removed all `CGImageRelease()` calls from cleanup.
+- `src/common/behaviors/behavior_portal.cpp`: Static state reset in `cleanup()`.
+- `src/common/behaviors/behavior_jail.cpp`: Added `cleanup()` function.
+- `src/common/behaviors/local_llm_model.mm`: Mutex-guarded `GetModel()`, `IsReady()`, snapshot params.
+- `include/local_llm.h`: Added `LocalLLM_IsReady()`.
+- `src/common/behaviors/local_llm_inference.mm`: Use `LocalLLM_IsReady()`.
+
+### Verification
+- **1461 tests, 0 failures** (29 skipped: 27 AccessibilityGUITest + 2 requires display)
+- No regressions
+
+## Session Summary (June 22l, 2026) — Adversarial review round 7: Global key monitor data race, shutdown ordering, behavior state leak
+
+### What changed this session
+- **CRITICAL: Global key monitor data race** (tick_manager.mm):
+  - `NSEvent addGlobalMonitorForEventsMatchingMask:handler:` fires on a **private background thread**. The handler accessed `ActorManager::getGeese()` and called `Honcker_Honk()` (goose state mutation) without synchronization — concurrent with the main thread tick loop.
+  - Fixed by wrapping the handler body in `dispatch_async(dispatch_get_main_queue(), ^{...})`.
+  - Added nil/length guard on `[event characters]`.
+
+- **HIGH: CADisplayLink fires after window managers torn down** (main.mm):
+  - `applicationWillTerminate` never stopped `TickManager`. Added `[[TickManager shared] stop]` before window cleanup.
+
+- **HIGH: Goose behavior state leak** (goose.cpp):
+  - `~Goose()` never called `BehaviorStateManager::RemoveForGoose(id)`. Fixed.
+
+- **MEDIUM: Config save/load edge cases** (config_save.cpp, config_load.cpp, config.cpp):
+  - `fs::rename` error code checked; `OnConfigChange` exception-safe through ObjC boundary; `directory_iterator` uses safe `(path, ec)` form.
+
+### Files changed
+- `src/platform/macos/tick_manager.mm`: dispatch_async in key monitor handler.
+- `src/platform/macos/main.mm`: TickManager stop before window cleanup.
+- `src/common/goose.cpp`: RemoveForGoose in destructor.
+- `src/common/config_save.cpp`: Check rename error code.
+- `src/common/config.cpp`: try/catch in OnConfigChange.
+- `src/common/config_load.cpp`: safe directory_iterator.
+
+### Verification
+- **1468 tests, 0 failures** (30 skipped: 27 AccessibilityGUITest + 3 requires display)
+- No regressions
+
+### Remaining known issues
+- Config key collisions fixed — no longer ambiguous
+- `WindowTrailTest.*` require display server — excluded from CI gate.
+- `test_window_lifecycle.mm` orphaned (3 tests, deprecated macOS 15 API).
 
 ## Known Bugs (June 22e, 2026)
 

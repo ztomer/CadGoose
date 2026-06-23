@@ -26,7 +26,7 @@ static AVAudioPlayer* g_honkPool[kHonkPoolDepth]  = {nullptr};
 static AVAudioPlayer* g_gulagPool[2]               = {nullptr};
 static AVAudioPlayer* g_bitePlayer = nullptr;
 static AVAudioPlayer* g_mudPlayer = nullptr;
-static bool g_audioInitialized = false;
+static std::atomic<bool> g_audioInitialized{false};
 static std::atomic<bool> g_audioMuted{false};
 
 #define DEBUG_LOG(fmt, ...) do { \
@@ -53,11 +53,11 @@ static AVAudioPlayer* MakePlayer(NSString* path) {
 }
 
 void Audio_Init() {
-    if (g_audioInitialized) return;
+    if (g_audioInitialized.load()) return;
 
     if (ASSET_ROOT.empty()) {
         fprintf(stderr, "[AUDIO] ASSET_ROOT not initialized — sounds unavailable\n");
-        g_audioInitialized = true;
+        g_audioInitialized.store(true);
         g_audioMuted.store(true);
         return;
     }
@@ -95,7 +95,7 @@ void Audio_Init() {
     g_mudPlayer  = MakePlayer([assetsPath stringByAppendingPathComponent:
                                @"Sound/NotEmbedded/MudSquith.mp3"]);
 
-    g_audioInitialized = true;
+    g_audioInitialized.store(true);
     g_audioMuted.store(g_config.general.audioMuted);
     DEBUG_LOG("Audio initialized");
 }
@@ -112,28 +112,28 @@ static void PlayFromPool(AVAudioPlayer* const* pool, int count) {
 
 void Audio_PlayHonk() {
     if (g_audioMuted.load()) return;
-    if (!g_audioInitialized) Audio_Init();
+    if (!g_audioInitialized.load()) Audio_Init();
     if (g_audioMuted.load()) return;
     PlayFromPool(g_honkPool, kHonkPoolDepth);
 }
 
 void Audio_PlayGulag() {
     if (g_audioMuted.load()) return;
-    if (!g_audioInitialized) Audio_Init();
+    if (!g_audioInitialized.load()) Audio_Init();
     if (g_audioMuted.load()) return;
     PlayFromPool(g_gulagPool, 2);
 }
 
 void Audio_PlayPat() {
     if (g_audioMuted.load()) return;
-    if (!g_audioInitialized) Audio_Init();
+    if (!g_audioInitialized.load()) Audio_Init();
     if (g_audioMuted.load()) return;
     PlayFromPool(g_patPool, kPatPoolDepth);
 }
 
 void Audio_PlayBite() {
     if (g_audioMuted.load()) return;
-    if (!g_audioInitialized) Audio_Init();
+    if (!g_audioInitialized.load()) Audio_Init();
     if (g_audioMuted.load()) return;
     if (g_bitePlayer && !g_bitePlayer.isPlaying) {
         [g_bitePlayer play];
@@ -142,7 +142,7 @@ void Audio_PlayBite() {
 
 void Audio_PlayMudSquish() {
     if (g_audioMuted.load()) return;
-    if (!g_audioInitialized) Audio_Init();
+    if (!g_audioInitialized.load()) Audio_Init();
     if (g_audioMuted.load()) return;
     if (g_mudPlayer && !g_mudPlayer.isPlaying) {
         [g_mudPlayer play];
@@ -151,4 +151,19 @@ void Audio_PlayMudSquish() {
 
 void Audio_SetMuted(bool muted) {
     g_audioMuted.store(muted);
+}
+
+void Audio_Cleanup() {
+    for (int i = 0; i < kPatPoolDepth; i++) {
+        g_patPool[i] = nil;
+    }
+    for (int i = 0; i < kHonkPoolDepth; i++) {
+        g_honkPool[i] = nil;
+    }
+    for (int i = 0; i < 2; i++) {
+        g_gulagPool[i] = nil;
+    }
+    g_bitePlayer = nil;
+    g_mudPlayer = nil;
+    g_audioInitialized = false;
 }

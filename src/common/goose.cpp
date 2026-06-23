@@ -150,6 +150,9 @@ void Goose::onHonk() {
 }
 
 Goose::~Goose() {
+    delete heldItem;
+    heldItem = nullptr;
+    BehaviorStateManager::Instance().RemoveForGoose(id);
 #ifdef __APPLE__
     Goose_DestroyPerGooseWindow(this);
 #endif
@@ -487,6 +490,7 @@ void Goose::ForceFetchText(const std::string &text, int w, int h) {
 
 void Goose::ForceWander(int w, int h) {
   state = GooseState::WANDER;
+  delete heldItem;
   heldItem = nullptr;
   dragInit = false;
   forcedText.clear();

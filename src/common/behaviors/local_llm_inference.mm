@@ -189,15 +189,15 @@ void LocalLLM_Generate(const std::string& prompt, float temperature,
         return;
     }
 
-    if (LocalLLM_GetState() != LocalLLMState::Ready || !LocalLLM_GetModel()) {
+    if (!LocalLLM_IsReady()) {
         LocalLLM_Init();
         // Wait for model to load (max 30 seconds)
         int waitMs = 0;
-        while (LocalLLM_GetState() == LocalLLMState::Loading && waitMs < kLLMLoadWaitMs) {
+        while (!LocalLLM_IsReady() && waitMs < kLLMLoadWaitMs) {
             usleep(kLLMLoadPollIntervalUs); // 100ms
             waitMs += 100;
         }
-        if (LocalLLM_GetState() != LocalLLMState::Ready || !LocalLLM_GetModel()) {
+        if (!LocalLLM_IsReady()) {
             std::lock_guard<std::mutex> lock(s_genMutex);
             s_generating = false;
             if (callback) callback("");

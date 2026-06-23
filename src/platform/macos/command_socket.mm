@@ -9,6 +9,8 @@
 #include <mutex>
 #include <condition_variable>
 
+#import <dispatch/dispatch.h>
+
 #if defined(__APPLE__)
 #define COMMAND_SOCKET_PATH "/tmp/desktop-goose.sock"
 #endif
@@ -87,7 +89,18 @@ namespace {
         std::string response;
         if (g_commandHandler) {
             std::vector<std::string> args = ParseArgs(requestData);
-            response = g_commandHandler(args);
+            
+            // Always run command handler on main thread for thread safety
+            __block std::string responseBlock;
+            dispatch_semaphore_t sema = dispatch_semaphore_create(0);
+            dispatch_async(dispatch_get_main_queue(), ^{
+                responseBlock = g_commandHandler(args);
+                dispatch_semaphore_signal(sema);
+            });
+            // Wait forever (ARC will manage semaphore lifetime)
+            dispatch_semaphore_wait(sema, UINT64_MAX);
+            // ARC will release semaphore when it goes out of scope
+            response = responseBlock;
         } else {
             response = "error command handler unavailable\n";
         }

@@ -12,12 +12,7 @@ static constexpr float kFacingLeftMax = 270.0f;
 static void* s_hatImage = nullptr;
 
 static void cleanupHat(BehaviorContext&) {
-#ifdef __APPLE__
-    if (s_hatImage) {
-        CGImageRelease((CGImageRef)s_hatImage);
-        s_hatImage = nullptr;
-    }
-#endif
+    s_hatImage = nullptr;
 }
 
 static void init(BehaviorContext& ctx) {

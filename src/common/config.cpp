@@ -148,8 +148,14 @@ bool Config_SetValueByKey(const std::string& key, const std::string& value, std:
 }
 
 void OnConfigChange() {
-    Config_UpdateActiveTheme();
-    Config_SaveAll();
+    try {
+        Config_UpdateActiveTheme();
+        Config_SaveAll();
+    } catch (const std::exception& e) {
+        fprintf(stderr, "[CONFIG] OnConfigChange error: %s\n", e.what());
+    } catch (...) {
+        fprintf(stderr, "[CONFIG] Unknown OnConfigChange error\n");
+    }
 }
 
 bool Config_SaveNow(std::string* errorOut) {
@@ -173,7 +179,9 @@ void Config_Init() {
     Config_InitRegistry();
     g_configLookup.clear();
     for (auto& opt : g_configRegistry) {
-        g_configLookup[ToLower(opt.key)] = &opt;
+        const char* lookup = opt.lookupKey && *opt.lookupKey ? opt.lookupKey : opt.key;
+        std::string lower = ToLower(lookup);
+        g_configLookup[lower] = &opt;
     }
     g_configInitialized.store(true);
 }

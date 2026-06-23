@@ -67,8 +67,19 @@ namespace {
     }
 
     void RestoreRegistry() {
-        BehaviorRegistry::Instance().Restore();
+        BehaviorRegistry::Instance().RestoreOriginal();
     }
+
+    // Fixture for tests that clear the registry — restores automatically.
+    class ClearRegistryFixture : public ::testing::Test {
+    protected:
+        void SetUp() override {
+            ClearTestRegistry();
+        }
+        void TearDown() override {
+            RestoreRegistry();
+        }
+    };
 }
 
 // ===========================
@@ -566,8 +577,7 @@ public:
     void SetAlpha(float) override {}
 };
 
-TEST(BehaviorRegistryTest, InitAllWithCustomBehavior) {
-    ClearTestRegistry();
+TEST_F(ClearRegistryFixture, InitAllWithCustomBehavior) {
     auto& reg = BehaviorRegistry::Instance();
     int initCount = 0;
     RegisterTestBehavior("custom_lifecycle", true,
@@ -577,8 +587,7 @@ TEST(BehaviorRegistryTest, InitAllWithCustomBehavior) {
     EXPECT_EQ(initCount, 1);
 }
 
-TEST(BehaviorRegistryTest, TickAllWithCustomBehavior) {
-    ClearTestRegistry();
+TEST_F(ClearRegistryFixture, TickAllWithCustomBehavior) {
     auto& reg = BehaviorRegistry::Instance();
     int tickCount = 0;
     RegisterTestBehavior("custom_tick", true, nullptr,
@@ -588,8 +597,7 @@ TEST(BehaviorRegistryTest, TickAllWithCustomBehavior) {
     EXPECT_GT(tickCount, 0);
 }
 
-TEST(BehaviorRegistryTest, RenderAllWithCustomBehavior) {
-    ClearTestRegistry();
+TEST_F(ClearRegistryFixture, RenderAllWithCustomBehavior) {
     auto& reg = BehaviorRegistry::Instance();
     int renderCount = 0;
     RegisterTestBehavior("custom_render", true, nullptr, nullptr,
@@ -600,8 +608,7 @@ TEST(BehaviorRegistryTest, RenderAllWithCustomBehavior) {
     EXPECT_EQ(renderCount, 1);
 }
 
-TEST(BehaviorRegistryTest, CleanupAllWithCustomBehavior) {
-    ClearTestRegistry();
+TEST_F(ClearRegistryFixture, CleanupAllWithCustomBehavior) {
     auto& reg = BehaviorRegistry::Instance();
     int cleanupCount = 0;
     RegisterTestBehavior("custom_cleanup", true, nullptr, nullptr, nullptr,
@@ -611,8 +618,7 @@ TEST(BehaviorRegistryTest, CleanupAllWithCustomBehavior) {
     EXPECT_EQ(cleanupCount, 1);
 }
 
-TEST(BehaviorRegistryTest, TickAllEnabledToDisabledTransition) {
-    ClearTestRegistry();
+TEST_F(ClearRegistryFixture, TickAllEnabledToDisabledTransition) {
     auto& reg = BehaviorRegistry::Instance();
     int tickCount = 0;
     int cleanupCount = 0;
@@ -637,8 +643,7 @@ TEST(BehaviorRegistryTest, TickAllEnabledToDisabledTransition) {
     EXPECT_EQ(tickCount, finalTick);
 }
 
-TEST(BehaviorRegistryTest, TickAllDisabledToEnabledTransition) {
-    ClearTestRegistry();
+TEST_F(ClearRegistryFixture, TickAllDisabledToEnabledTransition) {
     auto& reg = BehaviorRegistry::Instance();
     int initCount = 0;
     int tickCount = 0;
@@ -658,8 +663,7 @@ TEST(BehaviorRegistryTest, TickAllDisabledToEnabledTransition) {
     EXPECT_GT(tickCount, ticksBeforeEnable);
 }
 
-TEST(BehaviorRegistryTest, InitAllCatchesThrowingBehavior) {
-    ClearTestRegistry();
+TEST_F(ClearRegistryFixture, InitAllCatchesThrowingBehavior) {
     auto& reg = BehaviorRegistry::Instance();
     RegisterTestBehavior("test_throw_init", true,
         [&](BehaviorContext&) { throw std::runtime_error("init failure"); });
@@ -668,8 +672,7 @@ TEST(BehaviorRegistryTest, InitAllCatchesThrowingBehavior) {
     SUCCEED();
 }
 
-TEST(BehaviorRegistryTest, TickAllCatchesThrowingTick) {
-    ClearTestRegistry();
+TEST_F(ClearRegistryFixture, TickAllCatchesThrowingTick) {
     auto& reg = BehaviorRegistry::Instance();
     RegisterTestBehavior("test_throw_tick", true, nullptr,
         [&](Goose*, BehaviorContext&, double, double) { throw std::runtime_error("tick failure"); });
@@ -678,8 +681,7 @@ TEST(BehaviorRegistryTest, TickAllCatchesThrowingTick) {
     SUCCEED();
 }
 
-TEST(BehaviorRegistryTest, TickAllCatchesThrowingCleanup) {
-    ClearTestRegistry();
+TEST_F(ClearRegistryFixture, TickAllCatchesThrowingCleanup) {
     auto& reg = BehaviorRegistry::Instance();
     RegisterTestBehavior("test_throw_cleanup", true, nullptr, nullptr, nullptr,
         [&](BehaviorContext&) { throw std::runtime_error("cleanup failure"); });
@@ -690,8 +692,7 @@ TEST(BehaviorRegistryTest, TickAllCatchesThrowingCleanup) {
     SUCCEED();
 }
 
-TEST(BehaviorRegistryTest, TickAllCatchesThrowingInit) {
-    ClearTestRegistry();
+TEST_F(ClearRegistryFixture, TickAllCatchesThrowingInit) {
     auto& reg = BehaviorRegistry::Instance();
     RegisterTestBehavior("test_throw_disabled_init", false,
         [&](BehaviorContext&) { throw std::runtime_error("disabled init failure"); });
@@ -702,8 +703,7 @@ TEST(BehaviorRegistryTest, TickAllCatchesThrowingInit) {
     SUCCEED();
 }
 
-TEST(BehaviorRegistryTest, RenderPassCatchesThrowingRender) {
-    ClearTestRegistry();
+TEST_F(ClearRegistryFixture, RenderPassCatchesThrowingRender) {
     auto& reg = BehaviorRegistry::Instance();
     RegisterTestBehavior("test_throw_render", true, nullptr, nullptr,
         [&](Goose*, BehaviorContext&, IRenderer*) { throw std::runtime_error("render failure"); });
@@ -713,8 +713,7 @@ TEST(BehaviorRegistryTest, RenderPassCatchesThrowingRender) {
     SUCCEED();
 }
 
-TEST(BehaviorRegistryTest, TickAllWithJailState) {
-    ClearTestRegistry();
+TEST_F(ClearRegistryFixture, TickAllWithJailState) {
     auto& reg = BehaviorRegistry::Instance();
     RegisterTestBehavior("test_jail_behavior", true, nullptr,
         [&](Goose*, BehaviorContext&, double, double) { });
@@ -727,8 +726,7 @@ TEST(BehaviorRegistryTest, TickAllWithJailState) {
     jail->isJailed = false;
 }
 
-TEST(BehaviorRegistryTest, TickAllDisabledBehaviorDoesNothing) {
-    ClearTestRegistry();
+TEST_F(ClearRegistryFixture, TickAllDisabledBehaviorDoesNothing) {
     auto& reg = BehaviorRegistry::Instance();
     int tickCount = 0;
     RegisterTestBehavior("test_never_enabled", false, nullptr,
@@ -738,8 +736,7 @@ TEST(BehaviorRegistryTest, TickAllDisabledBehaviorDoesNothing) {
     EXPECT_EQ(tickCount, 0);
 }
 
-TEST(BehaviorRegistryTest, CleanupAllRemovesState) {
-    ClearTestRegistry();
+TEST_F(ClearRegistryFixture, CleanupAllRemovesState) {
     auto& reg = BehaviorRegistry::Instance();
     RegisterTestBehavior("test_cleanup_removes_state", true, nullptr,
         [&](Goose*, BehaviorContext&, double, double) { });

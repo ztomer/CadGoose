@@ -76,4 +76,7 @@ void Config_SaveAll() {
     ofs.close();
 
     fs::rename(tempPath, configPath, ec);
+    if (ec) {
+        fprintf(stderr, "[CONFIG] Failed to rename temp config file: %s\n", ec.message().c_str());
+    }
 }
