@@ -124,10 +124,26 @@ void Jail_ResetForTest() {
     s_lastInputTime = 0;
 }
 
+static void cleanup(BehaviorContext&) {
+    s_oWasKeyDown = false;
+    s_pWasKeyDown = false;
+    s_jails.clear();
+    s_jailsActive = false;
+    s_lastInputTime = 0;
+    // Remove all jail actors
+    auto& mgr = ActorManager::Instance();
+    for (int i = mgr.totalCount() - 1; i >= 0; i--) {
+        Actor* a = mgr.getByIndex(i);
+        if (a && a->actorType() == ActorType::Jail) {
+            a->setActive(false);
+        }
+    }
+}
+
 static Behavior g_jailBehavior = BEHAVIOR_DEF_CUSTOM(
     "jail", "Jail", "Press O to set jail position, P to trap goose. Based on GooseJail by WackyModer",
     g_config.behaviors.control.jail, init, tick, render,
-    [](BehaviorContext&) {}, true, false
+    cleanup, true, false
 );
 
 REGISTER_BEHAVIOR(g_jailBehavior);

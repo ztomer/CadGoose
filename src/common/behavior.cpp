@@ -182,6 +182,17 @@ void BehaviorRegistry::Restore() {
     behaviors = _registry;
 }
 
+// Snapshot the original app behaviors (before any test modifications).
+// Call this once at test startup.
+void BehaviorRegistry::SaveOriginal() {
+    _originalBehaviors = behaviors;
+}
+
+// Restore to the original app behaviors (excluding test behaviors).
+void BehaviorRegistry::RestoreOriginal() {
+    behaviors = _originalBehaviors;
+}
+
 // ===========================
 // Ball Physics
 // ===========================

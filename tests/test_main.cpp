@@ -11,6 +11,7 @@
 #include "assets.h"
 #include "world.h"
 #include "config.h"
+#include "behavior_registry.h"
 
 // Load assets once before any test runs. Fetch/return/drop tests need
 // GetRandomMeme() to return a real item; without Init() the meme pool is empty
@@ -21,6 +22,7 @@ public:
     void SetUp() override { 
         Config_Init();
         g_assets.Init(); 
+        BehaviorRegistry::Instance().SaveOriginal();
     }
 };
 static ::testing::Environment* const kCadGooseEnv =

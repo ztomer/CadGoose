@@ -16,6 +16,7 @@ enum class LocalLLMState {
 };
 
 LocalLLMState LocalLLM_GetState();
+bool LocalLLM_IsReady();
 void LocalLLM_Init();
 void LocalLLM_Generate(const std::string& prompt, float temperature,
                        std::function<void(const std::string&)> callback);

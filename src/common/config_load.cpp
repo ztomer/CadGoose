@@ -121,7 +121,9 @@ bool Config_LoadThemeColors(const std::string& themeName, ColorRGB& body, ColorR
     if (!fs::exists(themePath)) {
         // Fallback: search through all .toml files to match 'name' in [theme]
         bool found = false;
-        for (const auto& entry : fs::directory_iterator(Config_GetThemesDir())) {
+        std::error_code ec2;
+        for (const auto& entry : fs::directory_iterator(Config_GetThemesDir(), ec2)) {
+            if (ec2) break;
             if (entry.path().extension() == ".toml") {
                 try {
                     auto data = toml::parse(entry.path().string());

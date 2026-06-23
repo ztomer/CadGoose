@@ -60,9 +60,16 @@ public:
     // Needed after Clear() to restore the registry for subsequent tests.
     void Restore();
 
+    // Snapshot the original app behaviors (before any test modifications).
+    void SaveOriginal();
+
+    // Restore to the original app behaviors (excluding test behaviors).
+    void RestoreOriginal();
+
 private:
     std::vector<Behavior*> behaviors;
     std::vector<Behavior*> _registry; // permanent copy, never cleared
+    std::vector<Behavior*> _originalBehaviors; // snapshot of app behaviors at startup
 };
 
 #define REGISTER_BEHAVIOR(b) \

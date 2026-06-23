@@ -266,18 +266,10 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
 }
 
 static void cleanupPomoFont(BehaviorContext&) {
-#ifdef __APPLE__
-    if (s_bedImage) {
-        CGImageRelease(s_bedImage);
-        s_bedImage = nullptr;
-    }
+    s_bedImage = nullptr;
     for (int i = 0; i < 3; i++) {
-        if (s_zzzImages[i]) {
-            CGImageRelease(s_zzzImages[i]);
-            s_zzzImages[i] = nullptr;
-        }
+        s_zzzImages[i] = nullptr;
     }
-#endif
 }
 
 static void render(Goose* goose, BehaviorContext& ctx, IRenderer* irenderer) {

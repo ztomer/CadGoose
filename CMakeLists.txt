@@ -549,7 +549,7 @@ if(APPLE)
     # and analyzes pixels for window trail artifacts.
     add_executable(trail_detection_test
         tests/platform/macos/test_window_trail_detection.mm
-        src/platform/macos/command_socket.cpp
+        src/platform/macos/command_socket.mm
     )
     target_enable_asan(trail_detection_test)
     target_include_directories(trail_detection_test PRIVATE
@@ -575,7 +575,7 @@ if(APPLE)
 
     add_executable(soak_fetch_test
         tests/platform/macos/test_soak_fetch_visibility.mm
-        src/platform/macos/command_socket.cpp
+        src/platform/macos/command_socket.mm
     )
     target_enable_asan(soak_fetch_test)
     target_include_directories(soak_fetch_test PRIVATE
@@ -597,7 +597,7 @@ if(APPLE)
 
     add_executable(multi_goose_test
         tests/platform/macos/test_multi_goose.mm
-        src/platform/macos/command_socket.cpp
+        src/platform/macos/command_socket.mm
     )
     target_enable_asan(multi_goose_test)
     target_include_directories(multi_goose_test PRIVATE

@@ -21,6 +21,8 @@
 #include "audio.h"
 #import "tick_manager.h"
 #import "behavior_element_window.h"
+#import "item_window.h"
+#import "effect_window.h"
 #include "goose.h"
 #include "actor.h"
 
@@ -374,6 +376,17 @@ bool Config_IsSystemDarkTheme();
     MCP_StopHTTPServer();
     MCP_StopInternalServer();
     CommandSocket_StopServer();
+
+    // Stop the tick loop first so no frame fires after window managers are torn down
+    [[TickManager shared] stop];
+
+    // Clean up window managers
+    [[ItemWindowManager shared] closeAll];
+    [[BehaviorElementWindowManager shared] closeAll];
+    [[EffectWindowManager shared] closeAll];
+    
+    // Clean up audio
+    Audio_Cleanup();
 }
 
 - (BOOL)applicationShouldTerminateAfterLastWindowClosed:(NSApplication*)sender {

@@ -15,11 +15,11 @@ static std::mutex s_stateMutex;
 
 extern void LocalLLM_LoadTokenizer(NSString* baseDir);
 
-static NSString* FindModelAsset() {
+static NSString* FindModelAsset(const std::string& modelPath, const std::vector<std::string>& searchPaths) {
     NSFileManager* fm = [NSFileManager defaultManager];
 
-    if (!g_config.ai.localLlmModelPath.empty()) {
-        NSString* path = [NSString stringWithUTF8String:g_config.ai.localLlmModelPath.c_str()];
+    if (!modelPath.empty()) {
+        NSString* path = [NSString stringWithUTF8String:modelPath.c_str()];
         if ([fm fileExistsAtPath:path]) {
             CG_DEBUG("LOCAL_LLM", "Found model via config path: %s", path.UTF8String);
             return path;
@@ -98,7 +98,7 @@ static NSString* FindModelAsset() {
     }
 
     // Check custom search paths from config
-    for (const auto& searchPath : g_config.ai.localLlmSearchPaths) {
+    for (const auto& searchPath : searchPaths) {
         NSString* path = [NSString stringWithUTF8String:searchPath.c_str()];
         BOOL isDir = NO;
         if ([fm fileExistsAtPath:path isDirectory:&isDir] && isDir) {
@@ -164,6 +164,11 @@ void LocalLLM_Init() {
     if (s_state == LocalLLMState::Loading || s_state == LocalLLMState::Ready) return;
     s_state = LocalLLMState::Loading;
 
+    // Snapshot config values on the calling thread (may be background)
+    // before passing to FindModelAsset, since g_config is not atomic.
+    std::string modelPathSnapshot = g_config.ai.localLlmModelPath;
+    std::vector<std::string> searchPathsSnapshot = g_config.ai.localLlmSearchPaths;
+
     // Check for FoundationModels first (macOS 26+)
     if (FoundationLLM_IsAvailable()) {
         CG_DEBUG("LOCAL_LLM", "Using FoundationModels backend (macOS 26+)");
@@ -174,7 +179,7 @@ void LocalLLM_Init() {
 
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0), ^{
         @autoreleasepool {
-            NSString* modelPath = FindModelAsset();
+            NSString* modelPath = FindModelAsset(modelPathSnapshot, searchPathsSnapshot);
             if (!modelPath) {
                 CG_ERROR("LOCAL_LLM", "No CoreML model found");
                 { std::lock_guard<std::mutex> lock(s_stateMutex); s_state = LocalLLMState::Unavailable; }
@@ -223,7 +228,13 @@ LocalLLMState LocalLLM_GetState() {
 }
 
 MLModel* LocalLLM_GetModel() {
+    std::lock_guard<std::mutex> lock(s_stateMutex);
     return s_model;
+}
+
+bool LocalLLM_IsReady() {
+    std::lock_guard<std::mutex> lock(s_stateMutex);
+    return s_state == LocalLLMState::Ready && s_model != nil;
 }
 
 void LocalLLM_Shutdown() {

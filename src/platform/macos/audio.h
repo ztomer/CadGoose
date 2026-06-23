@@ -8,5 +8,6 @@ void Audio_PlayBite();
 void Audio_PlayMudSquish();
 void Audio_PlayPat();
 void Audio_SetMuted(bool muted);
+void Audio_Cleanup();
 
 #endif

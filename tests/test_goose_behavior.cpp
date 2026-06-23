@@ -480,7 +480,7 @@ TEST(GooseBehaviorDetail, ForceFetchTextSetsForcedText) {
 TEST(GooseBehaviorDetail, ForceWanderClearsState) {
     Goose g(301, "ForceWander", 1920, 1080);
     g.state = GooseState::FETCHING;
-    g.heldItem = (ItemData*)0x1;
+    g.heldItem = new ItemData();
     g.forcedText = "something";
 
     g.ForceWander(1920, 1080);

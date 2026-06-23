@@ -146,6 +146,10 @@ void Portal_ResetForTest() {
 static void cleanup(BehaviorContext& ctx) {
     (void)ctx;
     ActorManager::Instance().destroyAllOfType(ActorType::Portal);
+    s_portalsOn = true;
+    s_p0Pressed = false;
+    s_p1Pressed = false;
+    s_p2Pressed = false;
 }
 
 static Behavior g_portalBehavior = BEHAVIOR_DEF_CUSTOM(

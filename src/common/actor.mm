@@ -14,7 +14,7 @@ void Actor::closeWindowOnMainThread(void (^closeBlock)()) {
     if ([NSThread isMainThread]) {
         closeBlock();
     } else {
-        dispatch_async(dispatch_get_main_queue(), closeBlock);
+        dispatch_sync(dispatch_get_main_queue(), closeBlock);
     }
 #else
     (void)closeBlock;

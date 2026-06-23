@@ -63,13 +63,22 @@ static constexpr float kDisplayLinkDefaultFps = 60;
     __weak TickManager* weakSelf = self;
     self.keyMonitor = [NSEvent addGlobalMonitorForEventsMatchingMask:NSEventMaskKeyDown
         handler:^(NSEvent* event) {
-            unichar key = [[event characters] characterAtIndex:0];
-            if (key == 'f' || key == 'F') {
-                for (auto* g : ActorManager::Instance().getGeese()) {
-                    if (!g || !g->isActive()) continue;
-                    Honcker_Honk(g, weakSelf.currentTime);
+            // The global event monitor runs on a private background thread.
+            // Dispatch all work to the main thread to synchronize access to
+            // ActorManager, g_config, and other shared state.
+            dispatch_async(dispatch_get_main_queue(), ^{
+                TickManager* strongSelf = weakSelf;
+                if (!strongSelf) return;
+                NSString* chars = [event characters];
+                if (chars.length == 0) return;
+                unichar key = [chars characterAtIndex:0];
+                if (key == 'f' || key == 'F') {
+                    for (auto* g : ActorManager::Instance().getGeese()) {
+                        if (!g || !g->isActive()) continue;
+                        Honcker_Honk(g, strongSelf.currentTime);
+                    }
                 }
-            }
+            });
         }];
 }
 

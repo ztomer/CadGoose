@@ -138,6 +138,7 @@ void Config_InitRegistry() {
         &g_config.physics.directionToCursorDist, 0.0f, 10.0f, 0.1f, OnConfigChange));
     g_configRegistry.push_back(CONFIG_FLOAT("Physics", "snap_distance", "Snap Distance",
         &g_config.physics.snapDistance, 0.0f, 10.0f, 0.1f, OnConfigChange));
+    g_configRegistry.back().lookupKey = "physics.snap_distance";
     g_configRegistry.push_back(CONFIG_FLOAT("Physics", "direction_reverse_multiplier", "Direction Reverse Multiplier",
         &g_config.physics.directionReverseMultiplier, -1.0f, 1.0f, 0.1f, OnConfigChange));
     g_configRegistry.push_back(CONFIG_FLOAT("Physics", "min_valid_scale", "Min Valid Scale",
@@ -210,6 +211,7 @@ void Config_InitRegistry() {
         &g_config.rig.runSpeedThreshold, 0.0f, 500.0f, 1.0f, OnConfigChange));
     g_configRegistry.push_back(CONFIG_FLOAT("Rig", "foot_spacing", "Foot Spacing",
         &g_config.rig.footSpacing, 0.0f, 50.0f, 0.5f, OnConfigChange));
+    g_configRegistry.back().lookupKey = "rig.foot_spacing";
     g_configRegistry.push_back(CONFIG_FLOAT("Rig", "foot_offset_y", "Foot Offset Y",
         &g_config.rig.footOffsetY, -50.0f, 50.0f, 0.5f, OnConfigChange));
     g_configRegistry.push_back(CONFIG_FLOAT("Rig", "head_forward_bias", "Head Forward Bias",
@@ -294,6 +296,7 @@ void Config_InitRegistry() {
         &g_config.step.overshootRun, 0.0f, 50.0f, 0.5f, OnConfigChange));
     g_configRegistry.push_back(CONFIG_FLOAT("Step", "snap_distance", "Snap Distance",
         &g_config.step.snapDistance, 0.0f, 50.0f, 0.5f, OnConfigChange));
+    g_configRegistry.back().lookupKey = "step.snap_distance";
     g_configRegistry.push_back(CONFIG_FLOAT("Step", "dist_factor_base", "Dist Factor Base",
         &g_config.step.distFactorBase, 0.0f, 10.0f, 0.1f, OnConfigChange));
     g_configRegistry.push_back(CONFIG_FLOAT("Step", "dist_factor_min", "Dist Factor Min",
@@ -310,6 +313,7 @@ void Config_InitRegistry() {
         &g_config.step.rightFootAngle, -180.0f, 180.0f, 1.0f, OnConfigChange));
     g_configRegistry.push_back(CONFIG_FLOAT("Step", "foot_spacing", "Foot Spacing",
         &g_config.step.footSpacing, 0.0f, 50.0f, 0.5f, OnConfigChange));
+    g_configRegistry.back().lookupKey = "step.foot_spacing";
     g_configRegistry.push_back(CONFIG_FLOAT("Step", "zero_velocity_threshold", "Zero Velocity Threshold",
         &g_config.step.zeroVelocityThreshold, 0.0f, 100.0f, 0.5f, OnConfigChange));
     g_configRegistry.push_back(CONFIG_FLOAT("Step", "min_duration", "Min Duration",
@@ -346,42 +350,6 @@ void Config_InitRegistry() {
         &g_config.item.heistChancePercent, 0, 100, OnConfigChange));
     g_configRegistry.push_back(CONFIG_INT("Item", "heist_approach_margin", "Heist Approach Margin",
         &g_config.item.heistApproachMargin, 0, 500, OnConfigChange));
-
-    // === Render ===
-    g_configRegistry.push_back(CONFIG_FLOAT("Render", "shadow_offset_x", "Shadow Offset X",
-        &g_config.render.shadowOffsetX, -20.0f, 20.0f, 1.0f, OnConfigChange));
-    g_configRegistry.push_back(CONFIG_FLOAT("Render", "shadow_offset_y", "Shadow Offset Y",
-        &g_config.render.shadowOffsetY, 0.0f, 50.0f, 1.0f, OnConfigChange));
-    g_configRegistry.push_back(CONFIG_FLOAT("Render", "shadow_width", "Shadow Width",
-        &g_config.render.shadowWidth, 0.0f, 100.0f, 1.0f, OnConfigChange));
-    g_configRegistry.push_back(CONFIG_FLOAT("Render", "shadow_height", "Shadow Height",
-        &g_config.render.shadowHeight, 0.0f, 100.0f, 1.0f, OnConfigChange));
-    g_configRegistry.push_back(CONFIG_FLOAT("Render", "foot_size", "Foot Size",
-        &g_config.render.footSize, 0.0f, 30.0f, 1.0f, OnConfigChange));
-    g_configRegistry.push_back(CONFIG_FLOAT("Render", "body_width", "Body Width",
-        &g_config.render.bodyWidth, 0.0f, 50.0f, 1.0f, OnConfigChange));
-    g_configRegistry.push_back(CONFIG_FLOAT("Render", "body_height", "Body Height",
-        &g_config.render.bodyHeight, 0.0f, 50.0f, 1.0f, OnConfigChange));
-    g_configRegistry.push_back(CONFIG_FLOAT("Render", "neck_size", "Neck Size",
-        &g_config.render.neckSize, 0.0f, 30.0f, 1.0f, OnConfigChange));
-    g_configRegistry.push_back(CONFIG_FLOAT("Render", "head1_size", "Head 1 Size",
-        &g_config.render.head1Size, 0.0f, 30.0f, 1.0f, OnConfigChange));
-    g_configRegistry.push_back(CONFIG_FLOAT("Render", "head2_size", "Head 2 Size",
-        &g_config.render.head2Size, 0.0f, 30.0f, 1.0f, OnConfigChange));
-    g_configRegistry.push_back(CONFIG_FLOAT("Render", "eye_size", "Eye Size",
-        &g_config.render.eyeSize, 0.0f, 20.0f, 1.0f, OnConfigChange));
-    g_configRegistry.push_back(CONFIG_FLOAT("Render", "click_radius", "Click Radius",
-        &g_config.render.clickRadius, 0.0f, 100.0f, 1.0f, OnConfigChange));
-    g_configRegistry.push_back(CONFIG_FLOAT("Render", "footprint_width", "Footprint Width",
-        &g_config.render.footprintWidth, 0.0f, 30.0f, 1.0f, OnConfigChange));
-    g_configRegistry.push_back(CONFIG_FLOAT("Render", "footprint_height", "Footprint Height",
-        &g_config.render.footprintHeight, 0.0f, 30.0f, 1.0f, OnConfigChange));
-    g_configRegistry.push_back(CONFIG_FLOAT("Render", "close_button_size", "Close Button Size",
-        &g_config.render.closeButtonSize, 0.0f, 50.0f, 1.0f, OnConfigChange));
-    g_configRegistry.push_back(CONFIG_FLOAT("Render", "text_note_font_size", "Text Note Font Size",
-        &g_config.render.textNoteFontSize, 0.0f, 48.0f, 1.0f, OnConfigChange));
-    g_configRegistry.push_back(CONFIG_FLOAT("Render", "squash_factor", "Squash Factor",
-        &g_config.render.squashFactor, 0.5f, 1.0f, 0.01f, OnConfigChange));
 
     RegisterBehaviors(g_configRegistry);
     RegisterRender(g_configRegistry);
