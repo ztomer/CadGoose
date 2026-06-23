@@ -600,6 +600,7 @@ void Goose::render(IRenderer* renderer) {
 
 void Goose::draw(IRenderer* renderer) {
 #ifdef __APPLE__
+    if (!renderer) return;
     CGContextRef ctx = (CGContextRef)renderer->nativeContext();
     if (!ctx) return;
 
