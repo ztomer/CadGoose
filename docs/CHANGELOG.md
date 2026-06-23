@@ -1,5 +1,28 @@
 # Changelog
 
+## June 23, 2026 — v1.13 Release: Null renderer guard + adversarial review rounds 2-7 fixes
+
+### What changed this session
+- **Null renderer guard in `Goose::draw()`** (goose.cpp:603):
+  - Added null check for renderer before dereferencing to get nativeContext().
+  - Prevents potential crash when draw() is called with a null renderer pointer.
+
+- **Adversarial review rounds 2-7 fixes** (from v1.12):
+  - Thread safety: command socket, MCP server, global key monitor
+  - Shutdown ordering: TickManager stop before window cleanup
+  - Behavior state leak: Goose destructor cleans up BehaviorStateManager
+  - Config save/load: error handling, exception safety
+  - CGImageRef over-release fix in hats/pomodoro cleanup
+  - Static state reset on behavior toggle-off
+  - LocalLLM thread safety
+  - ActorManager safe iteration
+  - Audio thread safety (atomic bool)
+  - Type safety: strcmp to ActorType enum, int to FetchType enum
+
+### Verification
+- **1468 tests, 0 failures** (30 skipped: 27 AccessibilityGUITest + 3 requires display)
+- No regressions
+
 ## June 22l, 2026 — Adversarial review round 7: Global key monitor data race, shutdown ordering, behavior state leak, 1468/0/30 green
 
 ### What changed this session

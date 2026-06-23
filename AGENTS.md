@@ -33,6 +33,33 @@ brew install --cask tools/homebrew/cadgoose.rb   # Test the Homebrew Cask instal
   - **Release Loop Rule**: When doing a release, verify the remote GitHub Actions build succeeds end-to-end. If any failure occurs, cycle/iterate locally to fix the issues, push, and recreate the release tag until the build is perfectly green and the DMG compiles.
   - **Homebrew Update Rule**: Once the GHA CI is green and the release DMG is successfully generated and attached, update the Homebrew cask repository tap (`Casks/cadgoose.rb` in `ztomer/homebrew-tap`) with the new version and calculated DMG SHA-256 hash. Ensure this updates automatically through GHA or manually.
 
+## Session Summary (June 23, 2026) — v1.13 Release: Null renderer guard + adversarial review rounds 2-7
+
+### What changed this session
+- **Null renderer guard in `Goose::draw()`** (goose.cpp:603):
+  - Added null check for renderer before dereferencing to get nativeContext().
+  - Prevents potential crash when draw() is called with a null renderer pointer.
+
+- **Adversarial review rounds 2-7 fixes** (from v1.12):
+  - Thread safety: command socket, MCP server, global key monitor
+  - Shutdown ordering: TickManager stop before window cleanup
+  - Behavior state leak: Goose destructor cleans up BehaviorStateManager
+  - Config save/load: error handling, exception safety
+  - CGImageRef over-release fix in hats/pomodoro cleanup
+  - Static state reset on behavior toggle-off
+  - LocalLLM thread safety
+  - ActorManager safe iteration
+  - Audio thread safety (atomic bool)
+  - Type safety: strcmp to ActorType enum, int to FetchType enum
+
+### Files changed
+- `src/common/goose.cpp`: Null renderer guard in draw()
+- Multiple files from adversarial review rounds 2-7
+
+### Verification
+- **1468 tests, 0 failures** (30 skipped: 27 AccessibilityGUITest + 3 requires display)
+- No regressions
+
 ## Session Summary (June 22j, 2026) — Adversarial review round 5: Command socket thread safety, 1520/1520 green
 
 ### What changed this session
