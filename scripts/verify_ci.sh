@@ -55,7 +55,7 @@ try:
         assert 'runs-on' in job, f'Job {name} missing runs-on'
         assert 'steps' in job, f'Job {name} missing steps'
         for i, step in enumerate(job['steps']):
-            assert 'name' in step or 'run' in step, f'Job {name} step {i} has no name or run'
+            assert 'name' in step or 'run' in step or 'uses' in step, f'Job {name} step {i} has no name, run, or uses'
     print('       Structure validated (name, on, jobs, steps)')
 except Exception as e:
     print(f'       ERROR: {e}')
