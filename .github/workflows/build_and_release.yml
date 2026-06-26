@@ -40,7 +40,7 @@ jobs:
           xcode-version: latest-stable
 
       - name: Install dependencies
-        run: brew install cmake googletest mimalloc
+        run: brew install cmake googletest mimalloc ccache
 
       - name: Verify FoundationModels SDK support
         run: |
