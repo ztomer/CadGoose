@@ -69,32 +69,34 @@ By default, the Cask starts with `sha256 :no_check` to simplify initial testing 
 
 ---
 
-## Automating Updates with GitHub Actions
+## Automated Updates via GitHub Actions
 
-You can automate this entirely! We've integrated an automated step into the main CadGoose release workflow (`.github/workflows/build_and_release.yml`). Every time you publish a new release on GitHub, the pipeline will automatically:
-1. Calculate the SHA-256 checksum of the built DMG.
-2. Clone your `homebrew-tap` repository.
-3. Automatically update `Casks/cadgoose.rb` with the new version and new SHA-256 hash.
-4. Commit and push the changes directly to your tap!
+The release workflow (`.github/workflows/build_and_release.yml`) automatically updates the Homebrew tap on every release:
 
-### How to Enable the Automation:
+1. Builds macOS DMG + Linux tar.zst
+2. Calculates DMG SHA-256
+3. Clones `ztomer/homebrew-tap`
+4. Updates `Casks/cadgoose.rb` with new version + SHA-256
+5. Commits and pushes to tap
 
-1. **Create a GitHub Personal Access Token (PAT):**
-   - Go to your GitHub profile **Settings → Developer Settings → Personal Access Tokens (Classic)**.
-   - Click **Generate new token (classic)**.
-   - Choose a descriptive note (e.g. `Homebrew Tap Push Token`).
-   - Select the **`repo`** scope (allows pushing to public/private repos).
-   - Generate and copy the token.
+This runs on `release: published` and `workflow_dispatch` (for re-attaching artifacts). No manual steps needed.
 
-2. **Save the Token as a Secret in the CadGoose Repository:**
-   - Go to your main **CadGoose** GitHub repository page.
-   - Navigate to **Settings → Secrets and variables → Actions**.
-   - Click **New repository secret**.
-   - Set the Name to **`HOMEBREW_TAP_TOKEN`**.
-   - Set the Value to your copied Personal Access Token.
-   - Click **Add secret**.
+### Requirements
 
-Once enabled, you'll never have to manually update your Homebrew tap again! It will be kept up to date automatically and securely.
+The workflow expects:
+- A `ztomer/homebrew-tap` repo with `Casks/cadgoose.rb`
+- `HOMEBREW_TAP_TOKEN` secret in CadGoose repo (PAT with `repo` scope)
+
+### Manual Override (if needed)
+
+```bash
+# Download DMG, compute hash
+shasum -a 256 CadGoose-<version>.dmg
+
+# Update Casks/cadgoose.rb in homebrew-tap:
+#   version "<version>"
+#   sha256 "<hash>"
+```
 
 ---
 
