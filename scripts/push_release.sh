@@ -62,6 +62,9 @@ fi
 info "Pushing tag to origin"
 git push origin "$VERSION"
 
+# Capture existing release runs before creating/triggering a new one
+EXISTING_RUNS=$(gh run list --repo "$REPO" --event release --limit 10 --json databaseId --jq '[.[].databaseId] | join(",")' 2>/dev/null || echo "")
+
 # Create GitHub release if it does not exist
 if gh release view "$VERSION" --repo "$REPO" >/dev/null 2>&1; then
     info "GitHub release $VERSION already exists."
@@ -74,12 +77,15 @@ fi
 info "Waiting for CI to complete..."
 RUN_ID=""
 for i in {1..60}; do
-    RUN_ID=$(gh run list --repo "$REPO" --event release --limit 10 --json databaseId,headBranch --jq "[.[] | select(.headBranch==\"$VERSION\") | .databaseId] | max" 2>/dev/null || true)
-    if [[ "$RUN_ID" == "null" ]]; then
-        RUN_ID=""
+    LATEST_RUN_ID=$(gh run list --repo "$REPO" --event release --limit 10 --json databaseId,headBranch --jq "[.[] | select(.headBranch==\"$VERSION\") | .databaseId] | max" 2>/dev/null || true)
+    if [[ "$LATEST_RUN_ID" == "null" ]]; then
+        LATEST_RUN_ID=""
     fi
-    if [[ -n "$RUN_ID" ]]; then
-        break
+    if [[ -n "$LATEST_RUN_ID" ]]; then
+        if [[ ",$EXISTING_RUNS," != *",$LATEST_RUN_ID,"* ]]; then
+            RUN_ID="$LATEST_RUN_ID"
+            break
+        fi
     fi
     sleep 5
 done
