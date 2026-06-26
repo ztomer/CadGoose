@@ -15,15 +15,8 @@ static constexpr float kHeaderRowHeight = 28.0f;
 // leave just enough room to clear the text descenders.
 static constexpr float kHeaderTopMargin = 12.0f;
 static constexpr float kHeaderBottomMargin = 2.0f;
-static constexpr float kRowPaddingX = 16.0f;
-static constexpr float kRowIconX = kRowPaddingX;
-static constexpr float kRowIconWidth = 24.0f;
-static constexpr float kRowIconGap = 8.0f;
-static constexpr float kRowToggleX = kRowIconX + kRowIconWidth + kRowIconGap;
-static constexpr float kRowToggleWidth = 36.0f;
-static constexpr float kRowNameX = kRowToggleX + kRowToggleWidth + kRowIconGap;
-static constexpr float kRowDescGap = 12.0f;
-static constexpr float kRowDescPaddingX = 4.0f;
+
+static constexpr float kDetailWidth = 182.0f;
 static constexpr float kDetailLeftPad = 8.0f;
 static constexpr float kDetailLabelGap = 4.0f;
 static constexpr float kDetailSliderMinWidth = 80.0f;
@@ -33,10 +26,7 @@ static constexpr float kSeparatorWidth = 1.0f;
 static constexpr float kTabBarWidth = 260.0f;
 static constexpr float kTabBarY = 10.0f;
 static constexpr float kTabBarHeight = 24.0f;
-static constexpr float kNameFontSize = 14.0f;
-static constexpr float kDescFontSize = 11.0f;
-static constexpr float kDetailLabelFontSize = 12.0f;
-static constexpr float kDetailValueFontSize = 11.0f;
+
 
 bool s_getBoolForKey(const std::string& key) {
     const ConfigOption* opt = Config_FindOptionByKey(key);
@@ -90,23 +80,10 @@ void s_setBoolValue(const std::string& key, bool value) {
         g_configItemsForAccess = [NSMutableArray array];
         self.configItems = g_configItemsForAccess;
 
-        // Compute list width from content: icon+toggle+name(max)+gap+desc(max)+padding
-        NSFont* nameFont = [NSFont fontWithName:@"Maple Mono" size:kNameFontSize] ?: [NSFont systemFontOfSize:kNameFontSize weight:NSFontWeightSemibold];
-        NSFont* descFont = [NSFont fontWithName:@"Maple Mono" size:kDescFontSize] ?: [NSFont systemFontOfSize:kDescFontSize];
-        CGFloat maxNW = [@"Interactive Drops" sizeWithAttributes:@{NSFontAttributeName: nameFont}].width + 4;
-        // Measure longest description to ensure no truncation (compact descriptions save ~100px)
-        CGFloat maxDW = [@"Piles of leaves accumulate on screen" sizeWithAttributes:@{NSFontAttributeName: descFont}].width + kRowDescPaddingX;
-        self.descLabelX = kRowNameX + maxNW + kRowDescGap;
-        self.listWidth = self.descLabelX + maxDW + kRowDescPaddingX;
-        fprintf(stderr, "[config] listWidth=%.0f descLabelX=%.0f maxNW=%.0f maxDW=%.0f\n",
-                self.listWidth, self.descLabelX, maxNW, maxDW);
-
-        // Compute detail width from content: instruction text + slider controls
-        NSDictionary* font12 = @{NSFontAttributeName: [NSFont systemFontOfSize:kDetailLabelFontSize]};
-        CGFloat labelW = 120; // max label width for slider names
-        CGFloat valW = [@"100.00" sizeWithAttributes:@{NSFontAttributeName: [NSFont systemFontOfSize:kDetailValueFontSize]}].width + kDetailValuePad;
-        CGFloat detailWidth = kDetailLeftPad + labelW + kDetailLabelGap + kDetailSliderMinWidth + kDetailLabelGap + valW + kDetailRightPad;
-        CGFloat windowWidth = self.listWidth + kSeparatorWidth + detailWidth;
+        // Row: name(12,w=140) desc(154,w=230) gap(8) toggle(44) pad(8) = 444
+        self.listWidth = 444.0f;
+        CGFloat windowWidth = self.listWidth + kSeparatorWidth + kDetailWidth;
+        fprintf(stderr, "[config] listWidth=%.0f detailWidth=%.0f\n", self.listWidth, kDetailWidth);
 
         self.window = [[NSWindow alloc] initWithContentRect:NSMakeRect(0, 0, windowWidth, kWindowHeight)
                                                   styleMask:NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskFullSizeContentView
@@ -139,10 +116,11 @@ void s_setBoolValue(const std::string& key, bool value) {
         NSView* appBar = [[NSView alloc] initWithFrame:NSMakeRect(0, kWindowHeight - kAppbarHeight, windowWidth, kAppbarHeight)];
 
         _tabControl = [[NSSegmentedControl alloc] initWithFrame:NSMakeRect((windowWidth - kTabBarWidth) / 2, kTabBarY, kTabBarWidth, kTabBarHeight)];
-        _tabControl.segmentCount = 3;
+        _tabControl.segmentCount = 4;
         [_tabControl setLabel:@"Behaviors" forSegment:0];
-        [_tabControl setLabel:@"Appearance" forSegment:1];
-        [_tabControl setLabel:@"AI" forSegment:2];
+        [_tabControl setLabel:@"Play" forSegment:1];
+        [_tabControl setLabel:@"Appearance" forSegment:2];
+        [_tabControl setLabel:@"AI" forSegment:3];
         _tabControl.target = self;
         _tabControl.action = @selector(tabChanged:);
         _tabControl.selectedSegment = 0;
@@ -163,34 +141,71 @@ void s_setBoolValue(const std::string& key, bool value) {
         // --- Behaviors tab: list + detail split ---
         _behaviorsContainer = [[NSView alloc] initWithFrame:_contentContainer.bounds];
 
-        _detailView = [[BehaviorDetailView alloc] initWithFrame:NSMakeRect(self.listWidth + kSeparatorWidth, 0, detailWidth, kTableHeight)];
-        [_behaviorsContainer addSubview:_detailView];
+        _detailBehavior = [[BehaviorDetailView alloc] initWithFrame:NSMakeRect(self.listWidth + kSeparatorWidth, 0, kDetailWidth, kTableHeight)];
+        [_behaviorsContainer addSubview:_detailBehavior];
 
-        NSView* separator = [[AppBarBorderView alloc] initWithFrame:NSMakeRect(self.listWidth, 0, kSeparatorWidth, kTableHeight)];
-        [_behaviorsContainer addSubview:separator];
+        NSView* behaviorSeparator = [[AppBarBorderView alloc] initWithFrame:NSMakeRect(self.listWidth, 0, kSeparatorWidth, kTableHeight)];
+        [_behaviorsContainer addSubview:behaviorSeparator];
 
-        NSScrollView* scrollView = [[NSScrollView alloc] initWithFrame:NSMakeRect(0, 0, self.listWidth, kTableHeight)];
-        scrollView.hasVerticalScroller = NO;
-        scrollView.borderType = NSNoBorder;
-        scrollView.drawsBackground = NO;
+        {
+            NSScrollView* sv = [[NSScrollView alloc] initWithFrame:NSMakeRect(0, 0, self.listWidth, kTableHeight)];
+            sv.hasVerticalScroller = NO;
+            sv.borderType = NSNoBorder;
+            sv.drawsBackground = NO;
 
-        NSTableView* tableView = [[NSTableView alloc] initWithFrame:NSMakeRect(0, 0, self.listWidth, kTableHeight)];
-        tableView.headerView = nil;
-        tableView.delegate = self;
-        tableView.dataSource = self;
-        tableView.allowsEmptySelection = YES;
-        tableView.selectionHighlightStyle = NSTableViewSelectionHighlightStyleNone;
-        tableView.backgroundColor = [NSColor clearColor];
-        tableView.intercellSpacing = NSMakeSize(0, 4);
+            NSTableView* tv = [[NSTableView alloc] initWithFrame:NSMakeRect(0, 0, self.listWidth, kTableHeight)];
+            tv.headerView = nil;
+            tv.delegate = self;
+            tv.dataSource = self;
+            tv.allowsEmptySelection = YES;
+            tv.selectionHighlightStyle = NSTableViewSelectionHighlightStyleNone;
+            tv.backgroundColor = [NSColor clearColor];
+            tv.intercellSpacing = NSMakeSize(0, 4);
 
-        NSTableColumn* column = [[NSTableColumn alloc] initWithIdentifier:@"main"];
-        column.width = self.listWidth;
-        [tableView addTableColumn:column];
+            NSTableColumn* col = [[NSTableColumn alloc] initWithIdentifier:@"main"];
+            col.width = self.listWidth;
+            [tv addTableColumn:col];
 
-        self.behaviorsTable = tableView;
-        scrollView.documentView = tableView;
-        [_behaviorsContainer addSubview:scrollView];
+            self.behaviorsTable = tv;
+            sv.documentView = tv;
+            [_behaviorsContainer addSubview:sv];
+        }
         [_contentContainer addSubview:_behaviorsContainer];
+
+        // --- Play tab: list + detail split ---
+        _playContainer = [[NSView alloc] initWithFrame:_contentContainer.bounds];
+        _playContainer.hidden = YES;
+
+        _detailPlay = [[BehaviorDetailView alloc] initWithFrame:NSMakeRect(self.listWidth + kSeparatorWidth, 0, kDetailWidth, kTableHeight)];
+        [_playContainer addSubview:_detailPlay];
+
+        NSView* playSeparator = [[AppBarBorderView alloc] initWithFrame:NSMakeRect(self.listWidth, 0, kSeparatorWidth, kTableHeight)];
+        [_playContainer addSubview:playSeparator];
+
+        {
+            NSScrollView* sv = [[NSScrollView alloc] initWithFrame:NSMakeRect(0, 0, self.listWidth, kTableHeight)];
+            sv.hasVerticalScroller = NO;
+            sv.borderType = NSNoBorder;
+            sv.drawsBackground = NO;
+
+            NSTableView* tv = [[NSTableView alloc] initWithFrame:NSMakeRect(0, 0, self.listWidth, kTableHeight)];
+            tv.headerView = nil;
+            tv.delegate = self;
+            tv.dataSource = self;
+            tv.allowsEmptySelection = YES;
+            tv.selectionHighlightStyle = NSTableViewSelectionHighlightStyleNone;
+            tv.backgroundColor = [NSColor clearColor];
+            tv.intercellSpacing = NSMakeSize(0, 4);
+
+            NSTableColumn* col = [[NSTableColumn alloc] initWithIdentifier:@"main"];
+            col.width = self.listWidth;
+            [tv addTableColumn:col];
+
+            self.playTable = tv;
+            sv.documentView = tv;
+            [_playContainer addSubview:sv];
+        }
+        [_contentContainer addSubview:_playContainer];
 
 // --- Appearance tab (wantsLayer to avoid gray bg in layer-shared compositing) ---
          _appearanceView = [[AppearanceTabView alloc] initWithFrame:_contentContainer.bounds];
@@ -206,63 +221,66 @@ void s_setBoolValue(const std::string& key, bool value) {
          _aiView.hidden = YES;
         [_contentContainer addSubview:_aiView];
 
-        [self loadConfigItems];
+        self.behaviorItems = [NSMutableArray array];
+        self.playItems = [NSMutableArray array];
+        [self loadBehaviorItems];
+        [self loadPlayItems];
     }
     return self;
 }
 
-- (void)loadConfigItems {
-    if (!self.configItems) self.configItems = [NSMutableArray array];
-    [self.configItems removeAllObjects];
+- (void)addRow:(NSString*)label key:(NSString*)key desc:(NSString*)desc to:(NSMutableArray*)items {
+    [items addObject:@{@"key": key, @"label": label, @"desc": desc, @"type": @"behavior"}];
+}
 
-    [self.configItems addObject:@{@"name": @"FUN", @"type": @"header"}];
-    [self addRow:@"Ball" key:@"ball_enabled" desc:@"Pushable bouncing balls"];
-    [self addRow:@"Breadcrumbs" key:@"breadcrumbs_enabled" desc:@"Hold key to drop crumbs at cursor"];
-    [self addRow:@"Hats" key:@"hats_enabled" desc:@"Put hats on geese"];
-    [self addRow:@"Rainbow" key:@"rainbow_enabled" desc:@"Cycle colors on all geese"];
-    [self addRow:@"Acid" key:@"acid_enabled" desc:@"Geese spin and honk rapidly"];
-    [self addRow:@"Anger" key:@"anger_enabled" desc:@"Geese get angry and punch"];
-    [self addRow:@"Autumn Leaves" key:@"autumn_leaves_enabled" desc:@"Leaf piles accumulate on screen"];
-    
-    [self.configItems addObject:@{@"name": @"JOY", @"type": @"header"}];
-    [self addRow:@"Avoidance" key:@"avoidance_enabled" desc:@"Dodges fast-moving cursor"];
-    [self addRow:@"Boredom Sigh" key:@"boredom_enabled" desc:@"Sighs after 10+ min idle"];
-    [self addRow:@"Window Peeking" key:@"peeking_enabled" desc:@"Peeks at screen edges"];
-    [self addRow:@"Interactive Drops" key:@"interactive_drops_enabled" desc:@"Drops puddles or flowers"];
-    [self addRow:@"Toys" key:@"toys_enabled" desc:@"Scatter interactive toys"];
+- (void)loadBehaviorItems {
+    [self.behaviorItems removeAllObjects];
+    [self addRow:@"Ball" key:@"ball_enabled" desc:@"Pushable bouncing balls" to:self.behaviorItems];
+    [self addRow:@"Hats" key:@"hats_enabled" desc:@"Put hats on geese" to:self.behaviorItems];
+    [self addRow:@"Rainbow" key:@"rainbow_enabled" desc:@"Cycle colors on all geese" to:self.behaviorItems];
+    [self addRow:@"Acid" key:@"acid_enabled" desc:@"Geese spin and honk rapidly" to:self.behaviorItems];
+    [self addRow:@"Anger" key:@"anger_enabled" desc:@"Geese get angry and punch" to:self.behaviorItems];
+    [self addRow:@"Autumn Leaves" key:@"autumn_leaves_enabled" desc:@"Leaf piles accumulate on screen" to:self.behaviorItems];
+    [self addRow:@"Avoidance" key:@"avoidance_enabled" desc:@"Dodges fast-moving cursor" to:self.behaviorItems];
+    [self addRow:@"Boredom Sigh" key:@"boredom_enabled" desc:@"Sighs after 10+ min idle" to:self.behaviorItems];
+    [self addRow:@"Window Peeking" key:@"peeking_enabled" desc:@"Peeks at screen edges" to:self.behaviorItems];
+    [self addRow:@"Interactive Drops" key:@"interactive_drops_enabled" desc:@"Drops puddles or flowers" to:self.behaviorItems];
+    [self addRow:@"Toys" key:@"toys_enabled" desc:@"Scatter interactive toys" to:self.behaviorItems];
 
-    [self.configItems addObject:@{@"name": @"CONTROL", @"type": @"header"}];
-    {
-        NSString* hk = @(g_config.behaviors.honcker.hotkey.c_str());
-        [self addRow:@"Honcker" key:@"honcker_enabled" desc:[NSString stringWithFormat:@"Press %@ to honk at cursor", hk]];
-    }
-    {
-        NSString* kO = @(g_config.behaviors.jail.hotkeyO.c_str());
-        NSString* kP = @(g_config.behaviors.jail.hotkeyP.c_str());
-        [self addRow:@"Jail" key:@"jail_enabled" desc:[NSString stringWithFormat:@"Set trap %@, trigger %@", kO, kP]];
-    }
-    {
-        NSString* k1 = @(g_config.portal.hotkey1.c_str());
-        NSString* k2 = @(g_config.portal.hotkey2.c_str());
-        NSString* k0 = @(g_config.portal.hotkey0.c_str());
-        [self addRow:@"Portals" key:@"portals_enabled" desc:[NSString stringWithFormat:@"%@/%@ place, %@ toggle", k1, k2, k0]];
-    }
-    [self addRow:@"Drag" key:@"drag_enabled" desc:@"Click and drag geese"];
-
-    [self.configItems addObject:@{@"name": @"INFO", @"type": @"header"}];
-    [self addRow:@"Nametag" key:@"nametag_enabled" desc:@"Show goose name above head"];
-
-    [self.configItems addObject:@{@"name": @"SYSTEMS", @"type": @"header"}];
-    [self addRow:@"Health" key:@"health_enabled" desc:@"Health bar system for geese"];
-    [self addRow:@"Pomodoro" key:@"pomodoro_enabled" desc:@"Pomodoro timer behavior"];
+    // Keep g_configItemsForAccess pointing to behaviorItems for AX tests
+    g_configItemsForAccess = self.behaviorItems;
 
     if (self.behaviorsTable) {
         [self.behaviorsTable reloadData];
     }
 }
 
-- (void)addRow:(NSString*)label key:(NSString*)key desc:(NSString*)desc {
-    [self.configItems addObject:@{@"key": key, @"label": label, @"desc": desc, @"type": @"behavior"}];
+- (void)loadPlayItems {
+    [self.playItems removeAllObjects];
+    [self addRow:@"Breadcrumbs" key:@"breadcrumbs_enabled" desc:@"Hold key to drop crumbs at cursor" to:self.playItems];
+    {
+        NSString* hk = @(g_config.behaviors.honcker.hotkey.c_str());
+        [self addRow:@"Honcker" key:@"honcker_enabled" desc:[NSString stringWithFormat:@"Press %@ to honk at cursor", hk] to:self.playItems];
+    }
+    {
+        NSString* kO = @(g_config.behaviors.jail.hotkeyO.c_str());
+        NSString* kP = @(g_config.behaviors.jail.hotkeyP.c_str());
+        [self addRow:@"Jail" key:@"jail_enabled" desc:[NSString stringWithFormat:@"Set trap %@, trigger %@", kO, kP] to:self.playItems];
+    }
+    {
+        NSString* k1 = @(g_config.portal.hotkey1.c_str());
+        NSString* k2 = @(g_config.portal.hotkey2.c_str());
+        NSString* k0 = @(g_config.portal.hotkey0.c_str());
+        [self addRow:@"Portals" key:@"portals_enabled" desc:[NSString stringWithFormat:@"%@/%@ place, %@ toggle", k1, k2, k0] to:self.playItems];
+    }
+    [self addRow:@"Drag" key:@"drag_enabled" desc:@"Click and drag geese" to:self.playItems];
+    [self addRow:@"Nametag" key:@"nametag_enabled" desc:@"Show goose name above head" to:self.playItems];
+    [self addRow:@"Health" key:@"health_enabled" desc:@"Health bar system for geese" to:self.playItems];
+    [self addRow:@"Pomodoro" key:@"pomodoro_enabled" desc:@"Pomodoro timer behavior" to:self.playItems];
+
+    if (self.playTable) {
+        [self.playTable reloadData];
+    }
 }
 
 - (void)closeWindow:(id)sender {
@@ -271,8 +289,8 @@ void s_setBoolValue(const std::string& key, bool value) {
 
 - (void)reloadConfig:(id)sender {
     Config_Init();
-    [self loadConfigItems];
-    [self.behaviorsTable reloadData];
+    [self loadBehaviorItems];
+    [self loadPlayItems];
 }
 
 - (void)prepareForDisplay {
@@ -281,6 +299,7 @@ void s_setBoolValue(const std::string& key, bool value) {
     // on window layer tree rebuild after close+reopen.
     [_tabControl setSelectedSegment:0];
     _behaviorsContainer.hidden = NO;
+    _playContainer.hidden = YES;
     _appearanceView.hidden = YES;
     _aiView.hidden = YES;
 }
@@ -288,29 +307,33 @@ void s_setBoolValue(const std::string& key, bool value) {
 - (void)tabChanged:(NSSegmentedControl*)sender {
     NSInteger idx = sender.selectedSegment;
     _behaviorsContainer.hidden = (idx != 0);
-    _appearanceView.hidden = (idx != 1);
-    _aiView.hidden = (idx != 2);
-}
-
-- (void)showDetailForBehavior:(NSString*)key {
-    [_detailView configureForBehavior:key];
+    _playContainer.hidden = (idx != 1);
+    _appearanceView.hidden = (idx != 2);
+    _aiView.hidden = (idx != 3);
 }
 
 - (void)tableViewSelectionDidChange:(NSNotification*)note {
-    NSInteger prevRow = self.selectedRowIndex;
-    NSInteger row = self.behaviorsTable.selectedRow;
-    if (row >= 0 && row < (NSInteger)self.configItems.count) {
-        NSDictionary* item = self.configItems[row];
+    NSTableView* table = (NSTableView*)note.object;
+    BOOL isBehavior = (table == self.behaviorsTable);
+    NSMutableArray* items = isBehavior ? self.behaviorItems : self.playItems;
+    NSInteger row = table.selectedRow;
+    NSInteger* selectedIdx = isBehavior ? &_selectedBehaviorRowIndex : &_selectedPlayRowIndex;
+    BehaviorDetailView* detail = isBehavior ? self.detailBehavior : self.detailPlay;
+    NSTableView* otherTable = isBehavior ? self.playTable : self.behaviorsTable;
+
+    NSInteger prevRow = *selectedIdx;
+    if (row >= 0 && row < (NSInteger)items.count) {
+        NSDictionary* item = items[row];
         if ([item[@"type"] isEqualToString:@"behavior"]) {
-            self.selectedRowIndex = row;
-            [self showDetailForBehavior:item[@"key"]];
+            *selectedIdx = row;
+            [detail configureForBehavior:item[@"key"]];
         } else {
-            self.selectedRowIndex = -1;
+            *selectedIdx = -1;
         }
     } else {
-        self.selectedRowIndex = -1;
+        *selectedIdx = -1;
     }
-    // Only reload affected rows instead of full table reload
+    // Reload affected rows in the sending table only
     NSIndexSet* rowsToReload = nil;
     if (prevRow >= 0 && row >= 0 && prevRow != row) {
         rowsToReload = [NSIndexSet indexSetWithIndexesInRange:NSMakeRange((NSUInteger)MIN(prevRow, row), (NSUInteger)ABS(row - prevRow) + 1)];
@@ -320,46 +343,29 @@ void s_setBoolValue(const std::string& key, bool value) {
         rowsToReload = [NSIndexSet indexSetWithIndex:(NSUInteger)row];
     }
     if (rowsToReload) {
-        [self.behaviorsTable reloadDataForRowIndexes:rowsToReload columnIndexes:[NSIndexSet indexSetWithIndex:0]];
+        [table reloadDataForRowIndexes:rowsToReload columnIndexes:[NSIndexSet indexSetWithIndex:0]];
     }
+    // Reload the same index in the other table to clear its selection highlight
+    [otherTable reloadDataForRowIndexes:[NSIndexSet indexSetWithIndexesInRange:NSMakeRange(0, items.count)] columnIndexes:[NSIndexSet indexSetWithIndex:0]];
 }
 
 - (CGFloat)tableView:(NSTableView*)tableView heightOfRow:(NSInteger)row {
-    NSDictionary* item = self.configItems[row];
-    if ([item[@"type"] isEqualToString:@"header"]) return kHeaderRowHeight;
     return kRowHeight;
 }
 
 - (NSInteger)numberOfRowsInTableView:(NSTableView*)tableView {
-    return self.configItems.count;
+    if (tableView == self.behaviorsTable) return self.behaviorItems.count;
+    return self.playItems.count;
 }
 
 - (NSView*)tableView:(NSTableView*)tableView viewForTableColumn:(NSTableColumn*)column row:(NSInteger)row {
-    NSDictionary* item = self.configItems[row];
-    NSString* type = item[@"type"];
+    BOOL isBehavior = (tableView == self.behaviorsTable);
+    NSMutableArray* items = isBehavior ? self.behaviorItems : self.playItems;
+    NSInteger* selectedIdx = isBehavior ? &_selectedBehaviorRowIndex : &_selectedPlayRowIndex;
+    BehaviorDetailView* detail = isBehavior ? self.detailBehavior : self.detailPlay;
 
-    if ([type isEqualToString:@"header"]) {
-        NSTextField* label = [tableView makeViewWithIdentifier:@"headerLabel" owner:self];
-        if (!label) {
-            label = [[NSTextField alloc] init];
-            label.identifier = @"headerLabel";
-            label.backgroundColor = [NSColor clearColor];
-            label.bordered = NO;
-            label.editable = NO;
-            label.font = [NSFont fontWithName:@"Maple Mono" size:kNameFontSize] ?: [NSFont systemFontOfSize:kNameFontSize weight:NSFontWeightSemibold];
-            label.textColor = [NSColor colorWithRed:0.9 green:0.1 blue:0.1 alpha:1.0];
-        }
-        // Row views are non-flipped (y=0 at the row's BOTTOM edge, which is
-        // visually adjacent to the next row down — i.e. the first item under
-        // this header). To put the title close to that next row we anchor the
-        // label to LOW y; the empty space ends up at the TOP of the row,
-        // separating this group from the previous group's last item.
-        float labelH = kHeaderRowHeight - kHeaderTopMargin - kHeaderBottomMargin;
-        label.frame = NSMakeRect(kRowPaddingX, kHeaderBottomMargin,
-                                 self.listWidth - kRowPaddingX * 2, labelH);
-        label.stringValue = item[@"name"];
-        return label;
-    }
+    NSDictionary* item = items[row];
+    NSString* type = item[@"type"];
 
     if ([type isEqualToString:@"behavior"]) {
         BehaviorRowView* rowView = [tableView makeViewWithIdentifier:@"behaviorRow" owner:self];
@@ -369,18 +375,13 @@ void s_setBoolValue(const std::string& key, bool value) {
         }
 
         rowView.configKey = item[@"key"];
-        NSString* nameText = item[@"label"];
-        NSString* descText = item[@"desc"] ?: @"";
-        rowView.nameLabel.stringValue = nameText;
-        rowView.descLabel.stringValue = descText;
-        rowView.iconLabel.stringValue = [BehaviorRowView iconForConfigKey:item[@"key"]];
-        rowView.target = self;
-        rowView.detailAction = @selector(showDetailForBehavior:);
-        rowView.selected = (row == self.selectedRowIndex && [item[@"type"] isEqualToString:@"behavior"]);
+        rowView.nameLabel.stringValue = item[@"label"];
+        rowView.descLabel.stringValue = item[@"desc"] ?: @"";
+        rowView.detailView = detail;
+        rowView.selected = (row == *selectedIdx);
 
         std::string key = std::string([item[@"key"] UTF8String]);
-        bool val = s_getBoolForKey(key);
-        rowView.toggle.state = val ? NSControlStateValueOn : NSControlStateValueOff;
+        rowView.toggle.state = s_getBoolForKey(key) ? NSControlStateValueOn : NSControlStateValueOff;
 
         return rowView;
     }

@@ -22,17 +22,16 @@ extern NSMutableArray* g_configItemsForAccess;
 @property (nonatomic, copy) NSString* colorPrefix;
 @end
 
+@class BehaviorDetailView;
+
 @interface BehaviorRowView : NSView
-@property (nonatomic, strong) NSButton* toggle;
-@property (nonatomic, strong) NSTextField* iconLabel;
+@property (nonatomic, strong) NSSwitch* toggle;
 @property (nonatomic, strong) NSTextField* nameLabel;
 @property (nonatomic, strong) NSTextField* descLabel;
 @property (nonatomic, copy) NSString* configKey;
-@property (nonatomic, weak) id target;
-@property (nonatomic) SEL detailAction;
+@property (nonatomic, weak) BehaviorDetailView* detailView;
 @property (nonatomic, getter=isSelected) BOOL selected;
 - (void)openDetail;
-+ (NSString*)iconForConfigKey:(NSString*)key;
 @end
 
 @interface PreviewGooseView : NSView
@@ -91,17 +90,23 @@ extern NSMutableArray* g_configItemsForAccess;
 
 @interface ConfigGUIWindowController : NSWindowController <NSTableViewDelegate, NSTableViewDataSource>
 @property (nonatomic, strong) NSTableView* behaviorsTable;
+@property (nonatomic, strong) NSTableView* playTable;
 @property (nonatomic, strong) NSMutableArray* configItems;
-@property (nonatomic, strong) BehaviorDetailView* detailView;
+@property (nonatomic, strong) NSMutableArray* behaviorItems;
+@property (nonatomic, strong) NSMutableArray* playItems;
+@property (nonatomic, strong) BehaviorDetailView* detailBehavior;
+@property (nonatomic, strong) BehaviorDetailView* detailPlay;
 @property (nonatomic, strong) NSView* contentContainer;
 @property (nonatomic, strong) NSView* behaviorsContainer;
+@property (nonatomic, strong) NSView* playContainer;
 @property (nonatomic, strong) AppearanceTabView* appearanceView;
 @property (nonatomic, strong) AITabView* aiView;
 @property (nonatomic, strong) NSSegmentedControl* tabControl;
 @property (nonatomic) NSWindow* parentWindow;
-@property (nonatomic) NSInteger selectedRowIndex;
+@property (nonatomic) NSInteger selectedBehaviorRowIndex;
+@property (nonatomic) NSInteger selectedPlayRowIndex;
 @property (nonatomic) CGFloat listWidth;
-@property (nonatomic) CGFloat descLabelX;
+
 - (void)prepareForDisplay;
 + (NSMutableArray*)configItemsForAccess;
 @end

@@ -150,9 +150,9 @@ g = 0.22
 b = 0.22
 
 [color.customNeck]
-r = 0.44
-g = 0.55
-b = 0.66
+r = 0.82
+g = 0.82
+b = 0.82
 
 [color.canadaEye]
 r = 0.1
@@ -160,29 +160,29 @@ g = 0.1
 b = 0.1
 
 [color.customBody]
-r = 1.0
-g = 0.0
-b = 0.0
+r = 0.82
+g = 0.82
+b = 0.82
 
 [color.customHead]
-r = 0.77
-g = 0.88
-b = 0.99
+r = 0.82
+g = 0.82
+b = 0.82
 
 [color.customBeak]
-r = 0.1
-g = 0.2
-b = 0.3
+r = 1.0
+g = 0.6
+b = 0.0
 
 [color.customEye]
-r = 0.4
-g = 0.5
-b = 0.6
+r = 0.1
+g = 0.1
+b = 0.1
 
 [color.customOutline]
-r = 0.7
-g = 0.8
-b = 0.9
+r = 0.82
+g = 0.82
+b = 0.82
 
 [Snatch]
 radius_range = 80.0
@@ -200,32 +200,30 @@ angular_speed_random_range = 5.0
 
 [Render]
 eye_offset_x_back = -3.0
+dropped_item_size = 20.0
+squash_factor = 0.92
+shadow_width = 40.0
 shadow_offset_y = 10.0
 body_height = 22.0
+body_width = 22.0
+debug_tick_mod = 60
+eye_size = 4.0
+shadow_offset_x = 2.0
+footprint_height = 8.0
+frame_dt = 0.016667
 neck_size = 13.0
 foot_size = 8.0
 head1_size = 15.0
-close_button_size = 20.0
 head2_size = 10.0
 shadow_height = 30.0
-eye_size = 4.0
-shadow_offset_x = 2.0
-body_width = 22.0
-debug_tick_mod = 60
-footprint_height = 8.0
-frame_dt = 0.016667
-text_note_font_size = 14.0
-shadow_width = 40.0
-squash_factor = 0.92
-dropped_item_size = 20.0
 beak_width = 16.0
-beak_height = 8.0
-click_radius = 30.0
-beak_max_width = 9.0
-footprint_width = 12.0
 eye_offset_x_front = 3.0
 eye_offset_y = -4.0
 eye_facing_threshold = 0.5
+footprint_width = 12.0
+beak_max_width = 9.0
+click_radius = 30.0
+beak_height = 8.0
 frame_rate = 60.0
 iso_scale_x = 1.0
 iso_scale_y = 0.7

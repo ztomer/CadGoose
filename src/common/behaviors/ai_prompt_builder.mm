@@ -15,8 +15,8 @@ float CapEvilForFoundation(float level) {
 NSString* FoundationPersonaCapNote(void) {
     int pct = (int)(kFoundationMaxEvilLevel * 100.0f + 0.5f);
     return [NSString stringWithFormat:
-            @"Apple Foundation caps evil at %d%% (villainous). Above %d%% on-device safety refuses; requests sent at %d%%. Osaurus/Ollama have no cap.",
-            pct, pct, pct];
+            @"Foundation caps evil at %d%%, use Osaurus/Ollama for max evil",
+            pct];
 }
 
 NSString* systemPromptForEvilLevel(float level) {
