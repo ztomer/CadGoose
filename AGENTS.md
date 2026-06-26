@@ -33,6 +33,43 @@ brew install --cask tools/homebrew/cadgoose.rb   # Test the Homebrew Cask instal
   - **Release Loop Rule**: When doing a release, verify the remote GitHub Actions build succeeds end-to-end. If any failure occurs, cycle/iterate locally to fix the issues, push, and recreate the release tag until the build is perfectly green and the DMG compiles.
   - **Homebrew Update Rule**: Once the GHA CI is green and the release DMG is successfully generated and attached, update the Homebrew cask repository tap (`Casks/cadgoose.rb` in `ztomer/homebrew-tap`) with the new version and calculated DMG SHA-256 hash. Ensure this updates automatically through GHA or manually.
 
+## Session Summary (June 26, 2026) — v1.63 Release: Preferences layout, AI tab overhaul, detail panel stacked sliders
+
+### What changed this session
+- **Preferences (Behaviors / Play tabs):**
+  - NSSwitch at native 44×22, right-aligned with 28px padding (`kToggleRightPad`).
+  - `listWidth` 544→444, desc label 330→210, detail panel fixed at 182px.
+  - 4 tabs (Behaviors, Play, Appearance, AI). Headers removed. 11 behaviors + 8 play items.
+  - Appearance preview: removed 120px fudge factor; spans from color swatches to window edge.
+
+- **AI Tab:**
+  - Foundation note moved to Connection section (above Personality), Foundation-only. Text: "Foundation caps evil at 72%, use Osaurus/Ollama for max evil".
+  - Temperature slider moved below Personality. Label left of slider (aligned with "Cuddly"), value right of slider. Both vertically centered on track.
+  - Text meme / Auto-save converted to NSSwitch right-aligned (label left, toggle right).
+  - Debug status bar toggle removed from UI; `ai.showStatusBar` config-only, default OFF.
+  - Prompt preview: `NSVisualEffectView` (HUD material) behind `NSTextView`.
+
+- **Detail Panels (Behaviors / Play):**
+  - Stacked sliders: `addSliderWithLabel` now label/value top row, full-width slider below (42px per slider).
+  - All call-site Y spacings updated.
+
+- **Build / CI:**
+  - v1.63 tag pushed; CI green on macOS 26 + Linux. Homebrew tap auto-updated via GHA.
+
+### Files changed
+- `src/platform/macos/config_gui_views.mm`: `kDescLabelWidth` 330→210, added `kToggleRightPad=28`, NSSwitch init.
+- `src/platform/macos/config_gui.mm`: `listWidth` 544→444, `kDetailWidth=182`, preview fix.
+- `src/platform/macos/config_gui_ai.mm`: Foundation note move, temperature move, NSSwitch toggles, glass panel, debug toggle removal.
+- `src/platform/macos/config_gui_colors.mm`: Preview fudge factor removed.
+- `src/platform/macos/config_gui_detail.mm`: `addSliderWithLabel` stacked layout.
+- `src/common/behaviors/ai_prompt_builder.mm`: `FoundationPersonaCapNote()` reworded.
+
+### Verification
+- **1468 tests, 0 failures** (30 skipped: 27 AccessibilityGUITest + 3 requires display)
+- No regressions
+
+---
+
 ## Session Summary (June 23, 2026) — v1.13 Release: Null renderer guard + adversarial review rounds 2-7
 
 ### What changed this session

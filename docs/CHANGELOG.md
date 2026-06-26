@@ -1,5 +1,31 @@
 # Changelog
 
+## June 26, 2026 — v1.63 Release: Preferences layout, AI tab overhaul, detail panel stacked sliders
+
+### Preferences (Behaviors / Play tabs)
+- **Toggle position**: NSSwitch at native 44×22, right-aligned with 28px padding (`kToggleRightPad`). `listWidth` 544→444, desc label 330→210, detail panel fixed at 182px.
+- **Tabs reorganized**: 4 tabs (Behaviors, Play, Appearance, AI). Headers removed. 11 behaviors + 8 play items.
+- **Appearance preview**: Removed 120px fudge factor; preview now spans from color swatches to window edge.
+
+### AI Tab
+- **Foundation note moved**: Now in Connection section (above Personality), only shown for Foundation provider. Text: "Foundation caps evil at 72%, use Osaurus/Ollama for max evil".
+- **Temperature slider**: Moved below Personality, before Prompt Preview. Label left of slider (aligned with "Cuddly"), value right of slider. Both vertically centered on track.
+- **Text meme / Auto-save**: Converted to NSSwitch right-aligned (label left, toggle right).
+- **Debug status bar toggle**: Removed from UI. `ai.showStatusBar` remains config-only, default OFF.
+- **Prompt preview glass panel**: `NSVisualEffectView` (HUD material) behind `NSTextView`.
+
+### Detail Panels (Behaviors / Play)
+- **Stacked sliders**: `addSliderWithLabel` now renders label (left) + value (right) on top row, full-width slider below (42px per slider vs 20px). All call-site Y spacings updated.
+
+### Build / CI
+- **v1.63 tag pushed**, CI green on macOS 26 + Linux. Homebrew tap auto-updated via GHA.
+
+### Verification
+- **1468 tests, 0 failures** (30 skipped: 27 AccessibilityGUITest + 3 requires display)
+- No regressions
+
+---
+
 ## June 23, 2026 — v1.13 Release: Null renderer guard + adversarial review rounds 2-7 fixes
 
 ### What changed this session
