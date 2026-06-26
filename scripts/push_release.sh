@@ -74,7 +74,10 @@ fi
 info "Waiting for CI to complete..."
 RUN_ID=""
 for i in {1..60}; do
-    RUN_ID=$(gh run list --repo "$REPO" --event release --limit 10 --json databaseId,headBranch --jq ".[] | select(.headBranch==\"$VERSION\") | .databaseId" 2>/dev/null | head -n 1 || true)
+    RUN_ID=$(gh run list --repo "$REPO" --event release --limit 10 --json databaseId,headBranch --jq "[.[] | select(.headBranch==\"$VERSION\") | .databaseId] | max" 2>/dev/null || true)
+    if [[ "$RUN_ID" == "null" ]]; then
+        RUN_ID=""
+    fi
     if [[ -n "$RUN_ID" ]]; then
         break
     fi
