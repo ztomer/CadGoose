@@ -26,8 +26,6 @@ jobs:
     runs-on: macos-26
     steps:
       - uses: actions/checkout@v4
-        with:
-          submodules: recursive
 
       # FoundationModels (the local "Foundation" AI provider) only exists in the
       # macOS 26+ SDK. canImport() is evaluated at compile time, so building
@@ -153,8 +151,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          submodules: recursive
 
       - name: Install dependencies
         run: |
