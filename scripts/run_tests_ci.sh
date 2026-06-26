@@ -13,8 +13,10 @@ echo "Running tests with filter: $FILTER"
 echo "Test binary: $TEST_BINARY"
 
 # Run the test binary and capture output
+set +e
 OUTPUT=$("$TEST_BINARY" --gtest_filter="$FILTER" 2>&1)
 EXIT_CODE=$?
+set -e
 
 echo "$OUTPUT"
 
