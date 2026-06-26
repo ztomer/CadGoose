@@ -12,6 +12,21 @@ info() { echo "→ $*"; }
 ok()   { echo "✓ $*"; }
 err()  { echo "✗ $*" >&2; exit 1; }
 
+# Check if gh is authenticated. If GITHUB_TOKEN is set but invalid, try unsetting it to fall back to keyring/keychain.
+if ! gh auth status >/dev/null 2>&1; then
+    if [[ -n "${GITHUB_TOKEN:-}" ]]; then
+        info "GITHUB_TOKEN is set but may be invalid. Attempting to run without GITHUB_TOKEN to use keyring..."
+        if env -u GITHUB_TOKEN gh auth status >/dev/null 2>&1; then
+            unset GITHUB_TOKEN
+            ok "Successfully bypassed invalid GITHUB_TOKEN and authenticated using keyring."
+        else
+            err "gh CLI is not authenticated. Run 'gh auth login' first."
+        fi
+    else
+        err "gh CLI is not authenticated. Run 'gh auth login' first."
+    fi
+fi
+
 # 1. Determine version
 if [[ $# -eq 1 ]]; then
     VERSION="$1"
@@ -37,23 +52,36 @@ git diff --quiet || err "Working tree not clean. Commit or stash changes first."
 git diff --cached --quiet || err "Staged changes present. Commit first."
 
 # 3. Tag and push
-info "Creating tag $VERSION"
-git tag "$VERSION"
+if git rev-parse "$VERSION" >/dev/null 2>&1; then
+    info "Tag $VERSION already exists locally."
+else
+    info "Creating tag $VERSION"
+    git tag "$VERSION"
+fi
+
 info "Pushing tag to origin"
 git push origin "$VERSION"
+
+# Create GitHub release if it does not exist
+if gh release view "$VERSION" --repo "$REPO" >/dev/null 2>&1; then
+    info "GitHub release $VERSION already exists."
+else
+    info "Creating GitHub release $VERSION"
+    gh release create "$VERSION" --title "$VERSION" --notes "Release $VERSION" --repo "$REPO"
+fi
 
 # 4. Wait for CI
 info "Waiting for CI to complete..."
 RUN_ID=""
 for i in {1..60}; do
-    RUN_ID=$(gh run list --repo "$REPO" --event push --limit 1 --json databaseId,conclusion,headBranch,event --jq '.[0] | select(.headBranch=="main" or .headBranch=="master") | .databaseId' 2>/dev/null || true)
+    RUN_ID=$(gh run list --repo "$REPO" --event release --limit 10 --json databaseId,headBranch --jq ".[] | select(.headBranch==\"$VERSION\") | .databaseId" 2>/dev/null | head -n 1 || true)
     if [[ -n "$RUN_ID" ]]; then
         break
     fi
     sleep 5
 done
 
-[[ -n "$RUN_ID" ]] || err "Could not find CI run for tag push"
+[[ -n "$RUN_ID" ]] || err "Could not find CI run for release $VERSION"
 
 info "Monitoring run $RUN_ID"
 gh run watch "$RUN_ID" --repo "$REPO"
