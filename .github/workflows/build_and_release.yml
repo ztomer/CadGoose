@@ -54,23 +54,32 @@ jobs:
             echo "::warning title=Foundation provider disabled::This SDK lacks FoundationModels; the released DMG will NOT support the local Foundation AI provider. Use a runner/Xcode with the macOS 26+ SDK."
           fi
 
+      - name: Cache ccache
+        uses: actions/cache@v4
+        with:
+          path: ~/Library/Caches/ccache
+          key: ccache-${{ runner.os }}-${{ hashFiles('**/CMakeLists.txt') }}
+          restore-keys: |
+            ccache-${{ runner.os }}-
+
       - name: Configure & Build
         run: |
           rm -rf build && mkdir -p build && cd build
-          cmake .. -DCMAKE_BUILD_TYPE=Release
+          cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
           cmake --build . --config Release --parallel $(sysctl -n hw.logicalcpu)
 
-      - name: Run Tests
+      - name: Run Tests (fast)
         run: |
           cd build
           bash ../scripts/run_tests_ci.sh
 
-      - name: Coverage Gate
+      - name: Coverage Gate (release only)
+        if: github.event_name == 'release' || github.event_name == 'workflow_dispatch'
         run: |
           scripts/check_coverage.sh --p0-min=80
 
       - name: Upload Coverage Report
-        if: always()
+        if: always() && (github.event_name == 'release' || github.event_name == 'workflow_dispatch')
         uses: actions/upload-artifact@v4
         with:
           name: coverage-report
