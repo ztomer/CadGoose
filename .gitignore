@@ -6,6 +6,8 @@ build/
 build-debug/
 build_asan/
 build-nomalloc/
+build-cov/
+build-linux/
 release-build/
 test_logs/
 CMakeFiles/
