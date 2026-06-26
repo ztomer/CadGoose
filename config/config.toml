@@ -150,9 +150,9 @@ g = 0.22
 b = 0.22
 
 [color.customNeck]
-r = 0.82
-g = 0.82
-b = 0.82
+r = 0.44
+g = 0.55
+b = 0.66
 
 [color.canadaEye]
 r = 0.1
@@ -160,29 +160,29 @@ g = 0.1
 b = 0.1
 
 [color.customBody]
-r = 0.82
-g = 0.82
-b = 0.82
-
-[color.customHead]
-r = 0.82
-g = 0.82
-b = 0.82
-
-[color.customBeak]
 r = 1.0
-g = 0.6
+g = 0.0
 b = 0.0
 
-[color.customEye]
+[color.customHead]
+r = 0.77
+g = 0.88
+b = 0.99
+
+[color.customBeak]
 r = 0.1
-g = 0.1
-b = 0.1
+g = 0.2
+b = 0.3
+
+[color.customEye]
+r = 0.4
+g = 0.5
+b = 0.6
 
 [color.customOutline]
-r = 0.82
-g = 0.82
-b = 0.82
+r = 0.7
+g = 0.8
+b = 0.9
 
 [Snatch]
 radius_range = 80.0
