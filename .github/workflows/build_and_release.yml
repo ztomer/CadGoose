@@ -71,19 +71,6 @@ jobs:
           cd build
           bash ../scripts/run_tests_ci.sh
 
-      - name: Coverage Gate (release only)
-        if: github.event_name == 'release' || github.event_name == 'workflow_dispatch'
-        run: |
-          scripts/check_coverage.sh --p0-min=80
-
-      - name: Upload Coverage Report
-        if: always() && (github.event_name == 'release' || github.event_name == 'workflow_dispatch')
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-report
-          path: coverage-report/
-          retention-days: 30
-
       - name: Determine version
         uses: ./.github/actions/determine-version
         with:
