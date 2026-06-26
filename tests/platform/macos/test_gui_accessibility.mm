@@ -184,14 +184,19 @@ static bool OpenPreferencesViaMenu(AXUIElementRef appElem) {
     return result;
 }
 
-// Behavior display names in the preferences table (in order)
+// Behavior display names in the Behaviors tab (in order)
 static NSArray* BehaviorDisplayNames() {
     return @[
-        @"Ball", @"Breadcrumbs", @"Hats", @"Rainbow", @"Acid", @"Anger", @"Autumn Leaves",
-        @"Avoidance", @"Boredom Sigh", @"Window Peeking", @"Custom Affirmations", @"Interactive Drops", @"Toys",
-        @"Honcker", @"Jail", @"Portals", @"Drag",
-        @"Nametag",
-        @"Health", @"Pomodoro"
+        @"Ball", @"Hats", @"Rainbow", @"Acid", @"Anger", @"Autumn Leaves",
+        @"Avoidance", @"Boredom Sigh", @"Window Peeking", @"Interactive Drops", @"Toys"
+    ];
+}
+
+// Behavior display names in the Play tab (in order)
+static NSArray* PlayDisplayNames() {
+    return @[
+        @"Breadcrumbs", @"Honcker", @"Jail", @"Portals", @"Drag",
+        @"Nametag", @"Health", @"Pomodoro"
     ];
 }
 
@@ -232,7 +237,7 @@ static NSArray* CollectToggleRows(AXUIElementRef prefsWindow) {
                 if (!val) val = AXStr(child, kAXTitleAttribute);
                 val = [val stringByTrimmingCharactersInSet:NSCharacterSet.whitespaceCharacterSet];
 
-                if ([role isEqualToString:@"AXCheckBox"]) {
+                if ([role isEqualToString:@"AXCheckBox"] || [role isEqualToString:@"AXSwitch"]) {
                     cb = child;
                     CFRetain(cb);
                 } else if ([role isEqualToString:@"AXStaticText"] && val.length > 0) {
@@ -250,9 +255,9 @@ static NSArray* CollectToggleRows(AXUIElementRef prefsWindow) {
     return rows;
 }
 
-// Collect all AXCheckBox elements inside the preferences window
-static NSArray* CollectCheckboxes(AXUIElementRef root) {
-    NSMutableArray* boxes = [NSMutableArray array];
+// Collect all toggle/switch elements inside the preferences window
+static NSArray* CollectToggles(AXUIElementRef root) {
+    NSMutableArray* toggles = [NSMutableArray array];
     NSMutableArray* stack = [NSMutableArray arrayWithObject:(__bridge id)root];
 
     while (stack.count > 0) {
@@ -261,8 +266,8 @@ static NSArray* CollectCheckboxes(AXUIElementRef root) {
         AXUIElementRef el = (__bridge AXUIElementRef)elObj;
 
         NSString* role = AXStr(el, kAXRoleAttribute);
-        if ([role isEqualToString:@"AXCheckBox"]) {
-            [boxes addObject:elObj];
+        if ([role isEqualToString:@"AXCheckBox"] || [role isEqualToString:@"AXSwitch"]) {
+            [toggles addObject:elObj];
         }
 
         NSArray* kids = AXKids(el);
@@ -271,7 +276,7 @@ static NSArray* CollectCheckboxes(AXUIElementRef root) {
         }
     }
 
-    return boxes;
+    return toggles;
 }
 
 // Collect all sliders inside the preferences window
@@ -495,8 +500,8 @@ TEST_F(AccessibilityGUITest, TabSwitchingWorks) {
 // =========================================================
 TEST_F(AccessibilityGUITest, AllBehaviorTogglesExist) {
     ASSERT_NE(s_prefsWindow, nullptr);
-    NSArray* boxes = CollectCheckboxes(s_prefsWindow);
-    EXPECT_EQ(boxes.count, 21) << "Expected 21 toggle switches in Preferences window";
+    NSArray* toggles = CollectToggles(s_prefsWindow);
+    EXPECT_EQ(toggles.count, 11) << "Expected 11 toggle switches in Behaviors tab";
 }
 
 TEST_F(AccessibilityGUITest, ToggleBallAndVerifyStateChange) {
@@ -556,7 +561,7 @@ TEST_F(AccessibilityGUITest, AllTogglesRespondToPress) {
         pressed++;
     }
 
-    EXPECT_EQ(pressed, 21) << "Should have pressed all 21 behavior toggles";
+    EXPECT_EQ(pressed, 11) << "Should have pressed all 11 behavior toggles";
 }
 
 // =========================================================

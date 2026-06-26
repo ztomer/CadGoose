@@ -4,24 +4,20 @@
 #include "config.h"
 
 // BehaviorRowView layout constants
-static constexpr float kToggleX = 10.0f;
-static constexpr float kToggleY = 6.0f;
-static constexpr float kToggleSize = 20.0f;
-static constexpr float kIconLabelX = 34.0f;
-static constexpr float kIconLabelY = 5.0f;
-static constexpr float kIconLabelWidth = 28.0f;
-static constexpr float kIconLabelHeight = 22.0f;
-static constexpr float kIconFontSize = 16.0f;
-static constexpr float kNameLabelX = 64.0f;
+static constexpr float kNameLabelX = 12.0f;
 static constexpr float kNameLabelY = 7.0f;
 static constexpr float kNameLabelWidth = 140.0f;
 static constexpr float kNameLabelHeight = 18.0f;
 static constexpr float kNameFontSize = 14.0f;
-static constexpr float kDescLabelX = 210.0f;
+static constexpr float kDescLabelX = 154.0f;
 static constexpr float kDescLabelY = 9.0f;
-static constexpr float kDescLabelWidth = 280.0f;
+static constexpr float kDescLabelWidth = 210.0f;
 static constexpr float kDescLabelHeight = 14.0f;
 static constexpr float kDescFontSize = 11.0f;
+static constexpr float kToggleWidth = 44.0f;
+static constexpr float kToggleHeight = 22.0f;
+static constexpr float kToggleY = 3.0f;
+static constexpr float kToggleRightPad = 28.0f;
 static constexpr float kSeparatorX = 8.0f;
 static constexpr float kSeparatorWidth = 1.0f;
 static constexpr float kSeparatorInset = 16.0f;
@@ -31,28 +27,9 @@ static constexpr float kHighlightAlpha = 0.08f;
 
 @implementation BehaviorRowView
 
-+ (NSString*)iconForConfigKey:(NSString*)key {
-    return @"";
-}
-
 - (instancetype)initWithFrame:(NSRect)frame {
     self = [super initWithFrame:frame];
     if (self) {
-        _toggle = [[NSButton alloc] initWithFrame:NSMakeRect(kToggleX, kToggleY, kToggleSize, kToggleSize)];
-        _toggle.buttonType = NSButtonTypeSwitch;
-        _toggle.title = @"";
-        _toggle.target = self;
-        _toggle.action = @selector(toggled:);
-        [self addSubview:_toggle];
-
-        _iconLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(kIconLabelX, kIconLabelY, kIconLabelWidth, kIconLabelHeight)];
-        _iconLabel.font = [NSFont systemFontOfSize:kIconFontSize];
-        _iconLabel.backgroundColor = [NSColor clearColor];
-        _iconLabel.bordered = NO;
-        _iconLabel.editable = NO;
-        _iconLabel.alignment = NSTextAlignmentCenter;
-        [self addSubview:_iconLabel];
-
         _nameLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(kNameLabelX, kNameLabelY, kNameLabelWidth, kNameLabelHeight)];
         _nameLabel.font = [NSFont fontWithName:@"Maple Mono" size:kNameFontSize] ?: [NSFont systemFontOfSize:kNameFontSize weight:NSFontWeightSemibold];
         _nameLabel.textColor = [NSColor whiteColor];
@@ -69,6 +46,13 @@ static constexpr float kHighlightAlpha = 0.08f;
         _descLabel.editable = NO;
         _descLabel.lineBreakMode = NSLineBreakByTruncatingTail;
         [self addSubview:_descLabel];
+
+        // Toggle on the right side
+        float toggleX = self.bounds.size.width - kToggleWidth - kToggleRightPad;
+        _toggle = [[NSSwitch alloc] initWithFrame:NSMakeRect(toggleX, kToggleY, kToggleWidth, kToggleHeight)];
+        _toggle.target = self;
+        _toggle.action = @selector(toggled:);
+        [self addSubview:_toggle];
 
         NSView* separator = [[AppBarBorderView alloc] initWithFrame:NSMakeRect(kSeparatorX, 0, self.bounds.size.width - kSeparatorInset, kSeparatorWidth)];
         separator.autoresizingMask = NSViewWidthSizable | NSViewMaxYMargin;
@@ -108,17 +92,14 @@ static constexpr float kHighlightAlpha = 0.08f;
 - (void)toggled:(id)sender {
     if (_configKey) {
         std::string key = std::string([_configKey UTF8String]);
-        bool val = ((NSButton*)sender).state == NSControlStateValueOn;
+        bool val = ((NSSwitch*)sender).state == NSControlStateValueOn;
         s_setBoolValue(key, val);
     }
 }
 
 - (void)openDetail {
-    if (_target && _detailAction) {
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Warc-performSelector-leaks"
-        [_target performSelector:_detailAction withObject:self.configKey];
-#pragma clang diagnostic pop
+    if (_detailView && _configKey) {
+        [_detailView configureForBehavior:_configKey];
     }
 }
 

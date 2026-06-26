@@ -65,7 +65,7 @@ static constexpr float kDetailIdRowSpacing = 28;
         _titleLabel.stringValue = @"Breadcrumbs Behavior";
         float y = _contentView.bounds.size.height - kDetailSectionStartY;
         [self addHotkeyFieldWithLabel:@"Trigger Key" value:@(g_config.behaviors.breadCrumbs.hotkey.c_str()) atY:y key:@"breadcrumbs_hotkey"];
-        y -= kDetailRowSpacing;
+        y -= 42;
         [self addSliderWithLabel:@"Max Crumbs" min:10.0f max:200.0f value:g_config.behaviors.breadCrumbs.maxCrumbs atY:y key:@"behaviors.fun.breadCrumbs.max"];
     } else if ([key isEqualToString:@"hats_enabled"]) {
         _titleLabel.stringValue = @"Hats Behavior";
@@ -90,19 +90,19 @@ static constexpr float kDetailIdRowSpacing = 28;
         [self addInstructionLabel:[NSString stringWithFormat:@"Press %@ to honk at cursor location", k] atY:y];
         y -= kDetailRowSpacingSmall;
         [self addHotkeyFieldWithLabel:@"Honk Key" value:@(g_config.behaviors.honcker.hotkey.c_str()) atY:y key:@"hotkey"];
-        y -= kDetailRowSpacing;
+        y -= 42;
         [self addSliderWithLabel:@"Honk Cooldown" min:0.1f max:10.0f value:g_config.behaviors.honcker.cooldown atY:y key:@"behaviors.control.honcker.cooldown"];
     } else if ([key isEqualToString:@"jail_enabled"]) {
         _titleLabel.stringValue = @"Jail Behavior";
         float y = _contentView.bounds.size.height - kDetailSectionStartY;
         NSString* kO = @(g_config.behaviors.jail.hotkeyO.c_str());
         NSString* kP = @(g_config.behaviors.jail.hotkeyP.c_str());
-        [self addInstructionLabel:[NSString stringWithFormat:@"%@ = set cursor as jail position\n   %@ = toggle jail on/off", kO, kP] atY:y];
+        [self addInstructionLabel:[NSString stringWithFormat:@"%@ = set cursor as jail position\n%@ = toggle jail on/off", kO, kP] atY:y];
         y -= kDetailRowSpacingLarge;
         [self addHotkeyFieldWithLabel:@"Set Key" value:@(g_config.behaviors.jail.hotkeyO.c_str()) atY:y key:@"hotkeyO"];
         y -= kDetailRowSpacing;
         [self addHotkeyFieldWithLabel:@"Toggle Key" value:@(g_config.behaviors.jail.hotkeyP.c_str()) atY:y key:@"hotkeyP"];
-        y -= kDetailRowSpacing;
+        y -= 42;
         [self addSliderWithLabel:@"Jail Size" min:50.0f max:300.0f value:g_config.behaviors.jail.size atY:y key:@"behaviors.control.jail.size"];
     } else if ([key isEqualToString:@"portals_enabled"]) {
         _titleLabel.stringValue = @"Portal Behavior";
@@ -110,26 +110,26 @@ static constexpr float kDetailIdRowSpacing = 28;
         NSString* k1 = @(g_config.portal.hotkey1.c_str());
         NSString* k2 = @(g_config.portal.hotkey2.c_str());
         NSString* k0 = @(g_config.portal.hotkey0.c_str());
-        [self addInstructionLabel:[NSString stringWithFormat:@"%@ = place portal A\n   %@ = place portal B\n   %@ = toggle portals", k1, k2, k0] atY:y];
+        [self addInstructionLabel:[NSString stringWithFormat:@"%@ = place portal A\n%@ = place portal B\n%@ = toggle portals", k1, k2, k0] atY:y];
         y -= kDetailRowSpacingXLarge;
         [self addHotkeyFieldWithLabel:@"Portal 1" value:@(g_config.portal.hotkey1.c_str()) atY:y key:@"hotkey1"];
         y -= kDetailRowSpacing;
         [self addHotkeyFieldWithLabel:@"Portal 2" value:@(g_config.portal.hotkey2.c_str()) atY:y key:@"hotkey2"];
         y -= kDetailRowSpacing;
         [self addHotkeyFieldWithLabel:@"Toggle" value:@(g_config.portal.hotkey0.c_str()) atY:y key:@"hotkey0"];
-        y -= kDetailRowSpacing;
+        y -= 42;
         [self addSliderWithLabel:@"Portal Width" min:30.0f max:200.0f value:g_config.portal.width atY:y key:@"behaviors.control.portals.width"];
     } else if ([key isEqualToString:@"drag_enabled"]) {
         _titleLabel.stringValue = @"Drag Behavior";
         float y = _contentView.bounds.size.height - kDetailSectionStartY;
         [self addInstructionLabel:@"Click and drag the goose" atY:y];
-        y -= kDetailRowSpacingSmall;
+        y -= 42;
         [self addSliderWithLabel:@"Drag Radius" min:50.0f max:300.0f value:g_config.behaviors.drag.radius atY:y key:@"behaviors.control.drag.radius"];
     } else if ([key isEqualToString:@"nametag_enabled"]) {
         _titleLabel.stringValue = @"Nametag & Geese";
         float y = _contentView.bounds.size.height - kDetailSectionStartY;
         [self addSliderWithLabel:@"Font Size" min:8.0f max:40.0f value:g_config.behaviors.nametag.size atY:y key:@"behaviors.info.nametag.size"];
-        y -= kDetailRowSpacing + 5;
+        y -= 47;
         [self addGeeseListAtY:y];
     } else if ([key isEqualToString:@"health_enabled"]) {
         _titleLabel.stringValue = @"Health System";
@@ -139,7 +139,7 @@ static constexpr float kDetailIdRowSpacing = 28;
         _titleLabel.stringValue = @"Pomodoro Timer";
         float y = _contentView.bounds.size.height - kDetailSectionStartY;
         [self addSliderWithLabel:@"Work (min)" min:1.0f max:60.0f value:g_config.behaviors.pomodoro.workMinutes atY:y key:@"behaviors.systems.pomodoro.workDuration"];
-        y -= kDetailRowSpacing + 5;
+        y -= 47;
         [self addSliderWithLabel:@"Break (min)" min:1.0f max:30.0f value:g_config.behaviors.pomodoro.breakMinutes atY:y key:@"behaviors.systems.pomodoro.breakDuration"];
     } else {
         _titleLabel.stringValue = @"Settings";
@@ -174,14 +174,13 @@ static constexpr float kDetailIdRowSpacing = 28;
 - (void)addSliderWithLabel:(NSString*)label min:(float)min max:(float)max value:(float)value atY:(float)y key:(NSString*)key {
     CGFloat pw = _contentView.bounds.size.width;
     CGFloat leftPad = 12;
-    CGFloat gap = 6;
+    CGFloat rightPad = 12;
     NSDictionary* font12 = @{NSFontAttributeName: [NSFont systemFontOfSize:12]};
+    NSDictionary* font11 = @{NSFontAttributeName: [NSFont systemFontOfSize:11]};
     CGFloat labelW = [label sizeWithAttributes:font12].width + 10;
-    CGFloat valW = [@"100.00" sizeWithAttributes:@{NSFontAttributeName: [NSFont systemFontOfSize:11]}].width + 14;
-    CGFloat sliderW = pw - leftPad - labelW - gap - gap - valW - 12;
-    CGFloat sliderX = leftPad + labelW + gap;
-    CGFloat valX = sliderX + sliderW + gap;
+    CGFloat valW = [@"100.00" sizeWithAttributes:font11].width + 14;
 
+    // Row 1: Label (left) | Value (right)
     NSTextField* labelField = [[NSTextField alloc] initWithFrame:NSMakeRect(leftPad, y, labelW, 16)];
     labelField.font = [NSFont systemFontOfSize:12];
     labelField.textColor = [NSColor whiteColor];
@@ -191,16 +190,7 @@ static constexpr float kDetailIdRowSpacing = 28;
     labelField.stringValue = label;
     [_contentView addSubview:labelField];
 
-    NSSlider* slider = [[NSSlider alloc] initWithFrame:NSMakeRect(sliderX, y, sliderW, 20)];
-    slider.minValue = min;
-    slider.maxValue = max;
-    slider.doubleValue = value;
-    slider.identifier = key;
-    slider.target = self;
-    slider.action = @selector(sliderChanged:);
-    [_contentView addSubview:slider];
-
-    NSTextField* valueField = [[NSTextField alloc] initWithFrame:NSMakeRect(valX, y, valW, 16)];
+    NSTextField* valueField = [[NSTextField alloc] initWithFrame:NSMakeRect(pw - rightPad - valW, y, valW, 16)];
     valueField.font = [NSFont systemFontOfSize:11];
     valueField.textColor = [NSColor colorWithWhite:0.85 alpha:1.0];
     valueField.backgroundColor = [NSColor clearColor];
@@ -210,7 +200,20 @@ static constexpr float kDetailIdRowSpacing = 28;
     valueField.identifier = key;
     valueField.target = self;
     valueField.action = @selector(valueFieldChanged:);
+    valueField.alignment = NSTextAlignmentRight;
     [_contentView addSubview:valueField];
+
+    // Row 2: Slider (full width, 22px below)
+    CGFloat sliderX = leftPad;
+    CGFloat sliderW = pw - leftPad - rightPad;
+    NSSlider* slider = [[NSSlider alloc] initWithFrame:NSMakeRect(sliderX, y - 22, sliderW, 20)];
+    slider.minValue = min;
+    slider.maxValue = max;
+    slider.doubleValue = value;
+    slider.identifier = key;
+    slider.target = self;
+    slider.action = @selector(sliderChanged:);
+    [_contentView addSubview:slider];
 }
 
 - (void)addHotkeyFieldWithLabel:(NSString*)label value:(NSString*)value atY:(float)y key:(NSString*)key {
