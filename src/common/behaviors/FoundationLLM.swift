@@ -55,8 +55,7 @@ public func cAvailabilityCode() -> Int32 {
 public func cContextSize() -> Int32 {
     #if canImport(FoundationModels)
     if #available(macOS 26.0, *) {
-        let model = SystemLanguageModel.default
-        return Int32(model.contextSize)
+        return 4096  // default context size; actual model.contextSize not available on all SDKs
     }
     #endif
     return 0
