@@ -21,9 +21,9 @@ jobs:
   # ── macOS ──────────────────────────────────────────────
   build-macos:
     name: Build macOS (DMG)
-    # macos-26 ships the macOS 26 SDK, which contains FoundationModels — required
-    # for the local "Foundation" AI provider to be compiled into the binary.
-    runs-on: macos-26
+    # macOS 15 (Sequoia) SDK contains FoundationModels — required for the local
+    # "Foundation" AI provider to be compiled into the binary.
+    runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
 
