@@ -119,7 +119,11 @@ Goose::Goose(int id_, const std::string &name_, int screenW, int screenH)
 }
 
 void Goose::onHonk() {
-  g_assets.Honk();
+  if (g_config.general.appearanceMode == APPEARANCE_STALIN) {
+    g_assets.Gulag();
+  } else {
+    g_assets.Honk();
+  }
 }
 
 Goose::~Goose() {

@@ -26,6 +26,7 @@
 #import "effect_window.h"
 #include "goose.h"
 #include "actor.h"
+#include "assets.h"
 
 // --- Menu bar icon constants ---
 static constexpr float kMenuBarIconSize = 16;
@@ -281,7 +282,10 @@ bool Config_IsSystemDarkTheme();
     DEBUG_LOG("Opening presence panel");
 }
 
+extern void (*g_updateStatusBarIconFn)();
+
 - (void)applicationDidFinishLaunching:(NSNotification*)aNotification {
+    g_updateStatusBarIconFn = UpdateStatusBarIcon;
     DEBUG_LOG("App launching...");
 
     Config_Init();
@@ -416,10 +420,43 @@ bool Config_IsSystemDarkTheme();
 extern "C" void UpdateStatusBarIcon() {
     AppDelegate* delegate = (AppDelegate*)[NSApp delegate];
     if (!delegate.statusItem) return;
-    bool stalinMode = g_config.general.appearanceMode == APPEARANCE_STALIN;
-    bool darkAppearance = (g_config.general.appearanceMode == APPEARANCE_DARK) ||
-        (g_config.general.appearanceMode == APPEARANCE_SYSTEM && Config_IsSystemDarkTheme());
-    delegate.statusItem.button.title = stalinMode ? @"\u262D" : (darkAppearance ? @"\U0001F341" : @"\U0001FABF");
+
+    int mode = g_config.general.appearanceMode;
+    bool isStalin = (mode == APPEARANCE_STALIN);
+    bool isCanada = (mode == 1) || (mode == 2 && Config_IsSystemDarkTheme());
+
+    std::string menubarFile = "menubar_goose_white.png";
+    std::string appIconFile = "app_icon_white.png";
+
+    if (isStalin) {
+        menubarFile = "menubar_stalin.png";
+        appIconFile = "app_icon_stalin.png";
+    } else if (isCanada) {
+        menubarFile = "menubar_goose_canada.png";
+        appIconFile = "app_icon_canada.png";
+    }
+
+    std::string mbPath = (ASSET_ROOT / "Assets/Images/OtherGfx" / menubarFile).string();
+    std::string appPath = (ASSET_ROOT / "Assets/Images/OtherGfx" / appIconFile).string();
+
+    NSImage* mbImg = [[NSImage alloc] initWithContentsOfFile:[NSString stringWithUTF8String:mbPath.c_str()]];
+    NSImage* appImg = [[NSImage alloc] initWithContentsOfFile:[NSString stringWithUTF8String:appPath.c_str()]];
+
+    if (mbImg) {
+        [mbImg setTemplate:YES];
+        delegate.statusItem.button.image = mbImg;
+        delegate.statusItem.button.title = @""; // Clear title since we are using image
+    } else {
+        // Fallback to text emojis if image fails to load
+        delegate.statusItem.button.image = nil;
+        delegate.statusItem.button.title = isStalin ? @"\u262D" : (isCanada ? @"\U0001F341" : @"\U0001FABF");
+    }
+
+    if (appImg) {
+        [NSApp setApplicationIconImage:appImg];
+    } else {
+        [NSApp setApplicationIconImage:nil]; // reset to default Info.plist AppIcon
+    }
 }
 
 extern "C" void Presence_UpdateStatusFromBehavior(const char* status) {

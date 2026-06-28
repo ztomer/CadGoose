@@ -150,6 +150,7 @@ bool Config_SetValueByKey(const std::string& key, const std::string& value, std:
 
 #ifdef __APPLE__
 #include "audio.h"
+void (*g_updateStatusBarIconFn)() = nullptr;
 #endif
 
 void OnConfigChange() {
@@ -159,6 +160,9 @@ void OnConfigChange() {
 #ifdef __APPLE__
         Audio_SetEnabled(g_config.general.audioEnabled);
         Audio_SetMuted(g_config.general.audioMuted);
+        if (g_updateStatusBarIconFn) {
+            g_updateStatusBarIconFn();
+        }
 #endif
         Config_SaveAll();
     } catch (const std::exception& e) {
