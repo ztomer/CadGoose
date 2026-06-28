@@ -30,7 +30,16 @@ float CalculateGooseWindowSize(const Goose* goose) {
         float maxItemExtent = std::max(rotatedSize.x, rotatedSize.y) * 0.5f;
 
         float totalExtent = distToBeak + itemBehindBeak + maxItemExtent + kHeldItemPadding;
-        baseSize = std::max(baseSize, totalExtent * 2.0f);
+        float needed = totalExtent * 2.0f;
+        if (needed > baseSize) {
+            // Quantize up to a coarse grid: the held-item extent changes a little
+            // every frame (item rotation/distance), and an exact size means a full
+            // NSWindow resize (setFrame) each frame. Snapping to a grid keeps the
+            // size stable across frames so updatePosition takes the cheap origin-
+            // only path; the transparent click-through window over-sizes for free.
+            constexpr float kGooseWindowSizeStep = 48.0f;
+            baseSize = std::ceil(needed / kGooseWindowSizeStep) * kGooseWindowSizeStep;
+        }
     }
     return baseSize;
 }

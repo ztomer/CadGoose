@@ -121,7 +121,9 @@ static void BELog(const char* fmt, ...) {
 
     if (sizeChanged) {
         NSRect newFrame = NSMakeRect(screenOrigin.x, screenOrigin.y, w, h);
-        [self setFrame:newFrame display:YES];
+        // display:NO — every caller issues setNeedsDisplay:YES right after, so a
+        // synchronous redraw here is a redundant second draw on every resize.
+        [self setFrame:newFrame display:NO];
     } else {
         [self setFrameOrigin:NSMakePoint(screenOrigin.x, screenOrigin.y)];
     }
