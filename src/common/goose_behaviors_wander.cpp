@@ -9,17 +9,11 @@
 #include "goose_behaviors.h"
 #include "actor.h"
 #include "actor_dropped_item.h"
+#include "log.h"
 #include <cmath>
 #include <cstdio>
 
-static FILE* GetDebugLog() {
-    static FILE* f = nullptr;
-    if (!f) {
-        f = fopen("/tmp/goose_debug.log", "a");
-        if (!f) f = stderr;
-    }
-    return f;
-}
+static constexpr float kMinDt = 0.016f;
 
 CursorAction handleChaseCursor(Goose& g, double time, const CursorState& cursor, int w, int h) {
 
@@ -37,8 +31,7 @@ CursorAction handleChaseCursor(Goose& g, double time, const CursorState& cursor,
 
     double chaseDuration = time - g.chaseStartTime;
     if (chaseDuration > g_config.item.fetchCooldown * 2.0f) {
-        FILE* f = GetDebugLog();
-        fprintf(f, "[CHASE] t=%.1f g%d: chase timeout (%.1fs)\n", time, g.id, chaseDuration);
+        DebugLog("[CHASE] t=%.1f g%d: chase timeout (%.1fs)\n", time, g.id, chaseDuration);
         g.state = GooseState::WANDER;
         g.PickNewTarget(w, h);
         return {};
@@ -49,10 +42,9 @@ CursorAction handleChaseCursor(Goose& g, double time, const CursorState& cursor,
     Vector2 btPoint = g.GetBeakTipDevice();
     float catchThreshold = std::max(WorldCoord::Scale(22.0f), 15.0f);
     float dist = Vector2::Distance(btPoint, g.target);
-    FILE* f = GetDebugLog();
     Vector2 bodyDev = WorldCoord::RigBody(g).toVector2();
     Vector2 neckDev = WorldCoord::RigNeckHead(g).toVector2();
-    fprintf(f, "[CHASE] t=%.1f g%d: dir=%.0f body=(%.0f,%.0f) neck=(%.0f,%.0f) beak=(%.0f,%.0f) cursor=(%.0f,%.0f) dist=%.1f thr=%.1f grab=%d\n",
+    DebugLog("[CHASE] t=%.1f g%d: dir=%.0f body=(%.0f,%.0f) neck=(%.0f,%.0f) beak=(%.0f,%.0f) cursor=(%.0f,%.0f) dist=%.1f thr=%.1f grab=%d\n",
             time, g.id, g.dir, bodyDev.x, bodyDev.y, neckDev.x, neckDev.y,
             btPoint.x, btPoint.y, g.target.x, g.target.y, dist, catchThreshold, g_world.cursorGrabberId);
     if (dist < catchThreshold) {
@@ -76,8 +68,7 @@ void handleWander(Goose& g, double time, const CursorState& cursor, int w, int h
     if (canChase && chaseEnabled && cursorValid) {
         int totalChance = g_config.cursor.chaseChance + g.attackMouseBias;
         int roll = rng_util::RandRange(100);
-        FILE* f = GetDebugLog();
-        fprintf(f, "[WALKER] t=%.1f g%d: grab=-%d ena=%d valid=%d chance=%d roll=%d\n",
+        DebugLog("[WALKER] t=%.1f g%d: grab=-%d ena=%d valid=%d chance=%d roll=%d\n",
                 time, g.id, g_world.cursorGrabberId, chaseEnabled, cursorValid, totalChance, roll);
         if (totalChance > 100) totalChance = 100;
         if (roll < totalChance) {
@@ -92,8 +83,7 @@ void handleWander(Goose& g, double time, const CursorState& cursor, int w, int h
 
     if (!chased) {
         bool canFetch = (time - g.lastDropTime) > (g_config.item.fetchCooldown + g.randomOffset) && !g.isResting;
-        FILE* f = GetDebugLog();
-        fprintf(f, "[FETCH] t=%.1f g%d: lastDrop=%.1f cooldown=%.1f canFetch=%d resting=%d\n",
+        DebugLog("FETCH] t=%.1f g%d: lastDrop=%.1f cooldown=%.1f canFetch=%d resting=%d\n",
                 time, g.id, g.lastDropTime, g_config.item.fetchCooldown, canFetch, g.isResting);
 
         int memeProb = g_config.general.memesEnabled ? g.memeFetchBias : 0;
@@ -106,7 +96,7 @@ void handleWander(Goose& g, double time, const CursorState& cursor, int w, int h
         for (auto* other : ActorManager::Instance().getGeese()) if (other->state == GooseState::FETCHING) fetchCount++;
 
         int fetchRoll = rng_util::RandRange(100);
-        fprintf(f, "[FETCH] t=%.1f g%d: trigger=%d roll=%d fetchCount=%d maxGeese=%d\n",
+        DebugLog("[FETCH] t=%.1f g%d: trigger=%d roll=%d fetchCount=%d maxGeese=%d\n",
                 time, g.id, trigger, fetchRoll, fetchCount, g_config.item.maxFetchGeese);
 
         if (canFetch && fetchCount < g_config.item.maxFetchGeese && fetchRoll < trigger) {
@@ -115,12 +105,12 @@ void handleWander(Goose& g, double time, const CursorState& cursor, int w, int h
                 int memeShare = memeProb * 100 / (totalBias + 1);
                 fetchType = (rng_util::RandRange(100) < memeShare) ? FetchType::Meme : FetchType::Text;
             }
-            fprintf(f, "[FETCH] t=%.1f g%d: TRIGGERED fetch type=%s\n", time, g.id, fetchType == FetchType::Meme ? "MEME" : "TEXT");
+            DebugLog("[FETCH] t=%.1f g%d: TRIGGERED fetch type=%s\n", time, g.id, fetchType == FetchType::Meme ? "MEME" : "TEXT");
             g.ForceFetch(fetchType, w, h, time);
         } else {
-            if (!canFetch) fprintf(f, "[FETCH] g%d: skipped (cooldown, lastDrop=%.1f)\n", g.id, g.lastDropTime);
-            else if (fetchCount >= g_config.item.maxFetchGeese) fprintf(f, "[FETCH] g%d: skipped (max geese fetching=%d)\n", g.id, fetchCount);
-            else if (fetchRoll >= trigger) fprintf(f, "[FETCH] g%d: skipped (roll=%d >= trigger=%d)\n", g.id, fetchRoll, trigger);
+            if (!canFetch) DebugLog("[FETCH] g%d: skipped (cooldown, lastDrop=%.1f)\n", g.id, g.lastDropTime);
+            else if (fetchCount >= g_config.item.maxFetchGeese) DebugLog("[FETCH] g%d: skipped (max geese fetching=%d)\n", g.id, fetchCount);
+            else if (fetchRoll >= trigger) DebugLog("[FETCH] g%d: skipped (roll=%d >= trigger=%d)\n", g.id, fetchRoll, trigger);
             g.PickNewTarget(w, h);
 
             const auto& allItems = ActorManager::Instance().getDroppedItems();

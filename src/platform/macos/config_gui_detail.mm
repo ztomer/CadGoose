@@ -2,6 +2,7 @@
 // BehaviorDetailView — main implementation (init, behavior config UI, AI provider, geese list)
 #import "config_gui_helpers.h"
 #include "config.h"
+#include "hotkey_cache.h"
 #include "world.h"
 
 // --- Layout constants ---
@@ -64,7 +65,7 @@ static constexpr float kDetailIdRowSpacing = 28;
     } else if ([key isEqualToString:@"breadcrumbs_enabled"]) {
         _titleLabel.stringValue = @"Breadcrumbs Behavior";
         float y = _contentView.bounds.size.height - kDetailSectionStartY;
-        [self addHotkeyFieldWithLabel:@"Trigger Key" value:@(g_config.behaviors.breadCrumbs.hotkey.c_str()) atY:y key:@"breadcrumbs_hotkey"];
+        [self addHotkeyFieldWithLabel:@"Trigger Key" value:@(Hotkey_Name(HotkeyId::Breadcrumbs).c_str()) atY:y key:@"breadcrumbs_hotkey"];
         y -= 42;
         [self addSliderWithLabel:@"Max Crumbs" min:10.0f max:200.0f value:g_config.behaviors.breadCrumbs.maxCrumbs atY:y key:@"behaviors.fun.breadCrumbs.max"];
     } else if ([key isEqualToString:@"hats_enabled"]) {
@@ -86,37 +87,37 @@ static constexpr float kDetailIdRowSpacing = 28;
     } else if ([key isEqualToString:@"honcker_enabled"]) {
         _titleLabel.stringValue = @"Honcker Behavior";
         float y = _contentView.bounds.size.height - kDetailSectionStartY;
-        NSString* k = @(g_config.behaviors.honcker.hotkey.c_str());
+        NSString* k = @(Hotkey_Name(HotkeyId::HonckerHonk).c_str());
         [self addInstructionLabel:[NSString stringWithFormat:@"Press %@ to honk at cursor location", k] atY:y];
         y -= kDetailRowSpacingSmall;
-        [self addHotkeyFieldWithLabel:@"Honk Key" value:@(g_config.behaviors.honcker.hotkey.c_str()) atY:y key:@"hotkey"];
+        [self addHotkeyFieldWithLabel:@"Honk Key" value:@(Hotkey_Name(HotkeyId::HonckerHonk).c_str()) atY:y key:@"hotkey"];
         y -= 42;
         [self addSliderWithLabel:@"Honk Cooldown" min:0.1f max:10.0f value:g_config.behaviors.honcker.cooldown atY:y key:@"behaviors.control.honcker.cooldown"];
     } else if ([key isEqualToString:@"jail_enabled"]) {
         _titleLabel.stringValue = @"Jail Behavior";
         float y = _contentView.bounds.size.height - kDetailSectionStartY;
-        NSString* kO = @(g_config.behaviors.jail.hotkeyO.c_str());
-        NSString* kP = @(g_config.behaviors.jail.hotkeyP.c_str());
+        NSString* kO = @(Hotkey_Name(HotkeyId::JailSet).c_str());
+        NSString* kP = @(Hotkey_Name(HotkeyId::JailToggle).c_str());
         [self addInstructionLabel:[NSString stringWithFormat:@"%@ = set cursor as jail position\n%@ = toggle jail on/off", kO, kP] atY:y];
         y -= kDetailRowSpacingLarge;
-        [self addHotkeyFieldWithLabel:@"Set Key" value:@(g_config.behaviors.jail.hotkeyO.c_str()) atY:y key:@"hotkeyO"];
+        [self addHotkeyFieldWithLabel:@"Set Key" value:@(Hotkey_Name(HotkeyId::JailSet).c_str()) atY:y key:@"hotkeyO"];
         y -= kDetailRowSpacing;
-        [self addHotkeyFieldWithLabel:@"Toggle Key" value:@(g_config.behaviors.jail.hotkeyP.c_str()) atY:y key:@"hotkeyP"];
+        [self addHotkeyFieldWithLabel:@"Toggle Key" value:@(Hotkey_Name(HotkeyId::JailToggle).c_str()) atY:y key:@"hotkeyP"];
         y -= 42;
         [self addSliderWithLabel:@"Jail Size" min:50.0f max:300.0f value:g_config.behaviors.jail.size atY:y key:@"behaviors.control.jail.size"];
     } else if ([key isEqualToString:@"portals_enabled"]) {
         _titleLabel.stringValue = @"Portal Behavior";
         float y = _contentView.bounds.size.height - kDetailSectionStartY;
-        NSString* k1 = @(g_config.portal.hotkey1.c_str());
-        NSString* k2 = @(g_config.portal.hotkey2.c_str());
-        NSString* k0 = @(g_config.portal.hotkey0.c_str());
+        NSString* k1 = @(Hotkey_Name(HotkeyId::Portal1).c_str());
+        NSString* k2 = @(Hotkey_Name(HotkeyId::Portal2).c_str());
+        NSString* k0 = @(Hotkey_Name(HotkeyId::Portal0).c_str());
         [self addInstructionLabel:[NSString stringWithFormat:@"%@ = place portal A\n%@ = place portal B\n%@ = toggle portals", k1, k2, k0] atY:y];
         y -= kDetailRowSpacingXLarge;
-        [self addHotkeyFieldWithLabel:@"Portal 1" value:@(g_config.portal.hotkey1.c_str()) atY:y key:@"hotkey1"];
+        [self addHotkeyFieldWithLabel:@"Portal 1" value:@(Hotkey_Name(HotkeyId::Portal1).c_str()) atY:y key:@"hotkey1"];
         y -= kDetailRowSpacing;
-        [self addHotkeyFieldWithLabel:@"Portal 2" value:@(g_config.portal.hotkey2.c_str()) atY:y key:@"hotkey2"];
+        [self addHotkeyFieldWithLabel:@"Portal 2" value:@(Hotkey_Name(HotkeyId::Portal2).c_str()) atY:y key:@"hotkey2"];
         y -= kDetailRowSpacing;
-        [self addHotkeyFieldWithLabel:@"Toggle" value:@(g_config.portal.hotkey0.c_str()) atY:y key:@"hotkey0"];
+        [self addHotkeyFieldWithLabel:@"Toggle" value:@(Hotkey_Name(HotkeyId::Portal0).c_str()) atY:y key:@"hotkey0"];
         y -= 42;
         [self addSliderWithLabel:@"Portal Width" min:30.0f max:200.0f value:g_config.portal.width atY:y key:@"behaviors.control.portals.width"];
     } else if ([key isEqualToString:@"drag_enabled"]) {
@@ -247,20 +248,22 @@ static constexpr float kDetailIdRowSpacing = 28;
     NSString* keyStr = sender.identifier;
     std::string value = std::string([sender.stringValue UTF8String]);
 
+    // Hotkey_SetName writes the g_config string under the hotkey-cache mutex and
+    // refreshes the lock-free key-code cache, keeping the MCP server thread safe.
     if ([keyStr isEqualToString:@"hotkey"]) {
-        g_config.behaviors.honcker.hotkey = value;
+        Hotkey_SetName(HotkeyId::HonckerHonk, value);
     } else if ([keyStr isEqualToString:@"hotkeyO"]) {
-        g_config.behaviors.jail.hotkeyO = value;
+        Hotkey_SetName(HotkeyId::JailSet, value);
     } else if ([keyStr isEqualToString:@"hotkeyP"]) {
-        g_config.behaviors.jail.hotkeyP = value;
+        Hotkey_SetName(HotkeyId::JailToggle, value);
     } else if ([keyStr isEqualToString:@"hotkey1"]) {
-        g_config.portal.hotkey1 = value;
+        Hotkey_SetName(HotkeyId::Portal1, value);
     } else if ([keyStr isEqualToString:@"hotkey2"]) {
-        g_config.portal.hotkey2 = value;
+        Hotkey_SetName(HotkeyId::Portal2, value);
     } else if ([keyStr isEqualToString:@"hotkey0"]) {
-        g_config.portal.hotkey0 = value;
+        Hotkey_SetName(HotkeyId::Portal0, value);
     } else if ([keyStr isEqualToString:@"breadcrumbs_hotkey"]) {
-        g_config.behaviors.breadCrumbs.hotkey = value;
+        Hotkey_SetName(HotkeyId::Breadcrumbs, value);
     }
     OnConfigChange();
 }

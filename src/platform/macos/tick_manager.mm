@@ -12,7 +12,17 @@
 #import "goose_drawing.h"
 #import "cg_renderer.h"
 
+#import <os/signpost.h>
+
 void Honcker_Honk(Goose* goose, double time);
+
+static os_log_t g_tickLog = nullptr;
+static os_signpost_id_t g_frameSignpostID = 0;
+
+static inline os_log_t TickLog() {
+    if (!g_tickLog) g_tickLog = os_log_create("com.cadgoose.frame", "TickManager");
+    return g_tickLog;
+}
 
 #import <AppKit/AppKit.h>
 
@@ -113,6 +123,9 @@ static constexpr float kDisplayLinkDefaultFps = 60;
 
     g_time = self.currentTime;
 
+    if (!g_frameSignpostID) g_frameSignpostID = os_signpost_id_generate(TickLog());
+    os_signpost_interval_begin(TickLog(), g_frameSignpostID, "Frame", "dt=%.3f", dt);
+
     // Tick all actors
     ActorManager::Instance().tickAll(g_world, dt, self.currentTime);
     ActorManager::Instance().cleanup();
@@ -172,6 +185,8 @@ static constexpr float kDisplayLinkDefaultFps = 60;
     [[EffectWindowManager shared] syncWindows];
 
     [[ItemWindowManager shared] syncWindows];
+
+    os_signpost_interval_end(TickLog(), g_frameSignpostID, "Frame");
 }
 
 @end

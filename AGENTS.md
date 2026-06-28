@@ -33,6 +33,41 @@ brew install --cask tools/homebrew/cadgoose.rb   # Test the Homebrew Cask instal
   - **Release Loop Rule**: When doing a release, verify the remote GitHub Actions build succeeds end-to-end. If any failure occurs, cycle/iterate locally to fix the issues, push, and recreate the release tag until the build is perfectly green and the DMG compiles.
   - **Homebrew Update Rule**: Once the GHA CI is green and the release DMG is successfully generated and attached, update the Homebrew cask repository tap (`Casks/cadgoose.rb` in `ztomer/homebrew-tap`) with the new version and calculated DMG SHA-256 hash. Ensure this updates automatically through GHA or manually.
 
+## Session Summary (June 27, 2026) — Hotspot profiling scripts + 7 performance fixes
+
+### What changed this session
+- **3 new profiling shell scripts** in `tools/profiling/`:
+  - `analyze_trace.sh` — post-process `xctrace` `.trace` files into ranked hotspot reports (XML export + python3 parser)
+  - `hotspot_profile.sh` — one-shot: build → launch → 60s Time Profiler → analyze → report → kill
+  - `multi_goose_profile.sh` — same but spawns N geese (default 5) via MCP socket first, exposing O(N²) hotspots
+
+- **7 performance hotspot fixes** (all with zero test regressions):
+  - **H7** (`goose_drawing.mm`): `mach_absolute_time()` + division guarded under `g_config.debug.toTerminal` — was called every draw frame even with debug off
+  - **H6** (`goose.cpp`): `IsNighttime()` mutex replaced with `std::atomic<bool>` + `try_lock` refresh path — eliminates N mutex lock/unlocks per physics tick (one per goose at 60fps)
+  - **H4** (`goose_drawing.mm`): Removed redundant inner CTM Save/Scale/Restore inside `DrawGoose` — the outer `goose.cpp draw()` already applies `globalScale`; double-scaling was harmless but wasteful
+  - **H2** (`cg_renderer.h`): `CTFontCreateWithName` (~100µs) now cached in a thread-local `FontEntry` array keyed by quantized fontSize — `DrawText` and `MeasureText` both use the cache; font is never released mid-session
+  - **H3** (`cg_renderer.h`): `DrawRoundedRect` replaced manual 8-arc `CGPathCreateMutable` path with `CGPathCreateWithRoundedRect` (1 API call) + thread-local path cache keyed by (x,y,w,h,r) — zero allocation on cache hits
+  - **H1** (`actor.cpp` + `actor_manager.h`): `tickAll`/`renderAll` O(N²) `std::find` replaced with an `std::unordered_set<Actor*> liveSet` maintained in `add`/`remove`/`cleanup` — membership check is now O(1)
+  - **H5** (`goose_forces.cpp` + `actor.cpp`): `CalculateSeparationForce` now reads from a precomputed `GooseSeparationCache` flat array (populated once per tick batch in `tickAll`) instead of calling `getGeese()` per goose — eliminates repeated pointer chasing and virtual dispatch
+
+### Files changed
+- `tools/profiling/analyze_trace.sh` [NEW]
+- `tools/profiling/hotspot_profile.sh` [NEW]
+- `tools/profiling/multi_goose_profile.sh` [NEW]
+- `tools/profiling/README.md`: documented 3 new scripts
+- `src/common/goose_drawing.mm`: H7 debug guard, H4 redundant CTM removal
+- `src/common/goose.cpp`: H6 `IsNighttime()` atomic refactor
+- `src/common/actor.cpp`: H1 `liveSet` O(1) check, H5 `GooseSeparationCache_Update` call
+- `src/common/goose_forces.cpp`: H5 `GooseSeparationCache` struct + precomputed read
+- `include/actor_manager.h`: H1 `liveSet` field + `<unordered_set>` include
+- `include/goose.h`: H5 `GooseSeparationCache_Update` forward declaration + `<vector>` include
+- `include/cg_renderer.h`: H2 `GetCachedFont()` static, H3 `CGPathCreateWithRoundedRect` + path cache
+
+### Verification
+- **1520 tests, 0 failures** (1458 passed + ~62 skipped: WindowTrailTest/AccessibilityGUI/requires_display)
+- `ctest` gate: CadGooseTests passed; 3 `requires_display` tests skip as expected
+- Release build clean (178/178 objects linked)
+
 ## Session Summary (June 26, 2026) — v1.63 Release: Preferences layout, AI tab overhaul, detail panel stacked sliders
 
 ### What changed this session

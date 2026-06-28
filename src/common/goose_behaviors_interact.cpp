@@ -8,6 +8,7 @@
 #include "assets.h"
 #include "event_bus.h"
 #include "goose_behaviors.h"
+#include "log.h"
 #include <cmath>
 #include <cstdio>
 #include <algorithm>
@@ -18,15 +19,6 @@ static constexpr float kAvoidanceHeadDistance = 200.0f;
 static constexpr float kAvoidanceFleeDistance = 400.0f;
 static constexpr float kAvoidanceDotProductThreshold = 0.8f;
 static constexpr float kSurprisedTimeout = 1.5f;
-
-static FILE* GetDebugLog() {
-    static FILE* f = nullptr;
-    if (!f) {
-        f = fopen("/tmp/goose_debug.log", "a");
-        if (!f) f = stderr;
-    }
-    return f;
-}
 
 bool isTargetReached(Goose& g, float threshold) {
     Vector2 posDev = g.pos;
@@ -91,21 +83,20 @@ CursorAction Goose::UpdateBehaviors(double dt, double time, int w, int h, const 
         int moveX = std::lround(btDevice.x);
         int moveY = std::lround(btDevice.y);
 
-        FILE* f = GetDebugLog();
-        fprintf(f, "[SNATCH] t=%.1f g%d: posDev(%.0f,%.0f) vel(%.0f,%.0f) dir=%.0f snt=%.1f dur=%.1f\n",
+        DebugLog("SNATCH] t=%.1f g%d: posDev(%.0f,%.0f) vel(%.0f,%.0f) dir=%.0f snt=%.1f dur=%.1f\n",
                 time, id, goosePosDev.x, goosePosDev.y, vel.x, vel.y, dir,
                 time - snatchStartTime, snatchDuration);
-        fprintf(f, "  btDev(%.0f,%.0f) cursor(%.0f,%.0f) caps=%d\n",
+        DebugLog("  btDev(%.0f,%.0f) cursor(%.0f,%.0f) caps=%d\n",
                 btDevice.x, btDevice.y, cursor.position.x, cursor.position.y, cursor.caps);
-        fprintf(f, "  sfwd(%.2f,%.2f) radius=%.0f angle=%.2f angular=%.2f\n",
+        DebugLog("  sfwd(%.2f,%.2f) radius=%.0f angle=%.2f angular=%.2f\n",
                 snatchFwd.x, snatchFwd.y, snatchRadius, snatchAngle, snatchAngularSpeed);
-        fprintf(f, "  offset(%.0f,%.0f) pull=%.0f\n",
+        DebugLog("  offset(%.0f,%.0f) pull=%.0f\n",
                 snatchOffset.x, snatchOffset.y, snatchPullDistance);
 
         Vector2 cursorAction{0, 0};
         if (cursor.caps & CAP_MOVE_ABS) {
             cursorAction = Vector2{(float)moveX, (float)moveY};
-            fprintf(f, "  -> MOVEABS to (%d,%d)\n", moveX, moveY);
+            DebugLog("  -> MOVEABS to (%d,%d)\n", moveX, moveY);
         } else if (cursor.caps & CAP_MOVE_REL) {
             Vector2 delta = btDevice - cursor.position;
             float maxStep = g_config.snatch.tier3MaxStep * (float)dt;
@@ -114,9 +105,9 @@ CursorAction Goose::UpdateBehaviors(double dt, double time, int w, int h, const 
             }
             if (std::abs(delta.x) >= g_config.snatch.tier3MinDelta || std::abs(delta.y) >= g_config.snatch.tier3MinDelta) {
                 cursorAction = Vector2{delta.x, delta.y};
-                fprintf(f, "  -> MOVEREL delta(%.0f,%.0f)\n", delta.x, delta.y);
+                DebugLog("  -> MOVEREL delta(%.0f,%.0f)\n", delta.x, delta.y);
             } else {
-                fprintf(f, "  -> MOVEREL skipped (delta too small)\n");
+                DebugLog("  -> MOVEREL skipped (delta too small)\n");
             }
         }
 
@@ -131,13 +122,12 @@ CursorAction Goose::UpdateBehaviors(double dt, double time, int w, int h, const 
         endpointDev.y = std::clamp(endpointDev.y, 0.0f, (float)std::max(0, h - 1));
         target = snatchAnchor + (endpointDev - anchorDev);
 
-        fprintf(f, "  target=(%.0f,%.0f) distToTarget=%.1f\n", target.x, target.y, Vector2::Distance(pos, target));
+        DebugLog("  target=(%.0f,%.0f) distToTarget=%.1f\n", target.x, target.y, Vector2::Distance(pos, target));
 
         if (time - snatchStartTime > snatchDuration) {
-            fprintf(f, "  -> END SNATCH (timeout)\n");
+            DebugLog("  -> END SNATCH (timeout)\n");
             EndSnatch(time, w, h);
         }
-        fflush(f);
 
         if (cursor.caps & CAP_MOVE_ABS) {
             return CursorAction::MoveAbs(moveX, moveY);
@@ -150,8 +140,7 @@ CursorAction Goose::UpdateBehaviors(double dt, double time, int w, int h, const 
     if (state == GooseState::FETCHING && fetchStartTime > 0) {
         double fetchDuration = time - fetchStartTime;
         if (fetchDuration > g_config.item.fetchCooldown * 4.0f) {
-            FILE* df = GetDebugLog();
-            fprintf(df, "[FETCH] t=%.1f g%d: fetch TIMEOUT (%.1fs > %.1fs), forceItemFetch=%d -> WANDER\n",
+            DebugLog("FETCH] t=%.1f g%d: fetch TIMEOUT (%.1fs > %.1fs), forceItemFetch=%d -> WANDER\n",
                     time, id, fetchDuration, g_config.item.fetchCooldown * 4.0f, static_cast<int>(forceItemFetch));
             state = GooseState::WANDER;
             PickNewTarget(w, h);
@@ -177,10 +166,9 @@ CursorAction Goose::UpdateBehaviors(double dt, double time, int w, int h, const 
                                            : std::max(WorldCoord::Scale(g_config.spawn.targetReachedThresholdNormal), g_config.spawn.targetReachedMinNormal);
 
     bool reached = isTargetReached(*this, threshold);
-    FILE* f = GetDebugLog();
     if (state == GooseState::WANDER) {
         Vector2 btPoint = GetBeakTipDevice();
-        fprintf(f, "[TARGET] t=%.1f g%d: state=%d bt(%.0f,%.0f) tgt(%.0f,%.0f) dist=%.1f thr=%.1f reached=%d\n",
+        DebugLog("[TARGET] t=%.1f g%d: state=%d bt(%.0f,%.0f) tgt(%.0f,%.0f) dist=%.1f thr=%.1f reached=%d\n",
                 time, id, state, btPoint.x, btPoint.y, target.x, target.y,
                 Vector2::Distance(btPoint, target), threshold, reached);
     }

@@ -1,66 +1,20 @@
 #include "mcp_server.h"
 #include "command_socket.h"
 #include "config.h"
+#include "hotkey_cache.h"
 #include <string>
 #include <vector>
 #include <unordered_map>
-#include <functional>
-
-#ifdef __APPLE__
-#include <dispatch/dispatch.h>
-#else
-#include <glib.h>
-#include <mutex>
-#include <condition_variable>
-#endif
 
 extern std::string JsonEscape(const std::string& s);
 extern std::string ExtractArg(const std::string& json, const std::string& key);
 
-// Run a closure on the main thread and return its result.
-// Used by MCP handlers that access g_config from the internal server's bg thread.
-// If already on the main thread, runs directly (avoids deadlock in tests).
-#ifdef __APPLE__
-#include <pthread.h>
-static std::string OnMainThread(std::function<std::string()> fn) {
-    if (pthread_main_np()) return fn();
-    __block std::string result;
-    dispatch_semaphore_t sem = dispatch_semaphore_create(0);
-    dispatch_async(dispatch_get_main_queue(), ^{
-        result = fn();
-        dispatch_semaphore_signal(sem);
-    });
-    dispatch_semaphore_wait(sem, DISPATCH_TIME_FOREVER);
-    dispatch_release(sem);
-    return result;
-}
-#else
-#include <glib.h>
-static std::string OnMainThread(std::function<std::string()> fn) {
-    if (g_main_context_is_owner(nullptr)) return fn();
-    struct Task {
-        std::function<std::string()> fn;
-        std::string result;
-        std::mutex mtx;
-        std::condition_variable cv;
-        bool done = false;
-    };
-    Task task{std::move(fn), {}, {}, {}, false};
-    g_main_context_invoke(nullptr, [](gpointer data) -> gboolean {
-        auto* t = static_cast<Task*>(data);
-        t->result = t->fn();
-        {
-            std::lock_guard<std::mutex> lock(t->mtx);
-            t->done = true;
-        }
-        t->cv.notify_one();
-        return G_SOURCE_REMOVE;
-    }, &task);
-    std::unique_lock<std::mutex> lock(task.mtx);
-    task.cv.wait(lock, [&task]{ return task.done; });
-    return task.result;
-}
-#endif
+// MCP config handlers run on the internal server's background thread. They no
+// longer hop to the main thread: hotkey strings are accessed under the
+// hotkey-cache mutex (Hotkey_Name / Hotkey_SetName) and the bool fields are
+// plain bytes whose race with the main thread is benign. This removes the old
+// dispatch-to-main deadlock that stalled the single-threaded MCP server when no
+// run loop was pumping the main queue.
 
 // --- Helper: serialize a bool to JSON "true"/"false" ---
 static std::string BoolJson(bool v) { return v ? "true" : "false"; }
@@ -104,13 +58,16 @@ static std::string ConfigToJson() {
         {"ai", &g_config.behaviors.systems.ai},
         {"pomodoro", &g_config.behaviors.systems.pomodoro}
     }) + ",";
-    j += "\"honcker_hotkey\":\"" + JsonEscape(g_config.behaviors.honcker.hotkey) + "\",";
-    j += "\"jail_hotkey_o\":\"" + JsonEscape(g_config.behaviors.jail.hotkeyO) + "\",";
-    j += "\"jail_hotkey_p\":\"" + JsonEscape(g_config.behaviors.jail.hotkeyP) + "\",";
-    j += "\"portal_hotkey_1\":\"" + JsonEscape(g_config.portal.hotkey1) + "\",";
-    j += "\"portal_hotkey_2\":\"" + JsonEscape(g_config.portal.hotkey2) + "\",";
-    j += "\"portal_hotkey_0\":\"" + JsonEscape(g_config.portal.hotkey0) + "\",";
-    j += "\"breadcrumbs_hotkey\":\"" + JsonEscape(g_config.behaviors.breadCrumbs.hotkey) + "\"";
+    // Hotkey strings are read under the hotkey-cache mutex (Hotkey_Name) so this
+    // is safe to call from the MCP server thread without hopping to the main
+    // thread. The bool fields above are plain bytes; racing them is benign.
+    j += "\"honcker_hotkey\":\"" + JsonEscape(Hotkey_Name(HotkeyId::HonckerHonk)) + "\",";
+    j += "\"jail_hotkey_o\":\"" + JsonEscape(Hotkey_Name(HotkeyId::JailSet)) + "\",";
+    j += "\"jail_hotkey_p\":\"" + JsonEscape(Hotkey_Name(HotkeyId::JailToggle)) + "\",";
+    j += "\"portal_hotkey_1\":\"" + JsonEscape(Hotkey_Name(HotkeyId::Portal1)) + "\",";
+    j += "\"portal_hotkey_2\":\"" + JsonEscape(Hotkey_Name(HotkeyId::Portal2)) + "\",";
+    j += "\"portal_hotkey_0\":\"" + JsonEscape(Hotkey_Name(HotkeyId::Portal0)) + "\",";
+    j += "\"breadcrumbs_hotkey\":\"" + JsonEscape(Hotkey_Name(HotkeyId::Breadcrumbs)) + "\"";
     j += "}";
     return j;
 }
@@ -210,7 +167,8 @@ std::string HandleResourcesList() {
 }
 
 std::string HandleResourcesRead(const std::string& uri) {
-    return OnMainThread([uri]() -> std::string {
+    // Reads hotkey strings (via ConfigToJson, mutex-guarded) and bool fields
+    // (lock-free, benign race) — safe directly on the MCP server thread.
     std::string json;
     if (uri == "config://behaviors") {
         json = ConfigToJson();
@@ -246,7 +204,6 @@ std::string HandleResourcesRead(const std::string& uri) {
         return "";
     }
     return "{\"contents\":[{\"uri\":\"" + JsonEscape(uri) + "\",\"mimeType\":\"application/json\",\"text\":\"" + JsonEscape(json) + "\"}]}";
-    });
 }
 
 static bool SetConfigValue(const std::string& key, const std::string& valueJson) {
@@ -320,16 +277,17 @@ std::string ExecuteTool(const std::string& name, const std::string& argsJson) {
         if (!key.empty()) {
             return "config for '" + key + "' - use resources/config:// URIs for structured data";
         }
-        return OnMainThread([]() { return ConfigToJson(); });
+        // ConfigToJson reads hotkey strings under the hotkey-cache mutex and bool
+        // fields lock-free, so it is safe on the MCP server thread directly.
+        return ConfigToJson();
     } else if (name == "set_config") {
         std::string key = ExtractArg(argsJson, "key");
         std::string value = ExtractArg(argsJson, "value");
         if (key.empty()) return "error: 'key' argument is required";
         if (value.empty()) return "error: 'value' argument is required";
-        std::string result = OnMainThread([key, value]() {
-            return SetConfigValue(key, value) ? std::string() : std::string("unknown");
-        });
-        if (result == "unknown") {
+        // SetConfigValue flips a plain bool the tick loop polls each frame;
+        // racing that read is benign, so no main-thread hop is needed.
+        if (!SetConfigValue(key, value)) {
             return "error: unknown config key '" + key + "'";
         }
         return "ok: " + key + " set to " + value;
@@ -337,22 +295,20 @@ std::string ExecuteTool(const std::string& name, const std::string& argsJson) {
         std::string hotkey = ExtractArg(argsJson, "hotkey");
         std::string value = ExtractArg(argsJson, "value");
         if (hotkey.empty() || value.empty()) return "error: 'hotkey' and 'value' arguments required";
-        std::string result = OnMainThread([hotkey, value]() -> std::string {
-            static const std::unordered_map<std::string, std::string*> hotkeyFields = {
-                {"honcker_hotkey", &g_config.behaviors.honcker.hotkey},
-                {"jail_hotkey_o", &g_config.behaviors.jail.hotkeyO},
-                {"jail_hotkey_p", &g_config.behaviors.jail.hotkeyP},
-                {"portal_hotkey_1", &g_config.portal.hotkey1},
-                {"portal_hotkey_2", &g_config.portal.hotkey2},
-                {"portal_hotkey_0", &g_config.portal.hotkey0},
-                {"breadcrumbs_hotkey", &g_config.behaviors.breadCrumbs.hotkey},
-            };
-            auto it = hotkeyFields.find(hotkey);
-            if (it == hotkeyFields.end()) return "unknown";
-            *it->second = value;
-            return "";
-        });
-        if (result == "unknown") return "error: unknown hotkey field '" + hotkey + "'";
+        static const std::unordered_map<std::string, HotkeyId> hotkeyIds = {
+            {"honcker_hotkey", HotkeyId::HonckerHonk},
+            {"jail_hotkey_o", HotkeyId::JailSet},
+            {"jail_hotkey_p", HotkeyId::JailToggle},
+            {"portal_hotkey_1", HotkeyId::Portal1},
+            {"portal_hotkey_2", HotkeyId::Portal2},
+            {"portal_hotkey_0", HotkeyId::Portal0},
+            {"breadcrumbs_hotkey", HotkeyId::Breadcrumbs},
+        };
+        auto it = hotkeyIds.find(hotkey);
+        if (it == hotkeyIds.end()) return "error: unknown hotkey field '" + hotkey + "'";
+        // Hotkey_SetName updates the g_config string under the mutex and refreshes
+        // the lock-free key-code cache the behavior ticks read.
+        Hotkey_SetName(it->second, value);
         return "ok: " + hotkey + " set to '" + value + "'";
     } else {
         return "error: unknown tool: " + name;

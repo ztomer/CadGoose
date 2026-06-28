@@ -84,9 +84,15 @@ void LogWrite(const char* level, const char* fmt, ...) {
 
 #define LOG(fmt, ...) LogWrite("INFO", fmt, ##__VA_ARGS__)
 
+// Debug printouts: compiled out entirely in release (CG_DISABLE_DEBUG_LOG),
+// otherwise gated on g_debugMode at runtime.
+#if defined(CG_DISABLE_DEBUG_LOG)
+#define DEBUG_LOG(fmt, ...) ((void)0)
+#else
 #define DEBUG_LOG(fmt, ...) do { \
     if (g_debugMode) LogWrite("DEBUG", fmt, ##__VA_ARGS__); \
 } while(0)
+#endif
 
 extern "C" void AI_OpenChat(const char* gooseName);
 extern "C" void AI_SendMessage(const char* message);
@@ -280,6 +286,11 @@ bool Config_IsSystemDarkTheme();
     Config_Init();
     Config_LoadAll();
     DEBUG_LOG("Config init done");
+#ifndef CG_DISABLE_DEBUG_LOG
+    if (g_config.debug.toTerminal) {
+        Log_EnableFile("/tmp/CadGoose_async.log", LogLevel::Debug);
+    }
+#endif
     if (g_config.ai.enableMCP && !g_mcpMode) {
         MCP_StartInternalServer();
         MCP_StartHTTPServer();
@@ -490,5 +501,6 @@ int main(int argc, char** argv) {
     }
 
     CommandSocket_StopServer();
+    Log_Shutdown();
     return 0;
 }

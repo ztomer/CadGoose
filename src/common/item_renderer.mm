@@ -5,6 +5,7 @@
 #ifdef __APPLE__
 #import <Foundation/Foundation.h>
 #import <AppKit/AppKit.h>
+#include "cg_color_cache.h"
 #endif
 
 static constexpr float kHeldItemBeakOffset = 5.0f;
@@ -43,7 +44,7 @@ void MemeItemRenderer::DrawHeld(CGContextRef ctx, const ItemData* item, float it
         CGContextDrawImage(ctx, CGRectMake(0, 0, itemW, itemH), item->image);
         CGContextRestoreGState(ctx);
     } else {
-        CGContextSetRGBFillColor(ctx, 0.8f, 0.8f, 0.8f, 1.0f);
+        CGCtx_SetFillColor(ctx, 0.8f, 0.8f, 0.8f, 1.0f);
         CGContextFillRect(ctx, CGRectMake(0, 0, itemW, itemH));
     }
 }
@@ -59,7 +60,7 @@ bool MemeItemRenderer::DrawDropped(CGContextRef ctx, const DroppedItem& item, fl
         CGContextDrawImage(ctx, CGRectMake(0, 0, itemW, itemH), item.data->image);
         CGContextRestoreGState(ctx);
     } else {
-        CGContextSetRGBFillColor(ctx, g_config.render.memePlaceholderColor.r,
+        CGCtx_SetFillColor(ctx, g_config.render.memePlaceholderColor.r,
                                  g_config.render.memePlaceholderColor.g,
                                  g_config.render.memePlaceholderColor.b, 1.0);
         CGContextFillRect(ctx, CGRectMake(x, y, itemW, itemH));
@@ -73,15 +74,15 @@ bool MemeItemRenderer::DrawDropped(CGContextRef ctx, const DroppedItem& item, fl
 
 void TextItemRenderer::DrawHeld(CGContextRef ctx, const ItemData* item, float itemW, float itemH) {
     if (item->isAIGenerated) {
-        CGContextSetRGBFillColor(ctx, 0.96f, 0.94f, 0.88f, 1.0f);
+        CGCtx_SetFillColor(ctx, 0.96f, 0.94f, 0.88f, 1.0f);
         CGContextFillRect(ctx, CGRectMake(0, 0, itemW, itemH));
-        CGContextSetRGBStrokeColor(ctx, 0.6f, 0.5f, 0.4f, 1.0f);
+        CGCtx_SetStrokeColor(ctx, 0.6f, 0.5f, 0.4f, 1.0f);
         CGContextSetLineWidth(ctx, 1);
         CGContextStrokeRect(ctx, CGRectMake(0, 0, itemW, itemH));
     } else {
-        CGContextSetRGBFillColor(ctx, 1, 1, 0.9f, 1.0f);
+        CGCtx_SetFillColor(ctx, 1, 1, 0.9f, 1.0f);
         CGContextFillRect(ctx, CGRectMake(0, 0, itemW, itemH));
-        CGContextSetRGBStrokeColor(ctx, 0, 0, 0, 1.0f);
+        CGCtx_SetStrokeColor(ctx, 0, 0, 0, 1.0f);
         CGContextSetLineWidth(ctx, 2);
         CGContextStrokeRect(ctx, CGRectMake(0, 0, itemW, itemH));
     }
@@ -105,13 +106,13 @@ bool TextItemRenderer::DrawDropped(CGContextRef ctx, const DroppedItem& item, fl
     float y = -itemH / 2.0f;
 
     if (item.data->isAIGenerated) {
-        CGContextSetRGBFillColor(ctx, kAIPaperCreamR, kAIPaperCreamG, kAIPaperCreamB, 1.0f);
+        CGCtx_SetFillColor(ctx, kAIPaperCreamR, kAIPaperCreamG, kAIPaperCreamB, 1.0f);
         CGContextFillRect(ctx, CGRectMake(x, y, itemW, itemH));
-        CGContextSetRGBStrokeColor(ctx, 0.6f, 0.5f, 0.4f, 1.0f);
+        CGCtx_SetStrokeColor(ctx, 0.6f, 0.5f, 0.4f, 1.0f);
         CGContextSetLineWidth(ctx, 1);
         CGContextStrokeRect(ctx, CGRectMake(x, y, itemW, itemH));
     } else {
-        CGContextSetRGBFillColor(ctx, 1.0, 1.0, 0.8, 1.0);
+        CGCtx_SetFillColor(ctx, 1.0, 1.0, 0.8, 1.0);
         CGContextFillRect(ctx, CGRectMake(x, y, itemW, itemH));
     }
 
@@ -159,7 +160,7 @@ void ToyItemRenderer::DrawHeld(CGContextRef ctx, const ItemData* item, float ite
         CGContextDrawImage(ctx, CGRectMake(0, 0, itemW, itemH), item->image);
         CGContextRestoreGState(ctx);
     } else {
-        CGContextSetRGBFillColor(ctx, kStickBrownR, kStickBrownG, kStickBrownB, 1.0f);
+        CGCtx_SetFillColor(ctx, kStickBrownR, kStickBrownG, kStickBrownB, 1.0f);
         CGContextFillRect(ctx, CGRectMake(0, 0, itemW, itemH));
     }
 }
@@ -175,7 +176,7 @@ bool ToyItemRenderer::DrawDropped(CGContextRef ctx, const DroppedItem& item, flo
         CGContextDrawImage(ctx, CGRectMake(0, 0, itemW, itemH), item.data->image);
         CGContextRestoreGState(ctx);
     } else {
-        CGContextSetRGBFillColor(ctx, kStickBrownR, kStickBrownG, kStickBrownB, 1.0f);
+        CGCtx_SetFillColor(ctx, kStickBrownR, kStickBrownG, kStickBrownB, 1.0f);
         CGContextFillRect(ctx, CGRectMake(x, y, itemW, itemH));
     }
     return false; // No close button for toys

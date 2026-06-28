@@ -11,6 +11,7 @@
 #include "goose_behaviors.h"
 #include "actor.h"
 #include "actor_dropped_item.h"
+#include "log.h"
 #include <cmath>
 #include <cstdio>
 #include <algorithm>
@@ -35,18 +36,9 @@ static int s_dropTxnId = 0;
 
 // Gate verbose fetch tracing behind the debug-to-terminal flag so the
 // release path doesn't spam stderr every tick.
-#define FETCH_LOG(...) do { if (g_config.debug.toTerminal) { fprintf(stderr, __VA_ARGS__); } } while (0)
+#define FETCH_LOG(...) do { if (g_config.debug.toTerminal) { CG_DEBUG_ASYNC("FETCH", __VA_ARGS__); } } while (0)
 
 static constexpr float kSnatchAngularSpeedDivisor = 100.0f;
-
-static FILE* GetDebugLog() {
-    static FILE* f = nullptr;
-    if (!f) {
-        f = fopen("/tmp/goose_debug.log", "a");
-        if (!f) f = stderr;
-    }
-    return f;
-}
 
 void Goose::StartSnatch(double time, const Vector2& cursorPos) {
 
@@ -72,14 +64,13 @@ void Goose::StartSnatch(double time, const Vector2& cursorPos) {
 
 void Goose::EndSnatch(double time, int w, int h) {
 
-    FILE* f = GetDebugLog();
-    fprintf(f, "[ENDSNATCH] t=%.1f g%d: was state=%d grabId=%d\n", time, id, state, g_world.cursorGrabberId);
+    DebugLog("ENDSNATCH] t=%.1f g%d: was state=%d grabId=%d\n", time, id, state, g_world.cursorGrabberId);
     if (g_world.cursorGrabberId == id) {
-        fprintf(f, "[ENDSNATCH] g%d: releasing cursor grab (was %d)\n", id, g_world.cursorGrabberId);
+        DebugLog("[ENDSNATCH] g%d: releasing cursor grab (was %d)\n", id, g_world.cursorGrabberId);
         g_world.cursorGrabberId = -1;
     }
     state = GooseState::WANDER;
-    fprintf(f, "[ENDSNATCH] g%d: now state=%d\n", id, state);
+    DebugLog("[ENDSNATCH] g%d: now state=%d\n", id, state);
     PickNewTarget(w, h);
     triggerHonk(*this, time, g_config.honk.genericCooldown, honkState.lastGeneric);
 }
@@ -199,7 +190,6 @@ void handleReturning(Goose& g, double time, int w, int h) {
             drop.pos.x = std::clamp(drop.pos.x, minX, maxX);
             drop.pos.y = std::clamp(drop.pos.y, minY, maxY);
 
-
             // Actor takes ownership of drop.data
             int txnId = ++s_dropTxnId;
             double t0 = GetTimeMs();
@@ -215,7 +205,7 @@ void handleReturning(Goose& g, double time, int w, int h) {
                     case ItemData::TOY:  itemType = "toy"; break;
                 }
             }
-            fprintf(stderr, "[DROP_TIMING] txn=%d g%d type=%s pos=(%.0f,%.0f) t0=%.6f actorCreat=%.3fms nullHeld=%.3fms total=%.3fms\n",
+            FETCH_LOG("[DROP_TIMING] txn=%d g%d type=%s pos=(%.0f,%.0f) t0=%.6f actorCreat=%.3fms nullHeld=%.3fms total=%.3fms\n",
                 txnId, g.id, itemType, drop.pos.x, drop.pos.y,
                 t0, (t1 - t0), (t2 - t1), (t2 - t0));
             EventBus::Instance().Publish(ItemDroppedEvent{g.id, drop.pos.x, drop.pos.y, itemType});

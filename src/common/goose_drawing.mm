@@ -10,6 +10,7 @@
 #include "behavior.h"
 #include "item_renderer.h"
 #include "render_colors.h"
+#include "log.h"
 #include <mach/mach_time.h>
 #include <cmath>
 
@@ -18,6 +19,7 @@
 #import <AppKit/AppKit.h>
 #import "behavior_element_window.h"
 #include <CoreGraphics/CoreGraphics.h>
+#include "cg_color_cache.h"
 #endif
 
 // --- Drawing constants ---
@@ -46,12 +48,12 @@ static constexpr int kLeafColorCount = 4;
 static constexpr float kDebugOverlayBoxSize = 20.0f;
 
 static void DrawEllipse(CGContextRef ctx, Vector2 p, float rx, float ry, float r, float g, float b, float a) {
-    CGContextSetRGBFillColor(ctx, r, g, b, a);
+    CGCtx_SetFillColor(ctx, r, g, b, a);
     CGContextFillEllipseInRect(ctx, CGRectMake(p.x - rx, p.y - ry, rx * 2, ry * 2));
 }
 
 static void DrawLine(CGContextRef ctx, Vector2 a, Vector2 b, float width, float r, float g, float bl, float al) {
-    CGContextSetRGBStrokeColor(ctx, r, g, bl, al);
+    CGCtx_SetStrokeColor(ctx, r, g, bl, al);
     CGContextSetLineWidth(ctx, width);
     CGContextSetLineCap(ctx, kCGLineCapRound);
     CGContextMoveToPoint(ctx, a.x, a.y);
@@ -64,10 +66,9 @@ extern float Rainbow_GetHue(int gooseId);
 void DrawGoose(Goose* g, CGContextRef ctx) {
     if (!std::isfinite(g->pos.x) || !std::isfinite(g->pos.y)) return;
 
-    CGContextSaveGState(ctx);
-    CGContextTranslateCTM(ctx, g->pos.x, g->pos.y);
-    CGContextScaleCTM(ctx, g_config.general.globalScale, g_config.general.globalScale);
-    CGContextTranslateCTM(ctx, -g->pos.x, -g->pos.y);
+    // H4: The outer goose.cpp draw() already wraps this call in Save/Scale/Restore.
+    // DrawGoose only needs its own state save for the squash transform below.
+    // Do NOT add another full CTM scale here — it would double-scale.
 
     Vector2 rawFwd = Vector2::FromAngleDegrees(g->dir);
     Vector2 fwd{ rawFwd.x * g->ISO_SCALE.x, rawFwd.y * g->ISO_SCALE.y };
@@ -219,8 +220,8 @@ void DrawGoose(Goose* g, CGContextRef ctx) {
     // Surprise mark
     if (g->isSurprised) {
         Vector2 markPos = g->rig.neckHead + up * (-g_config.render.eyeOffsetY - kSurpriseMarkOffsetY);
-        CGContextSetRGBFillColor(ctx, kSurpriseMarkR, kSurpriseMarkG, kSurpriseMarkB, 0.9f);
-        CGContextSetRGBStrokeColor(ctx, 0.0f, 0.0f, 0.0f, 1.0f);
+        CGCtx_SetFillColor(ctx, kSurpriseMarkR, kSurpriseMarkG, kSurpriseMarkB, 0.9f);
+        CGCtx_SetStrokeColor(ctx, 0.0f, 0.0f, 0.0f, 1.0f);
         CGContextSetLineWidth(ctx, kSurpriseMarkLineWidth);
         DrawLine(ctx, markPos, markPos + up * (-kSurpriseMarkLineSize * kSurpriseMarkLineOffset), kSurpriseMarkLineWidth, kSurpriseMarkR, kSurpriseMarkG, kSurpriseMarkB, 1.0f);
         DrawEllipse(ctx, markPos + up * (-kSurpriseMarkLineSize * kSurpriseMarkLineOffset - kSurpriseMarkDotOffset), kSurpriseMarkDotRadius, kSurpriseMarkDotRadius, kSurpriseMarkR, kSurpriseMarkG, kSurpriseMarkB, 1.0f);
@@ -229,23 +230,24 @@ void DrawGoose(Goose* g, CGContextRef ctx) {
     if (g->heldItem && !facingBack) {
         DrawHeldItem(g, ctx);
     }
-
-    CGContextRestoreGState(ctx);
 }
 
 void DrawHeldItem(Goose* g, CGContextRef ctx) {
     if (!g->heldItem) return;
 
-    static mach_timebase_info_data_t info = {0};
-    if (info.denom == 0) mach_timebase_info(&info);
-    uint64_t now = mach_absolute_time();
-    double tMs = (double)now * (double)info.numer / (double)info.denom / 1e6;
-    static double s_lastDrawLog = 0;
-    if (tMs - s_lastDrawLog > 50.0) {
-        fprintf(stderr, "[DROP_TIMING] DrawHeldItem g%d beak=(%.0f,%.0f) type=%d t=%.6f\n",
-            g->id, g->GetBeakTipDevice().x, g->GetBeakTipDevice().y,
-            (int)g->heldItem->type, tMs);
-        s_lastDrawLog = tMs;
+    // H7: Only pay the mach_absolute_time + division cost when debug logging is on.
+    if (g_config.debug.toTerminal) {
+        static mach_timebase_info_data_t info = {0};
+        if (info.denom == 0) mach_timebase_info(&info);
+        uint64_t now = mach_absolute_time();
+        double tMs = (double)now * (double)info.numer / (double)info.denom / 1e6;
+        static double s_lastDrawLog = 0;
+        if (tMs - s_lastDrawLog > 50.0) {
+            CG_DEBUG_ASYNC("DROP_TIMING", "DrawHeldItem g%d beak=(%.0f,%.0f) type=%d t=%.6f",
+                g->id, g->GetBeakTipDevice().x, g->GetBeakTipDevice().y,
+                (int)g->heldItem->type, tMs);
+            s_lastDrawLog = tMs;
+        }
     }
 
     CGContextSaveGState(ctx);
@@ -275,7 +277,7 @@ void DrawFootprints(CGContextRef ctx, const RingBuffer<Footprint, kMaxFootprints
         float alpha = std::max(0.0f, 1.0f - (age / life));
         if (alpha <= 0) continue;
 
-        CGContextSetRGBFillColor(ctx, g_config.color.footprint.r, g_config.color.footprint.g, g_config.color.footprint.b, alpha * g_config.color.footprintAlphaMultiplier);
+        CGCtx_SetFillColor(ctx, g_config.color.footprint.r, g_config.color.footprint.g, g_config.color.footprint.b, alpha * g_config.color.footprintAlphaMultiplier);
 
         CGContextSaveGState(ctx);
         CGContextTranslateCTM(ctx, fp.pos.x, fp.pos.y);
@@ -301,11 +303,11 @@ void DrawDroppedItem(CGContextRef ctx, const DroppedItem& item, float viewHeight
     if (showClose) {
         float closeX = -itemW / 2.0f;
         float closeY = -itemH / 2.0f;
-        CGContextSetRGBFillColor(ctx, g_config.render.closeButtonColor.r,
+        CGCtx_SetFillColor(ctx, g_config.render.closeButtonColor.r,
                                  g_config.render.closeButtonColor.g,
                                  g_config.render.closeButtonColor.b, 0.8);
         CGContextFillRect(ctx, CGRectMake(closeX, closeY, g_config.render.closeButtonSize, g_config.render.closeButtonSize));
-        CGContextSetRGBStrokeColor(ctx, g_config.render.closeButtonStroke.r,
+        CGCtx_SetStrokeColor(ctx, g_config.render.closeButtonStroke.r,
                                    g_config.render.closeButtonStroke.g,
                                    g_config.render.closeButtonStroke.b, 1.0);
         CGContextSetLineWidth(ctx, 2.0);
@@ -322,7 +324,7 @@ void DrawDroppedItem(CGContextRef ctx, const DroppedItem& item, float viewHeight
 void DrawDebugOverlay(CGContextRef ctx, const std::vector<Goose*>& geese) {
     if (!g_config.debug.visuals) return;
 
-    CGContextSetRGBStrokeColor(ctx, 1, 0, 0, 1);
+    CGCtx_SetStrokeColor(ctx, 1, 0, 0, 1);
     CGContextSetLineWidth(ctx, 1);
     for (const auto* g : geese) {
         CGContextStrokeRect(ctx, CGRectMake(g->pos.x - kDebugOverlayBoxSize, g->pos.y - kDebugOverlayBoxSize, kDebugOverlayBoxSize * 2, kDebugOverlayBoxSize * 2));

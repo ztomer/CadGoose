@@ -49,11 +49,6 @@ static constexpr float kToggleHeight = 18.0f;
 static constexpr float kTextMemeBtnWidth = 220.0f;
 static constexpr float kAutoSaveBtnWidth = 260.0f;
 static constexpr float kMcpBtnWidth = 160.0f;
-static constexpr float kMcpPortLabelX = 180.0f;
-static constexpr float kMcpPortLabelWidth = 40.0f;
-static constexpr float kMcpPortFieldX = 224.0f;
-static constexpr float kMcpPortFieldYOffset = -2.0f;
-static constexpr float kMcpPortFieldWidth = 70.0f;
 static constexpr float kShowStatusBtnWidth = 200.0f;
 static constexpr float kEndpointFieldHeight = 22.0f;
 static constexpr float kCustomModelFieldHeight = 22.0f;
@@ -486,16 +481,17 @@ static constexpr float kRefreshBtnFontSize = 12.0f;
 
     y -= kPostSectionYGapLarge;
 
-    NSButton* mcpBtn = [[NSButton alloc] initWithFrame:NSMakeRect(marginX, y, kMcpBtnWidth, kToggleHeight)];
-    [mcpBtn setButtonType:NSButtonTypeSwitch];
-    [mcpBtn setTitle:@"Enable MCP Server"];
-    [mcpBtn setFont:[NSFont fontWithName:@"Maple Mono" size:kBtnFontSize] ?: [NSFont systemFontOfSize:kBtnFontSize]];
-    [mcpBtn setState:g_config.ai.enableMCP ? NSControlStateValueOn : NSControlStateValueOff];
-    [mcpBtn setTarget:self];
-    [mcpBtn setAction:@selector(mcpToggled:)];
-    [self addSubview:mcpBtn];
+    // MCP Server toggle: label left, Port field middle, NSSwitch right (aligned with other toggles)
+    NSTextField* mcpLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(marginX, y, 92, kToggleHeight)];
+    mcpLabel.stringValue = @"MCP server";
+    mcpLabel.font = [NSFont fontWithName:@"Maple Mono" size:kBtnFontSize] ?: [NSFont systemFontOfSize:kBtnFontSize];
+    mcpLabel.textColor = [NSColor whiteColor];
+    mcpLabel.backgroundColor = [NSColor clearColor];
+    mcpLabel.bordered = NO; mcpLabel.editable = NO;
+    [self addSubview:mcpLabel];
 
-    NSTextField* mcpPortLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(kMcpPortLabelX, y, kMcpPortLabelWidth, kSectionTitleHeight)];
+    // Port field: directly to the right of "MCP server" label
+    NSTextField* mcpPortLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(marginX + 96, y + 2, 36, kSectionTitleHeight)];
     mcpPortLabel.stringValue = @"Port:";
     mcpPortLabel.font = [NSFont fontWithName:@"Maple Mono" size:kLabelFontSize] ?: [NSFont systemFontOfSize:kLabelFontSize];
     mcpPortLabel.textColor = [NSColor colorWithWhite:0.75 alpha:1.0];
@@ -504,13 +500,21 @@ static constexpr float kRefreshBtnFontSize = 12.0f;
     mcpPortLabel.alignment = NSTextAlignmentRight;
     [self addSubview:mcpPortLabel];
 
-    NSTextField* mcpPortField = [[NSTextField alloc] initWithFrame:NSMakeRect(kMcpPortFieldX, y + kMcpPortFieldYOffset, kMcpPortFieldWidth, kControlHeightSmall)];
+    NSTextField* mcpPortField = [[NSTextField alloc] initWithFrame:NSMakeRect(marginX + 136, y, 50.0f, kControlHeightSmall)];
     mcpPortField.stringValue = [NSString stringWithFormat:@"%d", g_config.ai.mcpPort];
     mcpPortField.font = [NSFont fontWithName:@"Maple Mono" size:kLabelFontSize] ?: [NSFont systemFontOfSize:kLabelFontSize];
     mcpPortField.bezelStyle = NSTextFieldRoundedBezel;
     mcpPortField.target = self;
     mcpPortField.action = @selector(mcpPortChanged:);
     [self addSubview:mcpPortField];
+
+    NSSwitch* mcpSwitch = [[NSSwitch alloc] initWithFrame:NSMakeRect(w - marginX - 44, y, 44, kToggleHeight)];
+    mcpSwitch.state = g_config.ai.enableMCP ? NSControlStateValueOn : NSControlStateValueOff;
+    mcpSwitch.target = self;
+    mcpSwitch.action = @selector(mcpToggled:);
+    [self addSubview:mcpSwitch];
+
+    y -= kPostToggleYGap;
 
     [self performSelector:@selector(refreshModels:) withObject:_refreshBtn afterDelay:kModelRefreshDelay];
 }

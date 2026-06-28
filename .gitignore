@@ -28,3 +28,6 @@ config/logs/
 *.profdata
 *.profraw
 tools/Extractor/obj/
+
+# Instruments traces (large; contain env dumps with secrets)
+*.trace/

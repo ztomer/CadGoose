@@ -1,5 +1,6 @@
 #include "config_registry.h"
 #include "config_helpers.h"
+#include "hotkey_cache.h"
 #include <algorithm>
 #include <cctype>
 #include <cstdlib>
@@ -149,6 +150,7 @@ bool Config_SetValueByKey(const std::string& key, const std::string& value, std:
 
 void OnConfigChange() {
     try {
+        Hotkey_SyncFromConfig();  // keep the lock-free hotkey key-code cache current
         Config_UpdateActiveTheme();
         Config_SaveAll();
     } catch (const std::exception& e) {

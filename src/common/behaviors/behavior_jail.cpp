@@ -10,6 +10,7 @@
 #include "config.h"
 #include "world.h"
 #include "hotkey.h"
+#include "hotkey_cache.h"
 #include "ring_buffer.h"
 #include "actor.h"
 #include "actor_jail.h"
@@ -55,7 +56,7 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
         }
     }
 
-    bool oDown = Platform_IsKeyPressed(KeyNameToKeyCode(g_config.behaviors.jail.hotkeyO));
+    bool oDown = Platform_IsKeyPressed(Hotkey_KeyCode(HotkeyId::JailSet));
     if (oDown && !s_oWasKeyDown) {
         if (s_jailsActive) {
             s_jails.clear();
@@ -76,7 +77,7 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
     }
     s_oWasKeyDown = oDown;
 
-    bool pDown = Platform_IsKeyPressed(KeyNameToKeyCode(g_config.behaviors.jail.hotkeyP));
+    bool pDown = Platform_IsKeyPressed(Hotkey_KeyCode(HotkeyId::JailToggle));
     if (pDown && !s_pWasKeyDown && !s_jails.empty()) {
         s_jailsActive = !s_jailsActive;
         goose->onHonk();

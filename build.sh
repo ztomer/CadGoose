@@ -1,16 +1,24 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# build.sh — macOS Release build for CadGoose.
+# build.sh — macOS build engine for CadGoose (shared by build_release.sh /
+# build_debug.sh).
 #
 # Checks for required Homebrew dependencies (installing any that are missing),
 # then configures and builds with Ninja. Pass a build directory as $1
-# (default: build). Set SKIP_DEPS=1 to bypass the dependency check.
+# (default: build).
+#
+# Env:
+#   BUILD_TYPE        CMake build type (default: Release)
+#   EXTRA_CMAKE_ARGS  extra -D flags passed to the configure step (default: none)
+#   SKIP_DEPS=1       bypass the Homebrew dependency check
 
 # Always operate from the repo root so the CMake cache's home dir matches.
 cd "$(dirname "$0")"
 
 BUILD_DIR="${1:-build}"
+BUILD_TYPE="${BUILD_TYPE:-Release}"
+EXTRA_CMAKE_ARGS="${EXTRA_CMAKE_ARGS:-}"
 
 # ── Dependency check (macOS / Homebrew) ────────────────────
 # Required Homebrew formulae. CMake also links system frameworks (Cocoa,
@@ -70,8 +78,9 @@ if [[ -f "$BUILD_DIR/CMakeCache.txt" ]]; then
     fi
 fi
 
-echo "==> Configuring ($BUILD_DIR, Release, Ninja)"
-cmake -B "$BUILD_DIR" -DCMAKE_BUILD_TYPE=Release -GNinja
+echo "==> Configuring ($BUILD_DIR, $BUILD_TYPE, Ninja)${EXTRA_CMAKE_ARGS:+ [$EXTRA_CMAKE_ARGS]}"
+# shellcheck disable=SC2086  # EXTRA_CMAKE_ARGS is intentionally word-split
+cmake -B "$BUILD_DIR" -DCMAKE_BUILD_TYPE="$BUILD_TYPE" $EXTRA_CMAKE_ARGS -GNinja
 
 echo "==> Building"
 cmake --build "$BUILD_DIR"

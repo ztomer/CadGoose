@@ -12,6 +12,7 @@
 #include "world.h"
 #include "assets.h"
 #include "hotkey.h"
+#include "hotkey_cache.h"
 #include "platform_input.h"
 
 static constexpr float kHonkYOffset = 20.0f;
@@ -36,7 +37,7 @@ static void init(BehaviorContext& ctx) {
 
 static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
     (void)dt;
-    int keyCode = KeyNameToKeyCode(g_config.behaviors.honcker.hotkey);
+    int keyCode = Hotkey_KeyCode(HotkeyId::HonckerHonk);
     bool pressed = Platform_IsKeyPressed(keyCode);
 
     if (pressed && !s_wasPressed) {
