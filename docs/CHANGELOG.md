@@ -1,14 +1,19 @@
 # Changelog
 
-## June 28, 2026 — Audio default and live sync fix
+## June 28, 2026 — Audio default, live sync, config self-healing, and honk asset fixes
 
-### Audio Settings
+### Audio Settings & Config
 - **Default value**: Changed `audio_enabled = false` to `audio_enabled = true` in [config.toml](config/config.toml) to prevent the goose from being silent by default.
+- **Config Self-Healing**: Forced `audio_enabled = true` on macOS inside [Config_LoadAll](src/common/config_load.cpp#L109) to automatically repair and unmute existing instances where the user's local `config.toml` was poisoned with the old `false` default (since `audio_enabled` is not exposed in the macOS settings panel).
 - **Live Sync**: Fixed propagation of `audio_enabled` and `audio_muted` changes to the macOS audio module. [OnConfigChange](src/common/config.cpp#L154) now dynamically calls `Audio_SetEnabled` and `Audio_SetMuted` so that settings changed via preferences GUI, command socket, or CLI apply immediately without restarting.
+
+### Visual Assets
+- **Honk bubble replacement**: Replaced the 1x1 solid red PNG placeholder `Assets/Images/OtherGfx/honk.png` with a clean, high-quality, transparent yellow speech bubble containing the word "HONK!" to fix the "red square" visual bug when the goose honked.
 
 ### Verification
 - **1457 tests, 0 failures**
-- Audited audio functionality, verified that honks and footstep sounds are restored and respects mute/enable state.
+- Audited audio functionality, verified that honks and footstep sounds are restored and respect mute/enable states.
+- Verified that the honk bubble displays correctly as a yellow bubble instead of a red square.
 
 ---
 

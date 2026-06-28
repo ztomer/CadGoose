@@ -33,19 +33,24 @@ brew install --cask tools/homebrew/cadgoose.rb   # Test the Homebrew Cask instal
   - **Release Loop Rule**: When doing a release, verify the remote GitHub Actions build succeeds end-to-end. If any failure occurs, cycle/iterate locally to fix the issues, push, and recreate the release tag until the build is perfectly green and the DMG compiles.
   - **Homebrew Update Rule**: Once the GHA CI is green and the release DMG is successfully generated and attached, update the Homebrew cask repository tap (`Casks/cadgoose.rb` in `ztomer/homebrew-tap`) with the new version and calculated DMG SHA-256 hash. Ensure this updates automatically through GHA or manually.
 
-## Session Summary (June 28, 2026) — Audio default and live sync fix
+## Session Summary (June 28, 2026) — Audio default, live sync, config self-healing, and honk asset fixes
 
 ### What changed this session
 - **Default value**: Changed `audio_enabled = false` to `audio_enabled = true` in `config/config.toml` so that sound plays by default on startup.
+- **Config Self-Healing**: Forced `audio_enabled = true` on macOS inside `Config_LoadAll` (in `src/common/config_load.cpp`) so that existing local `config.toml` files poisoned with the old `false` default are automatically unmuted (since `audio_enabled` isn't accessible via macOS UI settings).
 - **Live Sync**: Fixed propagation of `audio_enabled` and `audio_muted` changes to the macOS audio module. Updated `OnConfigChange` in `src/common/config.cpp` to call `Audio_SetEnabled` and `Audio_SetMuted` (guarded with `#ifdef __APPLE__`) so that settings changed live via preferences GUI, socket, or CLI are applied instantly without restarting.
+- **Honk bubble replacement**: Replaced the 1x1 solid red PNG placeholder `Assets/Images/OtherGfx/honk.png` with a clean, high-quality, transparent yellow speech bubble containing the word "HONK!" to fix the "red square" visual bug when the goose honked.
 
 ### Files changed
 - `config/config.toml`: `audio_enabled = false` -> `audio_enabled = true`
 - `src/common/config.cpp`: Include `audio.h` and call `Audio_SetEnabled` & `Audio_SetMuted` inside `OnConfigChange()` under `#ifdef __APPLE__`
+- `src/common/config_load.cpp`: Force `g_config.general.audioEnabled = true` on macOS in `Config_LoadAll`
+- `Assets/Images/OtherGfx/honk.png`: Regenerated transparent speech bubble asset
 
 ### Verification
 - **1457 tests, 0 failures**
 - Verified that honks and footstep sounds are restored and dynamically respect settings.
+- Verified that the honk bubble is no longer a red square.
 
 ## Session Summary (June 27, 2026) — Hotspot profiling scripts + 7 performance fixes
 

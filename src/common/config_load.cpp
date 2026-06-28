@@ -94,21 +94,24 @@ void Config_LoadAll() {
         fs::current_path() / "config.toml",
         fs::current_path() / "config.ini",
     };
+    bool loaded = false;
     for (const auto& path : candidates) {
         if (fs::exists(path)) {
             try {
                 auto parsed = toml::parse(path.string());
                 Config_Load(parsed);
-                Config_UpdateActiveTheme();
-                Hotkey_SyncFromConfig();  // seed the lock-free hotkey cache
-                return;
+                loaded = true;
+                break;
             } catch (const std::exception&) {
                 continue;
             }
         }
     }
-    Config_UpdateActiveTheme(); // Fallback if no config file loaded
-    Hotkey_SyncFromConfig();    // seed the cache from default hotkey strings
+    Config_UpdateActiveTheme();
+    Hotkey_SyncFromConfig();  // seed the lock-free hotkey cache
+#ifdef __APPLE__
+    g_config.general.audioEnabled = true; // Force enabled on macOS to prevent silent poisoning
+#endif
 }
 
 bool Config_LoadThemeColors(const std::string& themeName, ColorRGB& body, ColorRGB& neck, ColorRGB& head, ColorRGB& beak, ColorRGB& eye, ColorRGB& outline) {
