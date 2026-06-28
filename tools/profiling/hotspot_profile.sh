@@ -59,7 +59,11 @@ echo "  Done."
 echo ""
 echo "[2/5] Building CadGoose (Release)..."
 cd "$BUILD_DIR"
-cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS_RELEASE="-O2" > /dev/null 2>&1 || true
+# Profile the PRODUCTION config: CG_DISABLE_DEBUG_LOG=ON compiles out debug
+# logging. Without it, BELog/os_log string-formatting inflates any path that
+# triggers drawRect (e.g. window resizes) and misrepresents the real hotspots.
+cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS_RELEASE="-O2" \
+    -DCG_DISABLE_DEBUG_LOG=ON > /dev/null 2>&1 || true
 # Generator-agnostic build (this dir is Ninja, not Make — `make CadGoose` was a
 # silent no-op that left a stale binary in place).
 if ! cmake --build "$BUILD_DIR" --target CadGoose -j"$(sysctl -n hw.logicalcpu)" 2>&1 | tail -5; then
