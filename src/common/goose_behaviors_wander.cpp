@@ -13,6 +13,9 @@
 #include <cmath>
 #include <cstdio>
 
+// C-fix: Count fetching geese from precomputed cache (no vector rebuild).
+extern int GooseSeparationCache_CountFetching();
+
 static constexpr float kMinDt = 0.016f;
 
 CursorAction handleChaseCursor(Goose& g, double time, const CursorState& cursor, int w, int h) {
@@ -93,7 +96,10 @@ void handleWander(Goose& g, double time, const CursorState& cursor, int w, int h
         if (trigger > g_config.item.maxFetchBias) trigger = g_config.item.maxFetchBias;
 
         int fetchCount = 0;
-        for (auto* other : ActorManager::Instance().getGeese()) if (other->state == GooseState::FETCHING) fetchCount++;
+        // C-fix: Read fetching count from the precomputed flat cache populated
+        // by GooseSeparationCache_Update at the start of each tick batch.
+        // Avoids rebuilding a vector<Goose*> on every wander decision.
+        fetchCount = GooseSeparationCache_CountFetching();
 
         int fetchRoll = rng_util::RandRange(100);
         DebugLog("[FETCH] t=%.1f g%d: trigger=%d roll=%d fetchCount=%d maxGeese=%d\n",

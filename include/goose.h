@@ -22,6 +22,9 @@
 // any goose so CalculateSeparationForce reads from a precomputed flat array.
 class Goose;
 void GooseSeparationCache_Update(const std::vector<Goose*>& geese);
+// C-fix: Returns the number of geese currently in FETCHING state from the
+// precomputed cache (no vector rebuild required).
+int GooseSeparationCache_CountFetching();
 
 enum class GooseState { WANDER, FETCHING, RETURNING, CHASE_CURSOR, SNATCH_CURSOR };
 enum class FetchType : int { Random = -1, Meme = 0, Text = 1, TestImage = 2 };

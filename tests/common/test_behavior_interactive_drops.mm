@@ -101,7 +101,7 @@ TEST_F(BehaviorInteractiveDropsTest, TickPastIntervalWithRngHit) {
     EXPECT_LE(count, 1);
 }
 
-TEST_F(BehaviorInteractiveDropsTest, TickDeterministicDropWithSeed48) {
+TEST_F(BehaviorInteractiveDropsTest, TickDeterministicDropWithSeed185) {
     auto* b = BehaviorRegistry::Instance().Get("interactive_drops");
     ASSERT_NE(b, nullptr);
     b->init(ctx);
@@ -111,7 +111,9 @@ TEST_F(BehaviorInteractiveDropsTest, TickDeterministicDropWithSeed48) {
     float saveInterval = g_config.behaviors.interactiveDrops.dropInterval;
     g_config.behaviors.interactiveDrops.dropInterval = 10.0f;
 
-    rng_util::Seed(48);
+    // Seed 185 produces RandRange(400)=0 (hit) with the optimized fast-path
+    // RandRange. Original seed 48 was specific to the old distribution path.
+    rng_util::Seed(185);
 
     b->tick(goose, ctx, 0.016, 100.0);
 

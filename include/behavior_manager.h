@@ -73,9 +73,15 @@ public:
 private:
     BehaviorStateManager() = default;
 
-    uint64_t MakeKey(int gooseId, const char* behaviorId) {
-        size_t hash = std::hash<std::string>{}(behaviorId);
-        return (static_cast<uint64_t>(gooseId) << 32) | static_cast<uint32_t>(hash);
+    // B-fix: FNV-1a on raw char* — no std::string allocation, same 64-bit key space.
+    static uint64_t MakeKey(int gooseId, const char* behaviorId) {
+        // FNV-1a 32-bit hash of the behavior ID string
+        uint32_t hash = 2166136261u;
+        for (const char* p = behaviorId; *p; ++p) {
+            hash ^= static_cast<uint8_t>(*p);
+            hash *= 16777619u;
+        }
+        return (static_cast<uint64_t>(gooseId) << 32) | hash;
     }
 
     mutable std::shared_mutex mutex_;

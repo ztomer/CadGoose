@@ -27,11 +27,27 @@ inline void Seed(uint32_t s) {
     Engine().seed(s);
 }
 
-// Uniform integer in [0, exclusiveMax). Returns 0 if exclusiveMax <= 0.
+// D-fix: Avoid constructing std::uniform_int_distribution on every call.
+// For small N (the common game case: N<=1024) use a rejection sampler on the
+// raw engine output — same unbiased result, zero heap/stack allocation.
+// For large N fall back to the standard distribution.
 inline int RandRange(int exclusiveMax) {
     if (exclusiveMax <= 0) return 0;
+    auto& eng = Engine();
+    // Power-of-two fast path: mask is exact and unbiased.
+    if ((exclusiveMax & (exclusiveMax - 1)) == 0) {
+        return static_cast<int>(eng() & static_cast<uint32_t>(exclusiveMax - 1));
+    }
+    // General small-N: rejection sampling (expected < 2 iterations).
+    if (exclusiveMax <= 65536) {
+        const uint32_t limit = (0xFFFFFFFFu / static_cast<uint32_t>(exclusiveMax)) * static_cast<uint32_t>(exclusiveMax);
+        uint32_t r;
+        do { r = eng(); } while (r >= limit);
+        return static_cast<int>(r % static_cast<uint32_t>(exclusiveMax));
+    }
+    // Large N: standard distribution.
     std::uniform_int_distribution<int> dist(0, exclusiveMax - 1);
-    return dist(Engine());
+    return dist(eng);
 }
 
 // Uniform integer in [lo, hiInclusive]. Returns lo if hi < lo.
