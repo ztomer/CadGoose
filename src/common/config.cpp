@@ -148,10 +148,18 @@ bool Config_SetValueByKey(const std::string& key, const std::string& value, std:
     return true;
 }
 
+#ifdef __APPLE__
+#include "audio.h"
+#endif
+
 void OnConfigChange() {
     try {
         Hotkey_SyncFromConfig();  // keep the lock-free hotkey key-code cache current
         Config_UpdateActiveTheme();
+#ifdef __APPLE__
+        Audio_SetEnabled(g_config.general.audioEnabled);
+        Audio_SetMuted(g_config.general.audioMuted);
+#endif
         Config_SaveAll();
     } catch (const std::exception& e) {
         fprintf(stderr, "[CONFIG] OnConfigChange error: %s\n", e.what());
