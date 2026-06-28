@@ -17,6 +17,7 @@
 #include "mcp_server.h"
 #include "app_actions.h"
 #include "app_cli.h"
+#include "single_instance.h"
 #include "window.h"
 #include "audio.h"
 #import "tick_manager.h"
@@ -468,6 +469,14 @@ int main(int argc, char** argv) {
             g_mcpMode = true;
             break;
         }
+    }
+
+    // Single-instance guard for the GUI goose. Race-free (unlike the socket
+    // ping in AppCli_HandleCommand) and self-healing on crash. MCP stdio mode
+    // is exempt — it renders no geese and may run alongside the app.
+    if (!g_mcpMode && !SingleInstance_Acquire()) {
+        fprintf(stderr, "Desktop Goose is already running.\n");
+        return 0;
     }
 
     // Quiet by default; verbose with --debug or CADGOOSE_VERBOSE.
