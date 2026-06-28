@@ -40,6 +40,11 @@ private:
     double m_timeCreated;
     double m_timeSinceKicked;
     float m_alphaMult = 1.0f;
+    // Redraw gating: a resting pile (not kicked, not fading) draws nothing new,
+    // so skip the per-frame window update + 128-leaf redraw. m_dirty is set while
+    // leaves are in motion; alpha changes are detected separately in render().
+    bool m_dirty = true;
+    float m_lastRenderedAlpha = -1.0f;
     std::vector<LeafParticle> m_leaves;
 
 #ifdef __APPLE__
