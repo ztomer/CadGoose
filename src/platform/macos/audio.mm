@@ -28,6 +28,15 @@ static AVAudioPlayer* g_bitePlayer = nullptr;
 static AVAudioPlayer* g_mudPlayer = nullptr;
 static std::atomic<bool> g_audioInitialized{false};
 static std::atomic<bool> g_audioMuted{false};
+// Mirrors g_config.general.audioEnabled. macOS previously gated playback on the
+// mute flag only, so audio_enabled=false (with audio_muted=false) still played —
+// and [AVAudioPlayer play] showed up at ~3.7% of main-thread time in profiling.
+static std::atomic<bool> g_audioEnabled{true};
+
+// Single playback gate: suppressed when muted OR not enabled.
+static inline bool AudioSuppressed() {
+    return g_audioMuted.load() || !g_audioEnabled.load();
+}
 
 // Debug printouts: compiled out in release (CG_DISABLE_DEBUG_LOG), else gated
 // on g_debugMode at runtime.
@@ -103,6 +112,7 @@ void Audio_Init() {
 
     g_audioInitialized.store(true);
     g_audioMuted.store(g_config.general.audioMuted);
+    g_audioEnabled.store(g_config.general.audioEnabled);
     DEBUG_LOG("Audio initialized");
 }
 
@@ -117,39 +127,39 @@ static void PlayFromPool(AVAudioPlayer* const* pool, int count) {
 }
 
 void Audio_PlayHonk() {
-    if (g_audioMuted.load()) return;
+    if (AudioSuppressed()) return;
     if (!g_audioInitialized.load()) Audio_Init();
-    if (g_audioMuted.load()) return;
+    if (AudioSuppressed()) return;
     PlayFromPool(g_honkPool, kHonkPoolDepth);
 }
 
 void Audio_PlayGulag() {
-    if (g_audioMuted.load()) return;
+    if (AudioSuppressed()) return;
     if (!g_audioInitialized.load()) Audio_Init();
-    if (g_audioMuted.load()) return;
+    if (AudioSuppressed()) return;
     PlayFromPool(g_gulagPool, 2);
 }
 
 void Audio_PlayPat() {
-    if (g_audioMuted.load()) return;
+    if (AudioSuppressed()) return;
     if (!g_audioInitialized.load()) Audio_Init();
-    if (g_audioMuted.load()) return;
+    if (AudioSuppressed()) return;
     PlayFromPool(g_patPool, kPatPoolDepth);
 }
 
 void Audio_PlayBite() {
-    if (g_audioMuted.load()) return;
+    if (AudioSuppressed()) return;
     if (!g_audioInitialized.load()) Audio_Init();
-    if (g_audioMuted.load()) return;
+    if (AudioSuppressed()) return;
     if (g_bitePlayer && !g_bitePlayer.isPlaying) {
         [g_bitePlayer play];
     }
 }
 
 void Audio_PlayMudSquish() {
-    if (g_audioMuted.load()) return;
+    if (AudioSuppressed()) return;
     if (!g_audioInitialized.load()) Audio_Init();
-    if (g_audioMuted.load()) return;
+    if (AudioSuppressed()) return;
     if (g_mudPlayer && !g_mudPlayer.isPlaying) {
         [g_mudPlayer play];
     }
@@ -157,6 +167,10 @@ void Audio_PlayMudSquish() {
 
 void Audio_SetMuted(bool muted) {
     g_audioMuted.store(muted);
+}
+
+void Audio_SetEnabled(bool enabled) {
+    g_audioEnabled.store(enabled);
 }
 
 void Audio_Cleanup() {
