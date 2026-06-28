@@ -152,10 +152,11 @@ TEST_F(BehaviorPeekingTest, PeekingAtLeftEdgeRngHit) {
     goose->pos.x = 10;
     g_world.screenWidth = 1920;
 
-    // Seed 230 produces: RandRange(10)=X (nextPeekTime), RandRange(120)=0 (hit)
-    // with the optimized fast-path RandRange. Original seed 48 was specific
-    // to the old std::uniform_int_distribution path.
-    rng_util::Seed(230);
+    // With the rejection-sampler RandRange, the peek "hit" needs the first
+    // RandRange(kPeekProbabilityDivisor=120) after seeding to be 0 (Reset()
+    // consumes no RNG, so line-50's check is the first draw). Seed 72 yields
+    // exactly that; seed 230 (old guess) gives 8 and misses.
+    rng_util::Seed(72);
     ctx.time = 0;
     b->tick(goose, ctx, 0.016, ctx.time);
 
