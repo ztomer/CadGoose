@@ -3,6 +3,7 @@
 !README.md
 
 build/
+build-release/
 build-debug/
 build_asan/
 build-nomalloc/
