@@ -9,17 +9,6 @@
 #include <cmath>
 #include <cstdarg>
 #include <cstdio>
-#include <ctime>
-#include <mach/mach_time.h>
-
-static double GetWindowTimeMs() {
-    static mach_timebase_info_data_t info = {0};
-    if (info.denom == 0) mach_timebase_info(&info);
-    uint64_t now = mach_absolute_time();
-    return (double)now * (double)info.numer / (double)info.denom / 1e6;
-}
-
-
 
 static constexpr float kCloseButtonPadding = 4.0f;
 
@@ -213,16 +202,6 @@ static DevicePoint RotatedBoundsSize(float width, float height, float rotation, 
     if (!_item || !_item->data) return;
 
     if (!IsItemValid(_item)) { _item = nullptr; return; }
-
-    double tNow = GetWindowTimeMs();
-    static double s_lastDrawLog = 0;
-    if (tNow - s_lastDrawLog > 50.0) { // log at most every 50ms
-        fprintf(stderr, "[DROP_TIMING] ItemContentView drawRect item=(%.1f,%.1f) size=(%.0fx%.0f) t=%.6f\n",
-            _item->pos.x, _item->pos.y,
-            self.bounds.size.width, self.bounds.size.height,
-            tNow);
-        s_lastDrawLog = tNow;
-    }
 
     CGContextRef ctx = (CGContextRef)[[NSGraphicsContext currentContext] CGContext];
     if (!ctx) return;
@@ -479,9 +458,6 @@ static DevicePoint RotatedBoundsSize(float width, float height, float rotation, 
         // Skip position update during drag (window moves via mouseDragged)
         if (!win.isBeingDragged) {
             [win updatePosition];
-            double tSync = GetWindowTimeMs();
-            fprintf(stderr, "[DROP_TIMING] syncWindows item=(%.1f,%.1f) t=%.6f\n",
-                win.item->pos.x, win.item->pos.y, tSync);
         }
 
         // Toggle ignoresMouseEvents based on cursor position

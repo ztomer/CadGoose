@@ -60,7 +60,9 @@ echo ""
 echo "[2/5] Building CadGoose (Release)..."
 cd "$BUILD_DIR"
 cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS_RELEASE="-O2" > /dev/null 2>&1 || true
-if ! make -j"$(sysctl -n hw.logicalcpu)" CadGoose 2>&1 | tail -5; then
+# Generator-agnostic build (this dir is Ninja, not Make — `make CadGoose` was a
+# silent no-op that left a stale binary in place).
+if ! cmake --build "$BUILD_DIR" --target CadGoose -j"$(sysctl -n hw.logicalcpu)" 2>&1 | tail -5; then
     echo "  FAIL: Build failed."
     exit 97
 fi
@@ -69,7 +71,10 @@ echo "  Build OK."
 # ── Step 3: Launch CadGoose ───────────────────────────────────────────────────
 echo ""
 echo "[3/5] Launching CadGoose..."
-"$BUILD_DIR/CadGoose" > "$OUTPUT_DIR/cadgoose.log" 2>&1 &
+# NOTE: must use --foreground. Without it the binary daemonizes (posix_spawn a
+# child, parent exits), so $! is the short-lived launcher PID, not the real
+# process — xctrace would attach to nothing and the PID check below false-fails.
+"$BUILD_DIR/CadGoose" --foreground > "$OUTPUT_DIR/cadgoose.log" 2>&1 &
 CADGOOSE_PID=$!
 echo "  PID: $CADGOOSE_PID"
 
