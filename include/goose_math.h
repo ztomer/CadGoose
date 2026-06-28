@@ -25,17 +25,21 @@ struct Vector2 {
     Vector2 operator/(float s) const { return { x / s, y / s }; }
     Vector2& operator+=(const Vector2& o) { x += o.x; y += o.y; return *this; }
 
+    // E-fix: Use sqrtf(dx*dx+dy*dy) instead of std::hypot. hypot is ~3x slower
+    // because it handles NaN/Inf/subnormals. Game coords are always finite.
     static float Distance(Vector2 a, Vector2 b) {
-        return std::hypot(b.x - a.x, b.y - a.y);
+        float dx = b.x - a.x, dy = b.y - a.y;
+        return sqrtf(dx*dx + dy*dy);
     }
 
     static Vector2 Normalize(Vector2 v) {
-        float len = std::hypot(v.x, v.y);
+        float len = sqrtf(v.x*v.x + v.y*v.y);
         return len < 1e-6f ? Vector2{ 0,0 } : Vector2{ v.x / len, v.y / len };
     }
 
+    // E-fix: Same fast path for Length.
     static float Length(Vector2 v) {
-        return std::hypot(v.x, v.y);
+        return sqrtf(v.x*v.x + v.y*v.y);
     }
 
     static Vector2 Lerp(Vector2 a, Vector2 b, float t) {

@@ -152,7 +152,10 @@ TEST_F(BehaviorPeekingTest, PeekingAtLeftEdgeRngHit) {
     goose->pos.x = 10;
     g_world.screenWidth = 1920;
 
-    rng_util::Seed(48);
+    // Seed 230 produces: RandRange(10)=X (nextPeekTime), RandRange(120)=0 (hit)
+    // with the optimized fast-path RandRange. Original seed 48 was specific
+    // to the old std::uniform_int_distribution path.
+    rng_util::Seed(230);
     ctx.time = 0;
     b->tick(goose, ctx, 0.016, ctx.time);
 

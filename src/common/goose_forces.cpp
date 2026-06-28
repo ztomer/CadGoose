@@ -28,12 +28,12 @@ Vector2 Goose::CalculateCurveForce(float dist) {
     return Vector2{0, 0};
 }
 
-// H5: Precomputed goose position cache for separation force.
-// Populated once per tick batch by ActorManager (via GooseSeparationCache::Update),
-// so each goose reads from a flat array instead of chasing pointers through getGeese().
+// H5 / C-fix: Precomputed goose data cache for per-tick hot paths.
+// Extended to include GooseState so wander logic can count fetching geese
+// without calling getGeese() (which rebuilds a vector) on every wander decision.
 struct GooseSeparationCache {
     static constexpr int kMaxGeese = 32;
-    struct Entry { int id; Vector2 pos; };
+    struct Entry { int id; Vector2 pos; GooseState state; };
     Entry entries[kMaxGeese];
     int count = 0;
 
@@ -41,8 +41,17 @@ struct GooseSeparationCache {
         count = 0;
         for (auto* g : geese) {
             if (count >= kMaxGeese) break;
-            entries[count++] = { g->id, g->pos };
+            entries[count++] = { g->id, g->pos, g->state };
         }
+    }
+
+    // C-fix: Count geese currently in FETCHING state — O(N) flat array scan,
+    // no pointer chasing, no vector rebuild.
+    int CountFetching() const {
+        int n = 0;
+        for (int i = 0; i < count; ++i)
+            if (entries[i].state == GooseState::FETCHING) ++n;
+        return n;
     }
 };
 
@@ -52,6 +61,11 @@ static GooseSeparationCache s_sepCache;
 
 void GooseSeparationCache_Update(const std::vector<Goose*>& geese) {
     s_sepCache.Update(geese);
+}
+
+// C-fix: Exposed so wander logic can query fetching count without getGeese().
+int GooseSeparationCache_CountFetching() {
+    return s_sepCache.CountFetching();
 }
 
 Vector2 Goose::CalculateSeparationForce() {

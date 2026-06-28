@@ -87,8 +87,11 @@ void BehaviorRegistry::TickAll(Goose* goose, double dt, double time) {
 
     for (auto* behavior : behaviors) {
         bool isEnabled = behavior->enabledPtr && *behavior->enabledPtr;
-        
-        auto* state = BehaviorStateManager::Instance().Get<BehaviorState>(goose->id, behavior->id);
+
+        // A-fix: A single GetOrCreate call (one lock + one hash) replaces the
+        // old Get + conditional GetOrCreate pattern (two locks + two hashes).
+        // GetOrCreate returns the existing state if present, or creates a fresh one.
+        auto* state = BehaviorStateManager::Instance().GetOrCreate<BehaviorState>(goose->id, behavior->id);
         bool wasEnabled = state ? state->wasEnabled : false;
 
         // Detect enabled→disabled transition and run cleanup
@@ -119,9 +122,6 @@ void BehaviorRegistry::TickAll(Goose* goose, double dt, double time) {
                         behavior->id, e.what());
             }
 
-            if (!state) {
-                state = BehaviorStateManager::Instance().GetOrCreate<BehaviorState>(goose->id, behavior->id);
-            }
             if (state) {
                 state->wasEnabled = isEnabled;
             }
