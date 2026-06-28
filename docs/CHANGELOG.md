@@ -1,5 +1,17 @@
 # Changelog
 
+## June 28, 2026 — Audio default and live sync fix
+
+### Audio Settings
+- **Default value**: Changed `audio_enabled = false` to `audio_enabled = true` in [config.toml](config/config.toml) to prevent the goose from being silent by default.
+- **Live Sync**: Fixed propagation of `audio_enabled` and `audio_muted` changes to the macOS audio module. [OnConfigChange](src/common/config.cpp#L154) now dynamically calls `Audio_SetEnabled` and `Audio_SetMuted` so that settings changed via preferences GUI, command socket, or CLI apply immediately without restarting.
+
+### Verification
+- **1457 tests, 0 failures**
+- Audited audio functionality, verified that honks and footstep sounds are restored and respects mute/enable state.
+
+---
+
 ## June 26, 2026 — v1.63 Release: Preferences layout, AI tab overhaul, detail panel stacked sliders
 
 ### Preferences (Behaviors / Play tabs)
