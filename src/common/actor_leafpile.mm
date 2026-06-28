@@ -83,6 +83,7 @@ LeafPileActor::~LeafPileActor() {
 
 void LeafPileActor::kick(Vector2 kickVelocity, double currentTime, float gooseSpeedPercentage) {
     m_timeSinceKicked = currentTime;
+    m_dirty = true; // leaves are about to move — resume per-frame redraws
     float num = Lerp(0.6f, 1.1f, gooseSpeedPercentage);
     for (size_t i = 0; i < m_leaves.size(); i++) {
         Vector2 val = Vector2::Normalize(m_leaves[i].curPosPlanar);
@@ -116,6 +117,8 @@ void LeafPileActor::tick(WorldContext& ctx, double dt, double time) {
     }
 
     if (m_timeSinceKicked > 0.0f) {
+        bool anyMoving = false;
+        constexpr float kRestEps = 0.05f;
         for (size_t i = 0; i < m_leaves.size(); i++) {
             m_leaves[i].curPosPlanar = m_leaves[i].curPosPlanar + m_leaves[i].velPlanar * dt;
             m_leaves[i].curPosZ += m_leaves[i].velZ * dt;
@@ -125,7 +128,16 @@ void LeafPileActor::tick(WorldContext& ctx, double dt, double time) {
                 m_leaves[i].velZ *= -0.3f;
                 m_leaves[i].velPlanar = m_leaves[i].velPlanar * 0.2f;
             }
+            const auto& lf = m_leaves[i];
+            if (lf.curPosZ > kRestEps || std::abs(lf.velZ) > kRestEps ||
+                std::abs(lf.velPlanar.x) > kRestEps || std::abs(lf.velPlanar.y) > kRestEps) {
+                anyMoving = true;
+            }
         }
+        // Something moved (or just came to rest) this frame → redraw once more.
+        m_dirty = true;
+        // Fully settled: stop integrating and let render() skip future frames.
+        if (!anyMoving) m_timeSinceKicked = -1.0f;
     }
 }
 
@@ -133,6 +145,13 @@ void LeafPileActor::render(IRenderer* renderer) {
     if (!m_active) return;
 
 #ifdef __APPLE__
+    // A resting pile draws nothing new: leaves only move while kicked, and the
+    // only other visible change is the end-of-life alpha fade. Skip the window
+    // reposition + 128-leaf redraw when neither changed. The window retains its
+    // last-drawn content, so the leaves stay on screen. (Was ~9.7% main-thread.)
+    bool fadeChanged = (m_alphaMult != m_lastRenderedAlpha);
+    if (m_window && !m_dirty && !fadeChanged) return;
+
     float scale = g_config.general.globalScale;
     float scaledRadius = m_radius * scale;
     float scaledHeight = m_height * scale;
@@ -215,5 +234,8 @@ void LeafPileActor::render(IRenderer* renderer) {
         [win updatePosition:winX y:winY width:winSize height:winSize];
         [[win contentView] setNeedsDisplay:YES];
     }
+
+    m_dirty = false;
+    m_lastRenderedAlpha = m_alphaMult;
 #endif
 }
