@@ -11,6 +11,7 @@
 #include "world.h"
 #include "assets.h"
 #include "hotkey.h"
+#include "hotkey_cache.h"
 #include "actor.h"
 #include "actor_portal.h"
 #include "platform_input.h"
@@ -78,9 +79,9 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
     double mouseX = 0, mouseY = 0;
     bool haveMouse = Platform_GetMousePosition(&mouseX, &mouseY);
 
-    bool d1Pressed = Platform_IsKeyPressed(KeyNameToKeyCode(g_config.portal.hotkey1));
-    bool d2Pressed = Platform_IsKeyPressed(KeyNameToKeyCode(g_config.portal.hotkey2));
-    bool d0Pressed = Platform_IsKeyPressed(KeyNameToKeyCode(g_config.portal.hotkey0));
+    bool d1Pressed = Platform_IsKeyPressed(Hotkey_KeyCode(HotkeyId::Portal1));
+    bool d2Pressed = Platform_IsKeyPressed(Hotkey_KeyCode(HotkeyId::Portal2));
+    bool d0Pressed = Platform_IsKeyPressed(Hotkey_KeyCode(HotkeyId::Portal0));
 
     if (d1Pressed && !s_p1Pressed) {
         s_p1Pressed = true;

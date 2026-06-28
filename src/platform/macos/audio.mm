@@ -29,8 +29,14 @@ static AVAudioPlayer* g_mudPlayer = nullptr;
 static std::atomic<bool> g_audioInitialized{false};
 static std::atomic<bool> g_audioMuted{false};
 
+// Debug printouts: compiled out in release (CG_DISABLE_DEBUG_LOG), else gated
+// on g_debugMode at runtime.
+#if defined(CG_DISABLE_DEBUG_LOG)
+#define DEBUG_LOG(fmt, ...) ((void)0)
+#else
 #define DEBUG_LOG(fmt, ...) do { \
     if (g_debugMode) fprintf(stderr, "[DEBUG] " fmt "\n", ##__VA_ARGS__); } while(0)
+#endif
 
 static NSString* GetAssetsPath() {
     std::string path = (ASSET_ROOT / "Assets").string();

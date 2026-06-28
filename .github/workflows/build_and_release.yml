@@ -63,7 +63,9 @@ jobs:
       - name: Configure & Build
         run: |
           rm -rf build && mkdir -p build && cd build
-          cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+          # Release build: compile out all debug-level logging (CG_DISABLE_DEBUG_LOG).
+          # Applies to the CadGoose app target only; CadGooseTests keeps full logging.
+          cmake .. -DCMAKE_BUILD_TYPE=Release -DCG_DISABLE_DEBUG_LOG=ON -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
           cmake --build . --config Release --parallel $(sysctl -n hw.logicalcpu)
 
       - name: Run Tests (fast)
@@ -148,7 +150,8 @@ jobs:
       - name: Configure & Build
         run: |
           rm -rf build && mkdir -p build && cd build
-          cmake .. -DCMAKE_BUILD_TYPE=Release
+          # Release build: compile out all debug-level logging (CG_DISABLE_DEBUG_LOG).
+          cmake .. -DCMAKE_BUILD_TYPE=Release -DCG_DISABLE_DEBUG_LOG=ON
           cmake --build . --config Release --parallel $(nproc)
 
       # Tests are macOS-only (behaviors have CoreGraphics dependencies)

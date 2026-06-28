@@ -1,20 +1,20 @@
 #import "behavior_element_window.h"
 #import "coordinate_system.h"
+#include "config.h"
+#include "log.h"
+#include <cstdarg>
 #include <cstdio>
 
-static FILE* s_debugFile = NULL;
-
+// Route through the centralized async logger so the render thread never
+// touches disk. Gated on debug.toTerminal like the rest of the debug logging.
 static void BELog(const char* fmt, ...) {
-    if (!s_debugFile) {
-        s_debugFile = fopen("/tmp/cadgoose_behavior_window.log", "w");
-    }
-    if (!s_debugFile) return;
+    if (!g_config.debug.toTerminal) return;
+    char buffer[512];
     va_list args;
     va_start(args, fmt);
-    vfprintf(s_debugFile, fmt, args);
+    vsnprintf(buffer, sizeof(buffer), fmt, args);
     va_end(args);
-    fprintf(s_debugFile, "\n");
-    fflush(s_debugFile);
+    CG_DEBUG_ASYNC("BEWIN", "%s", buffer);
 }
 
 // ============================================================

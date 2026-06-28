@@ -28,17 +28,44 @@ Vector2 Goose::CalculateCurveForce(float dist) {
     return Vector2{0, 0};
 }
 
+// H5: Precomputed goose position cache for separation force.
+// Populated once per tick batch by ActorManager (via GooseSeparationCache::Update),
+// so each goose reads from a flat array instead of chasing pointers through getGeese().
+struct GooseSeparationCache {
+    static constexpr int kMaxGeese = 32;
+    struct Entry { int id; Vector2 pos; };
+    Entry entries[kMaxGeese];
+    int count = 0;
+
+    void Update(const std::vector<Goose*>& geese) {
+        count = 0;
+        for (auto* g : geese) {
+            if (count >= kMaxGeese) break;
+            entries[count++] = { g->id, g->pos };
+        }
+    }
+};
+
+// Updated once per frame by Goose::tick() via a shared singleton.
+// Single-threaded main tick loop; no locking needed.
+static GooseSeparationCache s_sepCache;
+
+void GooseSeparationCache_Update(const std::vector<Goose*>& geese) {
+    s_sepCache.Update(geese);
+}
+
 Vector2 Goose::CalculateSeparationForce() {
     Vector2 force{0, 0};
     if (state == GooseState::WANDER || state == GooseState::FETCHING) {
-        for (auto* other : ActorManager::Instance().getGeese()) {
-            if (other->id == id) continue;
-            float d = Vector2::Distance(pos, other->pos);
+        // H5: Read from precomputed flat cache — no virtual dispatch, cache-friendly.
+        for (int i = 0; i < s_sepCache.count; ++i) {
+            if (s_sepCache.entries[i].id == id) continue;
+            float d = Vector2::Distance(pos, s_sepCache.entries[i].pos);
             if (d > g_config.spawn.separationMinDistance &&
                 d < g_config.spawn.separationMaxDistance) {
                 float strength = (g_config.spawn.separationMaxDistance - d) /
                                 g_config.spawn.separationMaxDistance;
-                Vector2 away = Vector2::Normalize(pos - other->pos);
+                Vector2 away = Vector2::Normalize(pos - s_sepCache.entries[i].pos);
                 force += away * (strength * g_config.movement.maxForce *
                                 g_config.spawn.separationForceMultiplier);
             }

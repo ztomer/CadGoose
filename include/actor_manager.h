@@ -5,6 +5,7 @@
 #pragma once
 
 #include <vector>
+#include <unordered_set>
 
 class Actor;
 class Goose;
@@ -61,4 +62,8 @@ private:
         geeseCacheDirty = true;
         droppedItemsCacheDirty = true;
     }
+
+    // H1: O(1) live-actor membership set — kept in sync with actors vector
+    // so tickAll/renderAll can check existence without O(N) std::find.
+    std::unordered_set<Actor*> liveSet;
 };

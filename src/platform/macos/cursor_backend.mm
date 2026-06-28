@@ -21,18 +21,19 @@ bool MacCursorBackend::Init() {
 }
 
 Vector2 MacCursorBackend::GetCursorPos() {
-    CGEventSourceRef source = CGEventSourceCreate(kCGEventSourceStateHIDSystemState);
+    CGEventSourceRef source = m_eventSource ? (CGEventSourceRef)m_eventSource :
+                                  CGEventSourceCreate(kCGEventSourceStateHIDSystemState);
     if (!source) return {-1.0f, -1.0f};
 
     CGEventRef event = CGEventCreate(source);
     if (!event) {
-        CFRelease(source);
+        if (source != m_eventSource) CFRelease(source);
         return {-1.0f, -1.0f};
     }
 
     CGPoint point = CGEventGetLocation(event);
     CFRelease(event);
-    CFRelease(source);
+    if (source != m_eventSource) CFRelease(source);
 
     return {(float)point.x, (float)point.y};
 }

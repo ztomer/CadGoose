@@ -5,7 +5,9 @@
 #import "coordinate_system.h"
 #import "actor.h"
 #import "actor_dropped_item.h"
+#include "log.h"
 #include <cmath>
+#include <cstdarg>
 #include <cstdio>
 #include <ctime>
 #include <mach/mach_time.h>
@@ -19,29 +21,18 @@ static double GetWindowTimeMs() {
 
 
 
-// Configurable log path (or use centralized logging)
-static const char* GetItemDragLogPath() {
-    return g_config.general.itemDragLogPath.empty() ? "/tmp/cadgoose_item_drag.log" : g_config.general.itemDragLogPath.c_str();
-}
 static constexpr float kCloseButtonPadding = 4.0f;
 
-static FILE* s_debugFile = NULL;
-
+// Route item-drag tracing through the centralized async logger so mouse-drag
+// events never block the main thread on disk I/O. Gated on debug.toTerminal.
 static void ItemLog(const char* fmt, ...) {
-    if (!s_debugFile) {
-        s_debugFile = fopen(GetItemDragLogPath(), "w");
-    }
-    if (!s_debugFile) return;
-    time_t now = time(nullptr);
-    struct tm* tm = localtime(&now);
-    char ts[32]; strftime(ts, sizeof(ts), "%H:%M:%S", tm);
-    fprintf(s_debugFile, "[%s] ", ts);
+    if (!g_config.debug.toTerminal) return;
+    char buffer[512];
     va_list args;
     va_start(args, fmt);
-    vfprintf(s_debugFile, fmt, args);
+    vsnprintf(buffer, sizeof(buffer), fmt, args);
     va_end(args);
-    fprintf(s_debugFile, "\n");
-    fflush(s_debugFile);
+    CG_DEBUG_ASYNC("ITEMDRAG", "%s", buffer);
 }
 
 static BOOL IsItemValid(DroppedItem* item) {

@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <toml.hpp>
 #include "config_helpers.h"
+#include "hotkey_cache.h"
 
 namespace fs = std::filesystem;
 
@@ -99,6 +100,7 @@ void Config_LoadAll() {
                 auto parsed = toml::parse(path.string());
                 Config_Load(parsed);
                 Config_UpdateActiveTheme();
+                Hotkey_SyncFromConfig();  // seed the lock-free hotkey cache
                 return;
             } catch (const std::exception&) {
                 continue;
@@ -106,6 +108,7 @@ void Config_LoadAll() {
         }
     }
     Config_UpdateActiveTheme(); // Fallback if no config file loaded
+    Hotkey_SyncFromConfig();    // seed the cache from default hotkey strings
 }
 
 bool Config_LoadThemeColors(const std::string& themeName, ColorRGB& body, ColorRGB& neck, ColorRGB& head, ColorRGB& beak, ColorRGB& eye, ColorRGB& outline) {

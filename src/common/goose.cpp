@@ -9,6 +9,7 @@
 #include "goose_math.h"
 #include "world.h"
 #include "cursor_backend.h"
+#include "log.h"
 #include <cmath>
 #include <cstdio>
 #include <mutex>
@@ -21,7 +22,6 @@
 #endif
 
 // --- Magic numbers extracted as named constants ---
-static constexpr const char* kDebugLogPath = "/tmp/goose_debug.log";
 static constexpr double kLogInterval = 0.1;
 static constexpr float kSpringForce = 50.0f;
 static constexpr float kSpringDamping = 0.80f;
@@ -35,19 +35,34 @@ static constexpr float kShudderDirChangeThreshold = 90.0f;
 static constexpr int kNighttimeCheckIntervalSec = 60;
 
 static bool IsNighttime() {
-    static std::mutex s_mutex;
-    static time_t s_lastCheck = 0;
-    static bool s_isNight = false;
+    // H6: Cache nighttime status in an atomic<bool> so every physics tick can
+    // read it without acquiring a mutex. The cached value is refreshed at most
+    // once per kNighttimeCheckIntervalSec using a lightweight try_lock so
+    // contention never blocks the render thread.
+    static std::atomic<bool> s_isNight{false};
+    static std::mutex s_refreshMutex;
+    static std::atomic<time_t> s_lastCheck{0};
+
     time_t now = std::time(nullptr);
-    std::lock_guard<std::mutex> lock(s_mutex);
-    if (now - s_lastCheck >= kNighttimeCheckIntervalSec) {
-        struct tm tm_info;
-        if (localtime_r(&now, &tm_info)) {
-            s_isNight = (tm_info.tm_hour >= kNighttimeStartHour || tm_info.tm_hour < kNighttimeEndHour);
-        }
-        s_lastCheck = now;
+    // Lock-free fast path: return cached value if still fresh.
+    if (now - s_lastCheck.load(std::memory_order_relaxed) < kNighttimeCheckIntervalSec) {
+        return s_isNight.load(std::memory_order_relaxed);
     }
-    return s_isNight;
+    // Slow path: refresh under mutex (only one thread at a time).
+    if (s_refreshMutex.try_lock()) {
+        // Double-check after acquiring lock.
+        if (now - s_lastCheck.load(std::memory_order_relaxed) >= kNighttimeCheckIntervalSec) {
+            struct tm tm_info;
+            if (localtime_r(&now, &tm_info)) {
+                s_isNight.store(
+                    (tm_info.tm_hour >= kNighttimeStartHour || tm_info.tm_hour < kNighttimeEndHour),
+                    std::memory_order_relaxed);
+            }
+            s_lastCheck.store(now, std::memory_order_relaxed);
+        }
+        s_refreshMutex.unlock();
+    }
+    return s_isNight.load(std::memory_order_relaxed);
 }
 static constexpr float kFetchCurvatureRange = 200.0f;
 static constexpr float kFetchCurvatureCenter = 100.0f;
@@ -57,49 +72,6 @@ static constexpr float kRadToDeg = 180.0f / PI;
 static constexpr float kDegToRad = PI / 180.0f;
 static constexpr double kStuckThresholdTime = 3.0;
 static constexpr float kStuckMinMovementThreshold = 10.0f;
-static FILE *s_debugLog = nullptr;
-
-static FILE *GetDebugLog() {
-  if (!s_debugLog) {
-    s_debugLog = fopen(kDebugLogPath, "w");
-    if (!s_debugLog)
-      s_debugLog = stderr;
-  }
-  return s_debugLog;
-}
-
-static void DebugLog(const char* fmt, ...) {
-    FILE *f = GetDebugLog();
-    if (!f) return;
-    va_list args;
-    va_start(args, fmt);
-    vfprintf(f, fmt, args);
-    va_end(args);
-    fflush(f);
-}
-
-static void LogTick(double time, const CursorState &cursor) {
-  FILE *f = GetDebugLog();
-  if (!f)
-    return;
-  fprintf(f, "[T%.1f] cur=%d", time, g_world.cursorGrabberId);
-  if (cursor.hasPos())
-    fprintf(f, " c(%.0f,%.0f)", cursor.position.x, cursor.position.y);
-  else
-    fprintf(f, " c(-,-)");
-  fprintf(f, " geese:");
-  for (auto* g : ActorManager::Instance().getGeese()) {
-    static constexpr const char* stateNames[] = {"W", "F", "R", "C", "S"};
-    int si = static_cast<int>(g->state);
-    const char* sn = (si >= 0 && si < (int)(sizeof(stateNames)/sizeof(stateNames[0]))) ? stateNames[si] : "?";
-    fprintf(f, " %d%s@(%d,%d)d%dv(%d,%d)s%d", g->id, sn, (int)g->pos.x,
-            (int)g->pos.y, (int)g->dir, (int)g->vel.x, (int)g->vel.y,
-            (int)g->currentSpeed);
-    if (g->state == GooseState::SNATCH_CURSOR)
-      fprintf(f, " a=%.1f r=%.0f", g->snatchAngle, g->snatchRadius);
-  }
-  fprintf(f, "\n");
-}
 
 static bool s_stateChanged = true;
 static double s_lastLogTime = 0;
@@ -459,7 +431,7 @@ CursorAction Goose::Update(double dt, double time, int w, int h,
   }
 
   s_lastLogTime += dt;
-  if (s_lastLogTime > kLogInterval || s_stateChanged) {
+  if ((s_lastLogTime > kLogInterval || s_stateChanged) && g_config.debug.toTerminal) {
     LogTick(time, cursor);
     s_lastLogTime = 0;
     s_stateChanged = false;

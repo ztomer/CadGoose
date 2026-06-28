@@ -5,6 +5,7 @@
 #include "actor.h"
 #include "item_window.h"
 #include "config.h"
+#include "log.h"
 #include <cstdio>
 #include <mach/mach_time.h>
 #include <TargetConditionals.h>
@@ -93,9 +94,10 @@ void DroppedItemActor::initWindow() {
     m_windowKey = (__bridge_retained void*)@(s_nextKey++);
     manager.windows[(__bridge NSNumber*)m_windowKey] = win;
     double t2 = GetTimeMs();
-    fprintf(stderr, "[DROP_TIMING] initWindow item=(%.1f,%.1f) allocInit=%.3fms storeKey=%.3fms total=%.3fms\n",
-        m_item.pos.x, m_item.pos.y,
-        (t1 - t0), (t2 - t1), (t2 - t0));
+    if (g_config.debug.toTerminal)
+        CG_DEBUG_ASYNC("DROP_TIMING", "initWindow item=(%.1f,%.1f) allocInit=%.3fms storeKey=%.3fms total=%.3fms",
+            m_item.pos.x, m_item.pos.y,
+            (t1 - t0), (t2 - t1), (t2 - t0));
 }
 
 void DroppedItemActor::updateWindow() {

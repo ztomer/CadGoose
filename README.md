@@ -41,11 +41,17 @@ xattr -dr com.apple.quarantine /Applications/CadGoose.app
 ## Build
 
 ```bash
-./build.sh    # macOS Release — installs deps via Homebrew if missing
-./run.sh      # build + run build/CadGoose
+./build_release.sh   # macOS Release (CI build) — debug logging compiled out
+./build_debug.sh     # macOS Debug — debug logging enabled
+./run.sh             # build + run build/CadGoose
 ```
 
-`build.sh` auto-installs `cmake ninja googletest mimalloc` via Homebrew (`SKIP_DEPS=1` to skip). toml11 fetched via CMake `FetchContent` (no submodules).
+`build_release.sh` is what CI ships: it passes `-DCG_DISABLE_DEBUG_LOG=ON`, which
+compiles out all debug-level logging (`CG_DEBUG`/`DebugLog`/`LogTick`/`DEBUG_LOG` →
+`((void)0)`, zero per-frame overhead) for the app target. `build_debug.sh` leaves logging
+in (still gated at runtime by `debug.toTerminal` / `--debug`). Both wrap the shared
+`build.sh` engine, which auto-installs `cmake ninja googletest mimalloc` via Homebrew
+(`SKIP_DEPS=1` to skip). toml11 is fetched via CMake `FetchContent` (no submodules).
 
 ## Test
 

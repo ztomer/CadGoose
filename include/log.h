@@ -24,4 +24,33 @@ void CG_Logv(LogLevel level, const char* tag, const char* fmt, ...)
 #define CG_ERROR(tag, ...) CG_Logv(LogLevel::Error, tag, __VA_ARGS__)
 #define CG_WARN(tag, ...)  CG_Logv(LogLevel::Warn,  tag, __VA_ARGS__)
 #define CG_INFO(tag, ...)  CG_Logv(LogLevel::Info,  tag, __VA_ARGS__)
-#define CG_DEBUG(tag, ...) CG_Logv(LogLevel::Debug, tag, __VA_ARGS__)
+
+// --- Async logging engine for hot paths (e.g., per-frame debug) ---
+// Call once at startup to enable file logging with background thread.
+void Log_EnableFile(const char* path, LogLevel minLevel = LogLevel::Debug);
+// Shutdown and flush (call at exit).
+void Log_Shutdown();
+// Async version - never blocks calling thread. Use for per-frame logging.
+void CG_LogvAsync(LogLevel level, const char* tag, const char* fmt, ...)
+    __attribute__((format(printf, 3, 4)));
+
+// --- Debug printouts (compiled out in release builds) ---
+// Defining CG_DISABLE_DEBUG_LOG (build_release.sh / CI) expands every debug-level
+// log call to ((void)0): no function call, no argument evaluation, no string
+// formatting — zero overhead in the shipped binary. The error/warn/info macros
+// above are unaffected. Debug builds (build_debug.sh) leave these fully enabled.
+#if defined(CG_DISABLE_DEBUG_LOG)
+  #define CG_DEBUG(tag, ...)       ((void)0)
+  #define CG_DEBUG_ASYNC(tag, ...) ((void)0)
+  #define DebugLog(...)            ((void)0)
+  #define DebugLogv(...)           ((void)0)
+  #define LogTick(...)             ((void)0)
+#else
+  #define CG_DEBUG(tag, ...)       CG_Logv(LogLevel::Debug, tag, __VA_ARGS__)
+  #define CG_DEBUG_ASYNC(tag, ...) CG_LogvAsync(LogLevel::Debug, tag, __VA_ARGS__)
+  // Centralized debug logging API (DRY). Replaces per-file GetDebugLog() / FILE*
+  // statics. Guards on g_config.debug.toTerminal internally.
+  void DebugLog(const char* fmt, ...) __attribute__((format(printf, 1, 2)));
+  void DebugLogv(LogLevel level, const char* tag, const char* fmt, ...) __attribute__((format(printf, 3, 4)));
+  void LogTick(double time, const struct CursorState& cursor);
+#endif

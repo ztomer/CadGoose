@@ -16,6 +16,12 @@
 #include "cursor_io.h"
 #include "coordinate_system.h"
 #include "actor.h"
+#include <vector>
+
+// H5: Declared in goose_forces.cpp. Call once per tick frame before ticking
+// any goose so CalculateSeparationForce reads from a precomputed flat array.
+class Goose;
+void GooseSeparationCache_Update(const std::vector<Goose*>& geese);
 
 enum class GooseState { WANDER, FETCHING, RETURNING, CHASE_CURSOR, SNATCH_CURSOR };
 enum class FetchType : int { Random = -1, Meme = 0, Text = 1, TestImage = 2 };

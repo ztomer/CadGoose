@@ -2,6 +2,7 @@
 // Free functions, ConfigGUIWindowController with tabs, and entry points
 #import "config_gui_helpers.h"
 #include "config.h"
+#include "hotkey_cache.h"
 #include "world.h"
 
 // --- Layout constants ---
@@ -259,18 +260,18 @@ void s_setBoolValue(const std::string& key, bool value) {
     [self.playItems removeAllObjects];
     [self addRow:@"Breadcrumbs" key:@"breadcrumbs_enabled" desc:@"Hold key to drop crumbs at cursor" to:self.playItems];
     {
-        NSString* hk = @(g_config.behaviors.honcker.hotkey.c_str());
+        NSString* hk = @(Hotkey_Name(HotkeyId::HonckerHonk).c_str());
         [self addRow:@"Honcker" key:@"honcker_enabled" desc:[NSString stringWithFormat:@"Press %@ to honk at cursor", hk] to:self.playItems];
     }
     {
-        NSString* kO = @(g_config.behaviors.jail.hotkeyO.c_str());
-        NSString* kP = @(g_config.behaviors.jail.hotkeyP.c_str());
+        NSString* kO = @(Hotkey_Name(HotkeyId::JailSet).c_str());
+        NSString* kP = @(Hotkey_Name(HotkeyId::JailToggle).c_str());
         [self addRow:@"Jail" key:@"jail_enabled" desc:[NSString stringWithFormat:@"Set trap %@, trigger %@", kO, kP] to:self.playItems];
     }
     {
-        NSString* k1 = @(g_config.portal.hotkey1.c_str());
-        NSString* k2 = @(g_config.portal.hotkey2.c_str());
-        NSString* k0 = @(g_config.portal.hotkey0.c_str());
+        NSString* k1 = @(Hotkey_Name(HotkeyId::Portal1).c_str());
+        NSString* k2 = @(Hotkey_Name(HotkeyId::Portal2).c_str());
+        NSString* k0 = @(Hotkey_Name(HotkeyId::Portal0).c_str());
         [self addRow:@"Portals" key:@"portals_enabled" desc:[NSString stringWithFormat:@"%@/%@ place, %@ toggle", k1, k2, k0] to:self.playItems];
     }
     [self addRow:@"Drag" key:@"drag_enabled" desc:@"Click and drag geese" to:self.playItems];

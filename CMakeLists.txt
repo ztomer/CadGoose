@@ -31,6 +31,12 @@ macro(target_enable_asan TARGET)
     endif()
 endmacro()
 
+# Compile out all debug-level logging (CG_DEBUG / CG_DEBUG_ASYNC / DebugLog /
+# DebugLogv / LogTick / the DEBUG_LOG macros) for release/CI builds. Applied to
+# the CadGoose app target only — the test target keeps full logging so log tests
+# still exercise it. Enabled by build_release.sh (-DCG_DISABLE_DEBUG_LOG=ON).
+option(CG_DISABLE_DEBUG_LOG "Compile out all debug-level logging (release/CI build)" OFF)
+
 option(CODE_COVERAGE "Build with LLVM source-based code coverage" OFF)
 if(CODE_COVERAGE AND APPLE)
     message(STATUS "Code coverage instrumentation enabled")
@@ -108,6 +114,10 @@ if(MACOS)
 
     add_executable(CadGoose ${SOURCES})
     target_enable_asan(CadGoose)
+    if(CG_DISABLE_DEBUG_LOG)
+        message(STATUS "CadGoose: debug logging compiled out (CG_DISABLE_DEBUG_LOG)")
+        target_compile_definitions(CadGoose PRIVATE CG_DISABLE_DEBUG_LOG)
+    endif()
 
     target_link_libraries(CadGoose
         toml11
@@ -218,6 +228,10 @@ elseif(LINUX)
 
     add_executable(CadGoose ${SOURCES})
     target_enable_asan(CadGoose)
+    if(CG_DISABLE_DEBUG_LOG)
+        message(STATUS "CadGoose: debug logging compiled out (CG_DISABLE_DEBUG_LOG)")
+        target_compile_definitions(CadGoose PRIVATE CG_DISABLE_DEBUG_LOG)
+    endif()
 
     target_link_libraries(CadGoose
         toml11
@@ -384,6 +398,7 @@ if(APPLE)
         src/common/behaviors/behavior_presence.cpp
         src/common/behaviors/behavior_peeking.cpp
         src/common/hotkey.cpp
+        src/common/hotkey_cache.cpp
         src/common/event_bus.cpp
         src/common/mcp_server.cpp
         src/common/mcp_http_server.cpp

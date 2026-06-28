@@ -7,6 +7,7 @@
 #include "assets.h"
 #include "cursor_io.h"
 #include "hotkey.h"
+#include "hotkey_cache.h"
 #include "renderer_interface.h"
 #include "render_colors.h"
 #include "ring_buffer.h"
@@ -54,7 +55,7 @@ static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
     CursorState cs = g_cursorProvider->Read();
     if (!cs.hasPos()) return;
     Vector2 cursorPos = cs.position;
-    int keyCode = KeyNameToKeyCode(g_config.behaviors.breadCrumbs.hotkey);
+    int keyCode = Hotkey_KeyCode(HotkeyId::Breadcrumbs);
     bool keyDown = Platform_IsKeyPressed(keyCode);
 
     if (keyDown && !s_wasKeyDown) {
