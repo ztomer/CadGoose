@@ -10,6 +10,7 @@
 #include "world.h"
 #include "cursor_backend.h"
 #include "log.h"
+#include <atomic>
 #include <cmath>
 #include <cstdio>
 #include <mutex>
