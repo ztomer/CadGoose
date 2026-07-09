@@ -1,6 +1,22 @@
 cmake_minimum_required(VERSION 3.17)
 project(CadGoose)
 
+# Version string for `CadGoose --version`, derived from the latest git tag at
+# configure time (e.g. "v1.66" or "v1.66-3-gabcdef" for untagged builds).
+execute_process(
+    COMMAND git describe --tags --always
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    OUTPUT_VARIABLE GIT_DESCRIBE_OUT
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+    ERROR_QUIET
+)
+if(GIT_DESCRIBE_OUT)
+    set(CADGOOSE_VERSION "${GIT_DESCRIBE_OUT}")
+else()
+    set(CADGOOSE_VERSION "0.0.0")
+endif()
+add_compile_definitions(CADGOOSE_VERSION="${CADGOOSE_VERSION}")
+
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
