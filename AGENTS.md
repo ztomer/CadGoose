@@ -695,6 +695,44 @@ brew install --cask tools/homebrew/cadgoose.rb   # Test the Homebrew Cask instal
 - `WindowTrailTest.*` require display server — excluded from CI gate.
 - `test_window_lifecycle.mm` orphaned (3 tests, deprecated macOS 15 API).
 
+## Session Summary (June 27-28, 2026) — Microstutter fix overhaul: async logging, cursor/color caches, single-instance, leaf/audio wins
+
+### What changed this session
+Root cause of once-per-second microstutters found via Instruments Time Profiler and fixed across 5 phases (full plan in `docs/STUTTER_FIX_PLAN.md`):
+
+- **Phase 1 — Centralized async logging (DRY, Critical)**: New `include/log.h` + `src/common/log.cpp` background logging queue (`CG_LogvAsync`, `DebugLog`, `DebugLogv`, `LogTick`). All per-file `GetDebugLog()` / `static FILE*` statics removed; dead `goose_debug.cpp` deleted. `goose.cpp` `LogTick`, `goose_behaviors_fetch.cpp` (`FETCH_LOG`), `goose_behaviors_interact.cpp`, `goose_behaviors_wander.cpp` now route through the queue. Window/item logging (`BELog`, `ItemLog`, `DROP_TIMING`) also moved off the main thread and gated on `debug.toTerminal`. Added `CG_DISABLE_DEBUG_LOG` CMake option (ON in `build-release`); logging compiles out entirely in production.
+- **Phase 2 — Cursor backend (Critical, sufficient)**: `MacCursorBackend::GetCursorPos()` now reuses a cached `CGEventSourceRef` instead of `CGEventSourceCreate()` every frame (was 60Hz syscall/CF churn). Time Profiler confirms it is not a hotspot.
+- **Phase 4 — Color caching (Critical)**: New `include/cg_color_cache.h` thread-local cache keyed by 8-bit RGBA, exposed via `CGCtx_SetFillColor` / `CGCtx_SetStrokeColor` (reused `CGColorRef` -> pointer-identity in the display list, no per-frame alloc, no `CGColorCompare` deep compare). Applied to `goose_drawing.mm` (`DrawGoose`), `item_renderer.mm`, and `cg_renderer.h` (`CGRenderer`, used by leaf piles / toys / flowers / balls).
+- **Phase 5 — Single-instance lock (Feature)**: Race-free single-instance enforcement at launch (named lock / `flock`), friendly "already running" message. Commit `c0549f1`.
+- **REAL bug fixed — `DROP_TIMING` stdio on main thread** (`item_window.mm`): Two stale `[DROP_TIMING]` `fprintf(stderr)` prints (one in `syncWindows` per dropped item every tick, one in `ItemContentView::drawRect` at 20Hz) re-introduced the exact hot-path I/O Phase 1 removed. Deleted both plus orphaned `GetWindowTimeMs()` and its includes.
+- **Leaf-pile at-rest redraw gating**: A resting pile early-returns instead of forcing a 128-leaf `setNeedsDisplay` every frame. Re-profile: `LeafPileActor::render` 9.7% -> <0.2% main-thread time. Commit `d0b74e3`.
+- **Audio gating** (`audio.mm`/`.h`): macOS gated playback on `audioMuted` only, never `audioEnabled`, so every footstep hit `[AVAudioPlayer play]` under defaults (`audio_enabled=false`). Added `g_audioEnabled` atomic + `AudioSuppressed()` gate. Re-profile: `Audio_PlayPat` 3.7% -> 0%. Commit `a2a49ca`.
+- **EffectWindow `updatePosition`** (`behavior_element_window.mm`): `setFrame:display:NO` (callers already `setNeedsDisplay:YES`, so `display:YES` was a redundant synchronous redraw) + goose held-item window size quantized to a 48px grid -> stable size, origin-only move path. Modest, scene-dependent (~11%->~10% of `updatePosition`). Commit `060a75a`.
+- **Profiling harness fixes** (`tools/profiling/hotspot_profile.sh`): launch with `--foreground` (binary daemonizes otherwise), `cmake --build` instead of `make` (no-op on Ninja), and `-DCG_DISABLE_DEBUG_LOG=ON` so future runs measure the production binary.
+- **MCP server UI** (`config_gui_ai.mm`): "MCP server" row now uses `NSSwitch`; Port field moved to the right of the label, aligned with other toggles.
+
+**Controlled baseline** (`build-release`, 1 goose, 60s fixed scene): Main Thread ~12% CPU, no stall. Conclusions: hot-path I/O gone, color cache cut `CGColor*`, remaining self-time is normal CoreGraphics/CoreAnimation churn. **Decision: stop here** — further work is diminishing returns (only a structural single-overlay-window redesign would be a large lever).
+
+### Files changed
+- `include/log.h` [NEW], `src/common/log.cpp` [NEW]: centralized async logger + `CG_DISABLE_DEBUG_LOG` no-op macros.
+- `src/common/goose.cpp`, `goose_behaviors_fetch.cpp`, `goose_behaviors_interact.cpp`, `goose_behaviors_wander.cpp`: route debug logging through `log.h`; local `GetDebugLog` removed.
+- `src/common/goose_debug.cpp`: deleted (dead).
+- `src/platform/macos/cursor_backend.mm`: cached `CGEventSourceRef` in `GetCursorPos()`.
+- `include/cg_color_cache.h` [NEW]: `CGCtx_SetFillColor`/`SetStrokeColor`.
+- `src/common/goose_drawing.mm`, `src/common/item_renderer.mm`, `include/cg_renderer.h`: use color cache.
+- `src/platform/macos/main.mm`, `command_socket.mm`: single-instance lock at launch.
+- `src/platform/macos/item_window.mm`: removed `DROP_TIMING` stdio + `GetWindowTimeMs()`.
+- `src/platform/macos/audio.h`/`.mm`: `g_audioEnabled` atomic + `AudioSuppressed()` gate.
+- `src/platform/macos/behavior_element_window.mm`: `setFrame:display:NO` + 48px size quantization.
+- `src/platform/macos/tick_manager.mm`: `os_signpost` frame markers (Instruments).
+- `src/platform/macos/config_gui_ai.mm`: MCP server `NSSwitch` + port-field reposition.
+- `tools/profiling/hotspot_profile.sh`: launch/build/config harness fixes.
+
+### Verification
+- Controlled 60s Time Profiler baseline (production `build-release`): no `fprintf`/`__sfvwrite`/stdio on main thread; no `CGEventSourceCreate` in hot path; ~12% main-thread CPU, no stall.
+- Test suite: failures (`BehaviorHonckerTest.*`, `BehaviorBreadcrumbsTest.*`, occasional `AppActions.GetStatusWithDroppedItems`) confirmed **pre-existing at HEAD** in the behavior WIP, not caused by these changes.
+- `CG_DISABLE_DEBUG_LOG=ON` path compiles and runs; logging verified present when flag is OFF.
+
 ## Known Bugs (June 22e, 2026)
 
 - **Config generator** — Works correctly for registry generation. GUI generation intentionally skipped (incompatible with `config_gui.mm` key-based lookup architecture).
