@@ -128,6 +128,10 @@ int AppCli_HandleCommand(int argc, char** argv, int* appArgc) {
             *appArgc = 1;
             return -1;
         }
+        if (std::string(argv[i]) == "--version" || std::string(argv[i]) == "-v") {
+            std::cout << "CadGoose " << CADGOOSE_VERSION << std::endl;
+            return 0;
+        }
     }
 
     if (argc <= 1) {
@@ -149,6 +153,7 @@ int AppCli_HandleCommand(int argc, char** argv, int* appArgc) {
             << "Desktop Goose commands:\n"
             << "  CadGoose\n"
             << "  CadGoose --debug\n"
+            << "  CadGoose --version\n"
             << "  CadGoose --mcp (run MCP stdio server)\n"
             << "  CadGoose start\n"
             << "  CadGoose start --foreground\n"

@@ -51,6 +51,21 @@ TEST_F(AppCliTest, HelpCommandReturnsZero) {
     EXPECT_EQ(ret, 0);
 }
 
+TEST_F(AppCliTest, VersionFlagReturnsZeroWithoutSocket) {
+    const char* argv[] = {"CadGoose", "--version"};
+    int ret = runAppCli(2, argv);
+    EXPECT_EQ(ret, 0);
+    // --version must exit before touching the running-instance socket.
+    EXPECT_TRUE(CommandSocketStub_GetCommands().empty());
+}
+
+TEST_F(AppCliTest, VersionShortFlagReturnsZeroWithoutSocket) {
+    const char* argv[] = {"CadGoose", "-v"};
+    int ret = runAppCli(2, argv);
+    EXPECT_EQ(ret, 0);
+    EXPECT_TRUE(CommandSocketStub_GetCommands().empty());
+}
+
 TEST_F(AppCliTest, HelpShortCommandReturnsZero) {
     const char* argv[] = {"CadGoose", "help"};
     int ret = runAppCli(2, argv);
