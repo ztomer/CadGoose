@@ -7,6 +7,9 @@
 #include "renderer_interface.h"
 #include "cg_renderer.h"
 #include "event_bus.h"
+#include "assets.h"
+#include "behavior_api.h"
+#include "goose_math.h"
 #include <cmath>
 
 static constexpr float kAngerMaxLevel = 100.0f;
@@ -111,6 +114,79 @@ static void render(Goose* goose, BehaviorContext& ctx, IRenderer* irenderer) {
         float flashRadius = kAngerFlashBaseRadius + kAngerFlashRadiusAmp * intensity;
         renderer.DrawEllipse({goose->pos.x, goose->pos.y}, flashRadius, flashRadius,
                             RenderColor{kAngerFlashR, kAngerFlashG, kAngerFlashB, flashAlpha});
+
+        #ifdef __APPLE__
+        static void* s_punchImage = nullptr;
+        if (!s_punchImage) {
+            s_punchImage = (void*)g_assets.GetBehaviorImage("Assets/Images/OtherGfx/punch_hand.png");
+        }
+
+        CGContextRef cgCtx = (CGContextRef)renderer.nativeContext();
+        if (cgCtx && s_punchImage) {
+            double elapsed = ctx.time - state->lastPunchTime;
+            float duration = g_config.behaviors.anger.punchDuration;
+            float t = Clamp((float)(elapsed / duration), 0.0f, 1.0f);
+            
+            // Smooth punch wave: starts at 0, peaks at 1 (middle of punch), returns to 0
+            float punchFactor = sin(t * M_PI);
+            float maxExtend = 35.0f * g_config.general.globalScale;
+            float extend = punchFactor * maxExtend;
+            
+            float angleRad = goose->dir * (float)(M_PI / 180.0);
+            float dx = cos(angleRad);
+            float dy = sin(angleRad);
+            float px = -dy;
+            float py = dx;
+            
+            // Alternate left/right wing for successive punches
+            bool leftSide = (static_cast<int>(state->lastPunchTime * 10.0) % 2 == 0);
+            float sideSign = leftSide ? 1.0f : -1.0f;
+            
+            // Spawn hand relative to body (wing area), extending in the facing direction
+            float sideDist = 12.0f * g_config.general.globalScale;
+            float startOffset = 15.0f * g_config.general.globalScale;
+            RenderPoint handPos = {
+                goose->rig.body.x + px * (sideDist * sideSign) + dx * (startOffset + extend),
+                goose->rig.body.y + py * (sideDist * sideSign) + dy * (startOffset + extend)
+            };
+            
+            // Retrieve body color
+            float bodyColorR = g_config.color.currentBody.r;
+            float bodyColorG = g_config.color.currentBody.g;
+            float bodyColorB = g_config.color.currentBody.b;
+            
+            if (g_config.behaviors.fun.rainbow) {
+                float hue = Rainbow_GetHue(goose->id);
+                float r, g, b;
+                HSV_to_RGB(hue, 1.0f, 0.85f, &r, &g, &b);
+                bodyColorR = r; bodyColorG = g; bodyColorB = b;
+            }
+
+            CGContextSaveGState(cgCtx);
+            CGContextTranslateCTM(cgCtx, handPos.x, handPos.y);
+            
+            // Align the punch hand pointing direction to the goose's angle.
+            // Fist points up in the PNG (+Y down in flipped view is -90 deg), so add M_PI_2 (90 deg) to face right (0 deg).
+            CGContextRotateCTM(cgCtx, angleRad + M_PI_2);
+            
+            float handSize = 28.0f * g_config.general.globalScale;
+            CGRect rect = CGRectMake(-handSize / 2.0f, -handSize / 2.0f, handSize, handSize);
+            
+            // Flip inside local space for CGContextDrawImage
+            CGContextTranslateCTM(cgCtx, 0, handSize);
+            CGContextScaleCTM(cgCtx, 1.0f, -1.0f);
+            CGContextTranslateCTM(cgCtx, 0, -handSize);
+            
+            CGContextDrawImage(cgCtx, rect, (CGImageRef)s_punchImage);
+            
+            // Color mask with the goose's current body color
+            CGContextSetBlendMode(cgCtx, kCGBlendModeSourceIn);
+            CGContextSetRGBFillColor(cgCtx, bodyColorR, bodyColorG, bodyColorB, 1.0f);
+            CGContextFillRect(cgCtx, rect);
+            
+            CGContextRestoreGState(cgCtx);
+        }
+        #endif
     }
 
     float auraAlpha = intensity * kAngerAuraAlphaScale;

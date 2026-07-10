@@ -33,6 +33,24 @@ brew install --cask tools/homebrew/cadgoose.rb   # Test the Homebrew Cask instal
   - **Release Loop Rule**: When doing a release, verify the remote GitHub Actions build succeeds end-to-end. If any failure occurs, cycle/iterate locally to fix the issues, push, and recreate the release tag until the build is perfectly green and the DMG compiles.
   - **Homebrew Update Rule**: Once the GHA CI is green and the release DMG is successfully generated and attached, update the Homebrew cask repository tap (`Casks/cadgoose.rb` in `ztomer/homebrew-tap`) with the new version and calculated DMG SHA-256 hash. Ensure this updates automatically through GHA or manually.
 
+## Session Summary (July 10, 2026) — Meme drag-and-drop visibility fix & Angry punch hand animation
+
+### What changed this session
+- **Meme Image Decompression**: Introduced `DecompressCGImage` helper function in `src/platform/macos/assets.mm` which synchronously draws loaded `CGImageRef` instances into a temporary `CGBitmapContext`.
+- **Forced Decompression**: Applied `DecompressCGImage` to all paths loading behavior and meme images (`PreloadBehaviorAssets`, `GetBehaviorImage`, and `GetRandomMeme`), forcing the OS-level lazy/deferred image decoding to execute immediately during fetch/load rather than during rapid screen redrawing.
+- **Fixed Intermittent Drag Visibility**: Resolved the bug where small, unresized memes drawn inside the fast-updating (60 FPS) transparent `BehaviorElementWindow` would be invisible while being carried (dragged) by the goose, only appearing after being dropped.
+- **Mickey Punch Hand Asset**: Generated a vector-style transparent Mickey Mouse clenched fist silhouette PNG (`Assets/Images/OtherGfx/punch_hand.png`) and added it to the macOS behavior assets preload list.
+- **Angry Punch Hand Animation**: Updated the `render` method in `src/common/behaviors/behavior_anger.cpp` to render a punch animation when the goose is punching. The fist extends outward in the goose's facing direction using a sine wave, alternating originating sides of the body (left/right wings) for consecutive punches. The fist is aligned to the movement angle and colored to match the goose's current body color (supporting default, custom, and rainbow modes).
+
+### Files changed
+- `src/platform/macos/assets.mm`: Add `DecompressCGImage` helper and call it to synchronously decode images on load/fetch; add `punch_hand.png` to behavior preloads.
+- `src/common/behaviors/behavior_anger.cpp`: Implement punch hand animation and color-tint rendering.
+- `Assets/Images/OtherGfx/punch_hand.png` [NEW]: Transparent Mickey-style fist silhouette.
+
+### Verification
+- Ran full test suite (1517 tests, 1484 passed, 0 failures, 33 skipped as expected).
+- Rebuilt app target successfully.
+
 ## Session Summary (June 28, 2026) — Audio default, live sync, config self-healing, honk asset, stalin sound, and custom icons
 
 ### What changed this session

@@ -83,6 +83,20 @@ void AssetManager::Init() {
     PreloadBehaviorAssets();
 }
 
+static CGImageRef DecompressCGImage(CGImageRef cgImage) {
+    if (!cgImage) return nullptr;
+    size_t width = CGImageGetWidth(cgImage);
+    size_t height = CGImageGetHeight(cgImage);
+    CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
+    CGContextRef ctx = CGBitmapContextCreate(nullptr, width, height, 8, 0, colorSpace, kCGImageAlphaPremultipliedFirst);
+    CGColorSpaceRelease(colorSpace);
+    if (!ctx) return nullptr;
+    CGContextDrawImage(ctx, CGRectMake(0, 0, width, height), cgImage);
+    CGImageRef decompressedImage = CGBitmapContextCreateImage(ctx);
+    CGContextRelease(ctx);
+    return decompressedImage;
+}
+
 void AssetManager::PreloadBehaviorAssets() {
     std::vector<std::string> behaviorImages = {
         "Assets/Images/OtherGfx/ball.png",
@@ -94,6 +108,7 @@ void AssetManager::PreloadBehaviorAssets() {
         "Assets/Images/OtherGfx/heart.png",
         "Assets/Images/OtherGfx/hat_default.png",
         "Assets/Images/OtherGfx/honk.png",
+        "Assets/Images/OtherGfx/punch_hand.png",
         "Assets/Images/OtherGfx/stalin_head.png",
         "Assets/Images/OtherGfx/app_icon_white.png",
         "Assets/Images/OtherGfx/app_icon_canada.png",
@@ -117,7 +132,12 @@ void AssetManager::PreloadBehaviorAssets() {
         if (img) {
             CGImageRef cg = [img CGImageForProposedRect:NULL context:nil hints:nil];
             if (cg) {
-                memeCache[path] = CGImageRetain(cg);
+                CGImageRef decompressed = DecompressCGImage(cg);
+                if (decompressed) {
+                    memeCache[path] = decompressed; // DecompressCGImage returns retained
+                } else {
+                    memeCache[path] = CGImageRetain(cg);
+                }
             }
         }
     }
@@ -139,9 +159,15 @@ CGImageRef AssetManager::GetBehaviorImage(const std::string& name) {
     if (img) {
         CGImageRef cg = [img CGImageForProposedRect:NULL context:nil hints:nil];
         if (cg) {
-            CGImageRef retained = CGImageRetain(cg);
-            memeCache[name] = retained;
-            return retained;
+            CGImageRef decompressed = DecompressCGImage(cg);
+            if (decompressed) {
+                memeCache[name] = decompressed; // DecompressCGImage returns retained
+                return decompressed;
+            } else {
+                CGImageRef retained = CGImageRetain(cg);
+                memeCache[name] = retained;
+                return retained;
+            }
         }
     }
     return nullptr;
@@ -221,8 +247,14 @@ ItemData* AssetManager::GetRandomMeme(int screenWidth, int screenHeight, float m
         data->h = finalH;
         CGImageRef cgImage = [img CGImageForProposedRect:NULL context:nil hints:nil];
         if (cgImage) {
-            data->image = CGImageRetain(cgImage);
-            memeCache[path] = CGImageRetain(cgImage);
+            CGImageRef decompressed = DecompressCGImage(cgImage);
+            if (decompressed) {
+                data->image = decompressed; // DecompressCGImage returns retained
+                memeCache[path] = CGImageRetain(decompressed);
+            } else {
+                data->image = CGImageRetain(cgImage);
+                memeCache[path] = CGImageRetain(cgImage);
+            }
         } else {
             data->w = g_config.asset.memePlaceholderW;
             data->h = g_config.asset.memePlaceholderH;
