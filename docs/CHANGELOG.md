@@ -3,8 +3,7 @@
 ## July 10, 2026 — Angry punch animation & Meme drag-and-drop visibility fix
 
 ### Meme Drag-and-Drop Visibility
-- **Image Decompression**: Added `DecompressCGImage` helper in `src/platform/macos/assets.mm` which synchronously rasterizes loaded images into a temporary `CGBitmapContext`.
-- **Forced Decompression on Load**: Applied `DecompressCGImage` to all asset loading paths in `assets.mm` (`PreloadBehaviorAssets`, `GetBehaviorImage`, and `GetRandomMeme`). This forces macOS to decode and load the image immediately, resolving an issue where small, unresized memes drawn inside the transparent 60 FPS `BehaviorElementWindow` would be invisible while being dragged, only showing up once dropped into a static `ItemWindow`.
+- **ImageIO CGImageSource Refactoring**: Replaced `NSImage`-based loading and focus-locked resizing with `CGImageSourceCreateImageAtIndex` and `CGImageSourceCreateThumbnailAtIndex` from `ImageIO`. By using `kCGImageSourceShouldCacheImmediately: @YES`, macOS synchronously decodes and caches the pixel data, returning an independent, persistent `CGImageRef` that does not depend on the AppKit lifecycle. This resolves an issue where transient `CGImageRef` pointers lost their backing pixels upon `NSImage` deallocation (when the autorelease pool flushed), which previously caused memes to appear empty or disappear mid-drag.
 
 ### Angry Punch Animation
 - **Mickey Punch Hand Asset**: Generated a vector-style transparent Mickey Mouse clenched fist silhouette PNG (`Assets/Images/OtherGfx/punch_hand.png`) and added it to the macOS behavior assets preload list.
