@@ -1,5 +1,21 @@
 # Changelog
 
+## July 10, 2026 — Angry punch animation & Meme drag-and-drop visibility fix
+
+### Meme Drag-and-Drop Visibility
+- **Image Decompression**: Added `DecompressCGImage` helper in `src/platform/macos/assets.mm` which synchronously rasterizes loaded images into a temporary `CGBitmapContext`.
+- **Forced Decompression on Load**: Applied `DecompressCGImage` to all asset loading paths in `assets.mm` (`PreloadBehaviorAssets`, `GetBehaviorImage`, and `GetRandomMeme`). This forces macOS to decode and load the image immediately, resolving an issue where small, unresized memes drawn inside the transparent 60 FPS `BehaviorElementWindow` would be invisible while being dragged, only showing up once dropped into a static `ItemWindow`.
+
+### Angry Punch Animation
+- **Mickey Punch Hand Asset**: Generated a vector-style transparent Mickey Mouse clenched fist silhouette PNG (`Assets/Images/OtherGfx/punch_hand.png`) and added it to the macOS behavior assets preload list.
+- **Animation and Tinting**: Updated the `render` method in `src/common/behaviors/behavior_anger.cpp` to animate the punch hand extending and returning in the goose's facing direction using a sine wave, alternating between the left and right wings (sides of the body) for successive punches. The fist is dynamically rotated and tinted to match the goose's current body color (including in rainbow mode) using CoreGraphics blend modes.
+
+### Verification
+- **1517 tests, 0 failures**
+- Audited the build on macOS and verified that all tests pass.
+
+---
+
 ## June 28, 2026 — Audio default, live sync, config self-healing, honk asset, stalin sound, and custom icons
 
 ### Audio Settings & Config
