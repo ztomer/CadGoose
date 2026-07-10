@@ -12,6 +12,7 @@
 
 #if defined(__APPLE__)
 #import <AppKit/AppKit.h>
+#import <ImageIO/ImageIO.h>
 #endif
 
 namespace fs = std::filesystem;
@@ -83,18 +84,50 @@ void AssetManager::Init() {
     PreloadBehaviorAssets();
 }
 
-static CGImageRef DecompressCGImage(CGImageRef cgImage) {
-    if (!cgImage) return nullptr;
-    size_t width = CGImageGetWidth(cgImage);
-    size_t height = CGImageGetHeight(cgImage);
-    CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
-    CGContextRef ctx = CGBitmapContextCreate(nullptr, width, height, 8, 0, colorSpace, kCGImageAlphaPremultipliedFirst);
-    CGColorSpaceRelease(colorSpace);
-    if (!ctx) return nullptr;
-    CGContextDrawImage(ctx, CGRectMake(0, 0, width, height), cgImage);
-    CGImageRef decompressedImage = CGBitmapContextCreateImage(ctx);
-    CGContextRelease(ctx);
-    return decompressedImage;
+static CGImageRef LoadCGImageFromFile(const std::string& path, int maxW, int maxH) {
+    CFStringRef cfPath = CFStringCreateWithCString(NULL, path.c_str(), kCFStringEncodingUTF8);
+    CFURLRef url = CFURLCreateWithFileSystemPath(NULL, cfPath, kCFURLPOSIXPathStyle, false);
+    CFRelease(cfPath);
+    if (!url) return nullptr;
+
+    CGImageSourceRef source = CGImageSourceCreateWithURL(url, NULL);
+    CFRelease(url);
+    if (!source) return nullptr;
+
+    CFDictionaryRef properties = CGImageSourceCopyPropertiesAtIndex(source, 0, NULL);
+    int origW = 0, origH = 0;
+    if (properties) {
+        CFNumberRef widthRef = (CFNumberRef)CFDictionaryGetValue(properties, kCGImagePropertyPixelWidth);
+        CFNumberRef heightRef = (CFNumberRef)CFDictionaryGetValue(properties, kCGImagePropertyPixelHeight);
+        if (widthRef) CFNumberGetValue(widthRef, kCFNumberIntType, &origW);
+        if (heightRef) CFNumberGetValue(heightRef, kCFNumberIntType, &origH);
+        CFRelease(properties);
+    }
+
+    CGImageRef image = nullptr;
+    if (origW > 0 && origH > 0 && (origW > maxW || origH > maxH)) {
+        float scaleW = (float)maxW / origW;
+        float scaleH = (float)maxH / origH;
+        float scale = std::min(scaleW, scaleH);
+        int maxPixelSize = (int)(std::max(origW, origH) * scale);
+
+        NSDictionary* options = @{
+            (id)kCGImageSourceCreateThumbnailFromImageAlways: @YES,
+            (id)kCGImageSourceThumbnailMaxPixelSize: @(maxPixelSize),
+            (id)kCGImageSourceCreateThumbnailWithTransform: @YES,
+            (id)kCGImageSourceShouldCacheImmediately: @YES
+        };
+        image = CGImageSourceCreateThumbnailAtIndex(source, 0, (__bridge CFDictionaryRef)options);
+    } else {
+        NSDictionary* options = @{
+            (id)kCGImageSourceShouldCache: @YES,
+            (id)kCGImageSourceShouldCacheImmediately: @YES
+        };
+        image = CGImageSourceCreateImageAtIndex(source, 0, (__bridge CFDictionaryRef)options);
+    }
+
+    CFRelease(source);
+    return image;
 }
 
 void AssetManager::PreloadBehaviorAssets() {
@@ -124,21 +157,10 @@ void AssetManager::PreloadBehaviorAssets() {
 
     for (const auto& path : behaviorImages) {
         if (memeCache.find(path) != memeCache.end()) continue;
-        // Resolve against ASSET_ROOT so loading doesn't depend on the current
-        // working directory (which is "/" when launched from the .app bundle).
         std::string fullPath = (ASSET_ROOT / path).string();
-        NSString* nsPath = [NSString stringWithUTF8String:fullPath.c_str()];
-        NSImage* img = [[NSImage alloc] initWithContentsOfFile:nsPath];
-        if (img) {
-            CGImageRef cg = [img CGImageForProposedRect:NULL context:nil hints:nil];
-            if (cg) {
-                CGImageRef decompressed = DecompressCGImage(cg);
-                if (decompressed) {
-                    memeCache[path] = decompressed; // DecompressCGImage returns retained
-                } else {
-                    memeCache[path] = CGImageRetain(cg);
-                }
-            }
+        CGImageRef cg = LoadCGImageFromFile(fullPath, 99999, 99999);
+        if (cg) {
+            memeCache[path] = cg; // LoadCGImageFromFile returns retained (+1)
         }
     }
 }
@@ -149,26 +171,11 @@ CGImageRef AssetManager::GetBehaviorImage(const std::string& name) {
         return it->second;
     }
 
-    // Resolve against ASSET_ROOT so loading doesn't depend on the current
-    // working directory (which is "/" when launched from the .app bundle).
-    // This is why the Stalin head — the only behavior image loaded lazily here
-    // rather than preloaded — intermittently failed to render.
     std::string fullPath = (ASSET_ROOT / name).string();
-    NSString* nsPath = [NSString stringWithUTF8String:fullPath.c_str()];
-    NSImage* img = [[NSImage alloc] initWithContentsOfFile:nsPath];
-    if (img) {
-        CGImageRef cg = [img CGImageForProposedRect:NULL context:nil hints:nil];
-        if (cg) {
-            CGImageRef decompressed = DecompressCGImage(cg);
-            if (decompressed) {
-                memeCache[name] = decompressed; // DecompressCGImage returns retained
-                return decompressed;
-            } else {
-                CGImageRef retained = CGImageRetain(cg);
-                memeCache[name] = retained;
-                return retained;
-            }
-        }
+    CGImageRef cg = LoadCGImageFromFile(fullPath, 99999, 99999);
+    if (cg) {
+        memeCache[name] = cg; // LoadCGImageFromFile returns retained (+1)
+        return cg;
     }
     return nullptr;
 }
@@ -218,47 +225,12 @@ ItemData* AssetManager::GetRandomMeme(int screenWidth, int screenHeight, float m
         return data;
     }
 
-    NSString* nsPath = [NSString stringWithUTF8String:path.c_str()];
-    NSImage* img = [[NSImage alloc] initWithContentsOfFile:nsPath];
-    if (img) {
-        NSSize size = img.size;
-        int origW = (int)size.width;
-        int origH = (int)size.height;
-        
-        int finalW = origW;
-        int finalH = origH;
-        
-        if (origW > maxW || origH > maxH) {
-            float scaleW = (float)maxW / origW;
-            float scaleH = (float)maxH / origH;
-            float scale = std::min(scaleW, scaleH);
-            finalW = (int)(origW * scale);
-            finalH = (int)(origH * scale);
-            
-            NSImage* resized = [[NSImage alloc] initWithSize:NSMakeSize(finalW, finalH)];
-            [resized lockFocus];
-            [[NSGraphicsContext currentContext] setImageInterpolation:NSImageInterpolationHigh];
-            [img drawInRect:NSMakeRect(0, 0, finalW, finalH) fromRect:NSMakeRect(0, 0, origW, origH) operation:NSCompositingOperationSourceOver fraction:1.0];
-            [resized unlockFocus];
-            img = resized;
-        }
-        
-        data->w = finalW;
-        data->h = finalH;
-        CGImageRef cgImage = [img CGImageForProposedRect:NULL context:nil hints:nil];
-        if (cgImage) {
-            CGImageRef decompressed = DecompressCGImage(cgImage);
-            if (decompressed) {
-                data->image = decompressed; // DecompressCGImage returns retained
-                memeCache[path] = CGImageRetain(decompressed);
-            } else {
-                data->image = CGImageRetain(cgImage);
-                memeCache[path] = CGImageRetain(cgImage);
-            }
-        } else {
-            data->w = g_config.asset.memePlaceholderW;
-            data->h = g_config.asset.memePlaceholderH;
-        }
+    CGImageRef cgImage = LoadCGImageFromFile(path, maxW, maxH);
+    if (cgImage) {
+        data->image = cgImage; // LoadCGImageFromFile returns retained (+1)
+        data->w = CGImageGetWidth(cgImage);
+        data->h = CGImageGetHeight(cgImage);
+        memeCache[path] = CGImageRetain(cgImage); // cached copy retains it (+2 total, data deletes one on destruction)
     } else {
         data->w = g_config.asset.memePlaceholderW;
         data->h = g_config.asset.memePlaceholderH;

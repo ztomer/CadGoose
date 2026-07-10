@@ -36,14 +36,13 @@ brew install --cask tools/homebrew/cadgoose.rb   # Test the Homebrew Cask instal
 ## Session Summary (July 10, 2026) — Meme drag-and-drop visibility fix & Angry punch hand animation
 
 ### What changed this session
-- **Meme Image Decompression**: Introduced `DecompressCGImage` helper function in `src/platform/macos/assets.mm` which synchronously draws loaded `CGImageRef` instances into a temporary `CGBitmapContext`.
-- **Forced Decompression**: Applied `DecompressCGImage` to all paths loading behavior and meme images (`PreloadBehaviorAssets`, `GetBehaviorImage`, and `GetRandomMeme`), forcing the OS-level lazy/deferred image decoding to execute immediately during fetch/load rather than during rapid screen redrawing.
-- **Fixed Intermittent Drag Visibility**: Resolved the bug where small, unresized memes drawn inside the fast-updating (60 FPS) transparent `BehaviorElementWindow` would be invisible while being carried (dragged) by the goose, only appearing after being dropped.
+- **ImageIO Refactoring**: Refactored macOS image loading in `src/platform/macos/assets.mm` to load all behavior and meme images via `CGImageSourceCreateImageAtIndex` and `CGImageSourceCreateThumbnailAtIndex` with `kCGImageSourceShouldCacheImmediately: @YES`.
+- **Fixed Intermittent Drag Visibility**: Completely resolved the bug where small or resized memes drawn inside the fast-updating (60 FPS) transparent `BehaviorElementWindow` would render blank/empty or disappear mid-drag when the autorelease pool was flushed. Since the new `CGImageRef` is fully decompressed, persistent, and independent of AppKit lifecycles, it never loses its backing pixels.
 - **Mickey Punch Hand Asset**: Generated a vector-style transparent Mickey Mouse clenched fist silhouette PNG (`Assets/Images/OtherGfx/punch_hand.png`) and added it to the macOS behavior assets preload list.
 - **Angry Punch Hand Animation**: Updated the `render` method in `src/common/behaviors/behavior_anger.cpp` to render a punch animation when the goose is punching. The fist extends outward in the goose's facing direction using a sine wave, alternating originating sides of the body (left/right wings) for consecutive punches. The fist is aligned to the movement angle and colored to match the goose's current body color (supporting default, custom, and rainbow modes).
 
 ### Files changed
-- `src/platform/macos/assets.mm`: Add `DecompressCGImage` helper and call it to synchronously decode images on load/fetch; add `punch_hand.png` to behavior preloads.
+- `src/platform/macos/assets.mm`: Rewrite image loading using `CGImageSource` to create fully-decompressed and persistent `CGImageRef` pointers; add `punch_hand.png` to behavior preloads.
 - `src/common/behaviors/behavior_anger.cpp`: Implement punch hand animation and color-tint rendering.
 - `Assets/Images/OtherGfx/punch_hand.png` [NEW]: Transparent Mickey-style fist silhouette.
 
