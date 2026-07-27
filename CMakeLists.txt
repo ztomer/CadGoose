@@ -433,6 +433,14 @@ if(APPLE)
         set(TEST_SOURCES_PLATFORM
             tests/common/test_cg_renderer.mm
             tests/common/test_goose_render.mm
+            # Was previously built, then silently dropped from this list. Two
+            # sibling files are still unbuildable and are NOT listed here:
+            #   test_window_lifecycle.mm    — CGWindowListCreateImage was
+            #     obsoleted in macOS 15, and it calls -drawRect: on ItemWindow,
+            #     which no longer declares it. Needs a ScreenCaptureKit port.
+            #   test_config_gui_rendering.mm — written against XCTest, not
+            #     GoogleTest; it cannot link into this target as-is.
+            tests/platform/macos/test_goose_rendering.mm
             tests/common/test_gui_config.mm
             tests/common/test_local_llm.cpp
             tests/common/test_behavior_ai.mm

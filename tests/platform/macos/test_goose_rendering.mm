@@ -457,7 +457,11 @@ TEST(GooseRender, GooseRender_CallsDrawGoose) {
     CGColorSpaceRelease(cs);
 }
 
-TEST(GooseRender, Render_NoopInCutoverMode) {
+// This case used to assert render() was a NO-OP ("cutover mode"). That design
+// is gone: Goose::render() now delegates straight to draw() (goose.cpp), so the
+// old expectation contradicted the shipped code. The file had been dropped from
+// the build, so nothing caught the drift. Asserting the delegation instead.
+TEST(GooseRender, Render_DelegatesToDraw) {
     Goose* g = createTestGoose();
     CGColorSpaceRef cs = CGColorSpaceCreateDeviceRGB();
     CGContextRef ctx = CGBitmapContextCreate(NULL, 500, 500, 8, 0, cs,
@@ -471,7 +475,7 @@ TEST(GooseRender, Render_NoopInCutoverMode) {
     const uint8_t* d = (const uint8_t*)CGBitmapContextGetData(ctx);
     int bx = (int)g->rig.body.x;
     int by = (int)g->rig.body.y;
-    EXPECT_EQ(pixelR(d, s, bx, by, 500), 0) << "render() should be no-op in cutover mode";
+    EXPECT_GT(pixelR(d, s, bx, by, 500), 100) << "render() should draw the goose body";
 
     delete g;
     CGContextRelease(ctx);
