@@ -7,6 +7,15 @@ on:
     branches: [main, master]
 
 jobs:
+  style-gates:
+    name: Style Gates
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # House standard: emoji are a failure state; only the Kare icon set is permitted.
+      - name: No-emoji gate
+        run: python3 tools/check_no_emoji.py
+
   build-and-test-linux:
     name: Build & Test (Linux)
     runs-on: ubuntu-latest

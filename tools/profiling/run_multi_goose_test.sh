@@ -69,9 +69,9 @@ echo "=============================================="
 echo "  RESULTS: $(date)"
 echo "=============================================="
 if [ "$EXIT_CODE" -eq 0 ]; then
-    echo "  ✅ All 3 geese functional."
+    echo "  ✓ All 3 geese functional."
 else
-    echo "  ❌ Exit code $EXIT_CODE"
+    echo "  ✗ Exit code $EXIT_CODE"
 fi
 echo ""
 echo "Log saved to: $OUTDIR/log.txt"

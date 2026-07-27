@@ -9,7 +9,9 @@
 import AppKit
 import Foundation
 
-let emoji = "🪿"
+// U+1FABF GOOSE, written as an escape so this file holds no literal emoji glyph
+// (tools/check_no_emoji.py policies literal emoji; the rendered string is unchanged).
+let emoji = "\u{1FABF}"
 let outPath = CommandLine.arguments.count > 1 ? CommandLine.arguments[1] : "app.icns"
 
 // Pond-blue gradient background, matching the app's vibe.

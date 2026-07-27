@@ -238,22 +238,22 @@ echo "  RESULTS: $(date)"
 echo "=============================================="
 case $EXIT_CODE in
     0)
-        echo "  ✅ CLEAN — No trail detected."
+        echo "  ✓ CLEAN — No trail detected."
         echo "  Held item CALayer renders correctly, no artifacts."
         ;;
     10)
-        echo "  ❌ TRAIL DETECTED."
+        echo "  ✗ TRAIL DETECTED."
         echo "  Inspect captured frames: /tmp/trail_test_frames/"
         echo "  Full log: $OUTPUT_DIR/log.txt"
         ;;
     11)
-        echo "  ❌ ITEM NOT VISIBLE during carry."
+        echo "  ✗ ITEM NOT VISIBLE during carry."
         echo "  The held item sublayer may not be rendering."
         echo "  Inspect captured frames: /tmp/trail_test_frames/"
         echo "  Full log: $OUTPUT_DIR/log.txt"
         ;;
     *)
-        echo "  ⚠️  Test error (code $EXIT_CODE)."
+        echo "  ⚠  Test error (code $EXIT_CODE)."
         echo "  Full log: $OUTPUT_DIR/log.txt"
         ;;
 esac

@@ -47,7 +47,7 @@ jobs:
           echo "SDK: $SDK_PATH (version $(xcrun --show-sdk-version))"
           printf '#if canImport(FoundationModels)\n#warning("FoundationModels present in SDK")\n#else\n#warning("FoundationModels MISSING from SDK")\n#endif\n' > /tmp/fmcheck.swift
           if swiftc -typecheck /tmp/fmcheck.swift -sdk "$SDK_PATH" 2>&1 | grep -q "FoundationModels present"; then
-            echo "✅ FoundationModels available — local Foundation provider will work in this build"
+            echo "✓ FoundationModels available — local Foundation provider will work in this build"
           else
             echo "::warning title=Foundation provider disabled::This SDK lacks FoundationModels; the released DMG will NOT support the local Foundation AI provider. Use a runner/Xcode with the macOS 26+ SDK."
           fi

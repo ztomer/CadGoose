@@ -326,16 +326,16 @@ brew install --cask tools/homebrew/cadgoose.rb   # Test the Homebrew Cask instal
 ### Algorithmic review — findings
 | Algorithm | Lines | Verdict | Notes |
 |-----------|-------|---------|-------|
-| **RingBuffer** | `ring_buffer.h` | ✅ correct | `back()` on empty returns stale slot (UB); all callers guard with `!empty()` |
-| **ActorManager tickAll** | `actor.cpp:23-43` | ✅ correct | Snapshot+existence pattern; dangling pointer never dereferenced |
-| **ActorManager cleanup** | `actor.cpp:45-55` | ✅ correct | stable_partition + erase is O(n); dead actors deleted after tick |
-| **isTargetReached** | `goose_behaviors_interact.cpp:31-39` | ✅ correct | Zero-vel, overshoot, at-target all handled. `Normalize({0,0})` returns `{0,0}` |
-| **ClampToScreen** | `goose_forces.cpp:77-121` | ✅ correct | Fetch expands bounds; non-fetch clamps tight. Degenerate case at tiny screens documented |
-| **EventBus Publish** | `event_bus.h:181-200` | ✅ correct | Snapshot+invoke pattern; handler can subscribe/unsubscribe during dispatch |
-| **EventBus Unsubscribe** | `event_bus.cpp:3-20` | ✅ correct | unique_lock excludes concurrent Publish; erase-remove on handler list |
-| **Config_Init** | `config.cpp:168-179` | ✅ correct | Mutex + atomic guard prevents reentrant init; lookup rebuild after registry init |
-| **Drag physics** | `goose.cpp:531-565` | ✅ correct | Spring+damping; NaN guard not present but only matters for degenerate rig configs |
-| **Seek/Separation/Curve forces** | `goose_forces.cpp` | ✅ correct | Zero-target, zero-vel, edge-avoid divide-by-zero all guarded |
+| **RingBuffer** | `ring_buffer.h` | ✓ correct | `back()` on empty returns stale slot (UB); all callers guard with `!empty()` |
+| **ActorManager tickAll** | `actor.cpp:23-43` | ✓ correct | Snapshot+existence pattern; dangling pointer never dereferenced |
+| **ActorManager cleanup** | `actor.cpp:45-55` | ✓ correct | stable_partition + erase is O(n); dead actors deleted after tick |
+| **isTargetReached** | `goose_behaviors_interact.cpp:31-39` | ✓ correct | Zero-vel, overshoot, at-target all handled. `Normalize({0,0})` returns `{0,0}` |
+| **ClampToScreen** | `goose_forces.cpp:77-121` | ✓ correct | Fetch expands bounds; non-fetch clamps tight. Degenerate case at tiny screens documented |
+| **EventBus Publish** | `event_bus.h:181-200` | ✓ correct | Snapshot+invoke pattern; handler can subscribe/unsubscribe during dispatch |
+| **EventBus Unsubscribe** | `event_bus.cpp:3-20` | ✓ correct | unique_lock excludes concurrent Publish; erase-remove on handler list |
+| **Config_Init** | `config.cpp:168-179` | ✓ correct | Mutex + atomic guard prevents reentrant init; lookup rebuild after registry init |
+| **Drag physics** | `goose.cpp:531-565` | ✓ correct | Spring+damping; NaN guard not present but only matters for degenerate rig configs |
+| **Seek/Separation/Curve forces** | `goose_forces.cpp` | ✓ correct | Zero-target, zero-vel, edge-avoid divide-by-zero all guarded |
 
 ### Verification
 - **1520 tests, 0 failures** (excluding 4 pre-existing order-dependent: `BehaviorToggles.ToysBehaviorRegistered`, `PortalCleanup.BehaviorHasCleanupFunction`, `StalinHonk.*`, and display-dependent: WindowTrail, MCPIntegration, LocalLLMTest, AXTest, DraggingIntegration)
