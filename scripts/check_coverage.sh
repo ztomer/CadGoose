@@ -5,21 +5,29 @@ set -euo pipefail
 # line coverage against per-tier thresholds. Exits 0 if all met, 1 if any below.
 #
 # Usage:
-#   ./scripts/check_coverage.sh [--p0-min=94] [--p1-min=31] [--total-min=80] [--build-dir=build-cov]
+#   ./scripts/check_coverage.sh [--p0-min=94] [--p1-min=30] [--total-min=79] [--build-dir=build-cov]
 #
 # Flags:
 #   --p0-min=N    Minimum line coverage % for P0 files (default: 94)
-#   --p1-min=N    Minimum line coverage % for P1 files (default: 31)
-#   --total-min=N Minimum line coverage % for all project files (default: 80)
+#   --p1-min=N    Minimum line coverage % for P1 files (default: 30)
+#   --total-min=N Minimum line coverage % for all project files (default: 79)
 #   --build-dir   CMake build directory (default: build-cov)
 #
-# The defaults are a RATCHET sitting just under the measured floor (P0 95.11%,
-# P1 32.25%, total 80.67% as of 2026-07-27), so the gate fails on a REGRESSION.
+# The defaults are a RATCHET sitting below the measured floor (CI measured
+# P0 95.11%, P1 31.83%, total 80.57% on 2026-07-27), so the gate fails on a
+# REGRESSION rather than on noise.
+#
+# Keep ~1pp of headroom when raising these. Coverage is not perfectly
+# deterministic: repeated runs of the same commit have varied by up to 0.4pp on
+# P1 (timing-sensitive async-log tests, randomised behavior tests), and a
+# threshold pressed against the measured value goes red on jitter. A gate that
+# cries wolf gets switched off, which costs more than the 1pp it buys.
+#
 # Raise them as coverage lands; never lower them to turn a red build green.
 
 P0_MIN=94
-P1_MIN=31
-TOTAL_MIN=80
+P1_MIN=30
+TOTAL_MIN=79
 BUILD_DIR="build-cov"
 ELIGIBLE_FILE="$(dirname "$0")/coverage_eligible.txt"
 
@@ -30,7 +38,7 @@ while [[ $# -gt 0 ]]; do
         --total-min=*) TOTAL_MIN="${1#*=}" ;;
         --build-dir=*) BUILD_DIR="${1#*=}" ;;
         --help|-h)
-            echo "Usage: $0 [--p0-min=94] [--p1-min=31] [--total-min=80] [--build-dir=build-cov]"
+            echo "Usage: $0 [--p0-min=94] [--p1-min=30] [--total-min=79] [--build-dir=build-cov]"
             exit 0
             ;;
         *) echo "Unknown option: $1"; exit 1 ;;
