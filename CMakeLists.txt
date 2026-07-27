@@ -386,6 +386,7 @@ if(APPLE)
         src/common/goose_behaviors_interact.cpp
         src/common/items.cpp
         src/common/item_window_logic.cpp
+        src/common/effect_window_logic.cpp
         src/common/actor.cpp
         src/common/actor.mm
         src/common/actor_ball.mm
@@ -433,6 +434,7 @@ if(APPLE)
     if(APPLE)
         set(TEST_SOURCES_PLATFORM
             tests/common/test_item_window_logic.cpp
+            tests/common/test_effect_window_logic.cpp
             tests/common/test_cg_renderer.mm
             tests/common/test_goose_render.mm
             # Was previously built, then silently dropped from this list. Two
