@@ -75,6 +75,10 @@ void BehaviorRegistry::InitAll(Goose* goose) {
 void BehaviorRegistry::TickAll(Goose* goose, double dt, double time) {
     if (!goose) return;
 
+    // Captured before any behavior callback runs: a tick can destroy the goose,
+    // after which reading goose->id is itself a use-after-free.
+    const int gooseId = goose->id;
+
     BehaviorContext ctx{};
     ctx.goose = goose;
     ctx.time = time;
@@ -122,8 +126,17 @@ void BehaviorRegistry::TickAll(Goose* goose, double dt, double time) {
                         behavior->id, e.what());
             }
 
-            if (state) {
-                state->wasEnabled = isEnabled;
+            // `state` must NOT be reused here. A behavior's tick can destroy
+            // its goose, and Goose::~Goose calls RemoveForGoose(id), which
+            // frees every BehaviorState for that goose — including the one
+            // fetched above. Writing through the stale pointer corrupted the
+            // heap (BehaviorState is {vptr, wasEnabled}, so it landed a byte
+            // on freed memory at offset 8) and blew up much later in an
+            // unrelated allocation. Re-fetch by id, using the goose id
+            // captured before the callback ran.
+            if (auto* live = BehaviorStateManager::Instance()
+                                 .Get<BehaviorState>(gooseId, behavior->id)) {
+                live->wasEnabled = isEnabled;
             }
         }
     }
