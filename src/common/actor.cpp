@@ -122,6 +122,7 @@ void ActorManager::destroyAllOfType(const char* type) {
         }
     }
     for (auto* a : dead) {
+        liveSet.erase(a);  // must precede delete — see note in the ActorType overload
         delete a;
     }
     if (!dead.empty()) invalidateCaches();
@@ -140,6 +141,14 @@ void ActorManager::destroyAllOfType(ActorType type) {
         }
     }
     for (auto* a : dead) {
+        // liveSet is the O(1) "is this actor still alive" check used by
+        // tickAll/renderAll. add/remove/cleanup all keep it in sync; these two
+        // destroyAllOfType overloads did not, so every actor destroyed here
+        // left a DANGLING pointer behind. Since the allocator readily recycles
+        // a just-freed block, the next actor allocated could land on exactly
+        // that address and be reported live by a stale entry — after which
+        // tickAll/renderAll would call into it. Erase before delete.
+        liveSet.erase(a);
         delete a;
     }
     if (!dead.empty()) invalidateCaches();
