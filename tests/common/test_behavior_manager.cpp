@@ -140,3 +140,22 @@ TEST(BehaviorStateManager, StateCount) {
     mgr.ClearAll();
     EXPECT_EQ(mgr.GetStateCount(), 0);
 }
+
+// Has() is the presence-check wrapper over Get<BehaviorState>(). It was
+// uncovered: every existing test reached for Get<T>() directly.
+TEST(BehaviorStateManager, HasReportsPresenceAndAbsence) {
+    auto& mgr = BehaviorStateManager::Instance();
+    mgr.ClearAll();
+
+    EXPECT_FALSE(mgr.Has(1, "jail")) << "nothing created yet";
+
+    mgr.GetOrCreate<JailState>(1, "jail");
+    EXPECT_TRUE(mgr.Has(1, "jail"));
+
+    // Keyed on the (gooseId, behaviorId) pair, so neither half alone matches.
+    EXPECT_FALSE(mgr.Has(2, "jail")) << "different goose must not match";
+    EXPECT_FALSE(mgr.Has(1, "ball")) << "different behavior must not match";
+
+    mgr.ClearAll();
+    EXPECT_FALSE(mgr.Has(1, "jail")) << "ClearAll must drop the state";
+}

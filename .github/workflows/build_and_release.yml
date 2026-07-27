@@ -73,13 +73,13 @@ jobs:
           cd build
           bash ../scripts/run_tests_ci.sh
 
-      # Thresholds are a RATCHET set just under the measured floor (P0 87.15%,
-      # P1 29.41%, total 72.97% as of 2026-07-27) — not an aspiration. They exist
+      # Thresholds are a RATCHET set just under the measured floor (P0 95.04%,
+      # P1 29.80%, total 79.02% as of 2026-07-27) — not an aspiration. They exist
       # to fail the build on a REGRESSION. Raise them as coverage lands; never
       # lower them to make a red build green.
       - name: Coverage Gate
         run: |
-          bash scripts/check_coverage.sh --p0-min=85 --p1-min=25 --total-min=70 --build-dir=build-cov
+          bash scripts/check_coverage.sh --p0-min=94 --p1-min=29 --total-min=78 --build-dir=build-cov
 
       - name: Determine version
         uses: ./.github/actions/determine-version

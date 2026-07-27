@@ -73,3 +73,18 @@ TEST(RandomUtil, RandFloatRange) {
 TEST(RandomUtil, RandFloatRangeReversed) {
     EXPECT_FLOAT_EQ(rng_util::RandFloatRange(10.0f, 5.0f), 10.0f);
 }
+
+// RandRange has three strategies by size: power-of-two masking, rejection
+// sampling for N <= 65536, and std::uniform_int_distribution above that. Only
+// the first two were exercised; this pins the large-N branch.
+TEST(RandomUtil, RandRangeLargeNUsesDistributionBranch) {
+    constexpr int kLarge = 100000;  // > 65536, so the distribution path runs
+    bool sawUpperHalf = false;
+    for (int i = 0; i < 500; i++) {
+        int r = rng_util::RandRange(kLarge);
+        ASSERT_GE(r, 0);
+        ASSERT_LT(r, kLarge);
+        if (r >= kLarge / 2) sawUpperHalf = true;
+    }
+    EXPECT_TRUE(sawUpperHalf) << "large-N sampling never reached the upper half";
+}
