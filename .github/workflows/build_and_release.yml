@@ -73,6 +73,10 @@ jobs:
           cd build
           bash ../scripts/run_tests_ci.sh
 
+      - name: Coverage Gate
+        run: |
+          bash scripts/check_coverage.sh --p0-min=95 --p1-min=80 --total-min=90 --build-dir=build-cov
+
       - name: Determine version
         uses: ./.github/actions/determine-version
         with:

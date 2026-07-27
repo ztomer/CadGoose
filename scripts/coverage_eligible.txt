@@ -1,5 +1,14 @@
-# Coverage-eligible source files for P0 (portable C++) gate.
-# Only these files count toward the CI coverage threshold.
-# Platform-specific .mm files and third-party code are excluded.
-src/common/*.cpp
-include/*.h
+# Coverage-eligible source files, organized by tier.
+#
+# P0: portable C++ .cpp + headers — must maintain ≥95% line coverage.
+# P1: platform-specific .mm files — must maintain ≥80% line coverage.
+# Project total: both tiers combined — must maintain ≥90%.
+#
+# Glob patterns are resolved against the repo root.
+
+# P0 — portable C++ (core logic)
+P0:src/common/*.cpp
+P0:include/*.h
+
+# P1 — platform-specific ObjC++ (window mgmt, platform backends)
+P1:src/platform/macos/*.mm
