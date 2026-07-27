@@ -3,6 +3,7 @@
 #import "world.h"
 #import "config.h"
 #import "coordinate_system.h"
+#import "effect_window_logic.h"
 #include <cmath>
 #include <cstdio>
 
@@ -11,7 +12,7 @@
 // Pomodoro bed accessor from behavior_pomodoro.cpp
 #import "pomodoro_bed.h"
 
-static constexpr size_t kMaxEffectWindows = 50;
+static constexpr size_t kMaxEffectWindows = effect_window_logic::kMaxEffectWindows;
 static constexpr float kEffectWindowMinSize = 40.0f;
 
 // ============================================================
@@ -118,17 +119,13 @@ static constexpr float kEffectWindowMinSize = 40.0f;
 - (instancetype)initWithType:(EffectType)type posX:(float)x posY:(float)y radius:(float)rad cgImage:(void*)img {
     _hasLastPosition = false;
 
-    float size = rad * 2.0f * g_config.general.globalScale;
-    size = std::max(size, kEffectWindowMinSize); // minimum 40x40
-
     NSScreen* mainScreen = [NSScreen mainScreen];
-    float screenH = (float)mainScreen.frame.size.height;
+    const float screenH = (float)mainScreen.frame.size.height;
+    const auto computed = effect_window_logic::ComputeEffectFrame(
+        x, y, rad, g_config.general.globalScale, screenH);
 
-    // Convert DEVICE position to SCREEN coords (bottom-left origin)
-    DevicePoint devicePt = {x, y};
-    ScreenPoint screenPt = CoordTransform::DeviceToScreenMacOS(devicePt, screenH);
-
-    NSRect frame = NSMakeRect(screenPt.x - size * 0.5f, screenPt.y - size * 0.5f, size, size);
+    NSRect frame = NSMakeRect(computed.origin.x, computed.origin.y,
+                              computed.size, computed.size);
 
     self = [super initWithContentRect:frame
                             styleMask:NSWindowStyleMaskBorderless
@@ -162,7 +159,13 @@ static constexpr float kEffectWindowMinSize = 40.0f;
 }
 
 - (void)updatePosition {
-    if (std::abs(_posX - _lastPosX) < 0.1f && std::abs(_posY - _lastPosY) < 0.1f) {
+    // _hasLastPosition is passed through here deliberately. It used to be set
+    // but never read, so the comparison ran against zero-initialized
+    // _lastPosX/_lastPosY and an effect spawning near DEVICE (0,0) skipped its
+    // first reposition entirely.
+    if (!effect_window_logic::ShouldUpdatePosition({_lastPosX, _lastPosY},
+                                                   {_posX, _posY},
+                                                   _hasLastPosition)) {
         return;
     }
 
@@ -170,16 +173,12 @@ static constexpr float kEffectWindowMinSize = 40.0f;
     _lastPosY = _posY;
     _hasLastPosition = true;
 
-    float size = _radius * 2.0f * g_config.general.globalScale;
-    size = std::max(size, kEffectWindowMinSize);
-
     NSScreen* mainScreen = [NSScreen mainScreen];
-    float screenH = (float)mainScreen.frame.size.height;
+    const float screenH = (float)mainScreen.frame.size.height;
+    const auto frame = effect_window_logic::ComputeEffectFrame(
+        _posX, _posY, _radius, g_config.general.globalScale, screenH);
 
-    DevicePoint devicePt = {_posX, _posY};
-    ScreenPoint screenPt = CoordTransform::DeviceToScreenMacOS(devicePt, screenH);
-
-    NSRect newFrame = NSMakeRect(screenPt.x - size * 0.5f, screenPt.y - size * 0.5f, size, size);
+    NSRect newFrame = NSMakeRect(frame.origin.x, frame.origin.y, frame.size, frame.size);
     [self setFrame:newFrame display:YES];
 
     _contentView.posX = _posX;
@@ -228,19 +227,17 @@ static constexpr float kEffectWindowMinSize = 40.0f;
 }
 
 - (void)addWindow:(EffectWindow*)window {
-    if (_count >= kMaxEffectWindows) {
-        // Circular buffer full — remove oldest
-        id obj = _windows[_head];
+    const auto plan = effect_window_logic::PlanInsertion(_head, _count, kMaxEffectWindows);
+
+    if (plan.evictsOldest) {
+        id obj = _windows[plan.slot];
         if ([obj isKindOfClass:[EffectWindow class]]) {
             [(EffectWindow*)obj closeAndRemove];
         }
-        [_windows replaceObjectAtIndex:_head withObject:window];
-        _head = (_head + 1) % kMaxEffectWindows;
-    } else {
-        size_t insertIdx = (_head + _count) % kMaxEffectWindows;
-        [_windows replaceObjectAtIndex:insertIdx withObject:window];
-        _count++;
     }
+    [_windows replaceObjectAtIndex:plan.slot withObject:window];
+    _head = plan.newHead;
+    _count = plan.newCount;
 }
 
 - (void)syncWindows {
