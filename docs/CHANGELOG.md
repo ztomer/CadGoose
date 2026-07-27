@@ -1,5 +1,54 @@
 # Changelog
 
+## July 27, 2026 — v1.75 Release: heap-corruption fixes, working coverage gate, P0 to 95%
+
+### Memory corruption — the test binary was crashing ~12% of runs, and CI hid it
+- **`run_tests_ci.sh` no longer swallows crashes.** It treated exit 139/134/138 as
+  success whenever `[  PASSED  ]` appeared, blaming "a GoogleTest tear-down bug".
+  The crash lands *after* the last test prints, so that string stayed true while the
+  process died. A crash is now a failure; the script records the causes and the
+  repro so the swallow does not come back.
+- **Use-after-free in `BehaviorRegistry::TickAll`** — it cached a `BehaviorState*`
+  across `behavior->tick()`, but a tick can destroy its goose and `Goose::~Goose`
+  calls `RemoveForGoose(id)`, freeing that state. The write then landed on freed
+  memory and poisoned the allocator's free list. Now re-fetched after the callback,
+  with the goose id captured beforehand.
+- **Double free in `test_headless_rendering.mm`** — `DroppedItemActor` owns its
+  `ItemData`, so `removeAllDroppedItems()` already freed it; the test deleted it
+  again. This was the dominant crash.
+- **Use-after-free read in `test_actor_manager.cpp`** — asserted on `a1->m_tickCount`
+  after deleting `a1`. It only passed because mimalloc leaves freed blocks intact.
+- **Dangling pointers in `ActorManager::destroyAllOfType`** — deleted actors were
+  left in `liveSet`, the O(1) "is this actor alive" set consulted by
+  `tickAll`/`renderAll`.
+- **`ItemData` copy operations deleted** — it owns a `CGImageRef` and released it in
+  its destructor while allowing implicit copies.
+- Result: **0 crashes in 30 runs** (was 3/25), and 12/12 clean against the system
+  allocator. Diagnosed with `-DUSE_MIMALLOC=OFF` + `RelWithDebInfo`, which turns the
+  intermittent exit crash into a deterministic, debuggable one.
+
+### The coverage gate had never measured anything
+- **`check_coverage.sh` repaired.** Three portability bugs — a quoted glob that never
+  expanded, an empty-array expansion fatal under `set -u` on bash 3.2, and GNU-only
+  `head -n -1` — meant it died before reading a single file. CI had been red since it
+  landed, and its 95/80/90 thresholds had never been validated by a run.
+- Thresholds are now a **ratchet** set ~1pp under the measured floor, sized against
+  observed run-to-run jitter so it fails on regressions rather than noise.
+- Added a documented **EXCLUDE** tier: a file may only be excluded if it is not
+  production code, or if it is a thin platform shell whose logic was extracted first.
+
+### Coverage: P0 87.00% -> 95.24%, total 72.86% -> 81.27%
+- `cg_renderer.h`, `cg_color_cache.h`, `log.cpp`, `window.mm` all 0-15% -> 100%.
+- Rewrote the logging tests, which previously called every function and asserted
+  nothing — the whole async engine sat at 0% while the suite was green.
+- Extracted `ItemWindow` and `EffectWindow` decision logic into testable modules,
+  fixing a dead first-update guard that made effects near device (0,0) skip their
+  first reposition, and removing a third copy of `RotatedBoundsSize`.
+- Restored `test_goose_rendering.mm`, which had silently dropped out of the build.
+- 1482 -> 1615 tests.
+
+---
+
 ## July 27, 2026 — Documentation cleanup
 
 ### Pruned obsolete docs
