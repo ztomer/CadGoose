@@ -24,6 +24,10 @@ wlr-virtual-pointer-unstable-v1-client-protocol.h
 wlr-virtual-pointer-unstable-v1-protocol.c
 FoundationLLM.*
 !PLAN.md
+!docs/ARCH.md
+!docs/MCP.md
+!docs/PROTOCOL.md
+!docs/README_LINUX.md
 !docs/CLEANUP_PLAN.md
 config/logs/
 *.profdata

@@ -1,5 +1,15 @@
 # Changelog
 
+## July 27, 2026 — Documentation cleanup
+
+### Pruned obsolete docs
+- **STUTTER_FIX_PLAN.md removed** — completed plan, belongs in git history per AGENTS.md rule
+- Updated ARCH.md: added BabyStalin to actor table (10 types), corrected test count (1520+), removed stale references to deleted `renderer.mm`/`renderer.h` and `g_cutoverMode`, updated rendering section for TickManager ownership, updated memory profile (no full-screen overlay), added `ActorType`/`FetchType` enums to design principles
+- Updated PLAN.md: marked `--version` flag as DONE (commit 4ce4b4a)
+- Updated PROTOCOL.md: `command_socket.cpp` → `.mm`, updated line numbers, added `spawn_baby_stalin`/`spawn_stalin` and `clear_dropped` commands
+
+---
+
 ## July 10, 2026 — Angry punch animation & Meme drag-and-drop visibility fix
 
 ### Meme Drag-and-Drop Visibility
@@ -15,7 +25,37 @@
 
 ---
 
-## June 28, 2026 — Audio default, live sync, config self-healing, honk asset, stalin sound, and custom icons
+## July 8, 2026 — `--version` flag
+
+### CLI `--version` flag
+- **`CadGoose --version`**: Prints git-describe string at configure time (e.g., `v1.63-10-g4ce4b4a`). Implemented via CMake `GIT_EXECUTABLE` to capture `GIT_DESCRIBE` at configure time, baked into `version.h`, exposed in `app_cli.cpp`. Works with both `--version` and `-v` flags.
+
+### Verification
+- **1520+ tests, 0 failures**
+
+---
+
+## June 28, 2026 — Microstutter fix overhaul: async logging, cursor/color caches, leaf/audio wins
+
+### Root cause & fixes
+Microstutter root cause found via Instruments Time Profiler: hot-path per-frame work on the main thread. Fixed across 5 phases:
+
+- **Phase 1 — Centralized async logging**: New `include/log.h` + `src/common/log.cpp` background logging queue. All per-file `GetDebugLog()` / `static FILE*` statics removed; dead `goose_debug.cpp` deleted. `CG_DISABLE_DEBUG_LOG` CMake option compiles logging out entirely in production.
+- **Phase 2 — Cursor backend**: `MacCursorBackend::GetCursorPos()` reuses a cached `CGEventSourceRef` instead of `CGEventSourceCreate()` every frame.
+- **Phase 4 — Color caching**: New `include/cg_color_cache.h` thread-local cache keyed by 8-bit RGBA. Applied to `goose_drawing.mm`, `item_renderer.mm`, `cg_renderer.h`.
+- **Phase 5 — Single-instance lock**: Race-free single-instance enforcement at launch (named lock / `flock`), friendly "already running" message.
+- **Real bug**: Two `[DROP_TIMING]` `fprintf(stderr)` in `item_window.mm` on the main thread — deleted.
+- **Leaf-pile at-rest redraw**: Resting pile early-returns instead of forcing 128-leaf `setNeedsDisplay` every frame (9.7% → <0.2% main-thread time).
+- **Audio gating**: macOS gated on `audioMuted` only, never `audioEnabled`. Added `AudioSuppressed()` gate (3.7% → 0%).
+- **EffectWindow `updatePosition`**: `setFrame:display:NO` + goose held-item window size quantized to 48px grid → stable size, origin-only move.
+
+### Verification
+- Controlled 60s Time Profiler baseline: no `fprintf`/`__sfvwrite`/stdio on main thread; ~12% main-thread CPU, no stall.
+- Full test suite: 1520+ tests pass.
+
+---
+
+## June 28b, 2026 — Audio default, live sync, config self-healing, honk asset, stalin sound, and custom icons
 
 ### Audio Settings & Config
 - **Default value**: Changed `audio_enabled = false` to `audio_enabled = true` in [config.toml](file:///Users/ztomer/Projects/CadGoose/config/config.toml) to prevent the goose from being silent by default.

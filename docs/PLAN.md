@@ -23,4 +23,4 @@ All items from the previous plan completed in v1.63 (June 26, 2026).
 - Remove `xattr` step from install docs
 
 ### CLI `--version` flag
-- Add `CadGoose --version` printing bundle `CFBundleShortVersionString`
+- ✅ **DONE** (commit 4ce4b4a): `CadGoose --version` prints git-describe at configure time.
