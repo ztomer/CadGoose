@@ -3,6 +3,7 @@
 #import "config.h"
 #import "item_renderer.h"
 #import "coordinate_system.h"
+#import "item_window_logic.h"
 #import "actor.h"
 #import "actor_dropped_item.h"
 #include "log.h"
@@ -54,13 +55,11 @@ static DevicePoint GetMouseDeviceCoords(NSEvent* event, NSWindow* window) {
 }
 
 
-// Calculate the bounding box size of a rotated rectangle
+// Bounding box of a rotated rectangle. The implementation lives in
+// item_window_logic so it is reachable from headless tests; this alias keeps
+// the call sites below unchanged.
 static DevicePoint RotatedBoundsSize(float width, float height, float rotation, float scale) {
-    float w = width * scale;
-    float h = height * scale;
-    float cosA = std::abs(std::cos(rotation));
-    float sinA = std::abs(std::sin(rotation));
-    return {w * cosA + h * sinA, w * sinA + h * cosA};
+    return item_window_logic::RotatedBoundsSize(width, height, rotation, scale);
 }
 
 // ============================================================
@@ -322,26 +321,13 @@ static DevicePoint RotatedBoundsSize(float width, float height, float rotation, 
 
     if (!IsItemValid(_item)) { _item = nullptr; return NO; }
 
-    // pt is in local view coordinates (top-left origin, Y-down, isFlipped=YES)
-    // Convert to DEVICE coords relative to item center
-    float scale = g_config.general.globalScale;
-    DevicePoint itemCenter = ItemCoords::Center({_item->pos.x, _item->pos.y},
-                                                 _item->data->w, _item->data->h,
-                                                 scale);
-
-    // View center in view coords
-    float viewCx = self.contentView.bounds.size.width * 0.5f;
-    float viewCy = self.contentView.bounds.size.height * 0.5f;
-
-    // pt relative to view center, then mapped to device coords
-    // Since view is isFlipped=YES and sized to item, view coords = device coords relative to item top-left
-    DevicePoint viewMousePt = {(float)pt.x, (float)pt.y};
-    DevicePoint devicePt = {_item->pos.x + viewMousePt.x, _item->pos.y + viewMousePt.y};
-
-    return HitTest::PointInItem(devicePt, itemCenter,
-                                _item->data->w, _item->data->h,
-                                _item->rotation,
-                                scale);
+    // pt is in local view coordinates (top-left origin, Y-down, isFlipped=YES).
+    return item_window_logic::IsLocalPointInsideItem(
+        {_item->pos.x, _item->pos.y},
+        {(float)pt.x, (float)pt.y},
+        _item->data->w, _item->data->h,
+        _item->rotation,
+        g_config.general.globalScale);
 }
 
 - (void)updatePosition {
@@ -349,35 +335,26 @@ static DevicePoint RotatedBoundsSize(float width, float height, float rotation, 
 
     if (!IsItemValid(_item)) { _item = nullptr; return; }
 
-    float scale = g_config.general.globalScale;
-    DevicePoint winSize = RotatedBoundsSize(_item->data->w, _item->data->h, _item->rotation, scale);
-    DevicePoint itemCenter = ItemCoords::Center({_item->pos.x, _item->pos.y},
-                                                 _item->data->w, _item->data->h, scale);
-    DevicePoint windowTopLeft = {itemCenter.x - winSize.x * 0.5f, itemCenter.y - winSize.y * 0.5f};
-
-    // Only update if position changed
-    if (_hasLastPosition &&
-        std::abs(_item->pos.x - _lastPosition.x) < 0.1f &&
-        std::abs(_item->pos.y - _lastPosition.y) < 0.1f) {
+    const DevicePoint newPos = {_item->pos.x, _item->pos.y};
+    if (!item_window_logic::ShouldUpdatePosition(_lastPosition, newPos, _hasLastPosition)) {
         return;
     }
 
-    _lastPosition = {_item->pos.x, _item->pos.y};
+    _lastPosition = newPos;
     _hasLastPosition = true;
 
     NSScreen* mainScreen = [NSScreen mainScreen];
-    float screenH = (float)mainScreen.frame.size.height;
-    ScreenPoint screenOrigin = CoordTransform::DeviceToScreenMacOS({windowTopLeft.x, windowTopLeft.y + winSize.y}, screenH);
+    const float screenH = (float)mainScreen.frame.size.height;
+    const auto frame = item_window_logic::ComputeWindowFrame(
+        newPos, _item->data->w, _item->data->h, _item->rotation,
+        g_config.general.globalScale, screenH);
 
-    NSRect newFrame = NSMakeRect(screenOrigin.x, screenOrigin.y, winSize.x, winSize.y);
-
-    ItemLog("UPDATE_POSITION: item.pos=(%.1f,%.1f) [DEVICE] center=(%.1f,%.1f) winSize=(%.1f,%.1f) screenOrigin=(%.1f,%.1f) [SCREEN]",
+    ItemLog("UPDATE_POSITION: item.pos=(%.1f,%.1f) [DEVICE] winSize=(%.1f,%.1f) screenOrigin=(%.1f,%.1f) [SCREEN]",
             _item->pos.x, _item->pos.y,
-            itemCenter.x, itemCenter.y,
-            winSize.x, winSize.y,
-            screenOrigin.x, screenOrigin.y);
+            frame.size.x, frame.size.y,
+            frame.origin.x, frame.origin.y);
 
-    [self setFrameOrigin:NSMakePoint(screenOrigin.x, screenOrigin.y)];
+    [self setFrameOrigin:NSMakePoint(frame.origin.x, frame.origin.y)];
 }
 
 - (void)closeAndRemove {
