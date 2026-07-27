@@ -124,8 +124,14 @@ TEST_F(ActorManagerSafetyTest, PreviousDeletionDuringTickIsSafe) {
     mgr.add(a1);
     mgr.add(a2);
 
-    // a2 deletes a1 (the previous actor) when ticked
-    a2->m_tickCallback = [&mgr, a1](MockModifyActor* self) {
+    // a2 deletes a1 (the previous actor) when ticked. Snapshot a1's tick count
+    // BEFORE freeing it: the assertion below used to read a1->m_tickCount after
+    // the delete, which is a use-after-free in the test itself. It only passed
+    // because mimalloc leaves the freed block intact; against the system
+    // allocator the scribbled memory read back 0 and the test failed.
+    int a1TicksAtDeletion = -1;
+    a2->m_tickCallback = [&mgr, a1, &a1TicksAtDeletion](MockModifyActor* self) {
+        a1TicksAtDeletion = a1->m_tickCount;
         mgr.remove(a1);
         delete a1;
     };
@@ -134,7 +140,7 @@ TEST_F(ActorManagerSafetyTest, PreviousDeletionDuringTickIsSafe) {
         mgr.tickAll(ctx, 1.0/60.0, 0.0);
     });
 
-    EXPECT_EQ(a1->m_tickCount, 1); // was already ticked
+    EXPECT_EQ(a1TicksAtDeletion, 1); // a1 was already ticked before a2 deleted it
     EXPECT_EQ(a2->m_tickCount, 1);
 }
 

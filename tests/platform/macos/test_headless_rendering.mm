@@ -430,9 +430,13 @@ TEST(HeadlessRendering, DragController_MultipleItems_TopmostWins) {
     EXPECT_EQ(dragged->data->type, ItemData::TEXT);
 
     controller.OnMouseUp();
+    // DroppedItemActor OWNS its ItemData and deletes it in its destructor, so
+    // removeAllDroppedItems() has already freed data1 and data2. Deleting them
+    // again here was a double free: it corrupted the heap, and the fallout
+    // surfaced far away — usually as a crash at process exit that looked like a
+    // GoogleTest teardown bug. The sibling tests below delete an ItemData only
+    // while ALSO nulling actor->item().data, which is what makes that safe.
     ActorManager::Instance().removeAllDroppedItems();
-    delete data1;
-    delete data2;
 }
 
 // ============================================================
