@@ -431,6 +431,8 @@ if(APPLE)
     
     if(APPLE)
         set(TEST_SOURCES_PLATFORM
+            tests/common/test_cg_renderer.mm
+            tests/common/test_goose_render.mm
             tests/common/test_gui_config.mm
             tests/common/test_local_llm.cpp
             tests/common/test_behavior_ai.mm

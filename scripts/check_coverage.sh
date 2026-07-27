@@ -5,21 +5,21 @@ set -euo pipefail
 # line coverage against per-tier thresholds. Exits 0 if all met, 1 if any below.
 #
 # Usage:
-#   ./scripts/check_coverage.sh [--p0-min=85] [--p1-min=25] [--total-min=70] [--build-dir=build-cov]
+#   ./scripts/check_coverage.sh [--p0-min=94] [--p1-min=29] [--total-min=78] [--build-dir=build-cov]
 #
 # Flags:
-#   --p0-min=N    Minimum line coverage % for P0 files (default: 85)
-#   --p1-min=N    Minimum line coverage % for P1 files (default: 25)
-#   --total-min=N Minimum line coverage % for all project files (default: 70)
+#   --p0-min=N    Minimum line coverage % for P0 files (default: 94)
+#   --p1-min=N    Minimum line coverage % for P1 files (default: 29)
+#   --total-min=N Minimum line coverage % for all project files (default: 78)
 #   --build-dir   CMake build directory (default: build-cov)
 #
-# The defaults are a RATCHET sitting just under the measured floor (P0 87.15%,
-# P1 29.41%, total 72.97% as of 2026-07-27), so the gate fails on a REGRESSION.
+# The defaults are a RATCHET sitting just under the measured floor (P0 95.04%,
+# P1 29.80%, total 79.02% as of 2026-07-27), so the gate fails on a REGRESSION.
 # Raise them as coverage lands; never lower them to turn a red build green.
 
-P0_MIN=85
-P1_MIN=25
-TOTAL_MIN=70
+P0_MIN=94
+P1_MIN=29
+TOTAL_MIN=78
 BUILD_DIR="build-cov"
 ELIGIBLE_FILE="$(dirname "$0")/coverage_eligible.txt"
 
