@@ -5,21 +5,21 @@ set -euo pipefail
 # line coverage against per-tier thresholds. Exits 0 if all met, 1 if any below.
 #
 # Usage:
-#   ./scripts/check_coverage.sh [--p0-min=94] [--p1-min=29] [--total-min=78] [--build-dir=build-cov]
+#   ./scripts/check_coverage.sh [--p0-min=94] [--p1-min=31] [--total-min=80] [--build-dir=build-cov]
 #
 # Flags:
 #   --p0-min=N    Minimum line coverage % for P0 files (default: 94)
-#   --p1-min=N    Minimum line coverage % for P1 files (default: 29)
-#   --total-min=N Minimum line coverage % for all project files (default: 78)
+#   --p1-min=N    Minimum line coverage % for P1 files (default: 31)
+#   --total-min=N Minimum line coverage % for all project files (default: 80)
 #   --build-dir   CMake build directory (default: build-cov)
 #
-# The defaults are a RATCHET sitting just under the measured floor (P0 95.04%,
-# P1 29.80%, total 79.02% as of 2026-07-27), so the gate fails on a REGRESSION.
+# The defaults are a RATCHET sitting just under the measured floor (P0 95.11%,
+# P1 32.25%, total 80.67% as of 2026-07-27), so the gate fails on a REGRESSION.
 # Raise them as coverage lands; never lower them to turn a red build green.
 
 P0_MIN=94
-P1_MIN=29
-TOTAL_MIN=78
+P1_MIN=31
+TOTAL_MIN=80
 BUILD_DIR="build-cov"
 ELIGIBLE_FILE="$(dirname "$0")/coverage_eligible.txt"
 
@@ -30,7 +30,7 @@ while [[ $# -gt 0 ]]; do
         --total-min=*) TOTAL_MIN="${1#*=}" ;;
         --build-dir=*) BUILD_DIR="${1#*=}" ;;
         --help|-h)
-            echo "Usage: $0 [--p0-min=95] [--p1-min=80] [--total-min=90] [--build-dir=build-cov]"
+            echo "Usage: $0 [--p0-min=94] [--p1-min=31] [--total-min=80] [--build-dir=build-cov]"
             exit 0
             ;;
         *) echo "Unknown option: $1"; exit 1 ;;
@@ -70,6 +70,7 @@ xcrun llvm-profdata merge -sparse "$COV_FILE" -o default.profdata
 P0_SOURCES=()
 P1_SOURCES=()
 ALL_SOURCES=()
+EXCLUDED=()
 
 # NOTE: CI runs this under macOS /bin/bash (3.2), where `set -u` makes
 # "${arr[@]}" on an EMPTY array a fatal "unbound variable". Every expansion
@@ -94,13 +95,60 @@ while IFS=: read -r tier glob || [[ -n "$tier" ]]; do
         echo "ERROR: tier $tier pattern '$glob' matched no files"
         exit 1
     fi
-    if [[ "$tier" == "P0" ]]; then
+    if [[ "$tier" == "EXCLUDE" ]]; then
+        EXCLUDED+=("${resolved[@]}")
+    elif [[ "$tier" == "P0" ]]; then
         P0_SOURCES+=("${resolved[@]}")
     elif [[ "$tier" == "P1" ]]; then
         P1_SOURCES+=("${resolved[@]}")
     fi
-    ALL_SOURCES+=("${resolved[@]}")
+    if [[ "$tier" != "EXCLUDE" ]]; then
+        ALL_SOURCES+=("${resolved[@]}")
+    fi
 done < "$ELIGIBLE_FILE"
+
+# Drop excluded files from the tier lists. EXCLUDE entries are order-independent:
+# a file stays out whether its EXCLUDE line comes before or after the P0/P1 glob
+# that would otherwise sweep it in.
+if [[ ${#EXCLUDED[@]} -gt 0 ]]; then
+    echo ""
+    echo "==> Excluded from measurement (${#EXCLUDED[@]} file(s)) — see $ELIGIBLE_FILE for the reason:"
+    filter_excluded() {
+        local kept=()
+        local f e skip
+        for f in "$@"; do
+            skip=0
+            for e in "${EXCLUDED[@]}"; do
+                if [[ "$f" == "$e" ]]; then skip=1; break; fi
+            done
+            [[ $skip -eq 0 ]] && kept+=("$f")
+        done
+        [[ ${#kept[@]} -gt 0 ]] && printf '%s\n' "${kept[@]}"
+    }
+    for e in "${EXCLUDED[@]}"; do
+        echo "    ${e#$PWD/}"
+    done
+    echo ""
+
+    if [[ ${#P0_SOURCES[@]} -gt 0 ]]; then
+        mapfile_p0=()
+        while IFS= read -r line; do [[ -n "$line" ]] && mapfile_p0+=("$line"); done \
+            < <(filter_excluded "${P0_SOURCES[@]}")
+        P0_SOURCES=(${mapfile_p0[@]+"${mapfile_p0[@]}"})
+    fi
+    if [[ ${#P1_SOURCES[@]} -gt 0 ]]; then
+        mapfile_p1=()
+        while IFS= read -r line; do [[ -n "$line" ]] && mapfile_p1+=("$line"); done \
+            < <(filter_excluded "${P1_SOURCES[@]}")
+        P1_SOURCES=(${mapfile_p1[@]+"${mapfile_p1[@]}"})
+    fi
+    if [[ ${#ALL_SOURCES[@]} -gt 0 ]]; then
+        mapfile_all=()
+        while IFS= read -r line; do [[ -n "$line" ]] && mapfile_all+=("$line"); done \
+            < <(filter_excluded "${ALL_SOURCES[@]}")
+        ALL_SOURCES=(${mapfile_all[@]+"${mapfile_all[@]}"})
+    fi
+fi
 
 if [[ ${#ALL_SOURCES[@]} -eq 0 ]]; then
     echo "ERROR: No source files found from eligible list"

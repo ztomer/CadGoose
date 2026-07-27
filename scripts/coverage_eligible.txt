@@ -1,8 +1,11 @@
 # Coverage-eligible source files, organized by tier.
 #
-# P0: portable C++ .cpp + headers — must maintain ≥95% line coverage.
-# P1: platform-specific .mm files — must maintain ≥80% line coverage.
-# Project total: both tiers combined — must maintain ≥90%.
+# P0: portable C++ .cpp + headers.
+# P1: platform-specific .mm files.
+# Project total: both tiers combined.
+#
+# The enforced thresholds live in the CI workflow and in check_coverage.sh's
+# defaults, not here — they are a ratchet set just under the measured floor.
 #
 # Glob patterns are resolved against the repo root.
 
@@ -12,3 +15,25 @@ P0:include/*.h
 
 # P1 — platform-specific ObjC++ (window mgmt, platform backends)
 P1:src/platform/macos/*.mm
+
+# ── EXCLUDE ───────────────────────────────────────────────────────────────
+# Files removed from the measurement entirely. Every entry needs a stated
+# reason, and there are exactly two admissible ones:
+#
+#   (a) It is NOT production code — test/debug/QA tooling that happens to live
+#       under src/ so it can link against internals.
+#   (b) It is a THIN PLATFORM SHELL whose logic has ALREADY been extracted to a
+#       testable module. The extraction must land FIRST, in its own commit,
+#       and the entry must name the module that now holds the logic.
+#
+# "It is hard to test" is NOT a reason. If a window class still holds branching
+# decisions, extract them and cover them — only the residual AppKit shell
+# qualifies under (b). Anything listed here is invisible to the ratchet, so the
+# bar for adding a line is deliberately high.
+#
+# Format: EXCLUDE:<path glob>    with the reason in the comment above it.
+
+# (a) Debug/QA tooling. Implements the `drag_test` CLI command, which
+#     synthesizes CGEvents to drag an item for manual verification. Reachable
+#     only from app_actions.cpp's debug command dispatch, never on a user path.
+EXCLUDE:src/platform/macos/item_window_test.mm
