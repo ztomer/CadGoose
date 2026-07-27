@@ -26,6 +26,14 @@ from typing import Optional
 
 import requests
 
+# Emoji the scorers look for in *model output*. They are data, not decoration, so they are
+# written as codepoint escapes — tools/check_no_emoji.py policies literal emoji glyphs, and
+# these strings must keep matching what the model actually emits.
+DUCK = "\U0001F986"    # duck
+GOOSE = "\U0001FABF"   # goose
+SKULL = "\U0001F480"   # skull
+IMP = "\U0001F608"     # smiling face with horns
+
 # ──────────────────────────────────────────────────────────────
 # Prompt builder (mirrors ai_text_meme.mm BuildPrompt())
 # ──────────────────────────────────────────────────────────────
@@ -139,7 +147,7 @@ def score_text_meme(text: str, evil_level: float = 0.4) -> dict:
     # ── Goose persona (0-100) ──
     # Does it feel like a goose wrote it?
     goose_signals = [
-        "honk", "goose", "geese", "honk!", "🦆", "🪿",
+        "honk", "goose", "geese", "honk!", DUCK, GOOSE,
         "bread", "crumb", "pond", "waddle", "feather", "beak",
         "hiss", "flap", "nest", "egg", "swan", "duck",
     ]
@@ -161,7 +169,7 @@ def score_text_meme(text: str, evil_level: float = 0.4) -> dict:
     humor_score = 50  # baseline
 
     # Positive signals
-    if any(c in stripped for c in ["!", "🦆", "🪿", "💀", "😈"]):
+    if any(c in stripped for c in ["!", DUCK, GOOSE, SKULL, IMP]):
         humor_score += 10
     if len(stripped.split()) >= 3:  # not just "honk"
         humor_score += 5
@@ -259,7 +267,7 @@ def score_chat_response(text: str, user_message: str) -> dict:
     scores["format"] = max(0, format_score)
 
     # ── Goose persona (0-100) ──
-    goose_signals = ["honk", "goose", "🦆", "🪿", "hiss", "waddle", "feather", "beak"]
+    goose_signals = ["honk", "goose", DUCK, GOOSE, "hiss", "waddle", "feather", "beak"]
     goose_hits = sum(1 for s in goose_signals if s in lower)
     if goose_hits >= 2:
         goose_score = 100
@@ -289,7 +297,7 @@ def score_chat_response(text: str, user_message: str) -> dict:
 
     # ── Humor (0-100) ──
     humor_score = 50
-    if any(c in stripped for c in ["!", "🦆", "🪿", "💀"]):
+    if any(c in stripped for c in ["!", DUCK, GOOSE, SKULL]):
         humor_score += 10
     if any(c in lower for c in ["honk", "chaos", "evil", "mischief", "steal", "attack"]):
         humor_score += 15

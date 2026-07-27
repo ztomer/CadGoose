@@ -31,7 +31,7 @@ Saves results to `soak_results_YYYYMMDD_HHMMSS.md`.
 ```
 Simple 60-second CPU profile, saves to quick_profile.md
 
-### 🆕 One-Shot Hotspot Profile (build → launch → profile → report)
+### One-Shot Hotspot Profile (build → launch → profile → report)
 ```bash
 ./hotspot_profile.sh [DURATION_SECONDS]
 ```
@@ -41,7 +41,7 @@ to print a ranked hotspot report, then kills the app.
 Saves trace + report to `/tmp/hotspot_<timestamp>/`.
 Requires `xctrace` (Xcode CLT). May need `sudo` on some macOS versions.
 
-### 🆕 Multi-Goose Stress Profile
+### Multi-Goose Stress Profile
 ```bash
 ./multi_goose_profile.sh [NUM_GEESE] [DURATION_SECONDS]
 ```
@@ -49,7 +49,7 @@ Same as `hotspot_profile.sh` but spawns N geese (default: 5) via the MCP socket
 before profiling. Exposes O(N²) separation-force and per-goose render hotspots
 that are invisible with a single goose.
 
-### 🆕 Analyze Existing Trace
+### Analyze Existing Trace
 ```bash
 ./analyze_trace.sh <trace_file.trace> [output_report.txt]
 ```
