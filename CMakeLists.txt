@@ -341,6 +341,8 @@ if(APPLE)
         tests/common/test_ai_tokens.cpp
         tests/common/test_ai_routing.cpp
         tests/common/test_ai_bridge.cpp
+        tests/common/test_ai_interfaces.cpp
+        tests/common/test_window_interfaces.cpp
         tests/common/test_config_registry.cpp
         tests/common/test_config_get_set.cpp
         tests/common/test_config_path.cpp
@@ -421,6 +423,10 @@ if(APPLE)
         src/common/mcp_json_rpc.cpp
         src/common/mcp_handlers.cpp
         src/common/ai_mcp_bridge.cpp
+        src/common/ai_local_llm_mock.cpp
+        src/common/ai_text_meme_mock.cpp
+        src/common/ai_http_client_mock.cpp
+        src/common/window_system_mock.cpp
     )
     
     if(APPLE)
