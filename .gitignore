@@ -36,3 +36,6 @@ tools/Extractor/obj/
 
 # Instruments traces (large; contain env dumps with secrets)
 *.trace/
+
+# check_coverage.sh output
+coverage-report/
