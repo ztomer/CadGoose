@@ -1,5 +1,27 @@
 # CadGoose Agent Guide
 
+## Session Summary (July 27, 2026) — Documentation cleanup: pruned obsolete, updated ARCH/PROTOCOL/PLAN/CHANGELOG
+
+### What changed this session
+- **Removed `docs/STUTTER_FIX_PLAN.md`** — completed microstutter fix plan. Per AGENTS.md rule ("prune completed plans to git history"), the plan belongs in git history, not the active docs tree. All phases (async logging, cursor cache, color cache, single-instance lock, leaf/audio/position fixes) are done.
+- **Updated `docs/ARCH.md`**: Added BabyStalinActor to actor table (10 types, not 9), fixed test count (1520+, not 1468), removed stale references to deleted `renderer.mm`/`renderer.h` and `g_cutoverMode`, updated rendering section for TickManager ownership (no full-screen overlay), added `ActorType`/`FetchType` enums and "fix the class" design principle, updated memory profile, added `lookupKey`, `OnMainThread()`, audio self-healing, and thread-safety details.
+- **Updated `docs/PLAN.md`**: Marked `--version` flag as DONE (commit 4ce4b4a).
+- **Updated `docs/PROTOCOL.md`**: `command_socket.cpp` → `.mm`, updated line numbers for `AppActions_HandleCommand` (line 195) and `IsControlCommand` (line 22), added `spawn_baby_stalin`/`spawn_stalin` and `clear_dropped` commands.
+- **Updated `docs/CHANGELOG.md`**: Added June 27-28 microstutter fix session, July 8 `--version` flag session, and July 27 doc cleanup session. All historical sessions preserved.
+- **MCP.md, HOMEBREW.md, README_LINUX.md**: Verified still accurate — no changes needed.
+
+### Files changed
+- `docs/STUTTER_FIX_PLAN.md` [DELETED]
+- `docs/ARCH.md`: Comprehensive refresh (project structure, actor table, rendering, config, AI, platform, design principles, memory, test results)
+- `docs/PLAN.md`: `--version` item marked DONE
+- `docs/PROTOCOL.md`: Paths, line numbers, new commands added
+- `docs/CHANGELOG.md`: 3 new date-stamped entries (stutter fix, --version, doc cleanup)
+- `AGENTS.md`: Updated with this session summary
+
+### Verification
+- All docs read and verified against current codebase state (file paths, line numbers, test counts, API signatures)
+- `command_socket.cpp` → `.mm` confirmed in filesystem; `g_cutoverMode` confirmed removed; `renderer.mm`/`renderer.h` confirmed deleted; `--version` flag confirmed functional
+
 ## Documentation Rules
 
 - **docs/PLAN.md** — Forward-looking only. Contains pending work, never completed items.
