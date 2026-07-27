@@ -435,6 +435,7 @@ if(APPLE)
         set(TEST_SOURCES_PLATFORM
             tests/common/test_item_window_logic.cpp
             tests/common/test_effect_window_logic.cpp
+            tests/common/test_goose_window_size.mm
             tests/common/test_cg_renderer.mm
             tests/common/test_goose_render.mm
             # Was previously built, then silently dropped from this list. Two
