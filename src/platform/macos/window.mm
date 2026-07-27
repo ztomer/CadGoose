@@ -4,16 +4,15 @@
 #include "config.h"
 #include "goose_math.h"
 #include "world_coord.h"
+#include "item_window_logic.h"
 
 static constexpr float kGooseWindowSize = 600.0f;
 static constexpr float kHeldItemPadding = 40.0f;
 static constexpr float kHeldItemBeakOffset = 5.0f;
 
-static DevicePoint RotatedBoundsSize(float width, float height, float rotation) {
-    float cosA = std::abs(std::cos(rotation));
-    float sinA = std::abs(std::sin(rotation));
-    return {width * cosA + height * sinA, width * sinA + height * cosA};
-}
+// Rotated-bounds maths lives in item_window_logic (tested there). This file and
+// item_window.mm each used to carry their own copy of it; they are the same
+// computation, with scale folded in as a parameter.
 
 float CalculateGooseWindowSize(const Goose* goose) {
     float baseSize = kGooseWindowSize;
@@ -26,7 +25,7 @@ float CalculateGooseWindowSize(const Goose* goose) {
         float distToBeak = Vector2::Distance({goose->pos.x, goose->pos.y}, neckHeadDev);
 
         float itemBehindBeak = itemW + kHeldItemBeakOffset;
-        DevicePoint rotatedSize = RotatedBoundsSize(itemW, itemH, goose->dragRot);
+        DevicePoint rotatedSize = item_window_logic::RotatedBoundsSize(itemW, itemH, goose->dragRot, 1.0f);
         float maxItemExtent = std::max(rotatedSize.x, rotatedSize.y) * 0.5f;
 
         float totalExtent = distToBeak + itemBehindBeak + maxItemExtent + kHeldItemPadding;
