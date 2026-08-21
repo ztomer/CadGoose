@@ -83,7 +83,7 @@ include(FetchContent)
 FetchContent_Declare(
     toml11
     GIT_REPOSITORY https://github.com/ToruNiina/toml11.git
-    GIT_TAG b32a2fff0d27e1f7522f26a125101500ddb47156
+    GIT_TAG v4.4.0
 )
 FetchContent_MakeAvailable(toml11)
 
