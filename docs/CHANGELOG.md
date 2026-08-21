@@ -1,5 +1,15 @@
 # Changelog
 
+## August 21, 2026 — v1.76 Release: toml11 dependency refresh
+
+- **toml11 bumped from a pinned 2025-12-03 commit to the v4.4.0 release tag**
+  (31 upstream commits). The pin was a moving-commit snapshot; it now tracks a
+  release tag.
+- Verified: full build clean; 1,634 unit tests green, including all 158
+  config/toml-parsing suites. The three `requires_display` ctest integration
+  tests still need a live app instance over its command socket and are
+  unaffected by this change (they never start CadGoose themselves).
+
 ## July 27, 2026 — v1.75 Release: heap-corruption fixes, working coverage gate, P0 to 95%
 
 ### Memory corruption — the test binary was crashing ~12% of runs, and CI hid it
