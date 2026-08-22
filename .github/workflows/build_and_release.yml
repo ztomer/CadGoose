@@ -74,7 +74,7 @@ jobs:
           bash ../scripts/run_tests_ci.sh
 
       # Thresholds are a RATCHET set below the measured floor (CI measured
-      # P0 95.11%, P1 31.83%, total 80.57% on 2026-07-27) — not an aspiration.
+      # P0 95.27%, P1 54.44%, total 86.01% on 2026-08-22) — not an aspiration.
       # They exist to fail the build on a REGRESSION.
       #
       # The ~1pp gap is deliberate. Coverage here is not perfectly
@@ -86,9 +86,12 @@ jobs:
       # raising these.
       #
       # Raise as coverage lands; never lower them to make a red build green.
+      - name: Test registration gate
+        run: python3 tools/check_test_registration.py
+
       - name: Coverage Gate
         run: |
-          bash scripts/check_coverage.sh --p0-min=94 --p1-min=30 --total-min=79 --build-dir=build-cov
+          bash scripts/check_coverage.sh --p0-min=94 --p1-min=53 --total-min=85 --build-dir=build-cov
 
       - name: Determine version
         uses: ./.github/actions/determine-version
@@ -172,6 +175,9 @@ jobs:
           cmake --build . --config Release --parallel $(nproc)
 
       # Tests are macOS-only (behaviors have CoreGraphics dependencies)
+
+      - name: Test registration gate
+        run: python3 tools/check_test_registration.py
 
       - name: Determine version
         uses: ./.github/actions/determine-version

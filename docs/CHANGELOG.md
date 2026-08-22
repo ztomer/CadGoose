@@ -1,5 +1,74 @@
 # Changelog
 
+## August 22, 2026 — PLAN.md executed: test-registration gate, dead tests revived, P1 coverage 33.85% → 54.44%, held-item sizing fix, bundle verified
+
+### Structural gate — unregistered test files can no longer exist silently
+- **`tools/check_test_registration.py` [NEW]** compares every `test_*` file under
+  `tests/` against CMakeLists.txt. Wired into `.githooks/pre-commit` and BOTH CI
+  jobs (macOS + Linux). It immediately caught FOUR orphans (~1200 lines of tests
+  that compiled into no target and never ran): the two known ones plus a dead
+  stub (`test_presence.cpp` — duplicate symbol of one in `test_behavior_presence.mm`,
+  deleted) and an unregistered QA probe.
+
+### Dead test files revived (all four orphans resolved)
+- **`test_config_gui_rendering.mm`** ported from XCTest to GoogleTest; same
+  dark-appearance pixel assertion. Registered, passing.
+- **`test_window_lifecycle.mm`** rewritten. The old file investigated the
+  (long-fixed) window-trail bug with CGWindowListCreateImage (obsoleted macOS 15)
+  and a `-drawRect:` override that no longer exists. The new file drives REAL
+  ItemWindow creation: rotated-bounds frame sizing, orderFront/close lifecycle,
+  manager round-trip, rotated hit-testing.
+- **`test_pixel_format_debug.mm`** kept as a standalone `pixel_format_probe`
+  executable under `requires_display` — it is a diagnostic, not a regression test,
+  but now it compiles into something.
+
+### Coverage — P1 33.85% → 54.44%, total 81.27% → 86.01%
+- New suites: `test_mac_cursor_backend.mm` (6), `test_audio.cpp` (3, silent — all
+  playback runs under the suppressed gate), `test_asset_manager.cpp` (6),
+  `test_effect_reg_live.mm` (4 — exercises the REAL footprint/pomodoro-bed effect
+  registrations), `test_behavior_element_window.mm` (6),
+  `test_tick_manager_logic.cpp` (5).
+- **Extraction:** `tick_manager_logic.{h,cpp}` [NEW] lifts TickManager's pure
+  decisions (world-cleanup cadence, leaf-spawn first-run burst vs 1-in-500 roll)
+  out of the CADisplayLink class; tick_manager.mm now executes them. Per measured
+  reality, item_window/effect_window decision layers were already extracted;
+  what remains there is AppKit drawing shells, not extractable without a flaky
+  windowed harness.
+- **Ratchet raised:** CI thresholds now 94/53/85 (was 94/30/79), ~1pp under the
+  measured floor per ratchet policy.
+- Measured on a real run (per the "paste the number" rule): P0 95.27%,
+  P1 54.44%, total 86.01%.
+
+### Correctness fix — rotated held-item window could clip long items
+- `CalculateGooseWindowSize` used `max(rotatedAABB.x, rotatedAABB.y) * 0.5` as
+  the held item's extent from its centre. That value SHRINKS toward 45° for long
+  thin items (900x60 drops from 450 to ~339) while the true requirement is the
+  rotation-invariant half-diagonal (~451) — rotating a long item made its window
+  smaller and risked clipping. Now uses `0.5*sqrt(w²+h²)`, which no angle can
+  exceed. The old "documents a known gap" pinning test is replaced by two tests:
+  extent is rotation-invariant across 24 angles, and size ≥ the exact bound at
+  45°. The open question in PLAN.md is resolved by fix, not deferred.
+
+### Shipped bundle verified end-to-end (was: never launched)
+- Built the self-contained `.app`, confirmed assets are embedded (not symlinked),
+  `--version` reports correctly. Launched it for real: socket status shows
+  goose wandering, then a full forced fetch cycle (fetch → heldItem=yes →
+  returning → dropped → wander). Single-instance lock held. Exited cleanly.
+
+### Stale plan item removed
+- "`config/config.toml` is rewritten by the CMake configure step" was false at
+  HEAD — a full reconfigure leaves the file untouched (verified by hash before/
+  after). The templating it complained about no longer exists.
+
+### Verification
+- Full suite: **1650 tests, 0 failures** (CI filter exclusions as before).
+- Coverage gate passes locally with the raised thresholds.
+- The new lifecycle tests initially crashed the suite (SIGBUS) — my first fixture
+  deleted its `DroppedItemActor` directly while `ActorManager` still listed it,
+  exactly the dangling-actor corruption class documented in `run_tests_ci.sh`.
+  Fixed by deactivating and letting `ActorManager::cleanup()` delete through its
+  own bookkeeping.
+
 ## August 21, 2026 — v1.76 Release: toml11 dependency refresh
 
 - **toml11 bumped from a pinned 2025-12-03 commit to the v4.4.0 release tag**

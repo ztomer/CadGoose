@@ -1,5 +1,25 @@
 # CadGoose Agent Guide
 
+## Session Summary (August 22, 2026) — PLAN.md executed: registration gate, dead tests revived, P1 coverage 33.85%→54.44%, held-item sizing fix, bundle verified
+
+### What changed this session
+- **Test-registration gate [NEW]**: `tools/check_test_registration.py` fails when any `test_*` file under `tests/` is not compiled into a target. Wired into `.githooks/pre-commit` and both CI jobs. Found 4 orphans on day one (~1200 lines of dead tests).
+- **Dead test files resolved**: `test_config_gui_rendering.mm` ported XCTest→GoogleTest (registered, passing); `test_window_lifecycle.mm` rewritten to drive REAL ItemWindow lifecycle (rotated frame sizing, orderFront/close, manager round-trip, hit-test) without the obsoleted CGWindowListCreateImage; `test_presence.cpp` deleted (dead duplicate stub); `test_pixel_format_debug.mm` registered as standalone `pixel_format_probe` (`requires_display`).
+- **Coverage**: new suites for MacCursorBackend, audio gates (silent), AssetManager, live effect registrations, BehaviorElementWindow(+manager), tick_manager_logic. Extracted `tick_manager_logic.{h,cpp}` (cleanup cadence + leaf-spawn burst/roll) out of TickManager. Ratchet raised to 94/53/85; measured P0 95.27%, P1 54.44%, total 86.01% on a real run.
+- **Correctness fix**: `CalculateGooseWindowSize` held-item extent now uses the rotation-invariant half-diagonal instead of max(rotatedAABB)*0.5, which shrank toward 45° and could clip long rotated items. Pinning test replaced with rotation-invariance + exact-bound tests.
+- **Bundle verified end-to-end**: self-contained `.app` built, assets embedded, launched for real — wander + full fetch/drop cycle via command socket, single-instance lock held, clean exit.
+- **Stale plan item pruned**: config.toml CMake-templating claim was false at HEAD (verified by hash before/after reconfigure).
+- **Docs**: PLAN.md rewritten lean (coverage remainder + notarization only); CHANGELOG entry added.
+
+### Key lessons
+- **ActorManager owns actors** — tests must NOT `delete` an actor directly after `add()`; deactivate + let `cleanup()` delete through its bookkeeping, else dangling pointers corrupt the heap later (my first lifecycle fixture did this and SIGBUS'd the suite mid-run).
+- Effect registrations in `effect_reg_*.mm` are static-init'd — any binary that links them can exercise them via `EffectGetRegistrations()` without mocks.
+
+### Verification
+- 1650 tests, 0 failures (standard CI filter).
+- Coverage gate passes locally with raised thresholds.
+- Bundled app user-POV check completed (see CHANGELOG).
+
 ## Session Summary (July 27, 2026) — Documentation cleanup: pruned obsolete, updated ARCH/PROTOCOL/PLAN/CHANGELOG
 
 ### What changed this session
