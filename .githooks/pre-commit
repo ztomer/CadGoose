@@ -7,3 +7,10 @@ root="$(git rev-parse --show-toplevel)"
 python3 "$root/tools/check_no_emoji.py" --staged || {
     echo "pre-commit: disallowed emoji in staged files — only → ✓ ✗ ⚠ ↔ ↑ ↓ are allowed." >&2
     exit 1; }
+
+# Every test file must compile into some target — orphaned test files never
+# run, so their coverage of the code is an illusion (~1200 lines were once
+# dropped from CMakeLists.txt silently).
+python3 "$root/tools/check_test_registration.py" || {
+    echo "pre-commit: unregistered test file(s) under tests/ — register them in CMakeLists.txt or delete them." >&2
+    exit 1; }

@@ -359,6 +359,9 @@ if(APPLE)
         tests/common/test_cursor_backend.cpp
         tests/common/test_items.cpp
         tests/common/test_log.cpp
+        tests/common/test_tick_manager_logic.cpp
+        tests/common/test_audio.cpp
+        tests/common/test_asset_manager.cpp
         tests/common/test_math.cpp
         tests/common/test_world.cpp
         tests/common/test_baby_stalin_spawn.mm
@@ -387,6 +390,7 @@ if(APPLE)
         src/common/items.cpp
         src/common/item_window_logic.cpp
         src/common/effect_window_logic.cpp
+        src/common/tick_manager_logic.cpp
         src/common/actor.cpp
         src/common/actor.mm
         src/common/actor_ball.mm
@@ -438,19 +442,17 @@ if(APPLE)
             tests/common/test_goose_window_size.mm
             tests/common/test_cg_renderer.mm
             tests/common/test_goose_render.mm
-            # Was previously built, then silently dropped from this list. Two
-            # sibling files are still unbuildable and are NOT listed here:
-            #   test_window_lifecycle.mm    — CGWindowListCreateImage was
-            #     obsoleted in macOS 15, and it calls -drawRect: on ItemWindow,
-            #     which no longer declares it. Needs a ScreenCaptureKit port.
-            #   test_config_gui_rendering.mm — written against XCTest, not
-            #     GoogleTest; it cannot link into this target as-is.
+            tests/common/test_config_gui_rendering.mm
+            tests/platform/macos/test_window_lifecycle.mm
             tests/platform/macos/test_goose_rendering.mm
             tests/common/test_gui_config.mm
             tests/common/test_local_llm.cpp
             tests/common/test_behavior_ai.mm
             tests/common/test_ai_helpers.mm
             tests/common/test_effect_registration.mm
+            tests/common/test_effect_reg_live.mm
+            tests/platform/macos/test_behavior_element_window.mm
+            tests/platform/macos/test_mac_cursor_backend.mm
             tests/common/test_world_utils.mm
             tests/common/test_behavior_health.mm
             tests/common/test_behavior_rainbow.mm
@@ -666,6 +668,27 @@ if(APPLE)
         Threads::Threads
     )
     set_target_properties(multi_goose_test PROPERTIES
+        COMPILE_FLAGS "-fobjc-arc"
+    )
+
+    # One-off QA probe: dumps the pixel format ScreenCaptureKit actually
+    # delivers (BGRA vs RGBA confusion once broke trail detection). Not an
+    # assertion test — a diagnostic that saves /tmp/test_captured_frame.png.
+    add_executable(pixel_format_probe
+        tests/platform/macos/test_pixel_format_debug.mm
+    )
+    target_include_directories(pixel_format_probe PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/platform/macos
+    )
+    target_link_libraries(pixel_format_probe PRIVATE
+        ${COCOA_LIBRARY}
+        ${COREGRAPHICS_LIBRARY}
+        ${SCREEN_CAPTURE_KIT_LIBRARY}
+        ${CORE_VIDEO_LIBRARY}
+        ${CORE_MEDIA_LIBRARY}
+        Threads::Threads
+    )
+    set_target_properties(pixel_format_probe PROPERTIES
         COMPILE_FLAGS "-fobjc-arc"
     )
 endif()

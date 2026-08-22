@@ -11,6 +11,7 @@
 #import "goose.h"
 #import "goose_drawing.h"
 #import "cg_renderer.h"
+#import "tick_manager_logic.h"
 
 #import <os/signpost.h>
 
@@ -26,10 +27,8 @@ static inline os_log_t TickLog() {
 
 #import <AppKit/AppKit.h>
 
-static constexpr int kWorldCleanupTickInterval = 60;
 static constexpr int kLeafSpawnProbabilityDenominator = 500;
-static bool s_leafPilesInitialized = false;
-static constexpr float kDisplayLinkMinFps = 30;
+static bool s_leafPilesInitialized = false;static constexpr float kDisplayLinkMinFps = 30;
 static constexpr float kDisplayLinkMaxFps = 60;
 static constexpr float kDisplayLinkDefaultFps = 60;
 
@@ -163,19 +162,17 @@ static constexpr float kDisplayLinkDefaultFps = 60;
     }
     [[ItemWindowManager shared] showPendingWindows];
 
-    if (self.tickCount % kWorldCleanupTickInterval == 0) {
+    if (tick_manager_logic::ShouldRunWorldCleanup(self.tickCount)) {
         World_CleanupExpired(self.currentTime);
     }
 
     auto geese = ActorManager::Instance().getGeese();
 
     if (g_config.behaviors.fun.autumnLeaves) {
-        if (!s_leafPilesInitialized) {
-            s_leafPilesInitialized = true;
-            for (int i = 0; i < 3; i++) {
-                World_SpawnRandomLeafPile(g_world.screenWidth, g_world.screenHeight, self.currentTime);
-            }
-        } else if (rng_util::RandRange(kLeafSpawnProbabilityDenominator) == 0) {
+        int spawns = tick_manager_logic::NextLeafSpawn(
+            s_leafPilesInitialized, /*enabled=*/true,
+            rng_util::RandRange(kLeafSpawnProbabilityDenominator));
+        for (int i = 0; i < spawns; i++) {
             World_SpawnRandomLeafPile(g_world.screenWidth, g_world.screenHeight, self.currentTime);
         }
         World_TickLeafPiles(self.currentTime, dt,

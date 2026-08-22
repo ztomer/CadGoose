@@ -17,6 +17,7 @@
 #include "config.h"
 #include "actor_manager.h"
 #include "world.h"
+#include "world_coord.h"
 
 namespace {
 
@@ -124,55 +125,53 @@ TEST_F(GooseWindowSizeTest, QuantizationRoundsUpNeverDown) {
         << "a bigger item must never produce a smaller window";
 }
 
-TEST_F(GooseWindowSizeTest, RotationFeedsIntoTheExtent) {
-    // Rotation is read by the sizing (via the rotated bounding box), so the
-    // window size responds to it.
+TEST_F(GooseWindowSizeTest, RotationDoesNotChangeTheExtent) {
+    // The held-item extent is the item's half-diagonal, which is
+    // rotation-invariant: no rotation angle can place a corner of the item
+    // farther from the item's centre than half its diagonal. The window size
+    // therefore must not respond to dragRot at all.
     holdItem(900.0f, 60.0f);
 
     m_goose->dragRot = 0.0f;
     const float unrotated = CalculateGooseWindowSize(m_goose);
 
-    m_goose->dragRot = static_cast<float>(M_PI) / 4.0f;
-    const float rotated = CalculateGooseWindowSize(m_goose);
-
-    EXPECT_NE(rotated, unrotated) << "dragRot must reach the size computation";
+    for (int deg = 15; deg < 360; deg += 15) {
+        m_goose->dragRot = deg * static_cast<float>(M_PI) / 180.0f;
+        EXPECT_FLOAT_EQ(CalculateGooseWindowSize(m_goose), unrotated)
+            << "window size changed at " << deg
+            << " degrees — extent is no longer rotation-invariant";
+    }
 }
 
-// Documents a known conservativeness gap rather than asserting it is correct.
+// The sizing must meet the TRUE bound: half the item diagonal.
 //
-// The sizing uses max(rotatedAABB.x, rotatedAABB.y) * 0.5 as the item's extent
-// from its own centre. The TRUE extent is half the diagonal, which does not
-// change under rotation. For a long thin item the AABB's max dimension SHRINKS
-// as it rotates toward 45 degrees (900x60 -> ~679x679), so the computed extent
-// drops from 450 to ~339 while the real requirement stays ~451.
-//
-// This test pins the current behaviour so a future change is a deliberate one.
-// Whether it visibly clips a rotated held item in the app is not established
-// here — the window also carries 40px of padding and the item is drawn out at
-// the beak, so the slack may absorb it.
-TEST_F(GooseWindowSizeTest, RotatedLongItemExtentIsBelowTheHalfDiagonalBound) {
+// History: the extent was max(rotatedAABB.x, rotatedAABB.y) * 0.5, which
+// SHRINKS as a long thin item rotates toward 45 degrees (900x60 drops from
+// 450 to ~339) while the real requirement stays ~451 — rotating a long item
+// made its window smaller and could clip it. Fixed to use the
+// rotation-invariant half-diagonal; this test proves the bound is met at
+// every angle, including the worst case (45 degrees for long thin items).
+TEST_F(GooseWindowSizeTest, ExtentMeetsTheHalfDiagonalBoundAtEveryAngle) {
     constexpr float w = 900.0f, h = 60.0f;
     const float halfDiagonal = std::sqrt(w * w + h * h) * 0.5f;
 
-    // What the implementation computes at 45 degrees.
-    const float cosA = std::abs(std::cos(static_cast<float>(M_PI) / 4.0f));
-    const float sinA = std::abs(std::sin(static_cast<float>(M_PI) / 4.0f));
-    const float aabbX = w * cosA + h * sinA;
-    const float aabbY = w * sinA + h * cosA;
-    const float computedExtent = std::max(aabbX, aabbY) * 0.5f;
-
-    EXPECT_LT(computedExtent, halfDiagonal)
-        << "computed extent " << computedExtent << " vs true bound " << halfDiagonal;
-
-    // And the resulting window is correspondingly smaller than the unrotated one.
     holdItem(w, h);
-    m_goose->dragRot = 0.0f;
-    const float unrotated = CalculateGooseWindowSize(m_goose);
-    m_goose->dragRot = static_cast<float>(M_PI) / 4.0f;
-    const float rotated = CalculateGooseWindowSize(m_goose);
 
-    EXPECT_LT(rotated, unrotated)
-        << "current behaviour: rotating a long thin item shrinks its window";
+    // distToBeak + itemBehindBeak + padding are rotation-invariant terms; if
+    // the window size is constant across angles (previous test), checking it
+    // at 45 degrees against the full half-diagonal bound covers all of them.
+    m_goose->dragRot = static_cast<float>(M_PI) / 4.0f;
+    const float size = CalculateGooseWindowSize(m_goose);
+
+    // size >= 2 * (distToBeak + itemW + beakOffset + halfDiag + padding),
+    // quantized UP to the grid — so it can never be below the exact bound.
+    Vector2 neckHeadDev = WorldCoord::RigNeckHead(*m_goose).toVector2();
+    const float distToBeak = Vector2::Distance({m_goose->pos.x, m_goose->pos.y}, neckHeadDev);
+    const float exactBound =
+        2.0f * (distToBeak + w + 5.0f + halfDiagonal + 40.0f);
+
+    EXPECT_GE(size, exactBound)
+        << "window size " << size << " is below the exact requirement " << exactBound;
 }
 
 TEST_F(GooseWindowSizeTest, GlobalScaleFeedsIntoTheHeldItemExtent) {

@@ -14,7 +14,7 @@ set -euo pipefail
 #   --build-dir   CMake build directory (default: build-cov)
 #
 # The defaults are a RATCHET sitting below the measured floor (CI measured
-# P0 95.11%, P1 31.83%, total 80.57% on 2026-07-27), so the gate fails on a
+# P0 95.27%, P1 54.44%, total 86.01% on 2026-08-22), so the gate fails on a
 # REGRESSION rather than on noise.
 #
 # Keep ~1pp of headroom when raising these. Coverage is not perfectly
@@ -26,8 +26,8 @@ set -euo pipefail
 # Raise them as coverage lands; never lower them to turn a red build green.
 
 P0_MIN=94
-P1_MIN=30
-TOTAL_MIN=79
+P1_MIN=53
+TOTAL_MIN=85
 BUILD_DIR="build-cov"
 ELIGIBLE_FILE="$(dirname "$0")/coverage_eligible.txt"
 
