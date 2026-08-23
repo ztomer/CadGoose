@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+# Fast pre-push copy of CI's gates. CI IS NOT DISABLED HERE AND MUST NOT BE.
+#
+# CadGoose is PUBLIC, so Actions minutes are free and its runs succeed — the
+# credit exhaustion that killed CI on the private repos never applied here. And
+# build_and_release.yml is the RELEASE PIPELINE: it builds the DMG, publishes
+# the release, and scripts/push_release.sh polls for that run before updating
+# the homebrew tap. Disabling it would stop releases working.
+#
+# This hook exists so a red build is found in minutes here rather than after a
+# push. CI remains the authority. Coverage is skipped (it needs its own
+# instrumented build); run ./tools/local_ci.sh --coverage by hand for that.
+set -euo pipefail
+root="$(git rev-parse --show-toplevel)"
+exec "$root/tools/local_ci.sh"
