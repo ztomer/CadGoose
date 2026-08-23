@@ -39,3 +39,6 @@ tools/Extractor/obj/
 
 # check_coverage.sh output
 coverage-report/
+
+# opencode session state (local agent scratch, never shared)
+.opencode/
