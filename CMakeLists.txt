@@ -299,7 +299,12 @@ if(APPLE)
     find_package(GTest REQUIRED)
     
     # Cross-platform test sources
-    set(TEST_SOURCES_COMMON
+    
+    
+# Test sources listed explicitly (no set()-and-splat): the house test
+    # registration gate reads only what an add_executable/add_test block
+    # names, so a variable indirection would hide every file from it.
+    add_executable(CadGooseTests
         tests/test_main.cpp
         src/common/crash_logger.mm
         tests/test_goose_behavior.cpp
@@ -439,85 +444,69 @@ if(APPLE)
         src/common/ai_text_meme_mock.cpp
         src/common/ai_http_client_mock.cpp
         src/common/window_system_mock.cpp
+        tests/common/test_item_window_logic.cpp
+        tests/common/test_effect_window_logic.cpp
+        tests/common/test_goose_window_size.mm
+        tests/common/test_cg_renderer.mm
+        tests/platform/macos/test_cg_primitives.mm
+        tests/common/test_goose_render.mm
+        tests/common/test_config_gui_rendering.mm
+        tests/platform/macos/test_window_lifecycle.mm
+        tests/platform/macos/test_goose_rendering.mm
+        tests/common/test_gui_config.mm
+        tests/common/test_local_llm.cpp
+        tests/common/test_behavior_ai.mm
+        tests/common/test_ai_helpers.mm
+        tests/common/test_effect_registration.mm
+        tests/common/test_effect_reg_live.mm
+        tests/platform/macos/test_behavior_element_window.mm
+        tests/platform/macos/test_mac_cursor_backend.mm
+        tests/common/test_world_utils.mm
+        tests/common/test_behavior_health.mm
+        tests/common/test_behavior_rainbow.mm
+        tests/common/test_behavior_acid.mm
+        tests/common/test_behavior_boredom.mm
+        tests/common/test_behavior_nametag.mm
+        tests/common/test_behavior_peeking.mm
+        tests/common/test_behavior_anger.mm
+        tests/common/test_behavior_presence.mm
+        tests/common/test_behavior_honcker.mm
+        tests/common/test_behavior_drag.mm
+        tests/common/test_behavior_breadcrumbs.mm
+        tests/common/test_behavior_hats.mm
+        tests/common/test_behavior_toys.mm
+        tests/common/test_behavior_interactive_drops.mm
+        tests/common/test_behavior_pomodoro.mm
+        tests/common/test_behavior_pomodoro_render.mm
+        tests/common/test_behavior_jail.mm
+        tests/common/test_behavior_portal.mm
+        src/common/goose_drawing.mm
+        src/common/item_renderer.mm
+        src/common/world_utils.mm
+        src/common/behaviors/behavior_ai.mm
+        src/common/behaviors/ai_http_client.mm
+        src/common/behaviors/ai_model_profiles.mm
+        src/common/behaviors/ai_think_block_stripper.mm
+        src/common/behaviors/ai_local_llm_adapter.mm
+        src/common/behaviors/ai_prompt_builder.mm
+        src/common/behaviors/ai_text_meme.mm
+        src/common/behaviors/local_llm_tokenizer.mm
+        src/common/behaviors/local_llm_model.mm
+        src/common/behaviors/local_llm_inference.mm
+        src/platform/macos/window.mm
+        src/platform/macos/cursor_backend.mm
+        src/platform/macos/platform_input.mm
+        src/platform/macos/tick_manager.mm
+        src/platform/macos/item_drag_controller.mm
+        tests/platform/macos/test_renderer.mm
+        tests/platform/macos/test_gui_accessibility.mm
+        tests/platform/macos/test_gui_statusbar_chat.mm
+        tests/platform/macos/test_gui_accessibility_goose_view.mm
+        tests/platform/macos/test_dragging_integration.mm
+        tests/platform/macos/test_headless_rendering.mm
+        tests/platform/macos/test_drag_controller.mm
+        tests/platform/macos/test_window_trail.mm
     )
-    
-    if(APPLE)
-        set(TEST_SOURCES_PLATFORM
-            tests/common/test_item_window_logic.cpp
-            tests/common/test_effect_window_logic.cpp
-            tests/common/test_goose_window_size.mm
-            tests/common/test_cg_renderer.mm
-            tests/platform/macos/test_cg_primitives.mm
-            tests/common/test_goose_render.mm
-            tests/common/test_config_gui_rendering.mm
-            tests/platform/macos/test_window_lifecycle.mm
-            tests/platform/macos/test_goose_rendering.mm
-            tests/common/test_gui_config.mm
-            tests/common/test_local_llm.cpp
-            tests/common/test_behavior_ai.mm
-            tests/common/test_ai_helpers.mm
-            tests/common/test_effect_registration.mm
-            tests/common/test_effect_reg_live.mm
-            tests/platform/macos/test_behavior_element_window.mm
-            tests/platform/macos/test_mac_cursor_backend.mm
-            tests/common/test_world_utils.mm
-            tests/common/test_behavior_health.mm
-            tests/common/test_behavior_rainbow.mm
-            tests/common/test_behavior_acid.mm
-            tests/common/test_behavior_boredom.mm
-            tests/common/test_behavior_nametag.mm
-            tests/common/test_behavior_peeking.mm
-            tests/common/test_behavior_anger.mm
-            tests/common/test_behavior_presence.mm
-            tests/common/test_behavior_honcker.mm
-            tests/common/test_behavior_drag.mm
-            tests/common/test_behavior_breadcrumbs.mm
-            tests/common/test_behavior_hats.mm
-            tests/common/test_behavior_toys.mm
-            tests/common/test_behavior_interactive_drops.mm
-            tests/common/test_behavior_pomodoro.mm
-            tests/common/test_behavior_pomodoro_render.mm
-            tests/common/test_behavior_jail.mm
-            tests/common/test_behavior_portal.mm
-            src/common/goose_drawing.mm
-            src/common/item_renderer.mm
-            src/common/world_utils.mm
-            src/common/behaviors/behavior_ai.mm
-            src/common/behaviors/ai_http_client.mm
-            src/common/behaviors/ai_model_profiles.mm
-            src/common/behaviors/ai_think_block_stripper.mm
-            src/common/behaviors/ai_local_llm_adapter.mm
-            src/common/behaviors/ai_prompt_builder.mm
-            src/common/behaviors/ai_text_meme.mm
-            src/common/behaviors/local_llm_tokenizer.mm
-            src/common/behaviors/local_llm_model.mm
-            src/common/behaviors/local_llm_inference.mm
-            src/platform/macos/window.mm
-            src/platform/macos/cursor_backend.mm
-            src/platform/macos/platform_input.mm
-            src/platform/macos/tick_manager.mm
-            src/platform/macos/item_drag_controller.mm
-            tests/platform/macos/test_renderer.mm
-            tests/platform/macos/test_gui_accessibility.mm
-            tests/platform/macos/test_gui_statusbar_chat.mm
-            tests/platform/macos/test_gui_accessibility_goose_view.mm
-            tests/platform/macos/test_dragging_integration.mm
-            tests/platform/macos/test_headless_rendering.mm
-            tests/platform/macos/test_drag_controller.mm
-            tests/platform/macos/test_window_trail.mm
-        )
-    else()
-        set(TEST_SOURCES_PLATFORM
-            src/platform/linux/ui.cpp
-            src/platform/linux/ui_debug.cpp
-            src/platform/linux/ui_callbacks.cpp
-            src/platform/linux/hyprland.cpp
-            src/platform/linux/x11_backend.cpp
-            src/platform/linux/wlroots_backend.cpp
-        )
-    endif()
-    
-    add_executable(CadGooseTests ${TEST_SOURCES_COMMON} ${TEST_SOURCES_PLATFORM})
     target_enable_asan(CadGooseTests)
     add_dependencies(CadGooseTests CompileSwiftFoundationLLM)
     

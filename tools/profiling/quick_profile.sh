@@ -1,29 +1,10 @@
-#!/bin/bash
-# quick_profile.sh - Quick 60-second CPU profile
-
-DURATION=${1:-60}
-PID=$(pgrep -f "CadGoose" | head -1)
-
-if [ -z "$PID" ]; then
-    echo "Error: CadGoose not running"
-    exit 1
+#!/usr/bin/env bash
+# quick_profile.sh — shim. The canonical harness lives in house-gates/tools/profiling
+# (branch unify/profiling); fixes land there, never here.
+GOH="${GOH_DIR:-$GOH_DIR}"
+CANON="$GOH/tools/profiling/quick_profile.sh"
+if [ ! -x "$CANON" ]; then
+    echo "✗ quick_profile.sh: canonical harness missing under $GOH/tools/profiling (is GOH_DIR right?)" >&2
+    exit 2
 fi
-
-TIMESTAMP=$(date +%Y%m%d_%H%M%S)
-OUTPUT_DIR="tools/profiling"
-TRACE_FILE="${OUTPUT_DIR}/quick_${TIMESTAMP}.trace"
-
-echo "Quick CPU Profile - 60 seconds (PID: $PID)"
-
-xctrace record \
-    --template "Time Profiler" \
-    --duration $DURATION \
-    --pid $PID \
-    --output "$TRACE_FILE" \
-    2>&1
-
-echo ""
-echo "Profile saved to: $TRACE_FILE"
-echo ""
-echo "Top symbols:"
-xctrace analyze --symbolicate --quiet "$TRACE_FILE" 2>/dev/null | head -20 || echo "Open in Instruments: open \"$TRACE_FILE\""
+exec "$CANON" "$@"

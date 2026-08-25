@@ -1,39 +1,10 @@
-#!/bin/bash
-# profile_memory.sh - Memory profiling with Allocations instrument
-
-DURATION=${2:-30}
-PID=$1
-
-if [ -z "$PID" ]; then
-    PID=$(pgrep -f "CadGoose" | head -1)
+#!/usr/bin/env bash
+# profile_memory.sh — shim. The canonical harness lives in house-gates/tools/profiling
+# (branch unify/profiling); fixes land there, never here.
+GOH="${GOH_DIR:-$GOH_DIR}"
+CANON="$GOH/tools/profiling/profile_memory.sh"
+if [ ! -x "$CANON" ]; then
+    echo "✗ profile_memory.sh: canonical harness missing under $GOH/tools/profiling (is GOH_DIR right?)" >&2
+    exit 2
 fi
-
-if [ -z "$PID" ]; then
-    echo "Error: CadGoose not running. Pass PID or start CadGoose first."
-    exit 1
-fi
-
-TIMESTAMP=$(date +%Y%m%d_%H%M%S)
-OUTPUT_DIR="tools/profiling"
-TRACE_FILE="${OUTPUT_DIR}/memory_profile_${TIMESTAMP}.trace"
-
-echo "Profiling Memory for $DURATION seconds (PID: $PID)..."
-echo "Saving to: $TRACE_FILE"
-
-xctrace record \
-    --template "Allocations" \
-    --duration $DURATION \
-    --pid $PID \
-    --output "$TRACE_FILE" \
-    2>&1
-
-if [ -f "$TRACE_FILE" ]; then
-    echo ""
-    echo "Profile saved to: $TRACE_FILE"
-    echo "Open in Instruments: open \"$TRACE_FILE\""
-    echo ""
-    echo "Note: Use Instruments app to analyze detailed allocation patterns"
-else
-    echo "Error: Profile failed"
-    exit 1
-fi
+exec "$CANON" "$@"
