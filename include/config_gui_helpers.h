@@ -79,6 +79,10 @@ extern NSMutableArray* g_configItemsForAccess;
 - (void)evilSliderChanged:(NSSlider*)sender;
 @end
 
+@interface AITabView (Sections)
+- (float)setupConnectionSectionWithY:(float)y width:(CGFloat)w;
+@end
+
 @interface AITabView (Connection)
 - (NSString*)modelsEndpointForTest;
 - (void)refreshModels:(id)sender;

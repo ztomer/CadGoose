@@ -303,6 +303,8 @@ if(APPLE)
         tests/test_main.cpp
         src/common/crash_logger.mm
         tests/test_goose_behavior.cpp
+        tests/test_goose_integration.cpp
+        tests/test_goose_world_forces.cpp
         tests/test_goose_physics.cpp
         tests/test_goose_behaviors.cpp
         tests/common/test_goose_behaviors_internal.cpp
@@ -313,9 +315,11 @@ if(APPLE)
         tests/common/test_behavior_typed.cpp
         tests/common/test_behavior_interaction.cpp
         tests/common/test_behavior_registry.cpp
+        tests/common/test_behavior_exception.cpp
         tests/common/test_behavior_ball.cpp
         tests/common/test_behavior_breadcrumbs.cpp
         tests/common/test_behavior_core.cpp
+        tests/common/test_behavior_physics.cpp
         tests/common/test_leafpile_scaling.cpp
         tests/common/test_footprint_registration.cpp
         tests/common/test_behavior_toggle.cpp
@@ -347,6 +351,7 @@ if(APPLE)
         tests/common/test_config_get_set.cpp
         tests/common/test_config_path.cpp
         tests/common/test_config_load_save.cpp
+        tests/common/test_config_themes.cpp
         tests/common/test_actor.cpp
         tests/common/test_config_toggles.cpp
         tests/common/test_dropped_item_hit.cpp
@@ -382,6 +387,7 @@ if(APPLE)
         src/common/config_save.cpp
         src/common/cursor_backend.cpp
         src/common/goose.cpp
+        src/common/goose_rig.cpp
         src/common/goose_forces.cpp
         src/common/goose_behaviors_internal.cpp
         src/common/goose_behaviors_wander.cpp
@@ -441,6 +447,7 @@ if(APPLE)
             tests/common/test_effect_window_logic.cpp
             tests/common/test_goose_window_size.mm
             tests/common/test_cg_renderer.mm
+            tests/platform/macos/test_cg_primitives.mm
             tests/common/test_goose_render.mm
             tests/common/test_config_gui_rendering.mm
             tests/platform/macos/test_window_lifecycle.mm
@@ -469,6 +476,7 @@ if(APPLE)
             tests/common/test_behavior_toys.mm
             tests/common/test_behavior_interactive_drops.mm
             tests/common/test_behavior_pomodoro.mm
+            tests/common/test_behavior_pomodoro_render.mm
             tests/common/test_behavior_jail.mm
             tests/common/test_behavior_portal.mm
             src/common/goose_drawing.mm
@@ -491,8 +499,11 @@ if(APPLE)
             src/platform/macos/item_drag_controller.mm
             tests/platform/macos/test_renderer.mm
             tests/platform/macos/test_gui_accessibility.mm
+            tests/platform/macos/test_gui_statusbar_chat.mm
+            tests/platform/macos/test_gui_accessibility_goose_view.mm
             tests/platform/macos/test_dragging_integration.mm
             tests/platform/macos/test_headless_rendering.mm
+            tests/platform/macos/test_drag_controller.mm
             tests/platform/macos/test_window_trail.mm
         )
     else()
