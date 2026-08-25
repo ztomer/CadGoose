@@ -495,6 +495,7 @@ if(APPLE)
             src/platform/macos/item_drag_controller.mm
             tests/platform/macos/test_renderer.mm
             tests/platform/macos/test_gui_accessibility.mm
+            tests/platform/macos/test_gui_accessibility_goose_view.mm
             tests/platform/macos/test_dragging_integration.mm
             tests/platform/macos/test_headless_rendering.mm
             tests/platform/macos/test_window_trail.mm
