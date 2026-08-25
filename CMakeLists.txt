@@ -303,6 +303,7 @@ if(APPLE)
         tests/test_main.cpp
         src/common/crash_logger.mm
         tests/test_goose_behavior.cpp
+        tests/test_goose_world_forces.cpp
         tests/test_goose_physics.cpp
         tests/test_goose_behaviors.cpp
         tests/common/test_goose_behaviors_internal.cpp
