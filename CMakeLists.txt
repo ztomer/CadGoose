@@ -475,6 +475,7 @@ if(APPLE)
             tests/common/test_behavior_toys.mm
             tests/common/test_behavior_interactive_drops.mm
             tests/common/test_behavior_pomodoro.mm
+            tests/common/test_behavior_pomodoro_render.mm
             tests/common/test_behavior_jail.mm
             tests/common/test_behavior_portal.mm
             src/common/goose_drawing.mm
