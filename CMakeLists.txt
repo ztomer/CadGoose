@@ -386,6 +386,7 @@ if(APPLE)
         src/common/config_save.cpp
         src/common/cursor_backend.cpp
         src/common/goose.cpp
+        src/common/goose_rig.cpp
         src/common/goose_forces.cpp
         src/common/goose_behaviors_internal.cpp
         src/common/goose_behaviors_wander.cpp
