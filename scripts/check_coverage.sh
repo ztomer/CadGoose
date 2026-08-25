@@ -122,6 +122,10 @@ IGNORE="(vendor|build|tests|googletest)${EXCL_REGEX:+|$EXCL_REGEX}"
 
 # The shared gate joins its project root with GOH_CPP_BUILD_DIR, so the build
 # dir seam must stay RELATIVE; the test-binary seam may be absolute.
+# Display-taking tests stay out of the measurement, exactly as this repo's
+# own automation runs it (house label contract: requires_display).
+export GOH_CTEST_ARGS="-LE requires_display"
+
 export GOH_CPP_BUILD_DIR="${BUILD_DIR#$ROOT/}"
 export GOH_CPP_TEST_BIN="$TEST_BIN"
 
