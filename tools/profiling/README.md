@@ -1,3 +1,12 @@
+# Canonical home: house-gates
+
+Every script here is a thin exec shim to
+`$GOH_DIR/tools/profiling/<same name>` (house-gates branch `unify/profiling`).
+Fixes land there; this directory exists so repo-relative entry points keep
+working. Historical run artifacts (soak_results_*.md) remain repo-local.
+
+---
+
 # CadGoose Profiling Tools
 
 This folder contains scripts for profiling CadGoose performance.
