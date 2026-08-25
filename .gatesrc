@@ -8,9 +8,6 @@ GOH_MAX_LINES=500                 # file-length cap; unset disables the check
 # GOH_SWIFT_COV_MIN=95
 # GOH_MAX_SCRATCH_GB=25           # disk-hygiene ceiling (full runs only)
 
-# DEBT (2026-08-24): 14 test files + src/common/goose.cpp predate the house
-# 500-line cap (largest: test_gui_accessibility.mm at 1222). Splitting them is
-# real refactoring, not part of the gates migration — tracked for a dedicated
-# pass. Remove these exemptions as each file is split.
-# Four more stragglers near the line (507-552), same story.
-GOH_LINE_EXCLUDE='tests/|src/common/goose\.cpp|src/platform/macos/main\.mm|src/platform/macos/config_gui_ai\.mm|include/config\.h|src/common/behaviors/behavior_ai\.mm'
+# DEBT (2026-08-24) resolved 2026-08-25: every over-cap file was split along
+# its seams; the blanket tests/ + straggler exemptions are gone. No generated
+# or vendored sources exist in this repo, so GOH_LINE_EXCLUDE is unused.

@@ -303,6 +303,7 @@ if(APPLE)
         tests/test_main.cpp
         src/common/crash_logger.mm
         tests/test_goose_behavior.cpp
+        tests/test_goose_integration.cpp
         tests/test_goose_world_forces.cpp
         tests/test_goose_physics.cpp
         tests/test_goose_behaviors.cpp
@@ -498,6 +499,7 @@ if(APPLE)
             src/platform/macos/item_drag_controller.mm
             tests/platform/macos/test_renderer.mm
             tests/platform/macos/test_gui_accessibility.mm
+            tests/platform/macos/test_gui_statusbar_chat.mm
             tests/platform/macos/test_gui_accessibility_goose_view.mm
             tests/platform/macos/test_dragging_integration.mm
             tests/platform/macos/test_headless_rendering.mm
