@@ -314,6 +314,7 @@ if(APPLE)
         tests/common/test_behavior_typed.cpp
         tests/common/test_behavior_interaction.cpp
         tests/common/test_behavior_registry.cpp
+        tests/common/test_behavior_exception.cpp
         tests/common/test_behavior_ball.cpp
         tests/common/test_behavior_breadcrumbs.cpp
         tests/common/test_behavior_core.cpp
