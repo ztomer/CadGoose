@@ -317,6 +317,7 @@ if(APPLE)
         tests/common/test_behavior_ball.cpp
         tests/common/test_behavior_breadcrumbs.cpp
         tests/common/test_behavior_core.cpp
+        tests/common/test_behavior_physics.cpp
         tests/common/test_leafpile_scaling.cpp
         tests/common/test_footprint_registration.cpp
         tests/common/test_behavior_toggle.cpp
