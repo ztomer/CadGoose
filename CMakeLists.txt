@@ -446,6 +446,7 @@ if(APPLE)
             tests/common/test_effect_window_logic.cpp
             tests/common/test_goose_window_size.mm
             tests/common/test_cg_renderer.mm
+            tests/platform/macos/test_cg_primitives.mm
             tests/common/test_goose_render.mm
             tests/common/test_config_gui_rendering.mm
             tests/platform/macos/test_window_lifecycle.mm
