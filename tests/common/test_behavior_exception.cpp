@@ -220,3 +220,4 @@ TEST(BehaviorException, InitThrowsInTickAllTransition) {
     AppActions_ClearGeese();
     BehaviorRegistry::Instance().Clear();
     BehaviorRegistry::Instance().Restore();
+}

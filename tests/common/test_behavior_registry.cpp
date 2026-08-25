@@ -308,4 +308,3 @@ TEST(BehaviorToggle, SetConfigBoolThenTickGateRespectsIt) {
 
     g_config.behaviors.fun.ball = saved;
 }
-}
