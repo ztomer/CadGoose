@@ -349,6 +349,7 @@ if(APPLE)
         tests/common/test_config_get_set.cpp
         tests/common/test_config_path.cpp
         tests/common/test_config_load_save.cpp
+        tests/common/test_config_themes.cpp
         tests/common/test_actor.cpp
         tests/common/test_config_toggles.cpp
         tests/common/test_dropped_item_hit.cpp
