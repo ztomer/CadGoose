@@ -1,15 +1,17 @@
 #!/usr/bin/env bash
-# Fast pre-push copy of CI's gates. CI IS NOT DISABLED HERE AND MUST NOT BE.
-#
-# CadGoose is PUBLIC, so Actions minutes are free and its runs succeed — the
-# credit exhaustion that killed CI on the private repos never applied here. And
-# build_and_release.yml is the RELEASE PIPELINE: it builds the DMG, publishes
-# the release, and scripts/push_release.sh polls for that run before updating
-# the homebrew tap. Disabling it would stop releases working.
-#
-# This hook exists so a red build is found in minutes here rather than after a
-# push. CI remains the authority. Coverage is skipped (it needs its own
-# instrumented build); run ./tools/local_ci.sh --coverage by hand for that.
+# pre-push — runs the FULL gate before anything leaves this machine.
+# Installed by house-gates/install.sh. There is no CI behind this; if this
+# hook is skipped, it is not run.
 set -euo pipefail
+
+GOH="${GOH_DIR:-${GOH:-$GOH_DIR}}"
 root="$(git rev-parse --show-toplevel)"
-exec "$root/tools/local_ci.sh"
+gate="$root/tools/gate.sh"
+
+if [ ! -f "$gate" ]; then
+    echo "✗ pre-push: $root/tools/gate.sh missing — run '$GOH/install.sh $root'" \
+        "to create the starter" >&2
+    exit 1
+fi
+
+exec bash "$gate" --full

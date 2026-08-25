@@ -20,16 +20,11 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
-# House Kare style. scripts/verify_ci.sh predates this and hand-rolls its own
-# ANSI colours; new scripts source the lib instead.
-if [ -f tui/lib.sh ]; then
-    # shellcheck source=../tui/lib.sh
-    source tui/lib.sh
-else
-    info() { echo "→ $*"; }; ok() { echo "✓ $*"; }
-    warn() { echo "⚠ $*" >&2; }; err() { echo "✗ $*" >&2; }
-    section() { printf '\n== %s ==\n' "$1"; }
-fi
+# House Kare style, canonical copy in house-gates. scripts/verify_ci.sh
+# predates this and hand-rolls its own ANSI colours; new scripts source the lib.
+GOH="${GOH_DIR:-$GOH_DIR}"
+# shellcheck source=$GOH_DIR/tui/lib.sh
+source "$GOH/tui/lib.sh"
 
 WITH_COVERAGE=0
 for a in "$@"; do
@@ -57,7 +52,7 @@ run() {  # run <label> <cmd...> — on failure, SHOW the output
 }
 
 section "structural gates"
-run "no-emoji gate"          python3 tools/check_no_emoji.py
+run "no-emoji gate"          python3 "${GOH_DIR:-$GOH_DIR}/checks/check_no_emoji.py"
 run "test registration gate" python3 tools/check_test_registration.py
 
 section "build"

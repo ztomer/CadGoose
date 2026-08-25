@@ -1,16 +1,20 @@
 #!/bin/bash
-# Pre-commit guard installed by init_repo.sh. Block disallowed emoji in STAGED files
-# (only the Kare icon set is permitted; emoji are a failure state).
+# pre-commit — layer-1 structural gate, STAGED scope.
+# Installed by house-gates/install.sh. Delegates to the shared checkout;
+# there is exactly ONE copy of every checker (this hook vendors nothing).
 set -euo pipefail
+
+GOH="${GOH_DIR:-${GOH:-$GOH_DIR}}"
 root="$(git rev-parse --show-toplevel)"
+structural="$GOH/gates/structural.sh"
 
-python3 "$root/tools/check_no_emoji.py" --staged || {
-    echo "pre-commit: disallowed emoji in staged files — only → ✓ ✗ ⚠ ↔ ↑ ↓ are allowed." >&2
-    exit 1; }
+if [ ! -f "$structural" ] && [ -f "$root/checks/check_no_emoji.py" ]; then
+    structural="$root/gates/structural.sh"   # self-hosted: this IS house-gates
+fi
+if [ ! -f "$structural" ]; then
+    echo "✗ pre-commit: cannot find house-gates at $GOH" \
+        "(set GOH_DIR or run its install.sh)" >&2
+    exit 1
+fi
 
-# Every test file must compile into some target — orphaned test files never
-# run, so their coverage of the code is an illusion (~1200 lines were once
-# dropped from CMakeLists.txt silently).
-python3 "$root/tools/check_test_registration.py" || {
-    echo "pre-commit: unregistered test file(s) under tests/ — register them in CMakeLists.txt or delete them." >&2
-    exit 1; }
+exec "$structural" --staged
