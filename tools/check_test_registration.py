@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Shim: the canonical test-registration gate lives in the author's shared house-gate suite.
+"""Shim: wires this repo's layout into the VENDORED test-registration gate.
 
 Wired to this repo's layout (cmake, tests/ at the root, CMakeLists.txt).
 The shared checker only accepts registration named INSIDE an
@@ -13,11 +13,12 @@ import os
 import subprocess
 import sys
 
-GOH = os.environ.get("GOH_DIR", "")
-CHECKER = os.path.join(GOH, "checks", "check_tests_registered.py")
+# tools/house_gates/, not GOH_DIR: this must run in CI and in a fork, neither of which can reach
+# the author's private suite. Requiring GOH_DIR here is what failed the release workflow.
+CHECKER = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                       "house_gates", "check_tests_registered.py")
 if not os.path.isfile(CHECKER):
-    print(f"✗ check_test_registration: canonical checker missing at {CHECKER} "
-          "(is GOH_DIR right?)", file=sys.stderr)
+    print(f"✗ check_test_registration: vendored checker missing at {CHECKER}", file=sys.stderr)
     sys.exit(2)
 
 sys.exit(subprocess.call([
