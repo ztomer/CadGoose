@@ -42,3 +42,7 @@ coverage-report/
 
 # opencode session state (local agent scratch, never shared)
 .opencode/
+
+# Ninja build state — machine-local, and it embedded absolute paths when committed.
+.ninja_deps
+.ninja_log
