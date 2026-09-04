@@ -1,0 +1,116 @@
+// ===========================
+// behavior_toys.cpp
+// Toys Enabled - Spawns stick toys that goose can fetch
+// Each toy is a ToyActor with its own window.
+// ===========================
+#include "behavior.h"
+#include "random_util.h"
+#include "behaviors/states/toys_state.h"
+#include "event_bus.h"
+#include "goose.h"
+#include "config.h"
+#include "world.h"
+#include "assets.h"
+#include "goose_math.h"
+#include "actor.h"
+#include "actor_toy.h"
+#include <cmath>
+#include <vector>
+
+static constexpr int MAX_TOYS = 5;
+static constexpr float TOY_SPAWN_INTERVAL = 5.0f;
+static constexpr float TOY_FETCH_DISTANCE = 20.0f;
+static constexpr float kToySpawnMargin = 100.0f;
+static constexpr float kToyWanderDetectRange = 200.0f;
+
+static int s_nextToyId = 0;
+
+static void init(BehaviorContext& ctx) {
+    s_nextToyId = 0;
+    (void)ctx;
+}
+
+static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
+    (void)dt;
+    auto& mgr = ActorManager::Instance();
+
+    // Count active toys
+    int activeCount = mgr.countByType(ActorType::Toy);
+
+    // Spawn new toy if needed
+    auto* state = BehaviorStateManager::Instance().GetOrCreate<ToysState>(goose->id, "toys");
+    if (time - state->lastSpawnTime >= TOY_SPAWN_INTERVAL && activeCount < MAX_TOYS) {
+        float margin = kToySpawnMargin;
+        float screenW = (float)g_world.screenWidth;
+        float screenH = (float)g_world.screenHeight;
+
+        Vector2 spawnPos{
+            margin + (float)(rng_util::RandRange((int)(screenW - margin * 2))),
+            margin + (float)(rng_util::RandRange((int)(screenH - margin * 2)))
+        };
+
+        ToyActor::Type type = (rng_util::RandRange(2) == 0) ? ToyActor::Stick : ToyActor::Ball;
+        ToyActor* toy = new ToyActor(type, spawnPos, s_nextToyId++);
+        mgr.add(toy);
+        EventBus::Instance().Publish(ToySpawnedEvent{spawnPos.x, spawnPos.y, static_cast<int>(type)});
+        state->lastSpawnTime = time;
+    }
+
+    // Find nearest active toy
+    ToyActor* nearestToy = nullptr;
+    float nearestDist = 1e9f;
+
+    for (int i = 0; i < mgr.totalCount(); i++) {
+        Actor* a = mgr.getByIndex(i);
+        if (!a) continue;
+        if (a->actorType() != ActorType::Toy) continue;
+
+        ToyActor* toy = static_cast<ToyActor*>(a);
+        if (!toy->isAlive()) continue;
+
+        float dist = Vector2::Distance(goose->pos, toy->position().toVector2());
+        if (dist < nearestDist) {
+            nearestDist = dist;
+            nearestToy = toy;
+        }
+    }
+
+    if (!nearestToy) return;
+
+    // Pick up toy if close enough
+    if (nearestDist < TOY_FETCH_DISTANCE) {
+        bool isStick = (nearestToy->toyType() == ToyActor::Stick);
+
+        nearestToy->setActive(false);
+
+        if (!goose->heldItem) {
+            goose->heldItem = g_assets.CreateToyItem(isStick);
+            goose->state = GooseState::RETURNING;
+            float margin = kToySpawnMargin;
+            goose->target = {
+                margin + (float)(rng_util::RandRange((int)(g_world.screenWidth - margin * 2))),
+                margin + (float)(rng_util::RandRange((int)(g_world.screenHeight - margin * 2)))
+            };
+            g_assets.Bite();
+            goose->onHonk();
+        }
+        return;
+    }
+
+    // Wander toward toy if close enough
+    if (goose->state == GooseState::WANDER && nearestDist < kToyWanderDetectRange) {
+        goose->target = nearestToy->position().toVector2();
+    }
+}
+
+static void render(Goose* goose, BehaviorContext& ctx, IRenderer* irenderer) {
+    // Toys render via their own BehaviorElementWindow
+    (void)goose; (void)ctx; (void)irenderer;
+}
+
+static Behavior g_toysBehavior = BEHAVIOR_DEF(
+    "toys", "Toys", "Spawns stick and ball toys that the goose can chase and fetch",
+    g_config.behaviors.fun.toysEnabled, init, tick, render
+);
+
+REGISTER_BEHAVIOR(g_toysBehavior);

@@ -1,0 +1,46 @@
+#include "behavior.h"
+#include "random_util.h"
+#include "behaviors/states/interactive_drops_state.h"
+#include "goose.h"
+#include "config.h"
+#include "world.h"
+#include "goose_math.h"
+#include "actor.h"
+#include "actor_flower.h"
+#include <cmath>
+#include <vector>
+
+static constexpr int kInteractiveDropProbability = 400;
+
+static void init(BehaviorContext& ctx) {
+    (void)ctx;
+}
+
+static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
+    (void)ctx; (void)dt; (void)time;
+
+    if (goose->heldItem) return;
+    if (goose->state != GooseState::WANDER) return;
+
+    double lastDrop = goose->lastDropTime;
+    bool shouldDrop = (time - lastDrop >= g_config.behaviors.interactiveDrops.dropInterval) && ((rng_util::RandRange(kInteractiveDropProbability)) == 0);
+
+    if (shouldDrop) {
+        Vector2 dropPos = goose->GetBeakTipDevice();
+        float hue = (rng_util::RandRange(360)) / 360.0f * 360.0f;
+        FlowerActor* flower = new FlowerActor(dropPos, hue, time);
+        ActorManager::Instance().add(flower);
+        g_assets.Bite();
+    }
+}
+
+static void render(Goose* goose, BehaviorContext& ctx, IRenderer* irenderer) {
+    (void)goose; (void)ctx; (void)irenderer;
+}
+
+static Behavior g_interactiveDropsBehavior = BEHAVIOR_DEF_GROUND(
+    "interactive_drops", "Interactive Drops", "Goose drops puddles that splash and flowers that grow",
+    g_config.behaviors.fun.interactiveDrops, init, tick, render
+);
+
+REGISTER_BEHAVIOR(g_interactiveDropsBehavior);

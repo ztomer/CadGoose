@@ -1,0 +1,370 @@
+goose = ["Goose 0"]
+
+[Debug]
+to_terminal = false
+visuals = false
+
+[Movement]
+base_walk_speed = 100.0
+init_direction_max = 360.0
+run_distance_threshold = 1200.0
+base_run_speed = 480.0
+max_speed = 600.0
+move_distance_threshold = 1.0
+friction = 0.85
+run_speed_multiplier = 1.25
+speed_lerp_rate = 0.05
+arrival_radius = 50.0
+max_force = 1000.0
+direction_blend_rate = 0.15
+
+[Honk]
+honk_min_gap = 0.6
+honk_idle_min = 6.0
+honk_idle_max = 14.0
+honk_chase_cooldown = 1.8
+generic_cooldown = 0.9
+idle_check_ahead = 2.0
+idle_chance_divisor = 3
+fetch_cooldown = 1.2
+wander_honk_divisor = 15
+
+[AI]
+ollama_port = 11434
+local_llm_enabled = false
+osaurus_port = 1337
+custom_port = 1337
+evil_level = 0.5
+provider_type = 0
+text_meme_temperature = 1.2
+ollama_model = "llama3"
+text_meme_auto_save = false
+custom_endpoint = "http://localhost:1337/v1/chat/completions"
+custom_model = "foundation"
+text_meme_enabled = false
+enable_mcp = false
+show_status_bar = true
+osaurus_model = "foundation"
+mcp_port = 31073
+text_meme_max_queue = 5
+chat_max_history = 100
+local_llm_model_path = ""
+
+[General]
+global_scale = 1.0
+audio_enabled = true
+audio_muted = false
+dark_theme_role = "Canadian"
+memes_enabled = true
+appearance_mode = 3
+light_theme_role = "Default"
+failsafe_hotkey = "cmd+shift+escape"
+
+[Rig]
+body_y = 14.0
+neck_base_x = 15.0
+beak_len = 12.0
+beak_base_offset = 4.0
+beak_width = 16.0
+neck_ext_idle = 3.0
+underbody_y = 9.0
+neck_height_moving = 10.0
+head_forward_bias = 1.0
+neck_ext_moving = 16.0
+neck_lerp_rate = 0.1
+neck_height_idle = 20.0
+run_speed_threshold = 150.0
+foot_spacing = 8.0
+foot_offset_y = 2.0
+
+[Asset]
+meme_placeholder_w = 200
+note_placeholder_w = 300
+meme_placeholder_h = 200
+text_placeholder_h = 150
+text_placeholder_w = 300
+note_placeholder_h = 150
+
+[color]
+footprintAlphaMultiplier = 0.6
+
+[color.goose]
+r = 0.82
+g = 0.82
+b = 0.82
+
+[color.eye]
+r = 0.1
+g = 0.1
+b = 0.1
+
+[color.shadow]
+r = 0.0
+g = 0.0
+b = 0.0
+
+[color.canadaBody]
+r = 0.35
+g = 0.28
+b = 0.22
+
+[color.footprint]
+r = 0.3
+g = 0.3
+b = 0.3
+
+[color.droppedItem]
+r = 0.5
+g = 0.5
+b = 0.5
+
+[color.canadaHead]
+r = 0.82
+g = 0.82
+b = 0.82
+
+[color.eyeHighlight]
+r = 1.0
+a = 0.8
+g = 0.8
+b = 0.0
+
+[color.canadaNeck]
+r = 0.05
+g = 0.05
+b = 0.05
+
+[color.beak]
+r = 1.0
+g = 0.6
+b = 0.0
+
+[color.canadaOutline]
+r = 0.15
+g = 0.12
+b = 0.1
+
+[color.canadaBeak]
+r = 0.22
+g = 0.22
+b = 0.22
+
+[color.customNeck]
+r = 0.44
+g = 0.55
+b = 0.66
+
+[color.canadaEye]
+r = 0.1
+g = 0.1
+b = 0.1
+
+[color.customBody]
+r = 1.0
+g = 0.0
+b = 0.0
+
+[color.customHead]
+r = 0.77
+g = 0.88
+b = 0.99
+
+[color.customBeak]
+r = 0.1
+g = 0.2
+b = 0.3
+
+[color.customEye]
+r = 0.4
+g = 0.5
+b = 0.6
+
+[color.customOutline]
+r = 0.7
+g = 0.8
+b = 0.9
+
+[Snatch]
+radius_range = 80.0
+angular_speed_base = 1.5
+duration = 3.0
+speed_multiplier = 1.25
+offset_max = 120.0
+forward_bias_scale = 0.25
+lateral_bias_limit = 0.75
+forward_bias_min = -0.35
+forward_bias_max = 0.15
+pull_distance = 140.0
+radius_base = 40.0
+angular_speed_random_range = 5.0
+
+[Render]
+eye_offset_x_back = -3.0
+dropped_item_size = 20.0
+squash_factor = 0.92
+shadow_width = 40.0
+shadow_offset_y = 10.0
+body_height = 22.0
+body_width = 22.0
+debug_tick_mod = 60
+eye_size = 4.0
+shadow_offset_x = 2.0
+footprint_height = 8.0
+frame_dt = 0.016667
+neck_size = 13.0
+foot_size = 8.0
+head1_size = 15.0
+head2_size = 10.0
+shadow_height = 30.0
+beak_width = 16.0
+eye_offset_x_front = 3.0
+eye_offset_y = -4.0
+eye_facing_threshold = 0.5
+footprint_width = 12.0
+beak_max_width = 9.0
+click_radius = 30.0
+beak_height = 8.0
+frame_rate = 60.0
+iso_scale_x = 1.0
+iso_scale_y = 0.7
+facing_back_threshold = 0.55
+
+[Cursor]
+chase_enabled = true
+chase_chance = 1
+multi_monitor_enabled = true
+
+[Item]
+meme_lifetime = 30.0
+text_lifetime = 30.0
+meme_pickup_chance = 10
+heist_chance_percent = 10
+item_pickup_cooldown = 2.0
+item_lifetime = 15.0
+fetch_base_chance = 2
+item_fetch_cooldown = 4.0
+max_fetch_bias = 100
+max_dropped_texts = 20
+max_fetch_geese = 3
+max_dropped_memes = 20
+meme_fetch_bias_max = 20
+note_fetch_bias_max = 20
+heist_approach_margin = 8
+
+[Physics]
+bounce_factor_corner = 0.8
+min_valid_scale = 0.01
+corner_margin = 100.0
+drag_min_dt = 0.001
+drag_velocity_threshold = 10.0
+direction_rotate_min_vel = 1.0
+direction_reverse_multiplier = -1.0
+snap_distance = 1.0
+drag_rotation_speed = 10.0
+screen_margin = 50.0
+edge_avoid_force = 3.0
+screen_clamp_tight = 20.0
+steer_seek_force = 4.0
+edge_look_ahead_speed = 0.4
+bounce_factor_wall = 0.5
+iso_scale_y = 1.0
+edge_avoid_margin = 40.0
+edge_look_ahead_base = 30.0
+iso_scale_x = 1.0
+screen_clamp_expanded = 50.0
+curve_tangent_force = 0.8
+screen_clamp_bounce = 50.0
+direction_to_cursor_dist = 2.0
+curve_fade_distance = 200.0
+curve_fade_min_vel = 10.0
+
+[Spawn]
+margin_y = 50.0
+item_drop_margin_x = 300.0
+margin_x = 50.0
+separation_max_distance = 70.0
+random_target_margin_x = 100.0
+target_reached_threshold_normal = 30.0
+fetch_edge_margin = 80.0
+target_reached_threshold_return = 60.0
+separation_min_distance = 1.0
+item_pickup_distance = 28.0
+target_reached_min_return = 50.0
+separation_force_multiplier = 1.5
+target_reached_min_normal = 25.0
+random_target_margin_y = 100.0
+item_drop_margin_y = 200.0
+catch_threshold_base = 22.0
+wander_target_offset = 200.0
+catch_threshold_min = 15.0
+wander_target_margin = 400.0
+
+[Screen]
+default_width = 60
+default_height = 1080
+
+[Mud]
+mud_enabled = true
+mud_lifetime = 15.0
+mud_chance = 15
+
+[Step]
+step_time_wander = 0.2
+step_lift_run = 7.0
+step_duration_walk = 0.2
+step_trigger_walk = 5.0
+overshoot_run = 4.0
+step_lift_walk = 3.0
+step_duration_run = 0.085
+step_time_fetch = 0.15
+time_snatch = 0.12
+overshoot_walk = 1.5
+step_trigger_run = 9.0
+snap_distance = 50.0
+min_duration = 0.001
+dist_factor_base = 10.0
+dist_factor_min = 0.9
+dist_factor_max = 1.45
+duration_min = 0.055
+duration_max = 0.18
+foot_spacing = 4.0
+left_foot_angle = 45.0
+right_foot_angle = -45.0
+zero_velocity_threshold = 0.001
+
+[Behavior]
+interactive_drops_enabled = false
+autumn_leaves_enabled = true
+rainbow_enabled = false
+interactive_drops_puddle_lifetime = 30.0
+anger_enabled = false
+avoidance_enabled = true
+boredom_enabled = false
+breadcrumbs_enabled = false
+peeking_enabled = true
+acid_enabled = false
+ball_enabled = false
+honcker_hotkey = "f"
+toys_enabled = true
+jail_enabled = false
+drag_enabled = false
+nametag_enabled = false
+portal_hotkey_1 = "1"
+presence_enabled = false
+jail_hotkey_o = "o"
+config_gui_enabled = false
+honcker_enabled = false
+visible_enabled = true
+hats_enabled = false
+ai_enabled = false
+health_enabled = false
+portals_enabled = false
+pomodoro_enabled = false
+jail_hotkey_p = "p"
+portal_hotkey_2 = "2"
+breadcrumbs_hotkey = "right shift"
+interactive_drops_flower_grow_time = 10.0
+portal_hotkey_0 = "0"
+interactive_drops_drop_interval = 120.0
+
+

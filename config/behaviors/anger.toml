@@ -1,0 +1,36 @@
+# Anger Behavior Config
+# Gets angry when displeased, punches cursor
+
+[settings]
+# Anger increase rate (per second)
+increaseRate = 15.0
+
+# Anger decrease rate (per second)
+decreaseRate = 8.0
+
+# Cooldown between punches (seconds)
+punchCooldown = 2.0
+
+# Duration of punch animation (seconds)
+punchDuration = 0.3
+
+# Radius to detect cursor for anger
+cursorRadius = 100.0
+
+# Maximum anger level
+maxAnger = 100.0
+
+# Anger threshold to start punching
+punchThreshold = 80.0
+
+# Minimum anger to show visual effect
+minVisualThreshold = 10.0
+
+# Default distance when no cursor provider
+defaultDistance = 1000.0
+
+# Visual alpha multiplier
+visualAlpha = 0.5
+
+# Visual radius for effect
+visualRadius = 20.0

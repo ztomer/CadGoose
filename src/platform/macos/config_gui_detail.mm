@@ -1,0 +1,347 @@
+// config_gui_detail.mm
+// BehaviorDetailView — main implementation (init, behavior config UI, AI provider, geese list)
+#import "config_gui_helpers.h"
+#include "config.h"
+#include "hotkey_cache.h"
+#include "world.h"
+
+// --- Layout constants ---
+static constexpr float kDetailTitleX = 14;
+static constexpr float kDetailTitleYOffset = 28;
+static constexpr float kDetailTitleWidthPad = 20;
+static constexpr float kDetailTitleHeight = 20;
+static constexpr float kDetailTitleFontSize = 15;
+static constexpr float kDetailContentYOffset = 36;
+static constexpr float kDetailSectionStartY = 40;
+static constexpr float kDetailRowSpacing = 30;
+static constexpr float kDetailRowSpacingSmall = 25;
+static constexpr float kDetailRowSpacingLarge = 42;
+static constexpr float kDetailRowSpacingXLarge = 60;
+static constexpr float kDetailSliderLabelX = 12;
+static constexpr float kDetailSliderLabelWidthPad = 24;
+static constexpr float kDetailDescX = 12;
+static constexpr float kDetailDescWidthPad = 24;
+static constexpr float kDetailDescHeight = 30;
+static constexpr float kDetailBigLabelX = 12;
+static constexpr float kDetailBigLabelWidthPad = 24;
+static constexpr float kDetailBigLabelHeight = 40;
+static constexpr float kDetailValueFontSize = 11;
+static constexpr float kDetailValueLabelPad = 14;
+static constexpr float kDetailIdLabelX = 16;
+static constexpr float kDetailIdLabelWidth = 30;
+static constexpr float kDetailIdLabelHeight = 20;
+static constexpr float kDetailIdRowSpacing = 28;
+
+@implementation BehaviorDetailView
+
+- (instancetype)initWithFrame:(NSRect)frame {
+    self = [super initWithFrame:frame];
+    if (self) {
+        _titleLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(kDetailTitleX, frame.size.height - kDetailTitleYOffset, frame.size.width - kDetailTitleWidthPad, kDetailTitleHeight)];
+        _titleLabel.font = [NSFont boldSystemFontOfSize:kDetailTitleFontSize];
+        _titleLabel.textColor = [NSColor whiteColor];
+        _titleLabel.backgroundColor = [NSColor clearColor];
+        _titleLabel.bordered = NO;
+        _titleLabel.editable = NO;
+        [self addSubview:_titleLabel];
+
+        _contentView = [[NSView alloc] initWithFrame:NSMakeRect(0, 0, frame.size.width, frame.size.height - kDetailContentYOffset)];
+        [self addSubview:_contentView];
+    }
+    return self;
+}
+
+- (void)configureForBehavior:(NSString*)key {
+    _configKey = key;
+
+    for (NSView* subview in _contentView.subviews) {
+        [subview removeFromSuperview];
+    }
+
+    if ([key isEqualToString:@"ball_enabled"]) {
+        _titleLabel.stringValue = @"Ball Behavior";
+        float y = _contentView.bounds.size.height - kDetailSectionStartY;
+        [self addSliderWithLabel:@"Ball Size" min:5.0f max:50.0f value:g_config.behaviors.ball.size atY:y key:@"behaviors.fun.ball.size"];
+    } else if ([key isEqualToString:@"breadcrumbs_enabled"]) {
+        _titleLabel.stringValue = @"Breadcrumbs Behavior";
+        float y = _contentView.bounds.size.height - kDetailSectionStartY;
+        [self addHotkeyFieldWithLabel:@"Trigger Key" value:@(Hotkey_Name(HotkeyId::Breadcrumbs).c_str()) atY:y key:@"breadcrumbs_hotkey"];
+        y -= 42;
+        [self addSliderWithLabel:@"Max Crumbs" min:10.0f max:200.0f value:g_config.behaviors.breadCrumbs.maxCrumbs atY:y key:@"behaviors.fun.breadCrumbs.max"];
+    } else if ([key isEqualToString:@"hats_enabled"]) {
+        _titleLabel.stringValue = @"Hats Behavior";
+        float y = _contentView.bounds.size.height - kDetailSectionStartY;
+        [self addSliderWithLabel:@"Hat Size" min:4.0f max:128.0f value:g_config.behaviors.hats.sizeX atY:y key:@"behaviors.fun.hats.size"];
+    } else if ([key isEqualToString:@"rainbow_enabled"]) {
+        _titleLabel.stringValue = @"Rainbow Behavior";
+        float y = _contentView.bounds.size.height - kDetailSectionStartY;
+        [self addSliderWithLabel:@"Hue Speed" min:0.1f max:5.0f value:g_config.behaviors.rainbow.hueSpeed atY:y key:@"behaviors.fun.rainbow.speed"];
+    } else if ([key isEqualToString:@"acid_enabled"]) {
+        _titleLabel.stringValue = @"Acid Behavior";
+        float y = _contentView.bounds.size.height - kDetailSectionStartY;
+        [self addSliderWithLabel:@"Spin Speed" min:0.1f max:5.0f value:g_config.behaviors.acid.spinSpeed atY:y key:@"behaviors.fun.acid.speed"];
+    } else if ([key isEqualToString:@"anger_enabled"]) {
+        _titleLabel.stringValue = @"Anger Behavior";
+        float y = _contentView.bounds.size.height - kDetailSectionStartY;
+        [self addSliderWithLabel:@"Max Anger" min:0.0f max:200.0f value:g_config.behaviors.anger.maxAnger atY:y key:@"behaviors.fun.anger.max"];
+    } else if ([key isEqualToString:@"honcker_enabled"]) {
+        _titleLabel.stringValue = @"Honcker Behavior";
+        float y = _contentView.bounds.size.height - kDetailSectionStartY;
+        NSString* k = @(Hotkey_Name(HotkeyId::HonckerHonk).c_str());
+        [self addInstructionLabel:[NSString stringWithFormat:@"Press %@ to honk at cursor location", k] atY:y];
+        y -= kDetailRowSpacingSmall;
+        [self addHotkeyFieldWithLabel:@"Honk Key" value:@(Hotkey_Name(HotkeyId::HonckerHonk).c_str()) atY:y key:@"hotkey"];
+        y -= 42;
+        [self addSliderWithLabel:@"Honk Cooldown" min:0.1f max:10.0f value:g_config.behaviors.honcker.cooldown atY:y key:@"behaviors.control.honcker.cooldown"];
+    } else if ([key isEqualToString:@"jail_enabled"]) {
+        _titleLabel.stringValue = @"Jail Behavior";
+        float y = _contentView.bounds.size.height - kDetailSectionStartY;
+        NSString* kO = @(Hotkey_Name(HotkeyId::JailSet).c_str());
+        NSString* kP = @(Hotkey_Name(HotkeyId::JailToggle).c_str());
+        [self addInstructionLabel:[NSString stringWithFormat:@"%@ = set cursor as jail position\n%@ = toggle jail on/off", kO, kP] atY:y];
+        y -= kDetailRowSpacingLarge;
+        [self addHotkeyFieldWithLabel:@"Set Key" value:@(Hotkey_Name(HotkeyId::JailSet).c_str()) atY:y key:@"hotkeyO"];
+        y -= kDetailRowSpacing;
+        [self addHotkeyFieldWithLabel:@"Toggle Key" value:@(Hotkey_Name(HotkeyId::JailToggle).c_str()) atY:y key:@"hotkeyP"];
+        y -= 42;
+        [self addSliderWithLabel:@"Jail Size" min:50.0f max:300.0f value:g_config.behaviors.jail.size atY:y key:@"behaviors.control.jail.size"];
+    } else if ([key isEqualToString:@"portals_enabled"]) {
+        _titleLabel.stringValue = @"Portal Behavior";
+        float y = _contentView.bounds.size.height - kDetailSectionStartY;
+        NSString* k1 = @(Hotkey_Name(HotkeyId::Portal1).c_str());
+        NSString* k2 = @(Hotkey_Name(HotkeyId::Portal2).c_str());
+        NSString* k0 = @(Hotkey_Name(HotkeyId::Portal0).c_str());
+        [self addInstructionLabel:[NSString stringWithFormat:@"%@ = place portal A\n%@ = place portal B\n%@ = toggle portals", k1, k2, k0] atY:y];
+        y -= kDetailRowSpacingXLarge;
+        [self addHotkeyFieldWithLabel:@"Portal 1" value:@(Hotkey_Name(HotkeyId::Portal1).c_str()) atY:y key:@"hotkey1"];
+        y -= kDetailRowSpacing;
+        [self addHotkeyFieldWithLabel:@"Portal 2" value:@(Hotkey_Name(HotkeyId::Portal2).c_str()) atY:y key:@"hotkey2"];
+        y -= kDetailRowSpacing;
+        [self addHotkeyFieldWithLabel:@"Toggle" value:@(Hotkey_Name(HotkeyId::Portal0).c_str()) atY:y key:@"hotkey0"];
+        y -= 42;
+        [self addSliderWithLabel:@"Portal Width" min:30.0f max:200.0f value:g_config.portal.width atY:y key:@"behaviors.control.portals.width"];
+    } else if ([key isEqualToString:@"drag_enabled"]) {
+        _titleLabel.stringValue = @"Drag Behavior";
+        float y = _contentView.bounds.size.height - kDetailSectionStartY;
+        [self addInstructionLabel:@"Click and drag the goose" atY:y];
+        y -= 42;
+        [self addSliderWithLabel:@"Drag Radius" min:50.0f max:300.0f value:g_config.behaviors.drag.radius atY:y key:@"behaviors.control.drag.radius"];
+    } else if ([key isEqualToString:@"nametag_enabled"]) {
+        _titleLabel.stringValue = @"Nametag & Geese";
+        float y = _contentView.bounds.size.height - kDetailSectionStartY;
+        [self addSliderWithLabel:@"Font Size" min:8.0f max:40.0f value:g_config.behaviors.nametag.size atY:y key:@"behaviors.info.nametag.size"];
+        y -= 47;
+        [self addGeeseListAtY:y];
+    } else if ([key isEqualToString:@"health_enabled"]) {
+        _titleLabel.stringValue = @"Health System";
+        float y = _contentView.bounds.size.height - kDetailSectionStartY;
+        [self addSliderWithLabel:@"Opacity" min:0.2f max:1.0f value:g_config.behaviors.health.opacity atY:y key:@"behaviors.systems.health.opacity"];
+    } else if ([key isEqualToString:@"pomodoro_enabled"]) {
+        _titleLabel.stringValue = @"Pomodoro Timer";
+        float y = _contentView.bounds.size.height - kDetailSectionStartY;
+        [self addSliderWithLabel:@"Work (min)" min:1.0f max:60.0f value:g_config.behaviors.pomodoro.workMinutes atY:y key:@"behaviors.systems.pomodoro.workDuration"];
+        y -= 47;
+        [self addSliderWithLabel:@"Break (min)" min:1.0f max:30.0f value:g_config.behaviors.pomodoro.breakMinutes atY:y key:@"behaviors.systems.pomodoro.breakDuration"];
+    } else {
+        _titleLabel.stringValue = @"Settings";
+        float y = _contentView.bounds.size.height - kDetailSectionStartY;
+        NSTextField* desc = [[NSTextField alloc] initWithFrame:NSMakeRect(kDetailDescX, y, self.bounds.size.width - kDetailDescWidthPad, kDetailDescHeight)];
+        desc.font = [NSFont systemFontOfSize:12];
+        desc.textColor = [NSColor colorWithWhite:0.85 alpha:1.0];
+        desc.backgroundColor = [NSColor clearColor];
+        desc.bordered = NO;
+        desc.editable = NO;
+        desc.stringValue = @"No additional settings for this behavior.";
+        [_contentView addSubview:desc];
+    }
+}
+
+- (void)addInstructionLabel:(NSString*)text atY:(float)y {
+    NSTextField* label = [[NSTextField alloc] initWithFrame:NSMakeRect(kDetailBigLabelX, y, self.bounds.size.width - kDetailBigLabelWidthPad, kDetailBigLabelHeight)];
+    label.font = [NSFont fontWithName:@"Maple Mono" size:12] ?: [NSFont systemFontOfSize:12];
+    label.textColor = [NSColor colorWithWhite:0.85 alpha:1.0];
+    label.backgroundColor = [NSColor clearColor];
+    label.bordered = NO;
+    label.editable = NO;
+    [_contentView addSubview:label];
+
+    NSMutableParagraphStyle* para = [[NSMutableParagraphStyle alloc] init];
+    para.lineSpacing = 2;
+    NSDictionary* attrs = @{NSFontAttributeName: label.font ?: [NSFont systemFontOfSize:12],
+                            NSParagraphStyleAttributeName: para};
+    label.attributedStringValue = [[NSAttributedString alloc] initWithString:text attributes:attrs];
+}
+
+- (void)addSliderWithLabel:(NSString*)label min:(float)min max:(float)max value:(float)value atY:(float)y key:(NSString*)key {
+    CGFloat pw = _contentView.bounds.size.width;
+    CGFloat leftPad = 12;
+    CGFloat rightPad = 12;
+    NSDictionary* font12 = @{NSFontAttributeName: [NSFont systemFontOfSize:12]};
+    NSDictionary* font11 = @{NSFontAttributeName: [NSFont systemFontOfSize:11]};
+    CGFloat labelW = [label sizeWithAttributes:font12].width + 10;
+    CGFloat valW = [@"100.00" sizeWithAttributes:font11].width + 14;
+
+    // Row 1: Label (left) | Value (right)
+    NSTextField* labelField = [[NSTextField alloc] initWithFrame:NSMakeRect(leftPad, y, labelW, 16)];
+    labelField.font = [NSFont systemFontOfSize:12];
+    labelField.textColor = [NSColor whiteColor];
+    labelField.backgroundColor = [NSColor clearColor];
+    labelField.bordered = NO;
+    labelField.editable = NO;
+    labelField.stringValue = label;
+    [_contentView addSubview:labelField];
+
+    NSTextField* valueField = [[NSTextField alloc] initWithFrame:NSMakeRect(pw - rightPad - valW, y, valW, 16)];
+    valueField.font = [NSFont systemFontOfSize:11];
+    valueField.textColor = [NSColor colorWithWhite:0.85 alpha:1.0];
+    valueField.backgroundColor = [NSColor clearColor];
+    valueField.bordered = NO;
+    valueField.editable = YES;
+    valueField.stringValue = [NSString stringWithFormat:@"%.2f", value];
+    valueField.identifier = key;
+    valueField.target = self;
+    valueField.action = @selector(valueFieldChanged:);
+    valueField.alignment = NSTextAlignmentRight;
+    [_contentView addSubview:valueField];
+
+    // Row 2: Slider (full width, 22px below)
+    CGFloat sliderX = leftPad;
+    CGFloat sliderW = pw - leftPad - rightPad;
+    NSSlider* slider = [[NSSlider alloc] initWithFrame:NSMakeRect(sliderX, y - 22, sliderW, 20)];
+    slider.minValue = min;
+    slider.maxValue = max;
+    slider.doubleValue = value;
+    slider.identifier = key;
+    slider.target = self;
+    slider.action = @selector(sliderChanged:);
+    [_contentView addSubview:slider];
+}
+
+- (void)addHotkeyFieldWithLabel:(NSString*)label value:(NSString*)value atY:(float)y key:(NSString*)key {
+    CGFloat pw = _contentView.bounds.size.width;
+    CGFloat leftPad = 12;
+    CGFloat gap = 6;
+    NSDictionary* font12 = @{NSFontAttributeName: [NSFont systemFontOfSize:12]};
+    CGFloat labelW = [label sizeWithAttributes:font12].width + 10;
+    CGFloat fieldW = pw - leftPad - labelW - gap - 12;
+
+    NSTextField* labelField = [[NSTextField alloc] initWithFrame:NSMakeRect(leftPad, y, labelW, 18)];
+    labelField.font = [NSFont systemFontOfSize:12];
+    labelField.textColor = [NSColor whiteColor];
+    labelField.backgroundColor = [NSColor clearColor];
+    labelField.bordered = NO;
+    labelField.editable = NO;
+    labelField.stringValue = label;
+    [_contentView addSubview:labelField];
+
+    NSTextField* field = [[NSTextField alloc] initWithFrame:NSMakeRect(leftPad + labelW + gap, y, fieldW, 22)];
+    field.font = [NSFont fontWithName:@"Menlo" size:12] ?: [NSFont systemFontOfSize:12];
+    field.stringValue = value;
+    field.bezelStyle = NSTextFieldRoundedBezel;
+    field.identifier = key;
+    field.target = self;
+    field.action = @selector(hotkeyFieldChanged:);
+    [_contentView addSubview:field];
+}
+
+- (void)hotkeyFieldChanged:(NSTextField*)sender {
+    NSString* keyStr = sender.identifier;
+    std::string value = std::string([sender.stringValue UTF8String]);
+
+    // Hotkey_SetName writes the g_config string under the hotkey-cache mutex and
+    // refreshes the lock-free key-code cache, keeping the MCP server thread safe.
+    if ([keyStr isEqualToString:@"hotkey"]) {
+        Hotkey_SetName(HotkeyId::HonckerHonk, value);
+    } else if ([keyStr isEqualToString:@"hotkeyO"]) {
+        Hotkey_SetName(HotkeyId::JailSet, value);
+    } else if ([keyStr isEqualToString:@"hotkeyP"]) {
+        Hotkey_SetName(HotkeyId::JailToggle, value);
+    } else if ([keyStr isEqualToString:@"hotkey1"]) {
+        Hotkey_SetName(HotkeyId::Portal1, value);
+    } else if ([keyStr isEqualToString:@"hotkey2"]) {
+        Hotkey_SetName(HotkeyId::Portal2, value);
+    } else if ([keyStr isEqualToString:@"hotkey0"]) {
+        Hotkey_SetName(HotkeyId::Portal0, value);
+    } else if ([keyStr isEqualToString:@"breadcrumbs_hotkey"]) {
+        Hotkey_SetName(HotkeyId::Breadcrumbs, value);
+    }
+    OnConfigChange();
+}
+
+- (float)addGeeseListAtY:(float)y {
+    NSTextField* sectionLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(12, y, 200, 16)];
+    sectionLabel.stringValue = @"Geese";
+    sectionLabel.font = [NSFont systemFontOfSize:12 weight:NSFontWeightSemibold];
+    sectionLabel.textColor = [NSColor whiteColor];
+    sectionLabel.backgroundColor = [NSColor clearColor];
+    sectionLabel.bordered = NO;
+    sectionLabel.editable = NO;
+    [_contentView addSubview:sectionLabel];
+    y -= 24;
+
+    for (auto* g : ActorManager::Instance().getGeese()) {
+        NSTextField* idLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(kDetailIdLabelX, y, kDetailIdLabelWidth, kDetailIdLabelHeight)];
+        idLabel.stringValue = [NSString stringWithFormat:@"#%d", g->id];
+        idLabel.font = [NSFont systemFontOfSize:11];
+        idLabel.textColor = [NSColor colorWithWhite:0.85 alpha:1.0];
+        idLabel.backgroundColor = [NSColor clearColor];
+        idLabel.bordered = NO;
+        idLabel.editable = NO;
+        idLabel.alignment = NSTextAlignmentRight;
+        [_contentView addSubview:idLabel];
+
+        NSTextField* nameField = [[NSTextField alloc] initWithFrame:NSMakeRect(52, y, self.bounds.size.width - 64, 22)];
+        nameField.stringValue = [NSString stringWithUTF8String:g->name.c_str()];
+        nameField.font = [NSFont systemFontOfSize:12];
+        nameField.bezelStyle = NSTextFieldRoundedBezel;
+        nameField.tag = g->id;
+        nameField.target = self;
+        nameField.action = @selector(gooseNameChanged:);
+        [_contentView addSubview:nameField];
+
+        y -= kDetailIdRowSpacing;
+    }
+
+    return y;
+}
+
+- (void)gooseNameChanged:(NSTextField*)sender {
+    int gooseId = (int)sender.tag;
+    std::string newName = std::string([sender.stringValue UTF8String]);
+    for (auto* g : ActorManager::Instance().getGeese()) {
+        if (g->id == gooseId) {
+            g->name = newName;
+            break;
+        }
+    }
+}
+
+- (void)sliderChanged:(NSSlider*)sender {
+    float value = (float)sender.doubleValue;
+    NSString* keyStr = sender.identifier;
+    if (keyStr) {
+        s_setFloatValue(std::string([keyStr UTF8String]), value);
+        for (NSView* subview in _contentView.subviews) {
+            if ([subview isKindOfClass:[NSTextField class]] && ![subview isEqualTo:sender] && [((NSTextField*)subview).identifier isEqualToString:keyStr]) {
+                ((NSTextField*)subview).stringValue = [NSString stringWithFormat:@"%.2f", value];
+                break;
+            }
+        }
+    }
+}
+
+- (void)valueFieldChanged:(NSTextField*)sender {
+    float value = (float)sender.doubleValue;
+    NSString* keyStr = sender.identifier;
+    if (keyStr) {
+        s_setFloatValue(std::string([keyStr UTF8String]), value);
+        for (NSView* subview in _contentView.subviews) {
+            if ([subview isKindOfClass:[NSSlider class]] && [((NSSlider*)subview).identifier isEqualToString:keyStr]) {
+                ((NSSlider*)subview).doubleValue = value;
+                break;
+            }
+        }
+    }
+}
+
+@end

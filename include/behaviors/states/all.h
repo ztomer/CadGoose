@@ -1,0 +1,17 @@
+#pragma once
+// Umbrella include for all behavior state types.
+#include "behaviors/states/acid_state.h"
+#include "behaviors/states/anger_state.h"
+#include "behaviors/states/ball_state.h"
+#include "behaviors/states/boredom_state.h"
+#include "behaviors/states/breadcrumb_state.h"
+#include "behaviors/states/drag_state.h"
+#include "behaviors/states/health_state.h"
+#include "behaviors/states/honcker_state.h"
+#include "behaviors/states/interactive_drops_state.h"
+#include "behaviors/states/jail_state.h"
+#include "behaviors/states/peeking_state.h"
+#include "behaviors/states/pomodoro_state.h"
+#include "behaviors/states/portal_state.h"
+#include "behaviors/states/rainbow_state.h"
+#include "behaviors/states/toys_state.h"

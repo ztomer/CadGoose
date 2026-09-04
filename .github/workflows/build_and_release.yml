@@ -1,0 +1,209 @@
+name: Build & Release Artifacts
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: "Existing release tag to attach the built artifacts to (e.g. v1.9). Leave blank to only build artifacts."
+        required: false
+        default: ""
+
+permissions:
+  contents: write
+
+jobs:
+  # ── macOS ──────────────────────────────────────────────
+  build-macos:
+    name: Build macOS (DMG)
+    # macos-26 ships the macOS 26 SDK, which contains FoundationModels — required
+    # for the local "Foundation" AI provider to be compiled into the binary.
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v4
+
+      # FoundationModels (the local "Foundation" AI provider) only exists in the
+      # macOS 26+ SDK. canImport() is evaluated at compile time, so building
+      # against an older SDK silently strips the backend out of the DMG. Select
+      # the newest Xcode the runner offers to maximize the chance of an SDK that
+      # includes FoundationModels.
+      - name: Select latest Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: Install dependencies
+        run: brew install cmake googletest mimalloc ccache
+
+      - name: Verify FoundationModels SDK support
+        run: |
+          echo "Xcode: $(xcodebuild -version | head -1)"
+          SDK_PATH="$(xcrun --show-sdk-path)"
+          echo "SDK: $SDK_PATH (version $(xcrun --show-sdk-version))"
+          printf '#if canImport(FoundationModels)\n#warning("FoundationModels present in SDK")\n#else\n#warning("FoundationModels MISSING from SDK")\n#endif\n' > /tmp/fmcheck.swift
+          if swiftc -typecheck /tmp/fmcheck.swift -sdk "$SDK_PATH" 2>&1 | grep -q "FoundationModels present"; then
+            echo "✓ FoundationModels available — local Foundation provider will work in this build"
+          else
+            echo "::warning title=Foundation provider disabled::This SDK lacks FoundationModels; the released DMG will NOT support the local Foundation AI provider. Use a runner/Xcode with the macOS 26+ SDK."
+          fi
+
+      - name: Cache ccache
+        uses: actions/cache@v4
+        with:
+          path: ~/Library/Caches/ccache
+          key: ccache-${{ runner.os }}-${{ hashFiles('**/CMakeLists.txt') }}
+          restore-keys: |
+            ccache-${{ runner.os }}-
+
+      - name: Configure & Build
+        run: |
+          rm -rf build && mkdir -p build && cd build
+          # Release build: compile out all debug-level logging (CG_DISABLE_DEBUG_LOG).
+          # Applies to the CadGoose app target only; CadGooseTests keeps full logging.
+          cmake .. -DCMAKE_BUILD_TYPE=Release -DCG_DISABLE_DEBUG_LOG=ON -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+          cmake --build . --config Release --parallel $(sysctl -n hw.logicalcpu)
+
+      - name: Run Tests (fast)
+        run: |
+          cd build
+          bash ../scripts/run_tests_ci.sh
+
+      # Thresholds are a RATCHET set below the measured floor (CI measured
+      # P0 95.27%, P1 54.44%, total 86.01% on 2026-08-22) — not an aspiration.
+      # They exist to fail the build on a REGRESSION.
+      #
+      # The ~1pp gap is deliberate. Coverage here is not perfectly
+      # deterministic: repeated runs of the same commit have varied by up to
+      # 0.4pp on P1 (timing-sensitive async-log tests, randomised behavior
+      # tests). A threshold pressed right up against the measured value would
+      # go red on noise, and a gate that cries wolf gets switched off — which
+      # costs more than the 1pp it buys. Keep roughly 1pp of headroom when
+      # raising these.
+      #
+      # Raise as coverage lands; never lower them to make a red build green.
+      - name: Test registration gate
+        run: python3 tools/check_test_registration.py
+
+      - name: Coverage Gate
+        run: |
+          bash scripts/check_coverage.sh --p0-min=94 --p1-min=53 --total-min=85 --build-dir=build-cov
+
+      - name: Determine version
+        uses: ./.github/actions/determine-version
+        with:
+          release_tag: ${{ inputs.release_tag }}
+
+      - name: Create App Bundle
+        run: |
+          chmod +x scripts/create_bundle.sh
+          BUNDLE_VERSION="${VERSION#v}" ./scripts/create_bundle.sh --clean
+
+      - name: Create DMG
+        run: |
+          hdiutil create -volname CadGoose -srcfolder build/CadGoose.app -ov -format UDZO "build/CadGoose-${VERSION}.dmg"
+
+      - name: Upload DMG (artifact)
+        uses: actions/upload-artifact@v4
+        with:
+          name: CadGoose-macOS-${{ env.VERSION }}
+          path: build/CadGoose-${{ env.VERSION }}.dmg
+          retention-days: 30
+
+      - name: Upload DMG to Release
+        if: github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && inputs.release_tag != '')
+        run: |
+          TAG="${{ github.event.release.tag_name || inputs.release_tag }}"
+          echo "Attaching CadGoose-${VERSION}.dmg to release $TAG"
+          gh release upload "$TAG" "build/CadGoose-${VERSION}.dmg" --clobber
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update Homebrew Cask in Tap
+        if: github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && inputs.release_tag != '')
+        env:
+          TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+        run: |
+          if [ -z "$TAP_TOKEN" ]; then
+            echo "HOMEBREW_TAP_TOKEN secret is not set, skipping cask tap automation."
+            exit 0
+          fi
+          
+          # 1. Calculate SHA-256 and get version strings
+          DMG_FILE="build/CadGoose-${VERSION}.dmg"
+          SHA256_HASH=$(shasum -a 256 "$DMG_FILE" | awk '{print $1}')
+          CLEAN_VERSION="${VERSION#v}"
+          
+          # 2. Clone the tap repository
+          git clone "https://${TAP_TOKEN}@github.com/ztomer/homebrew-tap.git" /tmp/homebrew-tap
+          cd /tmp/homebrew-tap
+          
+          # 3. Update the cask file with new version and SHA-256 hash using portable perl
+          perl -pi -e "s/version \".*\"/version \"$CLEAN_VERSION\"/" Casks/cadgoose.rb
+          perl -pi -e "s/sha256 \".*\"/sha256 \"$SHA256_HASH\"/" Casks/cadgoose.rb
+          perl -pi -e "s/sha256 :no_check/sha256 \"$SHA256_HASH\"/" Casks/cadgoose.rb
+          
+          # 4. Commit and push directly to the tap repository
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add Casks/cadgoose.rb
+          git commit -m "Update CadGoose cask to version $CLEAN_VERSION"
+          git push origin main
+
+  # ── Linux ──────────────────────────────────────────────
+  build-linux:
+    name: Build Linux (tar.zst)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq cmake g++ libgtk-4-dev libsdl2-dev libsdl2-mixer-dev \
+            libgdk-pixbuf-2.0-dev libwayland-dev libx11-dev libxtst-dev zstd
+
+      - name: Configure & Build
+        run: |
+          rm -rf build && mkdir -p build && cd build
+          # Release build: compile out all debug-level logging (CG_DISABLE_DEBUG_LOG).
+          cmake .. -DCMAKE_BUILD_TYPE=Release -DCG_DISABLE_DEBUG_LOG=ON
+          cmake --build . --config Release --parallel $(nproc)
+
+      # Tests are macOS-only (behaviors have CoreGraphics dependencies)
+
+      - name: Test registration gate
+        run: python3 tools/check_test_registration.py
+
+      - name: Determine version
+        uses: ./.github/actions/determine-version
+        with:
+          release_tag: ${{ inputs.release_tag }}
+
+      - name: Package binary
+        run: |
+          mkdir -p cadgoose-linux/{bin,config,Assets}
+          cp build/CadGoose cadgoose-linux/bin/
+          cp -r config/* cadgoose-linux/config/ 2>/dev/null || true
+          cp -r Assets/* cadgoose-linux/Assets/ 2>/dev/null || true
+          tar --zstd -cf "CadGoose-${VERSION}-linux.tar.zst" cadgoose-linux
+
+      - name: Upload tar.zst (artifact)
+        uses: actions/upload-artifact@v4
+        with:
+          name: CadGoose-Linux-${{ env.VERSION }}
+          path: CadGoose-${{ env.VERSION }}-linux.tar.zst
+          retention-days: 30
+
+      - name: Upload tar.zst to Release
+        if: github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && inputs.release_tag != '')
+        run: |
+          TAG="${{ github.event.release.tag_name || inputs.release_tag }}"
+          echo "Attaching CadGoose-${VERSION}-linux.tar.zst to release $TAG"
+          gh release upload "$TAG" "CadGoose-${VERSION}-linux.tar.zst" --clobber
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

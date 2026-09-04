@@ -1,0 +1,26 @@
+# Health Behavior Config
+# Health bar system for geese
+
+[settings]
+# Maximum health
+maxHealth = 100.0
+
+# Health regeneration rate (per second)
+regenRate = 0.5
+
+# Cooldown between damage instances (seconds)
+damageCooldown = 2.0
+
+# Speed threshold for taking damage
+damageSpeedThreshold = 200.0
+
+# Damage amount per instance
+damageAmount = 5.0
+
+[healthBar]
+# Health bar dimensions
+width = 40.0
+height = 4.0
+
+# Vertical offset from goose
+offset = 50.0

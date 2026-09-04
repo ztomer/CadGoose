@@ -1,0 +1,19 @@
+# Pomodoro Timer Behavior Config
+# Work for 25 minutes, break for 5, long break after 4 sessions
+
+[settings]
+# Enable pomodoro mode
+enabled = false
+
+# Session durations in minutes
+workMinutes = 25
+breakMinutes = 5
+longBreakMinutes = 15
+
+# Sessions before long break
+sessionsBeforeLongBreak = 4
+
+# Aggressive work mode settings
+enableAggressiveMode = true
+aggressiveHonkInterval = 2.0
+aggressiveSpeedMultiplier = 1.5

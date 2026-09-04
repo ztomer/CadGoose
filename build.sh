@@ -1,0 +1,88 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# build.sh — macOS build engine for CadGoose (shared by build_release.sh /
+# build_debug.sh).
+#
+# Checks for required Homebrew dependencies (installing any that are missing),
+# then configures and builds with Ninja. Pass a build directory as $1
+# (default: build).
+#
+# Env:
+#   BUILD_TYPE        CMake build type (default: Release)
+#   EXTRA_CMAKE_ARGS  extra -D flags passed to the configure step (default: none)
+#   SKIP_DEPS=1       bypass the Homebrew dependency check
+
+# Always operate from the repo root so the CMake cache's home dir matches.
+cd "$(dirname "$0")"
+
+BUILD_DIR="${1:-build}"
+BUILD_TYPE="${BUILD_TYPE:-Release}"
+EXTRA_CMAKE_ARGS="${EXTRA_CMAKE_ARGS:-}"
+
+# ── Dependency check (macOS / Homebrew) ────────────────────
+# Required Homebrew formulae. CMake also links system frameworks (Cocoa,
+# CoreML, curl, …) which ship with macOS and need no install.
+BREW_DEPS=(cmake ninja googletest mimalloc)
+
+check_dependencies() {
+    if [[ "$(uname)" != "Darwin" ]]; then
+        echo "==> Non-macOS host; skipping Homebrew dependency check."
+        echo "    See build_linux.sh / docs/README_LINUX.md for Linux builds."
+        return
+    fi
+
+    if ! command -v brew >/dev/null 2>&1; then
+        cat <<'EOF'
+ERROR: Homebrew is not installed, but it is required to install build dependencies.
+
+Install Homebrew first:
+
+  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+Then re-run ./build.sh. (Or set SKIP_DEPS=1 to bypass this check if you have
+cmake, ninja, googletest and mimalloc installed by other means.)
+EOF
+        exit 1
+    fi
+
+    local missing=()
+    for dep in "${BREW_DEPS[@]}"; do
+        if ! brew list --formula "$dep" >/dev/null 2>&1; then
+            missing+=("$dep")
+        fi
+    done
+
+    if (( ${#missing[@]} > 0 )); then
+        echo "==> Installing missing dependencies: ${missing[*]}"
+        brew install "${missing[@]}"
+    else
+        echo "==> All dependencies present: ${BREW_DEPS[*]}"
+    fi
+}
+
+if [[ "${SKIP_DEPS:-0}" != "1" ]]; then
+    check_dependencies
+fi
+
+# ── Configure & build ──────────────────────────────────────
+# Self-heal a stale or foreign CMake cache. A cache generated elsewhere (e.g. a
+# committed CI build under /work) or with a different generator makes `cmake -B`
+# fail outright, which silently skips the rebuild. Wipe it when it doesn't match
+# this source tree + the Ninja generator.
+if [[ -f "$BUILD_DIR/CMakeCache.txt" ]]; then
+    if ! grep -qx "CMAKE_HOME_DIRECTORY:INTERNAL=$PWD" "$BUILD_DIR/CMakeCache.txt" \
+       || ! grep -qx "CMAKE_GENERATOR:INTERNAL=Ninja" "$BUILD_DIR/CMakeCache.txt"; then
+        echo "==> Stale/foreign CMake cache in $BUILD_DIR — removing it"
+        rm -rf "$BUILD_DIR"
+    fi
+fi
+
+echo "==> Configuring ($BUILD_DIR, $BUILD_TYPE, Ninja)${EXTRA_CMAKE_ARGS:+ [$EXTRA_CMAKE_ARGS]}"
+# shellcheck disable=SC2086  # EXTRA_CMAKE_ARGS is intentionally word-split
+cmake -B "$BUILD_DIR" -DCMAKE_BUILD_TYPE="$BUILD_TYPE" $EXTRA_CMAKE_ARGS -GNinja
+
+echo "==> Building"
+cmake --build "$BUILD_DIR"
+
+echo "==> Built $BUILD_DIR/CadGoose"

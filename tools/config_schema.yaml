@@ -1,0 +1,1230 @@
+# CadGoose Config Schema
+# Single source of truth for config registry and GUI generation.
+# Run: python3 tools/generate_config.py config_schema.yaml
+#
+# Types: bool, int, float, string
+# Sections map to GUI tabs/categories.
+
+sections:
+  Debug:
+    fields:
+      - name: toTerminal
+        type: bool
+        key: to_terminal
+        label: "To Terminal"
+      - name: visuals
+        type: bool
+        key: visuals
+        label: "Visuals"
+
+  General:
+    fields:
+      - name: globalScale
+        type: float
+        key: global_scale
+        label: "Global Scale"
+        min: 0.0
+        max: 10.0
+        step: 0.1
+        explanation: "Multiplier for goose size and speeds (0.1 - 10.0)"
+      - name: audioEnabled
+        type: bool
+        key: audio_enabled
+        label: "Audio Enabled"
+        explanation: "Play honk sounds when goose moves"
+      - name: audioMuted
+        type: bool
+        key: audio_muted
+        label: "Audio Muted"
+      - name: memesEnabled
+        type: bool
+        key: memes_enabled
+        label: "Memes Enabled"
+        explanation: "Allow picking up images and text as items"
+      - name: appearanceMode
+        type: int
+        key: appearance_mode
+        label: "Appearance Mode"
+        min: 0
+        max: 3
+        explanation: "0=Light, 1=Dark, 2=System (follow macOS), 3=Custom"
+      - name: lightThemeRole
+        type: string
+        key: light_theme_role
+        label: "Light Theme Role"
+      - name: darkThemeRole
+        type: string
+        key: dark_theme_role
+        label: "Dark Theme Role"
+      - name: failsafeHotkey
+        type: string
+        key: failsafe_hotkey
+        label: "Failsafe Hotkey"
+
+  Screen:
+    fields:
+      - name: defaultWidth
+        type: int
+        key: default_width
+        label: "Default Width"
+        min: 0
+        max: 10000
+      - name: defaultHeight
+        type: int
+        key: default_height
+        label: "Default Height"
+        min: 0
+        max: 10000
+
+  Asset:
+    fields:
+      - name: memePlaceholderW
+        type: int
+        key: meme_placeholder_w
+        label: "Meme Placeholder W"
+        min: 0
+        max: 1000
+      - name: memePlaceholderH
+        type: int
+        key: meme_placeholder_h
+        label: "Meme Placeholder H"
+        min: 0
+        max: 1000
+      - name: textPlaceholderW
+        type: int
+        key: text_placeholder_w
+        label: "Text Placeholder W"
+        min: 0
+        max: 1000
+      - name: textPlaceholderH
+        type: int
+        key: text_placeholder_h
+        label: "Text Placeholder H"
+        min: 0
+        max: 1000
+      - name: notePlaceholderW
+        type: int
+        key: note_placeholder_w
+        label: "Note Placeholder W"
+        min: 0
+        max: 1000
+      - name: notePlaceholderH
+        type: int
+        key: note_placeholder_h
+        label: "Note Placeholder H"
+        min: 0
+        max: 1000
+
+  Cursor:
+    fields:
+      - name: chaseEnabled
+        type: bool
+        key: chase_enabled
+        label: "Chase Enabled"
+      - name: chaseChance
+        type: int
+        key: chase_chance
+        label: "Chase Chance"
+        min: 0
+        max: 100
+      - name: multiMonitorEnabled
+        type: bool
+        key: multi_monitor_enabled
+        label: "Multi Monitor Enabled"
+
+  Movement:
+    fields:
+      - name: baseWalkSpeed
+        type: float
+        key: base_walk_speed
+        label: "Base Walk Speed"
+        min: 0.0
+        max: 1000.0
+        step: 0.1
+      - name: baseRunSpeed
+        type: float
+        key: base_run_speed
+        label: "Base Run Speed"
+        min: 0.0
+        max: 1000.0
+        step: 0.1
+      - name: maxForce
+        type: float
+        key: max_force
+        label: "Max Force"
+        min: 0.0
+        max: 1000.0
+        step: 0.1
+      - name: moveDistanceThreshold
+        type: float
+        key: move_distance_threshold
+        label: "Move Distance Threshold"
+        min: 0.0
+        max: 1000.0
+        step: 0.1
+      - name: friction
+        type: float
+        key: friction
+        label: "Friction"
+        min: 0.0
+        max: 1000.0
+        step: 0.1
+      - name: maxSpeed
+        type: float
+        key: max_speed
+        label: "Max Speed"
+        min: 0.0
+        max: 1000.0
+        step: 0.1
+      - name: runSpeedMultiplier
+        type: float
+        key: run_speed_multiplier
+        label: "Run Speed Multiplier"
+        min: 0.0
+        max: 10.0
+        step: 0.1
+      - name: initDirectionMax
+        type: float
+        key: init_direction_max
+        label: "Init Direction Max"
+        min: 0.0
+        max: 360.0
+        step: 1.0
+      - name: speedLerpRate
+        type: float
+        key: speed_lerp_rate
+        label: "Speed Lerp Rate"
+        min: 0.0
+        max: 1.0
+        step: 0.01
+      - name: arrivalRadius
+        type: float
+        key: arrival_radius
+        label: "Arrival Radius"
+        min: 0.0
+        max: 1000.0
+        step: 1.0
+      - name: runDistanceThreshold
+        type: float
+        key: run_distance_threshold
+        label: "Run Distance Threshold"
+        min: 0.0
+        max: 2000.0
+        step: 1.0
+      - name: directionBlendRate
+        type: float
+        key: direction_blend_rate
+        label: "Direction Blend Rate"
+        min: 0.0
+        max: 1.0
+        step: 0.01
+
+  Physics:
+    fields:
+      - name: screenMargin
+        type: float
+        key: screen_margin
+        label: "Screen Margin"
+        min: 0.0
+        max: 500.0
+        step: 1.0
+      - name: bounceFactorWall
+        type: float
+        key: bounce_factor_wall
+        label: "Bounce Factor Wall"
+        min: 0.0
+        max: 2.0
+        step: 0.1
+      - name: bounceFactorCorner
+        type: float
+        key: bounce_factor_corner
+        label: "Bounce Factor Corner"
+        min: 0.0
+        max: 2.0
+        step: 0.1
+      - name: cornerMargin
+        type: float
+        key: corner_margin
+        label: "Corner Margin"
+        min: 0.0
+        max: 500.0
+        step: 1.0
+      - name: dragMinDt
+        type: float
+        key: drag_min_dt
+        label: "Drag Min Dt"
+        min: 0.0
+        max: 1.0
+        step: 0.01
+      - name: dragVelocityThreshold
+        type: float
+        key: drag_velocity_threshold
+        label: "Drag Velocity Threshold"
+        min: 0.0
+        max: 1000.0
+        step: 1.0
+      - name: dragRotationSpeed
+        type: float
+        key: drag_rotation_speed
+        label: "Drag Rotation Speed"
+        min: 0.0
+        max: 10.0
+        step: 0.1
+      - name: isoScaleX
+        type: float
+        key: iso_scale_x
+        label: "Iso Scale X"
+        min: 0.1
+        max: 2.0
+        step: 0.01
+      - name: isoScaleY
+        type: float
+        key: iso_scale_y
+        label: "Iso Scale Y"
+        min: 0.1
+        max: 2.0
+        step: 0.01
+      - name: edgeAvoidMargin
+        type: float
+        key: edge_avoid_margin
+        label: "Edge Avoid Margin"
+        min: 0.0
+        max: 200.0
+        step: 1.0
+      - name: edgeLookAheadSpeed
+        type: float
+        key: edge_look_ahead_speed
+        label: "Edge Look Ahead Speed"
+        min: 0.0
+        max: 1.0
+        step: 0.01
+      - name: edgeLookAheadBase
+        type: float
+        key: edge_look_ahead_base
+        label: "Edge Look Ahead Base"
+        min: 0.0
+        max: 200.0
+        step: 1.0
+      - name: edgeAvoidForce
+        type: float
+        key: edge_avoid_force
+        label: "Edge Avoid Force"
+        min: 0.0
+        max: 10.0
+        step: 0.1
+      - name: screenClampTight
+        type: float
+        key: screen_clamp_tight
+        label: "Screen Clamp Tight"
+        min: 0.0
+        max: 200.0
+        step: 1.0
+      - name: screenClampExpanded
+        type: float
+        key: screen_clamp_expanded
+        label: "Screen Clamp Expanded"
+        min: 0.0
+        max: 200.0
+        step: 1.0
+      - name: screenClampBounce
+        type: float
+        key: screen_clamp_bounce
+        label: "Screen Clamp Bounce"
+        min: 0.0
+        max: 200.0
+        step: 1.0
+      - name: steerSeekForce
+        type: float
+        key: steer_seek_force
+        label: "Steer Seek Force"
+        min: 0.0
+        max: 20.0
+        step: 0.1
+      - name: curveFadeDistance
+        type: float
+        key: curve_fade_distance
+        label: "Curve Fade Distance"
+        min: 0.0
+        max: 1000.0
+        step: 1.0
+      - name: curveTangentForce
+        type: float
+        key: curve_tangent_force
+        label: "Curve Tangent Force"
+        min: 0.0
+        max: 5.0
+        step: 0.1
+      - name: curveFadeMinVel
+        type: float
+        key: curve_fade_min_vel
+        label: "Curve Fade Min Vel"
+        min: 0.0
+        max: 100.0
+        step: 1.0
+      - name: directionRotateMinVel
+        type: float
+        key: direction_rotate_min_vel
+        label: "Direction Rotate Min Vel"
+        min: 0.0
+        max: 100.0
+        step: 1.0
+      - name: directionToCursorDist
+        type: float
+        key: direction_to_cursor_dist
+        label: "Direction To Cursor Dist"
+        min: 0.0
+        max: 10.0
+        step: 0.1
+      - name: snapDistance
+        type: float
+        key: snap_distance
+        label: "Snap Distance"
+        min: 0.0
+        max: 10.0
+        step: 0.1
+      - name: directionReverseMultiplier
+        type: float
+        key: direction_reverse_multiplier
+        label: "Direction Reverse Multiplier"
+        min: -1.0
+        max: 1.0
+        step: 0.1
+      - name: minValidScale
+        type: float
+        key: min_valid_scale
+        label: "Min Valid Scale"
+        min: 0.0
+        max: 1.0
+        step: 0.01
+
+  Spawn:
+    fields:
+      - name: marginX
+        type: float
+        key: margin_x
+        label: "Margin X"
+        min: 0.0
+        max: 1000.0
+        step: 1.0
+      - name: marginY
+        type: float
+        key: margin_y
+        label: "Margin Y"
+        min: 0.0
+        max: 1000.0
+        step: 1.0
+      - name: targetReachedThresholdReturn
+        type: float
+        key: target_reached_threshold_return
+        label: "Target Reached Threshold Return"
+        min: 0.0
+        max: 200.0
+        step: 1.0
+      - name: targetReachedThresholdNormal
+        type: float
+        key: target_reached_threshold_normal
+        label: "Target Reached Threshold Normal"
+        min: 0.0
+        max: 200.0
+        step: 1.0
+      - name: itemPickupDistance
+        type: float
+        key: item_pickup_distance
+        label: "Item Pickup Distance"
+        min: 0.0
+        max: 100.0
+        step: 1.0
+      - name: fetchEdgeMargin
+        type: float
+        key: fetch_edge_margin
+        label: "Fetch Edge Margin"
+        min: 0.0
+        max: 200.0
+        step: 1.0
+      - name: separationMaxDistance
+        type: float
+        key: separation_max_distance
+        label: "Separation Max Distance"
+        min: 0.0
+        max: 200.0
+        step: 1.0
+      - name: separationForceMultiplier
+        type: float
+        key: separation_force_multiplier
+        label: "Separation Force Multiplier"
+        min: 0.0
+        max: 5.0
+        step: 0.1
+      - name: targetReachedMinReturn
+        type: float
+        key: target_reached_min_return
+        label: "Target Reached Min Return"
+        min: 1.0
+        max: 100.0
+        step: 1.0
+      - name: targetReachedMinNormal
+        type: float
+        key: target_reached_min_normal
+        label: "Target Reached Min Normal"
+        min: 1.0
+        max: 100.0
+        step: 1.0
+      - name: randomTargetMarginX
+        type: float
+        key: random_target_margin_x
+        label: "Random Target Margin X"
+        min: 0.0
+        max: 1000.0
+        step: 1.0
+      - name: randomTargetMarginY
+        type: float
+        key: random_target_margin_y
+        label: "Random Target Margin Y"
+        min: 0.0
+        max: 1000.0
+        step: 1.0
+      - name: itemDropMarginX
+        type: float
+        key: item_drop_margin_x
+        label: "Item Drop Margin X"
+        min: 0.0
+        max: 500.0
+        step: 1.0
+      - name: itemDropMarginY
+        type: float
+        key: item_drop_margin_y
+        label: "Item Drop Margin Y"
+        min: 0.0
+        max: 500.0
+        step: 1.0
+      - name: catchThresholdBase
+        type: float
+        key: catch_threshold_base
+        label: "Catch Threshold Base"
+        min: 1.0
+        max: 100.0
+        step: 1.0
+      - name: catchThresholdMin
+        type: float
+        key: catch_threshold_min
+        label: "Catch Threshold Min"
+        min: 1.0
+        max: 50.0
+        step: 1.0
+      - name: wanderTargetMargin
+        type: float
+        key: wander_target_margin
+        label: "Wander Target Margin"
+        min: 0.0
+        max: 500.0
+        step: 1.0
+      - name: wanderTargetOffset
+        type: float
+        key: wander_target_offset
+        label: "Wander Target Offset"
+        min: 0.0
+        max: 500.0
+        step: 1.0
+      - name: maxFetchingGeese
+        type: int
+        key: max_fetching_geese
+        label: "Max Fetching Geese"
+        min: 0
+        max: 100
+      - name: separationMinDistance
+        type: float
+        key: separation_min_distance
+        label: "Separation Min Distance"
+        min: 1.0
+        max: 200.0
+        step: 1.0
+
+  Rig:
+    fields:
+      - name: bodyY
+        type: float
+        key: body_y
+        label: "Body Y"
+        min: 0.0
+        max: 50.0
+        step: 1.0
+      - name: neckHeightIdle
+        type: float
+        key: neck_height_idle
+        label: "Neck Height Idle"
+        min: 0.0
+        max: 50.0
+        step: 1.0
+      - name: neckHeightMoving
+        type: float
+        key: neck_height_moving
+        label: "Neck Height Moving"
+        min: 0.0
+        max: 50.0
+        step: 1.0
+      - name: beakLen
+        type: float
+        key: beak_len
+        label: "Beak Length"
+        min: 0.0
+        max: 30.0
+        step: 1.0
+      - name: beakWidth
+        type: float
+        key: beak_width
+        label: "Beak Width"
+        min: 0.0
+        max: 30.0
+        step: 1.0
+      - name: strideMax
+        type: float
+        key: stride_max
+        label: "Stride Max"
+        min: 0.0
+        max: 30.0
+        step: 1.0
+      - name: stepLiftHeight
+        type: float
+        key: step_lift_height
+        label: "Step Lift Height"
+        min: 0.0
+        max: 20.0
+        step: 1.0
+      - name: underbodyY
+        type: float
+        key: underbody_y
+        label: "Underbody Y"
+        min: -100.0
+        max: 100.0
+        step: 0.5
+      - name: neckBaseX
+        type: float
+        key: neck_base_x
+        label: "Neck Base X"
+        min: -50.0
+        max: 50.0
+        step: 0.5
+      - name: neckExtIdle
+        type: float
+        key: neck_ext_idle
+        label: "Neck Ext Idle"
+        min: 0.0
+        max: 100.0
+        step: 1.0
+      - name: neckExtMoving
+        type: float
+        key: neck_ext_moving
+        label: "Neck Ext Moving"
+        min: 0.0
+        max: 100.0
+        step: 1.0
+      - name: headBaseX
+        type: float
+        key: head_base_x
+        label: "Head Base X"
+        min: -50.0
+        max: 50.0
+        step: 0.5
+      - name: headBaseY
+        type: float
+        key: head_base_y
+        label: "Head Base Y"
+        min: -50.0
+        max: 50.0
+        step: 0.5
+      - name: beakBaseOffset
+        type: float
+        key: beak_base_offset
+        label: "Beak Base Offset"
+        min: 0.0
+        max: 50.0
+        step: 0.5
+      - name: neckLerpRate
+        type: float
+        key: neck_lerp_rate
+        label: "Neck Lerp Rate"
+        min: 0.0
+        max: 1.0
+        step: 0.01
+      - name: runSpeedThreshold
+        type: float
+        key: run_speed_threshold
+        label: "Run Speed Threshold"
+        min: 0.0
+        max: 500.0
+        step: 1.0
+      - name: footSpacing
+        type: float
+        key: foot_spacing
+        label: "Foot Spacing"
+        min: 0.0
+        max: 50.0
+        step: 0.5
+      - name: footOffsetY
+        type: float
+        key: foot_offset_y
+        label: "Foot Offset Y"
+        min: -50.0
+        max: 50.0
+        step: 0.5
+      - name: headForwardBias
+        type: float
+        key: head_forward_bias
+        label: "Head Forward Bias"
+        min: -1.0
+        max: 1.0
+        step: 0.01
+
+  Snatch:
+    fields:
+      - name: radiusBase
+        type: float
+        key: radius_base
+        label: "Radius Base"
+        min: 0.0
+        max: 200.0
+        step: 1.0
+      - name: radiusRange
+        type: float
+        key: radius_range
+        label: "Radius Range"
+        min: 0.0
+        max: 200.0
+        step: 1.0
+      - name: angularSpeedBase
+        type: float
+        key: angular_speed_base
+        label: "Angular Speed Base"
+        min: 0.0
+        max: 10.0
+        step: 0.1
+      - name: duration
+        type: float
+        key: duration
+        label: "Duration"
+        min: 0.0
+        max: 10.0
+        step: 0.1
+      - name: pullDistance
+        type: float
+        key: pull_distance
+        label: "Pull Distance"
+        min: 0.0
+        max: 300.0
+        step: 1.0
+      - name: speedMultiplier
+        type: float
+        key: speed_multiplier
+        label: "Speed Multiplier"
+        min: 0.0
+        max: 5.0
+        step: 0.1
+      - name: offsetMax
+        type: float
+        key: offset_max
+        label: "Offset Max"
+        min: 0.0
+        max: 500.0
+        step: 1.0
+      - name: lateralBiasLimit
+        type: float
+        key: lateral_bias_limit
+        label: "Lateral Bias Limit"
+        min: 0.0
+        max: 100.0
+        step: 1.0
+      - name: forwardBiasScale
+        type: float
+        key: forward_bias_scale
+        label: "Forward Bias Scale"
+        min: 0.0
+        max: 10.0
+        step: 0.1
+      - name: forwardBiasMin
+        type: float
+        key: forward_bias_min
+        label: "Forward Bias Min"
+        min: -100.0
+        max: 100.0
+        step: 1.0
+      - name: forwardBiasMax
+        type: float
+        key: forward_bias_max
+        label: "Forward Bias Max"
+        min: -100.0
+        max: 100.0
+        step: 1.0
+      - name: angularSpeedRandomRange
+        type: float
+        key: angular_speed_random_range
+        label: "Angular Speed Random Range"
+        min: 0.0
+        max: 5.0
+        step: 0.1
+
+  Mud:
+    fields:
+      - name: enabled
+        type: bool
+        key: mud_enabled
+        label: "Mud Enabled"
+      - name: chance
+        type: int
+        key: mud_chance
+        label: "Mud Chance"
+        min: 0
+        max: 100
+      - name: lifetime
+        type: float
+        key: mud_lifetime
+        label: "Mud Lifetime"
+        min: 0.0
+        max: 60.0
+        step: 1.0
+
+  Honk:
+    fields:
+      - name: minGap
+        type: float
+        key: honk_min_gap
+        label: "Honk Min Gap"
+        min: 0.0
+        max: 5.0
+        step: 0.1
+      - name: idleMin
+        type: float
+        key: honk_idle_min
+        label: "Honk Idle Min"
+        min: 0.0
+        max: 30.0
+        step: 1.0
+      - name: idleMax
+        type: float
+        key: honk_idle_max
+        label: "Honk Idle Max"
+        min: 0.0
+        max: 60.0
+        step: 1.0
+      - name: chaseCooldown
+        type: float
+        key: honk_chase_cooldown
+        label: "Honk Chase Cooldown"
+        min: 0.0
+        max: 5.0
+        step: 0.1
+      - name: genericCooldown
+        type: float
+        key: generic_cooldown
+        label: "Generic Cooldown"
+        min: 0.0
+        max: 30.0
+        step: 0.5
+      - name: fetchCooldown
+        type: float
+        key: fetch_cooldown
+        label: "Fetch Cooldown"
+        min: 0.0
+        max: 30.0
+        step: 0.5
+      - name: idleCheckAhead
+        type: float
+        key: idle_check_ahead
+        label: "Idle Check Ahead"
+        min: 0.0
+        max: 500.0
+        step: 1.0
+      - name: idleChanceDivisor
+        type: int
+        key: idle_chance_divisor
+        label: "Idle Chance Divisor"
+        min: 1
+        max: 1000
+      - name: wanderHonkDivisor
+        type: int
+        key: wander_honk_divisor
+        label: "Wander Honk Divisor"
+        min: 1
+        max: 1000
+
+  Step:
+    fields:
+      - name: timeFetch
+        type: float
+        key: step_time_fetch
+        label: "Step Time Fetch"
+        min: 0.0
+        max: 1.0
+        step: 0.01
+      - name: timeWander
+        type: float
+        key: step_time_wander
+        label: "Step Time Wander"
+        min: 0.0
+        max: 1.0
+        step: 0.01
+      - name: durationWalk
+        type: float
+        key: step_duration_walk
+        label: "Step Duration Walk"
+        min: 0.0
+        max: 1.0
+        step: 0.01
+      - name: durationRun
+        type: float
+        key: step_duration_run
+        label: "Step Duration Run"
+        min: 0.0
+        max: 1.0
+        step: 0.01
+      - name: liftWalk
+        type: float
+        key: step_lift_walk
+        label: "Step Lift Walk"
+        min: 0.0
+        max: 20.0
+        step: 1.0
+      - name: liftRun
+        type: float
+        key: step_lift_run
+        label: "Step Lift Run"
+        min: 0.0
+        max: 20.0
+        step: 1.0
+      - name: timeSnatch
+        type: float
+        key: time_snatch
+        label: "Time Snatch"
+        min: 0.0
+        max: 1.0
+        step: 0.01
+      - name: stepTriggerWalk
+        type: float
+        key: step_trigger_walk
+        label: "Step Trigger Walk"
+        min: 0.0
+        max: 500.0
+        step: 1.0
+      - name: stepTriggerRun
+        type: float
+        key: step_trigger_run
+        label: "Step Trigger Run"
+        min: 0.0
+        max: 500.0
+        step: 1.0
+      - name: overshootWalk
+        type: float
+        key: overshoot_walk
+        label: "Overshoot Walk"
+        min: 0.0
+        max: 50.0
+        step: 0.5
+      - name: overshootRun
+        type: float
+        key: overshoot_run
+        label: "Overshoot Run"
+        min: 0.0
+        max: 50.0
+        step: 0.5
+      - name: snapDistance
+        type: float
+        key: snap_distance
+        label: "Snap Distance"
+        min: 0.0
+        max: 50.0
+        step: 0.5
+      - name: distFactorBase
+        type: float
+        key: dist_factor_base
+        label: "Dist Factor Base"
+        min: 0.0
+        max: 10.0
+        step: 0.1
+      - name: distFactorMin
+        type: float
+        key: dist_factor_min
+        label: "Dist Factor Min"
+        min: 0.0
+        max: 10.0
+        step: 0.1
+      - name: distFactorMax
+        type: float
+        key: dist_factor_max
+        label: "Dist Factor Max"
+        min: 0.0
+        max: 10.0
+        step: 0.1
+      - name: durationMin
+        type: float
+        key: duration_min
+        label: "Duration Min"
+        min: 0.0
+        max: 1.0
+        step: 0.01
+      - name: durationMax
+        type: float
+        key: duration_max
+        label: "Duration Max"
+        min: 0.0
+        max: 1.0
+        step: 0.01
+      - name: leftFootAngle
+        type: float
+        key: left_foot_angle
+        label: "Left Foot Angle"
+        min: -180.0
+        max: 180.0
+        step: 1.0
+      - name: rightFootAngle
+        type: float
+        key: right_foot_angle
+        label: "Right Foot Angle"
+        min: -180.0
+        max: 180.0
+        step: 1.0
+      - name: footSpacing
+        type: float
+        key: foot_spacing
+        label: "Foot Spacing"
+        min: 0.0
+        max: 50.0
+        step: 0.5
+      - name: zeroVelocityThreshold
+        type: float
+        key: zero_velocity_threshold
+        label: "Zero Velocity Threshold"
+        min: 0.0
+        max: 100.0
+        step: 0.5
+      - name: minDuration
+        type: float
+        key: min_duration
+        label: "Min Duration"
+        min: 0.0
+        max: 0.5
+        step: 0.01
+
+  Item:
+    fields:
+      - name: pickupCooldown
+        type: float
+        key: item_pickup_cooldown
+        label: "Item Pickup Cooldown"
+        min: 0.0
+        max: 10.0
+        step: 0.1
+      - name: itemLifetime
+        type: float
+        key: item_lifetime
+        label: "Item Lifetime"
+        min: 0.0
+        max: 120.0
+        step: 1.0
+      - name: memeLifetime
+        type: float
+        key: meme_lifetime
+        label: "Meme Lifetime"
+        min: 0.0
+        max: 120.0
+        step: 1.0
+      - name: textLifetime
+        type: float
+        key: text_lifetime
+        label: "Text Lifetime"
+        min: 0.0
+        max: 120.0
+        step: 1.0
+      - name: maxDroppedMemes
+        type: int
+        key: max_dropped_memes
+        label: "Max Dropped Memes"
+        min: 0
+        max: 100
+      - name: maxDroppedTexts
+        type: int
+        key: max_dropped_texts
+        label: "Max Dropped Texts"
+        min: 0
+        max: 100
+      - name: fetchCooldown
+        type: float
+        key: item_fetch_cooldown
+        label: "Item Fetch Cooldown"
+        min: 0.0
+        max: 30.0
+        step: 1.0
+      - name: memePickupChance
+        type: int
+        key: meme_pickup_chance
+        label: "Meme Pickup Chance"
+        min: 0
+        max: 100
+      - name: fetchBaseChance
+        type: int
+        key: fetch_base_chance
+        label: "Fetch Base Chance"
+        min: 0
+        max: 100
+      - name: maxFetchBias
+        type: int
+        key: max_fetch_bias
+        label: "Max Fetch Bias"
+        min: 0
+        max: 1000
+      - name: maxFetchGeese
+        type: int
+        key: max_fetch_geese
+        label: "Max Fetch Geese"
+        min: 0
+        max: 100
+      - name: memeFetchBiasMax
+        type: int
+        key: meme_fetch_bias_max
+        label: "Meme Fetch Bias Max"
+        min: 0
+        max: 1000
+      - name: noteFetchBiasMax
+        type: int
+        key: note_fetch_bias_max
+        label: "Note Fetch Bias Max"
+        min: 0
+        max: 1000
+      - name: attackMouseBiasMax
+        type: int
+        key: attack_mouse_bias_max
+        label: "Attack Mouse Bias Max"
+        min: 0
+        max: 1000
+      - name: heistChancePercent
+        type: int
+        key: heist_chance_percent
+        label: "Heist Chance Percent"
+        min: 0
+        max: 100
+      - name: heistApproachMargin
+        type: int
+        key: heist_approach_margin
+        label: "Heist Approach Margin"
+        min: 0
+        max: 500
+
+  Render:
+    fields:
+      - name: shadowOffsetX
+        type: float
+        key: shadow_offset_x
+        label: "Shadow Offset X"
+        min: -20.0
+        max: 20.0
+        step: 1.0
+      - name: shadowOffsetY
+        type: float
+        key: shadow_offset_y
+        label: "Shadow Offset Y"
+        min: 0.0
+        max: 50.0
+        step: 1.0
+      - name: shadowWidth
+        type: float
+        key: shadow_width
+        label: "Shadow Width"
+        min: 0.0
+        max: 100.0
+        step: 1.0
+      - name: shadowHeight
+        type: float
+        key: shadow_height
+        label: "Shadow Height"
+        min: 0.0
+        max: 100.0
+        step: 1.0
+      - name: footSize
+        type: float
+        key: foot_size
+        label: "Foot Size"
+        min: 0.0
+        max: 30.0
+        step: 1.0
+      - name: bodyWidth
+        type: float
+        key: body_width
+        label: "Body Width"
+        min: 0.0
+        max: 50.0
+        step: 1.0
+      - name: bodyHeight
+        type: float
+        key: body_height
+        label: "Body Height"
+        min: 0.0
+        max: 50.0
+        step: 1.0
+      - name: neckSize
+        type: float
+        key: neck_size
+        label: "Neck Size"
+        min: 0.0
+        max: 30.0
+        step: 1.0
+      - name: head1Size
+        type: float
+        key: head1_size
+        label: "Head 1 Size"
+        min: 0.0
+        max: 30.0
+        step: 1.0
+      - name: head2Size
+        type: float
+        key: head2_size
+        label: "Head 2 Size"
+        min: 0.0
+        max: 30.0
+        step: 1.0
+      - name: eyeSize
+        type: float
+        key: eye_size
+        label: "Eye Size"
+        min: 0.0
+        max: 20.0
+        step: 1.0
+      - name: clickRadius
+        type: float
+        key: click_radius
+        label: "Click Radius"
+        min: 0.0
+        max: 100.0
+        step: 1.0
+      - name: footprintWidth
+        type: float
+        key: footprint_width
+        label: "Footprint Width"
+        min: 0.0
+        max: 30.0
+        step: 1.0
+      - name: footprintHeight
+        type: float
+        key: footprint_height
+        label: "Footprint Height"
+        min: 0.0
+        max: 30.0
+        step: 1.0
+      - name: closeButtonSize
+        type: float
+        key: close_button_size
+        label: "Close Button Size"
+        min: 0.0
+        max: 50.0
+        step: 1.0
+      - name: textNoteFontSize
+        type: float
+        key: text_note_font_size
+        label: "Text Note Font Size"
+        min: 0.0
+        max: 48.0
+        step: 1.0
+      - name: squashFactor
+        type: float
+        key: squash_factor
+        label: "Squash Factor"
+        min: 0.5
+        max: 1.0
+        step: 0.01

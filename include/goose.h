@@ -1,0 +1,233 @@
+// ===========================
+// goose.h
+// ===========================
+#ifndef GOOSE_H
+#define GOOSE_H
+
+#include <string>
+
+#ifdef __linux__
+#include <gtk/gtk.h>
+// cairo_t is already typedef'd by cairo.h (included via gtk/gtk.h)
+#endif
+
+#include "goose_math.h"
+#include "assets.h"
+#include "cursor_io.h"
+#include "coordinate_system.h"
+#include "actor.h"
+#include <vector>
+
+// H5: Declared in goose_forces.cpp. Call once per tick frame before ticking
+// any goose so CalculateSeparationForce reads from a precomputed flat array.
+class Goose;
+void GooseSeparationCache_Update(const std::vector<Goose*>& geese);
+// C-fix: Returns the number of geese currently in FETCHING state from the
+// precomputed cache (no vector rebuild required).
+int GooseSeparationCache_CountFetching();
+
+enum class GooseState { WANDER, FETCHING, RETURNING, CHASE_CURSOR, SNATCH_CURSOR };
+enum class FetchType : int { Random = -1, Meme = 0, Text = 1, TestImage = 2 };
+
+struct FootState {
+    Vector2 currentPos{};
+    Vector2 moveOrigin{};
+    Vector2 moveDir{};
+    double moveStartTime = -1.0;
+    float moveDuration = 0.2f;
+};
+
+struct Rig {
+    Vector2 underbody, body, neckBase, neckHead, head1, head2;
+    float neckLerp = 0;
+    FootState lFoot, rFoot;
+};
+
+class Goose : public Actor {
+public:
+    bool isGoose() const override { return true; }
+    void PickNewTarget(int w, int h);
+    
+    int id;
+    std::string name;
+    Vector2 pos{};       // DEVICE coords (screen pixels, top-left origin)
+    Vector2 target{};    // DEVICE coords
+    Vector2 vel{};       // DEVICE coords (pixels/frame)
+    Vector2 acceleration{};
+    float dir = 0.0f;
+    float parabolicCurvature = 0.0f; // Multiplier for tangential curve force
+
+    // State
+    GooseState state = GooseState::WANDER;
+    ItemData* heldItem = nullptr;
+    FetchType forceItemFetch = FetchType::Random;
+    std::string forcedText;
+
+    float currentSpeed = 0;
+    Rig rig;
+
+    Vector2 ISO_SCALE;
+
+    Vector2 dragPos{};
+    Vector2 dragVel{};
+    float dragRot = 0.0f; // radians
+    float dragRotVel = 0.0f;
+    bool dragInit = false;
+
+    // Cursor chase/snatch state
+    double snatchStartTime = 0.0;
+    Vector2 snatchOffset{};  // Cursor anchor stored in goose-local forward/right space during snatch
+    Vector2 snatchAnchor{};  // Goose position at snatch start (fixed reference point)
+    Vector2 snatchFwd{};     // Fixed forward direction at snatch start
+    // How far the goose pulls the cursor behind it when snatching
+    float snatchPullDistance = 140.0f;
+    // Circular snatch motion parameters
+    float snatchAngle = 0.0f;           // current angular phase (radians)
+    float snatchRadius = 60.0f;         // radius of circular motion in pixels
+    float snatchAngularSpeed = 2.5f;    // radians per second
+
+    // Per-goose tendencies (0-100)
+    int attackMouseBias = 0; // added to global cursor chase chance
+    int noteFetchBias = 0;   // increases chance to fetch notes
+    int memeFetchBias = 0;   // increases chance to fetch memes
+
+    // Per-goose random offset (0-3s) — desynchronizes geese so they don't
+    // all do the same thing at the same time. Applied to fetch cooldowns,
+    // wander target selection, state transitions, and honk timing.
+    float randomOffset = 0.0f;
+
+    // Per-goose dynamic settings
+    bool cursorChaseEnabled = true;
+    int  cursorChaseChance = 5;
+    float snatchDuration = 3.0f;
+    bool mudEnabled = true;
+    int  mudChance = 15;
+    float mudLifetime = 15.0f;
+
+    // Joy state
+    Vector2 lastCursorPos{};
+
+    bool isSurprised = false;
+    double surprisedTime = 0.0;
+
+    // Honk timing state
+    struct HonkState {
+        bool init = false;
+        double lastAny = -1e9;
+        double lastChase = -1e9;
+        double lastFetch = -1e9;
+        double lastGeneric = -1e9;
+        double nextIdleHonk = 0.0;
+    } honkState;
+
+    // Step sound cooldown
+    double lastStepSoundTime = -1e9;
+    static constexpr double stepSoundCooldown = 0.08; // minimum time between step sounds
+
+    // Debug logging
+    bool debugSnatch = true;
+    GooseState prevState = GooseState::WANDER;
+    double lastDebugLog = -1e9;
+    static constexpr double debugLogInterval = 0.1;
+
+    // Fetch/drop tracking
+    double lastDropTime = -999.0;
+    double fetchStartTime = -999.0;
+    double chaseStartTime = -999.0;
+
+    bool isChewing = false;
+    double chewingStartTime = 0.0;
+    double lastUpdateTime = 0.0;
+
+    // Stuck detection
+    Vector2 stuckCheckPos{};
+    double stuckCheckTime = 0.0;
+    static constexpr double STUCK_THRESHOLD_TIME = 3.0;
+    static constexpr float STUCK_THRESHOLD_DIST = 5.0f;
+
+    // Shudder detection — rapid direction changes without movement
+    Vector2 shudderLastPos{};
+    float shudderLastDir = 0.0f;
+    double shudderCheckTime = 0.0;
+    int shudderDirChanges = 0;
+    static constexpr double SHUDDER_WINDOW = 1.0; // seconds to track direction changes
+    static constexpr int SHUDDER_DIR_THRESHOLD = 5; // direction flips per window
+    static constexpr float SHUDDER_MOVE_THRESHOLD = 10.0f; // minimum px movement to not count as shudder
+
+    // Behavior system enable flag
+    bool behaviorsEnabled = true;
+    bool isResting = false;
+
+    // Character-specific capability flags
+    bool m_canHonk = true;
+
+#ifdef __APPLE__
+    // Per-goose window for Phase 1 dual-write (__bridge BehaviorElementWindow*)
+    void* m_perGooseWindow = nullptr;
+    void* m_perGooseWindowKey = nullptr;
+    float m_perGooseWindowSize = 600.0f;
+#endif
+
+    // Actor interface
+    const char* type() const override { return "goose"; }
+    ActorType actorType() const override { return ActorType::Goose; }
+    void tick(WorldContext& ctx, double dt, double time) override;
+    void render(IRenderer* renderer) override;
+    void draw(IRenderer* renderer);
+    virtual void onHonk();
+
+#ifdef __APPLE__
+    virtual void drawBody(CGContextRef ctx);
+#endif
+    bool isAlive() const override { return true; }
+
+    Goose(int _id, const std::string& _name, int screenW, int screenH);
+    ~Goose() override;
+
+    CursorAction Update(double dt, double time, int scrW, int scrH, const CursorState& cursor);
+    void ForceFetch(FetchType type, int w, int h, double time = -1.0);
+    void ForceFetchText(const std::string& text, int w, int h);
+    void ForceWander(int w, int h);
+
+#ifdef __linux__
+    void Draw(cairo_t* cr);
+#endif
+
+    Vector2 GetBeakTipDevice();
+    Vector2 GetFootHome(float angleOffset);
+    void SolveFeet(double time);
+    void UpdateRig();
+
+    void StartSnatch(double time, const Vector2& cursorPos);
+    void EndSnatch(double time, int w, int h);
+
+private:
+    void UpdateDirection();
+    void ClampToScreen(int w, int h);
+    Vector2 CalculateSeekForce();
+    Vector2 CalculateCurveForce(float dist);
+    Vector2 CalculateSeparationForce();
+    Vector2 CalculateEdgeAvoidance(int w, int h);
+    void UpdateDrag(double dt);
+    // Per-foot procedural step (shared by both feet). `gait` holds the
+    // speed-derived step parameters computed once per frame in SolveFeet.
+    struct Gait { float stepTrigger; float overshoot; float baseDur; float liftAmt; };
+    void StepFoot(FootState& f, Vector2 home, const Gait& gait, double time);
+    void StartFetch(int w, int h, double time = -1.0);
+    CursorAction UpdateBehaviors(double dt, double time, int w, int h, const CursorState& cursor);
+    void UpdatePhysics(double dt, int w, int h);
+    void UpdateDetection(double time, int w, int h);
+    void UpdateAnimation(double dt, double time);
+    void UpdateDebug(double time, const CursorState& cursor);
+
+
+#ifdef __linux__
+    void DrawHeldItem(cairo_t* cr);
+    void DrawEyes(cairo_t* cr, Vector2 fwd);
+    void DrawEllipse(cairo_t* cr, Vector2 p, int rx, int ry, float r, float g, float b, float a=1.0);
+    void DrawLine(cairo_t* cr, Vector2 a, Vector2 b, float w, const float color[]);
+    void DrawLine(cairo_t* cr, Vector2 a, Vector2 b, float w, float r, float g, float bl);
+#endif
+};
+
+#endif // GOOSE_H

@@ -1,0 +1,105 @@
+// actor_breadcrumb.mm
+// Breadcrumb actor implementation — dropped at cursor, expires after lifetime.
+
+#include "actor_breadcrumb.h"
+#include "config.h"
+#include "world.h"
+#include "assets.h"
+#include "renderer_interface.h"
+#include "cg_renderer.h"
+#include <cmath>
+
+#ifdef __APPLE__
+#include "behavior_element_window.h"
+#include <CoreGraphics/CoreGraphics.h>
+#include <Foundation/Foundation.h>
+#endif
+
+BreadcrumbActor::BreadcrumbActor(const Vector2& pos, double spawnTime, float lifetime)
+    : Actor(), m_spawnTime(spawnTime), m_lifetime(lifetime), m_image(nullptr)
+#ifdef __APPLE__
+    , m_window(nullptr), m_windowKey(nullptr)
+#endif
+{
+    m_position = {pos.x, pos.y};
+    m_active = true;
+    m_radius = CRUMB_SIZE * 0.5f;
+
+#ifdef __APPLE__
+    m_image = (void*)g_assets.GetBehaviorImage("Assets/Images/OtherGfx/crumbs.png");
+#endif
+}
+
+BreadcrumbActor::~BreadcrumbActor() {
+#ifdef __APPLE__
+    if (m_window) {
+        void* windowPtr = m_window;
+        void* keyPtr = m_windowKey;
+        m_window = nullptr;
+        m_windowKey = nullptr;
+        closeWindowOnMainThread(^{
+            BehaviorElementWindow* win = (__bridge_transfer BehaviorElementWindow*)windowPtr;
+            NSNumber* key = (__bridge_transfer NSNumber*)keyPtr;
+            [[BehaviorElementWindowManager shared] unregisterWindow:key];
+            [win closeAndRemove];
+        });
+    }
+#endif
+}
+
+void BreadcrumbActor::tick(WorldContext& ctx, double dt, double time) {
+    (void)dt;
+    if (!m_active) return;
+
+    if (time - m_spawnTime > m_lifetime) {
+        m_active = false;
+    }
+}
+
+void BreadcrumbActor::render(IRenderer* renderer) {
+    if (!m_active) return;
+
+#ifdef __APPLE__
+    if (getenv("CADGOOSE_HEADLESS_TEST")) return;
+
+    double age = g_time - m_spawnTime;
+    float alpha = std::min(1.0f, (float)(m_lifetime - age) / 2.0f);
+    if (alpha < 0) alpha = 0;
+
+    float winSize = CRUMB_SIZE;
+    float winX = m_position.x - winSize / 2.0f;
+    float winY = m_position.y - winSize / 2.0f;
+
+    if (!m_window) {
+        m_window = (void*)CFBridgingRetain([[BehaviorElementWindow alloc]
+            initWithDrawBlock:^(CGContextRef cgCtx) {
+                CGRenderer r(cgCtx);
+                r.SaveState();
+
+                if (m_image) {
+                    CGImageRef img = (CGImageRef)m_image;
+                    float w = (float)CGImageGetWidth(img);
+                    float h = (float)CGImageGetHeight(img);
+                    // Aspect-preserve into the centered crumb window.
+                    float scale = winSize / std::max(w, h);
+                    float drawW = w * scale;
+                    float drawH = h * scale;
+                    float offX = (winSize - drawW) * 0.5f;
+                    float offY = (winSize - drawH) * 0.5f;
+                    r.SetAlpha(alpha);
+                    r.DrawImage(img, {offX, offY, drawW, drawH});
+                }
+
+                r.RestoreState();
+            }
+            deviceX:winX deviceY:winY width:winSize height:winSize]);
+        BehaviorElementWindow* newWin = (__bridge BehaviorElementWindow*)m_window;
+        newWin.level = NSStatusWindowLevel - 5; // Decoration layer — above ground, below memes
+        m_windowKey = (void*)CFBridgingRetain([[BehaviorElementWindowManager shared] registerWindow:newWin]);
+    } else {
+        BehaviorElementWindow* win = (__bridge BehaviorElementWindow*)m_window;
+        [win updatePosition:winX y:winY width:winSize height:winSize];
+        [[win contentView] setNeedsDisplay:YES];
+    }
+#endif
+}

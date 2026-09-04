@@ -1,0 +1,300 @@
+#include "app_actions.h"
+#include "config.h"
+#include "world.h"
+#include "behavior.h"
+#include "actor.h"
+#include "actor_dropped_item.h"
+
+#include <fstream>
+#include <iomanip>
+#include <sstream>
+#include <cstdlib>
+
+#if defined(__linux__)
+#include "glib.h"
+#include "ui.h"
+#endif
+
+#if defined(__APPLE__)
+void AppActions_SetApplication(void* app) {}
+#include "baby_stalin_actor.h"
+#endif
+
+Goose* AppActions_SpawnGoose(const std::string& requestedName) {
+    std::string name = requestedName;
+    if (name.empty()) {
+        size_t idx = ActorManager::Instance().getGeese().size();
+        if (idx < g_config.gooseNames.size() && !g_config.gooseNames[idx].empty()) {
+            name = g_config.gooseNames[idx];
+        } else {
+            name = "Goose " + std::to_string(g_world.nextId);
+        }
+    }
+
+#if defined(__APPLE__)
+    if (g_config.general.appearanceMode == APPEARANCE_STALIN) {
+        Goose* goose = new BabyStalinActor(g_world.nextId++, name, g_world.screenWidth, g_world.screenHeight);
+        ActorManager::Instance().add(goose);
+        BehaviorRegistry::Instance().InitAll(goose);
+        return goose;
+    }
+#endif
+    Goose* goose = new Goose(g_world.nextId++, name, g_world.screenWidth, g_world.screenHeight);
+    ActorManager::Instance().add(goose);
+    BehaviorRegistry::Instance().InitAll(goose);
+
+#if defined(__linux__)
+    UiLogPush("Spawned " + name);
+#endif
+    return goose;
+}
+
+#ifdef __APPLE__
+Goose* AppActions_SpawnBabyStalin(const std::string& requestedName) {
+    std::string name = requestedName;
+    if (name.empty()) {
+        name = "BabyStalin " + std::to_string(g_world.nextId);
+    }
+
+    Goose* actor = new BabyStalinActor(g_world.nextId++, name, g_world.screenWidth, g_world.screenHeight);
+    ActorManager::Instance().add(actor);
+    BehaviorRegistry::Instance().InitAll(actor);
+    return actor;
+}
+#endif
+
+void AppActions_EnsureInitialGoose() {
+    if (!ActorManager::Instance().getGeese().empty()) return;
+    AppActions_SpawnGoose("");
+}
+
+void AppActions_ClearGeese() {
+    ActorManager::Instance().removeAllDroppedItems();
+    g_world.footprints.clear();
+
+    Config_SaveGooseNames();
+    ActorManager::Instance().destroyAllOfType(ActorType::Goose);
+
+    ActorManager::Instance().destroyAllOfType(ActorType::BabyStalin);
+
+    g_world.cursorGrabberId = -1;
+    g_world.selectedGooseId = 0;
+    g_world.nextId = 0;
+
+#if defined(__linux__)
+    for (GtkWidget* canvas : g_world.overlayCanvases) {
+        if (canvas) gtk_widget_queue_draw(canvas);
+    }
+    UiLogPush("Cleared all geese.");
+#endif
+}
+
+#if defined(__linux__)
+static gboolean QuitAfterClearFrame(gpointer data) {
+    GtkApplication* app = static_cast<GtkApplication*>(data);
+    if (app) g_application_quit(G_APPLICATION(app));
+    return G_SOURCE_REMOVE;
+}
+
+void AppActions_Quit() {
+    // Linux: quit via GTK
+}
+#endif
+
+#if defined(__APPLE__)
+void AppActions_Quit() {
+    // macOS: handled differently
+}
+#endif
+
+static std::string GetRamUsageReport() {
+#if defined(__linux__)
+    std::ifstream file("/proc/self/status");
+    std::string line;
+    long rssKb = -1;
+    long hwmKb = -1;
+    long vmKb = -1;
+
+    while (std::getline(file, line)) {
+        if (line.rfind("VmRSS:", 0) == 0) {
+            std::istringstream(line.substr(6)) >> rssKb;
+        } else if (line.rfind("VmHWM:", 0) == 0) {
+            std::istringstream(line.substr(6)) >> hwmKb;
+        } else if (line.rfind("VmSize:", 0) == 0) {
+            std::istringstream(line.substr(7)) >> vmKb;
+        }
+    }
+
+    std::ostringstream out;
+    out << std::fixed << std::setprecision(2);
+    if (rssKb >= 0) out << "ram_rss_mb=" << (rssKb / 1024.0) << "\n";
+    if (hwmKb >= 0) out << "ram_peak_mb=" << (hwmKb / 1024.0) << "\n";
+    if (vmKb >= 0) out << "ram_virtual_mb=" << (vmKb / 1024.0) << "\n";
+    return out.str();
+#elif defined(__APPLE__)
+    return "";
+#endif
+}
+
+std::string AppActions_GetStatus() {
+    std::ostringstream out;
+    out << std::fixed << std::setprecision(1);
+    out << "running=1\n";
+    auto geese = ActorManager::Instance().getGeese();
+    out << "goose_count=" << geese.size() << "\n";
+    out << "config_path=" << Config_GetPath() << "\n";
+    out << GetRamUsageReport();
+
+    if (!geese.empty()) {
+        const auto& g = *geese.front();
+        out << "goose_pos=" << g.pos.x << "," << g.pos.y << "\n";
+        out << "goose_state=";
+        switch (g.state) {
+            case GooseState::WANDER: out << "wander"; break;
+            case GooseState::FETCHING: out << "fetching"; break;
+            case GooseState::RETURNING: out << "returning"; break;
+            case GooseState::CHASE_CURSOR: out << "chase_cursor"; break;
+            case GooseState::SNATCH_CURSOR: out << "snatch_cursor"; break;
+        }
+        out << "\n";
+        out << "goose_heldItem=" << (g.heldItem ? "yes" : "no") << "\n";
+        out << "goose_dir=" << g.dir << "\n";
+        {
+            Vector2 rawFwd = Vector2::FromAngleDegrees(g.dir);
+            Vector2 fwd{ rawFwd.x * g.ISO_SCALE.x, rawFwd.y * g.ISO_SCALE.y };
+            float facing = Dot(Vector2::Normalize(fwd), Vector2{0, 1});
+            float back = std::max(0.0f, std::min(-facing, 1.0f));
+            out << "goose_facingBack=" << (back > g_config.render.facingBackThreshold ? "1" : "0") << "\n";
+        }
+    }
+
+    auto droppedItems = ActorManager::Instance().getDroppedItems();
+    out << "dropped_items=" << droppedItems.size() << "\n";
+    for (auto* actor : droppedItems) {
+        DroppedItem& item = actor->item();
+        if (!item.data) {
+            out << "item_null\n";
+            continue;
+        }
+        out << "item_pos=" << item.pos.x << "," << item.pos.y
+            << " size=" << item.data->w << "x" << item.data->h
+            << " type=" << (int)item.data->type
+            << " rotation=" << item.rotation
+            << " pinned=" << (item.pinned ? "1" : "0") << "\n";
+    }
+
+    for (const auto& opt : g_configRegistry) {
+        std::string value;
+        Config_GetValueByKey(opt.key, &value, nullptr);
+        out << opt.key << "=" << value << "\n";
+    }
+
+    return out.str();
+}
+
+std::string AppActions_HandleCommand(const std::vector<std::string>& args) {
+    if (args.empty()) return "error missing command\n";
+
+    const std::string& command = args.front();
+    if (command == "spawn") {
+        Goose* goose = AppActions_SpawnGoose(args.size() > 1 ? args[1] : "");
+        return "ok id=" + std::to_string(goose->id) + "\n";
+    }
+
+    if (command == "spawn_baby_stalin" || command == "spawn_stalin") {
+#ifdef __APPLE__
+        Goose* stalin = AppActions_SpawnBabyStalin(args.size() > 1 ? args[1] : "");
+        return "ok id=" + std::to_string(stalin->id) + "\n";
+#else
+        return "error only supported on macOS\n";
+#endif
+    }
+
+    if (command == "clear") {
+        AppActions_ClearGeese();
+        return "ok\n";
+    }
+
+    if (command == "status") {
+        return AppActions_GetStatus();
+    }
+
+    if (command == "ram") {
+        return GetRamUsageReport();
+    }
+
+    if (command == "quit") {
+        AppActions_ClearGeese();
+        AppActions_Quit();
+        return "ok cleared and quitting\n";
+    }
+
+    if (command == "fetch") {
+        auto geese = ActorManager::Instance().getGeese();
+        if (geese.empty()) return "error no goose\n";
+        FetchType type = FetchType::Meme;
+        int gooseIdx = 0;
+        if (args.size() > 1) {
+            char* end = nullptr;
+            long idx = std::strtol(args[1].c_str(), &end, 10);
+            if (end && *end == '\0' && idx >= 0 && idx < (long)geese.size()) {
+                gooseIdx = (int)idx;
+                if (args.size() > 2) {
+                    if (args[2] == "text") type = FetchType::Text;
+                    else if (args[2] == "meme") type = FetchType::Meme;
+                    else if (args[2] == "test") type = FetchType::TestImage;
+                }
+            } else {
+                if (args[1] == "text") type = FetchType::Text;
+                else if (args[1] == "meme") type = FetchType::Meme;
+                else if (args[1] == "test") type = FetchType::TestImage;
+            }
+        }
+        geese[gooseIdx]->ForceFetch(type, g_world.screenWidth, g_world.screenHeight);
+        return "ok force_fetch goose=" + std::to_string(gooseIdx) + " type=" + std::to_string((int)type) + "\n";
+    }
+
+    if (command == "clear_dropped") {
+        ActorManager::Instance().removeAllDroppedItems();
+        return "ok\n";
+    }
+
+    if (command == "enable") {
+        if (args.size() < 2) return "error missing behavior id\n";
+        auto* behavior = BehaviorRegistry::Instance().Get(args[1].c_str());
+        if (!behavior) return "error unknown behavior: " + args[1] + "\n";
+        if (behavior->enabledPtr) {
+            *behavior->enabledPtr = true;
+            if (behavior->configPtr) *behavior->configPtr = true;
+            return "ok enabled " + args[1] + "\n";
+        }
+        return "error behavior has no enabledPtr\n";
+    }
+
+    if (command == "disable") {
+        if (args.size() < 2) return "error missing behavior id\n";
+        auto* behavior = BehaviorRegistry::Instance().Get(args[1].c_str());
+        if (!behavior) return "error unknown behavior: " + args[1] + "\n";
+        if (behavior->enabledPtr) {
+            *behavior->enabledPtr = false;
+            if (behavior->configPtr) *behavior->configPtr = false;
+            return "ok disabled " + args[1] + "\n";
+        }
+        return "error behavior has no enabledPtr\n";
+    }
+
+    if (command == "drag_test") {
+        if (args.size() < 3) return "error usage: drag_test <x> <y>\n";
+        float targetX = std::stof(args[1]);
+        float targetY = std::stof(args[2]);
+#if defined(__APPLE__)
+        extern void ItemWindow_DragTest(float, float);
+        ItemWindow_DragTest(targetX, targetY);
+        return "ok drag_test dispatched\n";
+#else
+        return "error drag_test only available on macOS\n";
+#endif
+    }
+
+    return "error unknown command: " + command + "\n";
+}
