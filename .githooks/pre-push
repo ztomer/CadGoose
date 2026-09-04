@@ -1,17 +1,10 @@
-#!/usr/bin/env bash
-# pre-push — runs the FULL gate before anything leaves this machine.
-# Installed by house-gates/install.sh. There is no CI behind this; if this
-# hook is skipped, it is not run.
+#!/bin/bash
+# pre-push -- full-scope gate. There is no CI behind this for the local-only checks, so if this
+# does not run, nothing does.
+#
+# Delegates to tools/gate.sh, which runs this repo's OWN vendored gates always and the author's
+# shared house-gate suite only when GOH_DIR points at one.
 set -euo pipefail
 
-GOH="${GOH_DIR:-${GOH:-$GOH_DIR}}"
 root="$(git rev-parse --show-toplevel)"
-gate="$root/tools/gate.sh"
-
-if [ ! -f "$gate" ]; then
-    echo "✗ pre-push: $root/tools/gate.sh missing — run '$GOH/install.sh $root'" \
-        "to create the starter" >&2
-    exit 1
-fi
-
-exec bash "$gate" --full
+exec "$root/tools/gate.sh" --full

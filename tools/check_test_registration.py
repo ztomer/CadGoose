@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Shim: the canonical test-registration gate lives in house-gates.
+"""Shim: the canonical test-registration gate lives in the author's shared house-gate suite.
 
 Wired to this repo's layout (cmake, tests/ at the root, CMakeLists.txt).
 The shared checker only accepts registration named INSIDE an
@@ -13,7 +13,7 @@ import os
 import subprocess
 import sys
 
-GOH = os.environ.get("GOH_DIR", os.path.expanduser("$GOH_DIR"))
+GOH = os.environ.get("GOH_DIR", "")
 CHECKER = os.path.join(GOH, "checks", "check_tests_registered.py")
 if not os.path.isfile(CHECKER):
     print(f"✗ check_test_registration: canonical checker missing at {CHECKER} "

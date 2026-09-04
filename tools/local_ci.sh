@@ -14,7 +14,7 @@
 # after a push. CI remains the authority.
 #
 # The step LIST lives in .gatesrc as GOH_CI_STEPS; the shared runner
-# (house-gates/gates/local_ci.sh) owns the skeleton — fail accumulator,
+# (the shared house suite's gates/local_ci.sh) owns the skeleton — fail accumulator,
 # log-on-failure, Kare styling — that used to be copy-pasted per repo.
 #
 #   ./tools/local_ci.sh              steps from .gatesrc (gates + build + tests)
@@ -22,7 +22,7 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-GOH="${GOH_DIR:-$GOH_DIR}"
+GOH="${GOH_DIR:-}"
 
 ARGS=()
 case "${1:-}" in

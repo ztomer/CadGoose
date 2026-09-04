@@ -1,20 +1,11 @@
 #!/bin/bash
-# pre-commit — layer-1 structural gate, STAGED scope.
-# Installed by house-gates/install.sh. Delegates to the shared checkout;
-# there is exactly ONE copy of every checker (this hook vendors nothing).
+# pre-commit -- staged-scope gate.
+#
+# Delegates to tools/gate.sh, which runs this repo's OWN vendored gates always and the author's
+# shared house-gate suite only when GOH_DIR points at one. That order matters for a public repo:
+# an outside contributor must be able to commit without obtaining a checkout they cannot see, and
+# the vendored gates still hold the line for them.
 set -euo pipefail
 
-GOH="${GOH_DIR:-${GOH:-$GOH_DIR}}"
 root="$(git rev-parse --show-toplevel)"
-structural="$GOH/gates/structural.sh"
-
-if [ ! -f "$structural" ] && [ -f "$root/checks/check_no_emoji.py" ]; then
-    structural="$root/gates/structural.sh"   # self-hosted: this IS house-gates
-fi
-if [ ! -f "$structural" ]; then
-    echo "✗ pre-commit: cannot find house-gates at $GOH" \
-        "(set GOH_DIR or run its install.sh)" >&2
-    exit 1
-fi
-
-exec "$structural" --staged
+exec "$root/tools/gate.sh" --staged

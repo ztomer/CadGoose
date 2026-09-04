@@ -1,4 +1,5 @@
-# house-gates configuration. All keys optional; delete what you don't use.
+# House gate configuration, read by the author's shared suite when GOH_DIR points at one.
+# Every key is optional and this project gates itself without them.
 GOH_MAX_LINES=500                 # file-length cap; unset disables the check
 
 # local_ci step list (tools/local_ci.sh delegates to gates/local_ci.sh, which
@@ -8,7 +9,8 @@ GOH_MAX_LINES=500                 # file-length cap; unset disables the check
 # never contain a colon — hence $GOH_DIR resolved here, not ${GOH_DIR:-...}.
 # Exported because the shared runner executes steps via `bash -c`, which only
 # inherits exported variables.
-export GOH_DIR="${GOH_DIR:-$GOH_DIR}"
+# GOH_DIR is set in the author's environment; this project does not default it to a path
+# that only exists on one machine.
 GOH_CI_STEPS='python3 "$GOH_DIR/checks/check_no_emoji.py":python3 tools/check_test_registration.py:rm -rf build && cmake -S . -B build -DCMAKE_BUILD_TYPE=Release:cmake --build build --config Release --parallel $(sysctl -n hw.ncpu):cd build && bash ../scripts/run_tests_ci.sh'
 # GOH_EXCLUDE='vendor/|\.generated\.'   # shared vendor/generated exemption
 # GOH_LINE_EXCLUDE='third_party/'       # length-only alias

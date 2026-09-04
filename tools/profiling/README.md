@@ -1,7 +1,7 @@
-# Canonical home: house-gates
+# Canonical home: the author's shared house-tools checkout
 
 Every script here is a thin exec shim to
-`$GOH_DIR/tools/profiling/<same name>` (house-gates branch `unify/profiling`).
+`$GOH_DIR/tools/profiling/<same name>`, when GOH_DIR is configured.
 Fixes land there; this directory exists so repo-relative entry points keep
 working. Historical run artifacts (soak_results_*.md) remain repo-local.
 

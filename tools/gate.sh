@@ -4,9 +4,19 @@
 #   --staged : pre-commit scope (fast) — layer 1 only
 #   --full   : pre-push scope — every layer
 set -euo pipefail
-GOH="${GOH_DIR:-${GOH:-$GOH_DIR}}"
+# The author's shared house-gate suite, if this machine has one. It is NOT part of this project:
+# a contributor without it still gets the vendored gates below and a clean run, because a public
+# repo may not require a checkout nobody else can obtain.
+GOH="${GOH_DIR:-${GOH:-}}"
 
-"$GOH/gates/structural.sh" "$@"
+if [ -n "$GOH" ] && [ -x "$GOH/gates/structural.sh" ]; then
+    "$GOH/gates/structural.sh" "$@"
+else
+    echo "· house gate suite not configured (set GOH_DIR); running this repo's own gates only"
+fi
+
+# Vendored, so it runs for everyone -- see tools/house_gates/.
+python3 "$(dirname "${BASH_SOURCE[0]}")/house_gates/check_no_emoji.py"
 
 case "${1:-}" in
   --full)

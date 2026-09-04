@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# mem_watch.sh — shim. The canonical harness lives in house-gates/tools/profiling
+# mem_watch.sh — shim. The canonical harness lives in $GOH_DIR/tools/profiling
 # (branch unify/profiling); fixes land there, never here.
-GOH="${GOH_DIR:-$GOH_DIR}"
+GOH="${GOH_DIR:-}"
 CANON="$GOH/tools/profiling/mem_watch.sh"
 if [ ! -x "$CANON" ]; then
     echo "✗ mem_watch.sh: canonical harness missing under $GOH/tools/profiling (is GOH_DIR right?)" >&2

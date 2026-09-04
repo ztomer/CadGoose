@@ -9,7 +9,7 @@ import random
 import re
 
 # Emoji the scorers look for in *model output*. They are data, not decoration, so they are
-# written as codepoint escapes — the canonical house-gates check_no_emoji.py policies literal
+# written as codepoint escapes — tools/house_gates/check_no_emoji.py policies literal
 # emoji glyphs, and
 # these strings must keep matching what the model actually emits.
 DUCK = "\U0001F986"    # duck

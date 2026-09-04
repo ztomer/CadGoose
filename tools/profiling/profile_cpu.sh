@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# profile_cpu.sh — shim. The canonical harness lives in house-gates/tools/profiling
+# profile_cpu.sh — shim. The canonical harness lives in $GOH_DIR/tools/profiling
 # (branch unify/profiling); fixes land there, never here.
-GOH="${GOH_DIR:-$GOH_DIR}"
+GOH="${GOH_DIR:-}"
 CANON="$GOH/tools/profiling/profile_cpu.sh"
 if [ ! -x "$CANON" ]; then
     echo "✗ profile_cpu.sh: canonical harness missing under $GOH/tools/profiling (is GOH_DIR right?)" >&2

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # check_coverage.sh — delegating shim. The shared machinery lives in
-# house-gates/gates/coverage_gate.sh (--lang cpp): instrumented
+# Mirrors the author's shared coverage gate (--lang cpp): instrumented
 # configure/build, ctest under LLVM_PROFILE_FILE, profdata merge, and the
 # TOTAL floor against --total-min.
 #
@@ -19,7 +19,7 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-GOH="${GOH_DIR:-$GOH_DIR}"
+GOH="${GOH_DIR:-}"
 GATE="$GOH/gates/coverage_gate.sh"
 ELIGIBLE_FILE="$ROOT/scripts/coverage_eligible.txt"
 

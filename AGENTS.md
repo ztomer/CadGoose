@@ -53,7 +53,7 @@
 ## Build & Run
 
 ```bash
-cd $HOME/Projects/CadGoose
+cd /path/to/CadGoose
 ./build.sh              # macOS Release — checks/installs Homebrew deps, self-heals stale cache, verbose
 ./run.sh               # build, then run build/CadGoose
 ./build_debug.sh        # macOS Debug (verbose)
