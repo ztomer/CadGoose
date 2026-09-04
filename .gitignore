@@ -46,3 +46,7 @@ coverage-report/
 # Ninja build state — machine-local, and it embedded absolute paths when committed.
 .ninja_deps
 .ninja_log
+
+# Compiled Python — machine-local, and .pyc embeds the absolute source path.
+__pycache__/
+*.pyc
