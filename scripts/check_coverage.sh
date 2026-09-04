@@ -21,6 +21,17 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 GOH="${GOH_DIR:-}"
 GATE="$GOH/gates/coverage_gate.sh"
+
+# SAY WHAT IS MISSING. Without this the run reported `bash: /gates/coverage_gate.sh: No such file`
+# followed by "no profdata" -- two messages for one cause, neither naming it. The shared gate is
+# what performs the instrumented build and merges the profdata, so when it is absent there is
+# nothing to grade and the second error is a cascade of the first.
+if [[ -z "$GOH" || ! -f "$GATE" ]]; then
+    echo "✗ coverage gate unavailable: it lives in the author's shared house-gate suite, which" >&2
+    echo "  this checkout cannot reach. Set GOH_DIR to a checkout of it, or run the build and" >&2
+    echo "  test steps without --coverage." >&2
+    exit 2
+fi
 ELIGIBLE_FILE="$ROOT/scripts/coverage_eligible.txt"
 
 P0_MIN=94
