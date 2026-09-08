@@ -26,11 +26,11 @@ Desktop goose for macOS (primary) and Linux (experimental). Transparent per-goos
 ## Install (macOS)
 
 ```bash
+# Homebrew (recommended, auto-strips quarantine)
+brew tap ztomer/tap && brew install --cask cadgoose
+
 # DMG
 open https://github.com/ztomer/CadGoose/releases/latest
-
-# Homebrew (auto-strips quarantine)
-brew tap ztomer/tap && brew install --cask cadgoose
 ```
 
 First DMG launch requires quarantine removal (one-time):
