@@ -407,7 +407,7 @@ static constexpr float kChatFontSize = 13.0f;
 - (void)updateModelDisplay {
     NSString* model = [self.httpClient currentModel];
     NSString* dot = self.httpClient.connected ? @"✓" : @"✗";
-    self.statusBar.stringValue = [NSString stringWithFormat:@"\u2699 %@  %@", model, dot];
+    self.statusBar.stringValue = [NSString stringWithFormat:@"%@  %@", model, dot];
     self.statusBar.textColor = self.httpClient.connected ? [NSColor systemGreenColor] : [NSColor systemRedColor];
     self.statusBar.hidden = !g_config.ai.showStatusBar;
 }

@@ -8,14 +8,15 @@ network — pure text in, scores/prompts out.
 import random
 import re
 
-# Emoji the scorers look for in *model output*. They are data, not decoration, so they are
-# written as codepoint escapes — the house no-emoji gate (gates_of_heck) policies literal
-# emoji glyphs, and
-# these strings must keep matching what the model actually emits.
-DUCK = "\U0001F986"    # duck
-GOOSE = "\U0001FABF"   # goose
-SKULL = "\U0001F480"   # skull
-IMP = "\U0001F608"     # smiling face with horns
+# Emoji the scorers look for in *model output*. They are data, not decoration,
+# so they are built from their CODEPOINT NUMBERS -- the house no-emoji gate
+# (gates_of_heck) polices literal glyphs and, since 2026-09-14, escapes that
+# render as one; a number is neither, and these must keep matching what the
+# model actually emits.
+DUCK = chr(0x1F986)    # duck
+GOOSE = chr(0x1FABF)   # goose
+SKULL = chr(0x1F480)   # skull
+IMP = chr(0x1F608)     # smiling face with horns
 
 # ──────────────────────────────────────────────────────────────
 # Prompt builder (mirrors ai_text_meme.mm BuildPrompt())

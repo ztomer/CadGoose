@@ -33,7 +33,7 @@ static constexpr float kDefaultMcpPort = 31072;
 
 - (void)modelPopupChanged:(NSPopUpButton*)sender {
     NSString* selected = [sender titleOfSelectedItem];
-    if (selected && ![selected hasPrefix:@"\U0001F300"] && ![selected hasPrefix:@"\u274C"] && ![selected isEqualToString:@"(none)"]) {
+    if (selected && ![selected hasPrefix:@"\u00B7"] && ![selected hasPrefix:@"\u2717"] && ![selected isEqualToString:@"(none)"]) {
         [self setModelName:selected];
         Config_SaveAll();
     }

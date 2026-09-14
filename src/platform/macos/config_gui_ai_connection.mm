@@ -25,7 +25,7 @@ static constexpr float kErrorDescMaxLength = 30;
     if (prov == 3) return;
     int port = [self currentPort];
     [self.modelPopup removeAllItems];
-    [self.modelPopup addItemWithTitle:@"\U0001F300 Loading..."];
+    [self.modelPopup addItemWithTitle:@"\u00B7 Loading..."];
     NSString* endpoint = (prov == 1) ? [NSString stringWithFormat:@"http://localhost:%d/v1/models", port]
                                       : [NSString stringWithFormat:@"http://localhost:%d/api/tags", port];
     NSURL* url = [NSURL URLWithString:endpoint];
@@ -39,7 +39,7 @@ static constexpr float kErrorDescMaxLength = 30;
             if (!strongPopup || !strongSelf) return;
             [strongPopup removeAllItems];
             if (error || !data) {
-                [strongPopup addItemWithTitle:[NSString stringWithFormat:@"\u274C %@", error ? [error.localizedDescription substringToIndex:MIN((NSInteger)kErrorDescMaxLength,error.localizedDescription.length)] : @"no data"]];
+                [strongPopup addItemWithTitle:[NSString stringWithFormat:@"\u2717 %@", error ? [error.localizedDescription substringToIndex:MIN((NSInteger)kErrorDescMaxLength,error.localizedDescription.length)] : @"no data"]];
                 return;
             }
             NSDictionary* json = [NSJSONSerialization JSONObjectWithData:data options:0 error:nil];
@@ -79,32 +79,32 @@ static constexpr float kErrorDescMaxLength = 30;
         LocalLLMState state = LocalLLM_GetState();
         switch (state) {
             case LocalLLMState::Ready:
-                self.statusLabel.stringValue = @"\u2705 Local LLM ready!";
+                self.statusLabel.stringValue = @"\u2713 Local LLM ready!";
                 self.statusLabel.textColor = [NSColor systemGreenColor];
                 break;
             case LocalLLMState::Loading:
-                self.statusLabel.stringValue = @"\U0001F300 Local LLM loading...";
+                self.statusLabel.stringValue = @"\u00B7 Local LLM loading...";
                 self.statusLabel.textColor = [NSColor systemOrangeColor];
                 break;
             case LocalLLMState::Error:
-                self.statusLabel.stringValue = @"\u274C Local LLM error";
+                self.statusLabel.stringValue = @"\u2717 Local LLM error";
                 self.statusLabel.textColor = [NSColor systemRedColor];
                 break;
             case LocalLLMState::Unavailable: {
                 int code = FoundationLLM_AvailabilityCode();
                 NSString* why = (code == 0) ? @"No local model found" : FoundationUnavailableMessage(code);
-                self.statusLabel.stringValue = [NSString stringWithFormat:@"\u274C %@", why];
+                self.statusLabel.stringValue = [NSString stringWithFormat:@"\u2717 %@", why];
                 self.statusLabel.textColor = [NSColor systemRedColor];
                 break;
             }
         }
         return;
     }
-    self.statusLabel.stringValue = @"\U0001F300 Testing...";
+    self.statusLabel.stringValue = @"\u00B7 Testing...";
     self.statusLabel.textColor = [NSColor colorWithWhite:0.85 alpha:1.0];
     NSString* endpoint = [self modelsEndpointForTest];
     NSURL* url = [NSURL URLWithString:endpoint];
-    if (!url) { self.statusLabel.stringValue = @"\u274C Invalid URL"; self.statusLabel.textColor = [NSColor systemRedColor]; return; }
+    if (!url) { self.statusLabel.stringValue = @"\u2717 Invalid URL"; self.statusLabel.textColor = [NSColor systemRedColor]; return; }
     NSMutableURLRequest* request = [NSMutableURLRequest requestWithURL:url];
     request.timeoutInterval = kTestTimeout;
     __weak NSTextField* weakStatus = self.statusLabel;
@@ -113,15 +113,15 @@ static constexpr float kErrorDescMaxLength = 30;
             NSTextField* strongStatus = weakStatus;
             if (!strongStatus) return;
             if (error) {
-                strongStatus.stringValue = [NSString stringWithFormat:@"\u274C %@", error.localizedDescription];
+                strongStatus.stringValue = [NSString stringWithFormat:@"\u2717 %@", error.localizedDescription];
                 strongStatus.textColor = [NSColor systemRedColor];
             } else {
                 NSHTTPURLResponse* httpResp = (NSHTTPURLResponse*)response;
                 if (httpResp.statusCode == 200) {
-                    strongStatus.stringValue = @"\u2705 Connected!";
+                    strongStatus.stringValue = @"\u2713 Connected!";
                     strongStatus.textColor = [NSColor systemGreenColor];
                 } else {
-                    strongStatus.stringValue = [NSString stringWithFormat:@"\u274C HTTP %ld", (long)httpResp.statusCode];
+                    strongStatus.stringValue = [NSString stringWithFormat:@"\u2717 HTTP %ld", (long)httpResp.statusCode];
                     strongStatus.textColor = [NSColor systemRedColor];
                 }
             }

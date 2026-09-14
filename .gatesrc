@@ -23,3 +23,12 @@ GOH_CI_STEPS='"$GOH_DIR/gates/structural.sh" --full:python3 tools/check_test_reg
 # DEBT (2026-08-24) resolved 2026-08-25: every over-cap file was split along
 # its seams; the blanket tests/ + straggler exemptions are gone. No generated
 # or vendored sources exist in this repo, so GOH_LINE_EXCLUDE is unused.
+
+# The goose IS the product: U+1FABF is the app icon (scripts/make_icon.swift
+# renders it) and the menu-bar title, with the maple leaf (U+1F341) and the
+# hammer-and-sickle (U+262D) as its two themed variants in main.mm. Product
+# identity, not decoration -- the way a prompt character is the prompt. The
+# status strings that used check-mark-button / cross-mark / cyclone were
+# converted to the Kare set on 2026-09-14 when the gate learned to see
+# escapes; nothing else is allowed.
+GOH_ALLOW='🪿 🍁 ☭'
