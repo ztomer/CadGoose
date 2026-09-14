@@ -12,12 +12,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      # House standard: emoji are a failure state; only the Kare icon set is permitted.
-      # The checker is VENDORED under tools/house_gates/ rather than fetched: this project is
-      # public and must gate itself with nothing but its own checkout, so that CI passes for a
-      # fork and a contributor can run the same check locally.
-      - name: No-emoji gate
-        run: python3 tools/house_gates/check_no_emoji.py
+      # The house gate suite is a public repo; CI and forks fetch it rather than
+      # carrying copies (copies drift, and the copy is what the gate then means).
+      - name: Fetch the house gate suite
+        uses: actions/checkout@v4
+        with:
+          repository: ztomer/gates_of_heck
+          path: .goh
+      # Structural gates: emoji (only the Kare icon set), conflict markers,
+      # file length, shell lint, secrets -- the same run the pre-commit hook does.
+      - name: Structural gates
+        run: GOH_DIR="$PWD/.goh" bash .goh/gates/structural.sh --full
 
   build-and-test-linux:
     name: Build & Test (Linux)

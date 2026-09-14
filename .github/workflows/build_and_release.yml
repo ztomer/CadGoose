@@ -86,8 +86,13 @@ jobs:
       # raising these.
       #
       # Raise as coverage lands; never lower them to make a red build green.
+      - name: Fetch the house gate suite
+        uses: actions/checkout@v4
+        with:
+          repository: ztomer/gates_of_heck
+          path: .goh
       - name: Test registration gate
-        run: python3 tools/check_test_registration.py
+        run: GOH_DIR="$PWD/.goh" python3 tools/check_test_registration.py
 
       - name: Coverage Gate
         run: |
@@ -176,8 +181,13 @@ jobs:
 
       # Tests are macOS-only (behaviors have CoreGraphics dependencies)
 
+      - name: Fetch the house gate suite
+        uses: actions/checkout@v4
+        with:
+          repository: ztomer/gates_of_heck
+          path: .goh
       - name: Test registration gate
-        run: python3 tools/check_test_registration.py
+        run: GOH_DIR="$PWD/.goh" python3 tools/check_test_registration.py
 
       - name: Determine version
         uses: ./.github/actions/determine-version

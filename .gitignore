@@ -50,3 +50,6 @@ coverage-report/
 # Compiled Python — machine-local, and .pyc embeds the absolute source path.
 __pycache__/
 *.pyc
+
+# The house gate suite, when CI checks it out beside the tree (see .github/workflows)
+.goh/
