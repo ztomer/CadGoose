@@ -800,7 +800,7 @@ Root cause of once-per-second microstutters found via Instruments Time Profiler 
 - **Test process memory ~7.2GB** — From ring buffer (300 × 25MB frames). Acceptable for short runs; not a CadGoose issue.
 - **MCPIntegrationTest failures** — Tests require running MCP server. Run with `./CadGoose` running in background.
 - **Coverage** — P0 `.cpp` line coverage at 94.60% (197/3651 missed), 25/28 files ≥95%. Behavior `.cpp` at 100% (all 17 files). `app_actions.cpp` pushed past 95% (95.36%). 6 files remain below 95%.
-- **test_window_lifecycle.mm** — Still orphaned (3 tests). macOS 15 deprecated API (`CGWindowListCreateImage`), cannot reclaim without rewrite.
+- **test_window_lifecycle.mm** — RECLAIMED 2026-09-16: rewritten to drive REAL ItemWindow lifecycle (rotated frame sizing, orderFront/close, manager round-trip, hit-test) with no pixel capture and no `CGWindowListCreateImage`; registered at CMakeLists:454, `WindowLifecycleTest` 4/4 green on a fresh `CadGooseTests` build. The "orphaned" note above was stale.
 - **Pre-existing issues** (unchanged): 4 order-dependent registration tests excluded (`BehaviorToggles.ToysBehaviorRegistered`, `PortalCleanup.BehaviorHasCleanupFunction`, `StalinHonk.*`).
 - **Remaining Adversarial Review issues (deferred)**: `void*` ObjC pointers in 12 actor headers — well-established type-safe pattern with `__bridge` casts and documented type comments. Deemed cosmetic, no runtime bugs.
 
