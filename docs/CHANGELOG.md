@@ -1,5 +1,19 @@
 # Changelog
 
+## September 21, 2026 — MCP SEP-2575: initialize negotiates protocol version, latest by default
+
+- `initialize` now echoes the client's requested `protocolVersion` when it is a
+  supported version, and answers with the latest supported version when the
+  client asks for nothing, sends extra params (`clientInfo`, `_meta`), or asks
+  for something unknown (`src/common/mcp_handlers.cpp`, `mcp_server.cpp`).
+- Tests: 5 new negotiation cases in `test_mcp_protocol.cpp` (latest echoed,
+  old versions echoed, unknown/missing fall back to latest, `_meta` tolerated)
+  plus `InitializeNegotiatesRequestedVersion` in `test_mcp_integration.cpp`;
+  existing initialize expectations moved from the old pinned version to latest.
+- Docs: `docs/MCP.md` describes the negotiation generically (no version pin to
+  rot); the only version strings in the tree are the supported-echo list in
+  `mcp_handlers.cpp` and the tests that pin it.
+
 ## August 22, 2026 — PLAN.md executed: test-registration gate, dead tests revived, P1 coverage 33.85% → 54.44%, held-item sizing fix, bundle verified
 
 ### Structural gate — unregistered test files can no longer exist silently

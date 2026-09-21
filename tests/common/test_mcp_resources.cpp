@@ -126,26 +126,26 @@ TEST(MCPEdgeCase, JsonWithExtraFields) {
     std::string resp = MCP_HandleRequest(
         "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"initialize\","
         "\"extra\":\"ignored\"}");
-    EXPECT_NE(resp.find("\"protocolVersion\":\"2024-11-05\""), std::string::npos);
+    EXPECT_NE(resp.find("\"protocolVersion\":\"2026-07-28\""), std::string::npos);
 }
 
 TEST(MCPEdgeCase, StringIdWithSpecialChars) {
     std::string resp = MCP_HandleRequest(
         "{\"jsonrpc\":\"2.0\",\"id\":\"test-id-123\",\"method\":\"initialize\"}");
-    EXPECT_NE(resp.find("\"protocolVersion\":\"2024-11-05\""), std::string::npos);
+    EXPECT_NE(resp.find("\"protocolVersion\":\"2026-07-28\""), std::string::npos);
     EXPECT_NE(resp.find("\"id\":\"test-id-123\""), std::string::npos);
 }
 
 TEST(MCPEdgeCase, BooleanId) {
     std::string resp = MCP_HandleRequest(
         "{\"jsonrpc\":\"2.0\",\"id\":true,\"method\":\"initialize\"}");
-    EXPECT_NE(resp.find("\"protocolVersion\":\"2024-11-05\""), std::string::npos);
+    EXPECT_NE(resp.find("\"protocolVersion\":\"2026-07-28\""), std::string::npos);
 }
 
 TEST(MCPEdgeCase, NumericIdZero) {
     std::string resp = MCP_HandleRequest(
         "{\"jsonrpc\":\"2.0\",\"id\":0,\"method\":\"initialize\"}");
-    EXPECT_NE(resp.find("\"protocolVersion\":\"2024-11-05\""), std::string::npos);
+    EXPECT_NE(resp.find("\"protocolVersion\":\"2026-07-28\""), std::string::npos);
     EXPECT_NE(resp.find("\"id\":0"), std::string::npos);
 }
 

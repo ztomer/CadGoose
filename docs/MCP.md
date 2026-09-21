@@ -25,12 +25,21 @@ Send these as the `method` field of a JSON-RPC 2.0 request:
 
 | Method | Description |
 |---|---|
-| `initialize` | Handshake; returns protocol version, server info, capabilities |
+| `initialize` | Handshake; echoes a supported protocol version (see negotiation below), plus server info and capabilities |
 | `notifications/initialized` | Acknowledge; no response |
 | `tools/list` | List all 12 available tools with descriptions and input schemas |
 | `tools/call` | Execute a tool by name with arguments |
 | `resources/list` | List all 5 resource URIs |
 | `resources/read` | Read a resource by URI |
+
+### `initialize` version negotiation
+
+The server echoes the client's requested `protocolVersion` when it is a version
+the server supports, and answers with the latest supported version otherwise —
+when the client sends no version, asks for an unknown one, or sends extra
+params (e.g. `clientInfo`, `_meta`, which are ignored). No client upgrade is
+ever refused: an old client keeps getting the version it asked for, and a new
+client asking for something the server does not know yet gets the latest.
 
 ---
 

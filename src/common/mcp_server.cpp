@@ -23,7 +23,7 @@ std::string ExtractId(const std::string& json);
 std::string ExtractArg(const std::string& json, const std::string& key);
 
 // Handler functions (defined in mcp_handlers.cpp)
-std::string HandleInitialize();
+std::string HandleInitialize(const std::string& requestedVersion = "");
 std::string HandleToolsList();
 std::string HandleResourcesList();
 std::string HandleResourcesRead(const std::string& uri);
@@ -94,7 +94,10 @@ std::string MCP_HandleRequest(const std::string& line) {
     }
 
     if (method == "initialize") {
-        return MakeJsonResponse(id, HandleInitialize());
+        // SEP-2575 negotiation: echo a supported version, else answer latest.
+        // Extra params (e.g. _meta, clientInfo) are ignored.
+        std::string requested = ExtractArg(line, "protocolVersion");
+        return MakeJsonResponse(id, HandleInitialize(requested));
     }
 
     if (method == "tools/list") {

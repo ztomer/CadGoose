@@ -78,7 +78,15 @@ TEST_F(MCPIntegrationTest, InitializeReturnsProtocolVersion) {
         "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"initialize\"}", Port());
     EXPECT_NE(resp.find("HTTP/1.1 200"), std::string::npos);
     EXPECT_NE(resp.find("protocolVersion"), std::string::npos);
-    EXPECT_NE(resp.find("2024-11-05"), std::string::npos);
+    EXPECT_NE(resp.find("2026-07-28"), std::string::npos);
+}
+
+TEST_F(MCPIntegrationTest, InitializeNegotiatesRequestedVersion) {
+    std::string resp = SendHTTPRequest(
+        "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"initialize\","
+        "\"params\":{\"protocolVersion\":\"2026-07-28\"}}", Port());
+    EXPECT_NE(resp.find("HTTP/1.1 200"), std::string::npos);
+    EXPECT_NE(resp.find("\"protocolVersion\":\"2026-07-28\""), std::string::npos);
 }
 
 TEST_F(MCPIntegrationTest, ToolsListReturnsAllTools) {

@@ -72,9 +72,28 @@ static std::string ConfigToJson() {
     return j;
 }
 
-std::string HandleInitialize() {
+// --- MCP protocol version negotiation (SEP-2575) ---
+// Supported versions, oldest first. The latest entry is the default answer
+// when the client asks for nothing or for something unknown.
+static const char* kSupportedProtocolVersions[] = {
+    "2024-11-05",
+    "2025-03-26",
+    "2025-06-18",
+    "2025-11-25",
+    "2026-07-28",
+};
+static constexpr const char* kLatestProtocolVersion = "2026-07-28";
+
+static std::string NegotiateProtocolVersion(const std::string& requested) {
+    for (const char* v : kSupportedProtocolVersions) {
+        if (requested == v) return requested;
+    }
+    return kLatestProtocolVersion;
+}
+
+std::string HandleInitialize(const std::string& requestedVersion) {
     return "{"
-        "\"protocolVersion\":\"2024-11-05\","
+        "\"protocolVersion\":\"" + NegotiateProtocolVersion(requestedVersion) + "\","
         "\"capabilities\":{"
             "\"tools\":{},"
             "\"resources\":{}"

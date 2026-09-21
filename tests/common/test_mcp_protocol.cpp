@@ -5,7 +5,7 @@
 TEST(MCPProtocol, Initialize) {
     std::string resp = MCP_HandleRequest(
         "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"initialize\"}");
-    EXPECT_NE(resp.find("\"protocolVersion\":\"2024-11-05\""), std::string::npos);
+    EXPECT_NE(resp.find("\"protocolVersion\":\"2026-07-28\""), std::string::npos);
     EXPECT_NE(resp.find("\"id\":1"), std::string::npos);
 }
 
@@ -41,7 +41,7 @@ TEST(MCPProtocol, MalformedJson) {
 TEST(MCPProtocol, IdCanBeString) {
     std::string resp = MCP_HandleRequest(
         "{\"jsonrpc\":\"2.0\",\"id\":\"req-1\",\"method\":\"initialize\"}");
-    EXPECT_NE(resp.find("\"protocolVersion\":\"2024-11-05\""), std::string::npos);
+    EXPECT_NE(resp.find("\"protocolVersion\":\"2026-07-28\""), std::string::npos);
     EXPECT_NE(resp.find("\"id\":\"req-1\""), std::string::npos);
 }
 
@@ -73,4 +73,44 @@ TEST(MCPTools, ToolsListIdReflects) {
     std::string resp = MCP_HandleRequest(
         "{\"jsonrpc\":\"2.0\",\"id\":42,\"method\":\"tools/list\"}");
     EXPECT_NE(resp.find("\"id\":42"), std::string::npos);
+}
+
+TEST(MCPNegotiation, LatestEchoed) {
+    std::string resp = MCP_HandleRequest(
+        "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"initialize\","
+        "\"params\":{\"protocolVersion\":\"2026-07-28\"}}");
+    EXPECT_NE(resp.find("\"protocolVersion\":\"2026-07-28\""), std::string::npos);
+}
+
+TEST(MCPNegotiation, OldVersionsEchoed) {
+    for (const char* v : {"2024-11-05", "2025-03-26", "2025-06-18", "2025-11-25"}) {
+        std::string req = std::string("{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"initialize\","
+            "\"params\":{\"protocolVersion\":\"") + v + "\"}}";
+        std::string resp = MCP_HandleRequest(req);
+        std::string expect = std::string("\"protocolVersion\":\"") + v + "\"";
+        EXPECT_NE(resp.find(expect), std::string::npos) << "requested " << v;
+    }
+}
+
+TEST(MCPNegotiation, UnknownFallsBackToLatest) {
+    std::string resp = MCP_HandleRequest(
+        "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"initialize\","
+        "\"params\":{\"protocolVersion\":\"1999-01-01\"}}");
+    EXPECT_NE(resp.find("\"protocolVersion\":\"2026-07-28\""), std::string::npos);
+}
+
+TEST(MCPNegotiation, MissingVersionFallsBackToLatest) {
+    std::string resp = MCP_HandleRequest(
+        "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"initialize\","
+        "\"params\":{\"clientInfo\":{\"name\":\"x\"}}}");
+    EXPECT_NE(resp.find("\"protocolVersion\":\"2026-07-28\""), std::string::npos);
+}
+
+TEST(MCPNegotiation, MetaParamTolerated) {
+    std::string resp = MCP_HandleRequest(
+        "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"initialize\","
+        "\"params\":{\"protocolVersion\":\"2026-07-28\","
+        "\"_meta\":{\"progressToken\":7}}}");
+    EXPECT_NE(resp.find("\"protocolVersion\":\"2026-07-28\""), std::string::npos);
+    EXPECT_NE(resp.find("\"id\":1"), std::string::npos);
 }
