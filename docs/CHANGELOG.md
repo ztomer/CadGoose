@@ -200,10 +200,10 @@ Microstutter root cause found via Instruments Time Profiler: hot-path per-frame 
 ## June 28b, 2026 — Audio default, live sync, config self-healing, honk asset, stalin sound, and custom icons
 
 ### Audio Settings & Config
-- **Default value**: Changed `audio_enabled = false` to `audio_enabled = true` in [config.toml](config/config.toml) to prevent the goose from being silent by default.
-- **Config Self-Healing**: Forced `audio_enabled = true` on macOS inside [Config_LoadAll](src/common/config_load.cpp#L109) to automatically repair and unmute existing instances where the user's local `config.toml` was poisoned with the old `false` default (since `audio_enabled` is not exposed in the macOS settings panel).
-- **Live Sync**: Fixed propagation of `audio_enabled` and `audio_muted` changes to the macOS audio module. [OnConfigChange](src/common/config.cpp#L154) now dynamically calls `Audio_SetEnabled` and `Audio_SetMuted` so that settings changed via preferences GUI, command socket, or CLI apply immediately without restarting.
-- **Stalin Mode Honk Sound**: Modified [Goose::onHonk](src/common/goose.cpp#L121) to check if `appearanceMode == APPEARANCE_STALIN` and play the Gulag sound (`g_assets.Gulag()`) instead of standard honk. This ensures all geese say "gulag" when Stalin mode is active.
+- **Default value**: Changed `audio_enabled = false` to `audio_enabled = true` in [config.toml](../config/config.toml) to prevent the goose from being silent by default.
+- **Config Self-Healing**: Forced `audio_enabled = true` on macOS inside [Config_LoadAll](../src/common/config_load.cpp) to automatically repair and unmute existing instances where the user's local `config.toml` was poisoned with the old `false` default (since `audio_enabled` is not exposed in the macOS settings panel).
+- **Live Sync**: Fixed propagation of `audio_enabled` and `audio_muted` changes to the macOS audio module. [OnConfigChange](../src/common/config.cpp) now dynamically calls `Audio_SetEnabled` and `Audio_SetMuted` so that settings changed via preferences GUI, command socket, or CLI apply immediately without restarting.
+- **Stalin Mode Honk Sound**: Modified [Goose::onHonk](../src/common/goose.cpp) to check if `appearanceMode == APPEARANCE_STALIN` and play the Gulag sound (`g_assets.Gulag()`) instead of standard honk. This ensures all geese say "gulag" when Stalin mode is active.
 
 ### Visual Assets & Custom Icons
 - **Honk bubble replacement**: Replaced the 1x1 solid red PNG placeholder `Assets/Images/OtherGfx/honk.png` with a clean, high-quality, transparent yellow speech bubble containing the word "HONK!" to fix the "red square" visual bug when the goose honked.
@@ -211,8 +211,8 @@ Microstutter root cause found via Instruments Time Profiler: hot-path per-frame 
   - **Default**: White Goose menubar icon + cute 3D White Goose App Dock icon.
   - **Canadian (Dark)**: Maple Leaf menubar icon + realistic Canada Goose App Dock icon.
   - **Stalin**: Hammer & Sickle menubar icon + golden Hammer & Sickle App Dock icon.
-- **Dynamic Switching**: Updated [UpdateStatusBarIcon](src/platform/macos/main.mm#L417) to dynamically switch both the status bar button image (`setTemplate:YES` for auto light/dark menubar styling) and the Dock icon (`[NSApp setApplicationIconImage:]`) at runtime when the theme/appearance mode changes.
-- **Decoupled Linkage**: Declared `g_updateStatusBarIconFn` function pointer in [config.cpp](src/common/config.cpp#L153) to allow calling the status bar update function from core common code without introducing test runner linker dependencies.
+- **Dynamic Switching**: Updated [UpdateStatusBarIcon](../src/platform/macos/main.mm) to dynamically switch both the status bar button image (`setTemplate:YES` for auto light/dark menubar styling) and the Dock icon (`[NSApp setApplicationIconImage:]`) at runtime when the theme/appearance mode changes.
+- **Decoupled Linkage**: Declared `g_updateStatusBarIconFn` function pointer in [config.cpp](../src/common/config.cpp) to allow calling the status bar update function from core common code without introducing test runner linker dependencies.
 
 ### Verification
 - **1457 tests, 0 failures**
