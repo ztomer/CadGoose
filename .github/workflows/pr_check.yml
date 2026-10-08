@@ -11,12 +11,19 @@ jobs:
     name: Style Gates
     runs-on: ubuntu-latest
     steps:
+      # persist-credentials: false on EVERY checkout in this file: by default
+      # checkout leaves the job token in git config (http.<host>.extraheader),
+      # readable by every later step and refused by the gates_of_heck structural
+      # gate's no-credential-in-git-config check (2026-10-08).
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       # The house gate suite is a public repo; CI and forks fetch it rather than
       # carrying copies (copies drift, and the copy is what the gate then means).
       - name: Fetch the house gate suite
         uses: actions/checkout@v4
         with:
+          persist-credentials: false
           repository: ztomer/gates_of_heck
           path: .goh
       # Structural gates: emoji (only the Kare icon set), conflict markers,
@@ -30,6 +37,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          persist-credentials: false
           submodules: recursive
       - name: Install dependencies
         run: |

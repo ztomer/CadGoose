@@ -25,7 +25,13 @@ jobs:
     # for the local "Foundation" AI provider to be compiled into the binary.
     runs-on: macos-26
     steps:
+      # persist-credentials: false on EVERY checkout in this file: by default
+      # checkout leaves the job token in git config (http.<host>.extraheader),
+      # readable by every later step and refused by the gates_of_heck structural
+      # gate's no-credential-in-git-config check (2026-10-08).
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       # FoundationModels (the local "Foundation" AI provider) only exists in the
       # macOS 26+ SDK. canImport() is evaluated at compile time, so building
@@ -89,6 +95,7 @@ jobs:
       - name: Fetch the house gate suite
         uses: actions/checkout@v4
         with:
+          persist-credentials: false
           repository: ztomer/gates_of_heck
           path: .goh
       - name: Test registration gate
@@ -165,6 +172,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Install dependencies
         run: |
@@ -184,6 +193,7 @@ jobs:
       - name: Fetch the house gate suite
         uses: actions/checkout@v4
         with:
+          persist-credentials: false
           repository: ztomer/gates_of_heck
           path: .goh
       - name: Test registration gate
