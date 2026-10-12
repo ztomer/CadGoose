@@ -121,7 +121,16 @@ to go red once.
   replace the blanket rule with explicit ignores for the generated markdown
   (`tools/profiling/soak_results_*.md`, stray probe files). *Proof:* a new
   `docs/X.md` shows up in `git status`.
-- **G0.10 Stale remote branch `origin/unify/harnesses`.** It predates the
+- **G0.10 Every clean configure clones toml11 with its full history and all
+  of its submodules.** `FetchContent_Declare(toml11 ... GIT_TAG v4.4.0)` sets
+  neither `GIT_SHALLOW` nor `GIT_SUBMODULES ""`. The pre-push gate (`rm -rf
+  build && cmake ...`) therefore spends minutes on every push cloning
+  nlohmann/json, doctest and a Hugo theme that nothing builds (measured on the
+  2026-10-12 push). Fix: a shallow fetch with no submodules, or a release
+  tarball with `URL_HASH`. *Proof:* `build/_deps/toml11-src/tests/extlib/` is
+  empty after configure, and the configure step's wall time is recorded before
+  and after.
+- **G0.11 Stale remote branch `origin/unify/harnesses`.** It predates the
   flatten (no merge base with `main`). Its 2026-08-25 file splits are all on
   `main`, and its harness wiring was superseded by `75eb43f`. Delete it on the
   remote; this needs owner approval because it changes the remote.
@@ -227,7 +236,7 @@ what it says. **Exit:** each proof below is green in CI.
   lower-case path slug): its facts were checked against the code. The
   hotkey-cache residual race → M1.2, and the MCP fixed port → G0.3. The store
   stays where it is.
-- `origin/unify/harnesses`: superseded (G0.10).
+- `origin/unify/harnesses`: superseded (G0.11).
 - opencode: the `.opencode/` directory holds only plugin package files; there
   are no loop jobs or goals.
 - Cross-project Rust roadmap: CadGoose `src/` is on its "stay as-is"
