@@ -5,8 +5,8 @@ Instructions for agents working in this repo. **The backlog lives in
 that used to fill this file was pruned on 2026-10-12; the per-session detail is
 in `docs/CHANGELOG.md`, and the old text is at `git show a3353d2:AGENTS.md`.
 
-Before starting feature work, read ROADMAP.md's **D1**: this repo may be a
-maintenance line, with features going elsewhere.
+**This repo is a maintenance line** (ROADMAP.md D1, owner ruling 2026-10-12): no
+new features here; they go to a separate fork.
 
 ## Documentation rules
 

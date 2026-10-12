@@ -16,7 +16,7 @@ the session log that used to live in AGENTS.md: `git show a3353d2:AGENTS.md`.
   quoted in docs/CHANGELOG.md from before that date no longer resolve.
 - Every commit since the flatten is hygiene: gates, CI hardening, docs, one MCP
   protocol-negotiation change. **No feature work has landed since 2026-09-04**;
-  feature development happens in a separate macOS-only fork (see D1).
+  feature development happens in a separate macOS-only fork (D1, ruled: maintenance line).
 - 1697 `TEST`/`TEST_F`/`TEST_P` cases under `tests/`. Coverage ratchet in CI:
   P0 94 / P1 53 / total 85 (`build_and_release.yml:106`), whole-binary floor 64
   (`scripts/coverage_whole_binary_floor.txt`) — but see G0.1 for what the tiers
@@ -26,26 +26,19 @@ the session log that used to live in AGENTS.md: `git show a3353d2:AGENTS.md`.
 
 ---
 
-## D1 — Decision for the owner: what is this repo now? (BLOCKS Phase 2)
+## D1 — RULED 2026-10-12: maintenance line (option A)
 
-A private, macOS-only successor fork carries the feature mission: independent
-since 2026-09-07, Linux dropped there on 2026-09-02, and roughly 900 more tests
-than this repo. This repo still owns three things
-the fork does not: the **public** release line, the **Homebrew cask**, and the
-**Linux** build.
+Owner ruling, verbatim: "CadGoose is maintenance". This repo keeps CI, gates,
+dependencies and the release/cask path green and current, and keeps the Linux
+build building. **No new features here**: feature development happens in a
+separate, private macOS-only successor fork. Phases 0-1 are the work; Phase 2
+is parked for good unless this ruling is reversed. Expected cost: about one
+session per quarter.
 
-| Option | What it means | Cost |
-|---|---|---|
-| **A. Maintenance line** (recommended) | Phases 0-1 only: keep CI, gates, deps and the release/cask path green and current; no new features; Linux kept building. | ~1 session per quarter |
-| B. Retire | Final release, README points at the successor, repo archived on GitHub, cask removed or repointed. | 1 session; loses the public and Linux builds |
-| C. Keep developing | Do Phase 2 as well, duplicating the fork's work. | Ongoing; two goose code bases drifting apart |
+Rejected: B (retire — would lose the public and Linux builds) and C (keep
+developing — two goose code bases drifting apart).
 
-Why A: since the flatten, the only commits here are gate and CI hygiene, so the
-real state already IS option A; writing that down stops a future session from
-starting feature work in the wrong repo. **Unblocks:** an owner ruling in this
-section. Until then, Phases 0-1 are valid under every option except B.
-
-**Also decide with D1 — shared settings directory.** Both apps read and write
+**D1.1 Shared settings directory (do in Phase 1).** Both apps read and write
 `~/Library/Application Support/CadGoose` (`ConfigDirPath()` here; the fork
 documents the same path). With both installed they share `config.toml` and
 `themes/`, and the two schemas have diverged. Under A, move this app to its own
@@ -135,7 +128,7 @@ to go red once.
   `main`, and its harness wiring was superseded by `75eb43f`. Delete it on the
   remote; this needs owner approval because it changes the remote.
 
-## Phase 1 — Maintenance-line correctness (S-M, 1 session; after D1 unless B)
+## Phase 1 — Maintenance-line correctness (S-M, 1 session)
 
 **Goal:** no setting, state or race that silently does something other than
 what it says. **Exit:** each proof below is green in CI.
@@ -164,9 +157,11 @@ what it says. **Exit:** each proof below is green in CI.
   certificate. *Unblocks:* the credential existing in the repo's secrets.
   *Proof:* `spctl -a -vv` accepts the downloaded DMG's app.
 
-## Phase 2 — Feature-line work (M-L; ONLY if D1 = C)
+## Phase 2 — Feature-line work (PARKED: D1 ruled A on 2026-10-12)
 
-**Goal:** close the remaining coverage and parity gaps. Parked under A and B.
+**Goal:** close the remaining coverage and parity gaps. Parked: reopens only if
+the owner reverses D1. C2.3's "keep Linux building; do not grow it" is the
+standing rule meanwhile.
 
 - **C2.1 Coverage of the AI layer.** `ai_http_client.mm`, `ai_local_llm_adapter.mm`
   and `local_llm_{inference,model,tokenizer}.mm` (about 60 KB). Measure them
