@@ -91,10 +91,10 @@ Drop into repo (copied into `.app` bundle by `create_bundle.sh`):
 
 ## Architecture
 
-- `AGENTS.md` — current state, build/run, session summaries
+- `AGENTS.md` — agent instructions: build/run, release rules, durable facts
 - `docs/ARCH.md` — internal architecture (state machine, project structure, bundle)
 - `docs/PROTOCOL.md` — socket command reference
-- `docs/PLAN.md` — backlog
+- `ROADMAP.md` — backlog (the one plan file)
 - `docs/MCP.md` — MCP bridge for AI chat
 
 ## License

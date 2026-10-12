@@ -19,7 +19,6 @@ Assets/
 docs/
   ARCH.md                # Architecture overview (this file)
   CHANGELOG.md           # Completed work log
-  PLAN.md                # Forward-looking work
   MCP.md                 # MCP protocol and AI integration
   PROTOCOL.md            # Unix socket command protocol
   HOMEBREW.md            # Homebrew Cask install docs
