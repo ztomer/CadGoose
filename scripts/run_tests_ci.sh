@@ -36,8 +36,8 @@ set -e
 
 echo "$OUTPUT"
 
-if echo "$OUTPUT" | grep -q "\[  PASSED  \]"; then
-    PASSED_COUNT=$(echo "$OUTPUT" | grep "\[  PASSED  \]" | sed -E 's/.*\[  PASSED  \] ([0-9]+) tests?.*/\1/' | tail -1)
+if grep -q "\[  PASSED  \]" <<< "$OUTPUT"; then
+    PASSED_COUNT=$(grep "\[  PASSED  \]" <<< "$OUTPUT" | sed -E 's/.*\[  PASSED  \] ([0-9]+) tests?.*/\1/' | tail -1)
     echo "Tests passed: $PASSED_COUNT"
 fi
 

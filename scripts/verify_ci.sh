@@ -110,9 +110,10 @@ else
 fi
 
 # Check macOS source files compile (syntax check only)
-OBJC_SOURCES=$(find "${PROJECT_DIR}/src/platform/macos" -name "*.mm" | head -10)
+ALL_OBJC=$(find "${PROJECT_DIR}/src/platform/macos" -name "*.mm")
+OBJC_SOURCES=$(head -n 10 <<< "$ALL_OBJC")
 for src in $OBJC_SOURCES; do
-    if head -1 "$src" | grep -q "^//"; then
+    if [[ "$(head -n 1 "$src")" == //* ]]; then
         log_pass "$(basename "$src") — header valid"
     fi
 done
@@ -185,7 +186,8 @@ if [ -x "$TEST_BINARY" ]; then
 
     # Verify new test suites exist
     for suite in AIEndpoint AIHandler AIThinkBlock; do
-        if "$TEST_BINARY" --gtest_filter="*${suite}*" --gtest_list_tests 2>/dev/null | grep -q "${suite}"; then
+        LISTED=$("$TEST_BINARY" --gtest_filter="*${suite}*" --gtest_list_tests 2>/dev/null || true)
+        if grep -q "${suite}" <<< "$LISTED"; then
             log_pass "Test suite ${suite} present"
         else
             log_fail "Test suite ${suite} missing"
@@ -234,8 +236,9 @@ except Exception as e:
     # Check binary
     if [ -x "${BUNDLE}/Contents/MacOS/CadGoose" ]; then
         log_pass "Executable present and marked executable"
-        BIN_TYPE=$(file -b "${BUNDLE}/Contents/MacOS/CadGoose" | head -1)
-        if echo "$BIN_TYPE" | grep -q "Mach-O"; then
+        BIN_DESC=$(file -b "${BUNDLE}/Contents/MacOS/CadGoose")
+        BIN_TYPE=$(head -n 1 <<< "$BIN_DESC")
+        if grep -q "Mach-O" <<< "$BIN_TYPE"; then
             log_pass "Binary is Mach-O format"
         else
             log_fail "Binary is not Mach-O: $BIN_TYPE"

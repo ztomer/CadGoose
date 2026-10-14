@@ -36,7 +36,8 @@ fi
 if [[ $# -eq 1 ]]; then
     VERSION="$1"
 else
-    LATEST=$(git tag --sort=-v:refname | head -1)
+    TAGS=$(git tag --sort=-v:refname)
+    LATEST=$(head -n 1 <<< "$TAGS")
     # Extract major.minor, bump minor
     if [[ $LATEST =~ ^v([0-9]+)\.([0-9]+)$ ]]; then
         MAJOR="${BASH_REMATCH[1]}"
