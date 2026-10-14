@@ -33,6 +33,6 @@ rc = subprocess.call([
     "--tests-dir", "tests",
     "--makefile", "CMakeLists.txt",
     "--min-tests", "20",
-])
+], stdin=subprocess.DEVNULL)
 if rc != 0:
     sys.exit(rc)
