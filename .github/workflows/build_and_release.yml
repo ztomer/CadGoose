@@ -150,8 +150,14 @@ jobs:
           SHA256_HASH=$(shasum -a 256 "$DMG_FILE" | awk '{print $1}')
           CLEAN_VERSION="${VERSION#v}"
           
-          # 2. Clone the tap repository
-          git clone "https://${TAP_TOKEN}@github.com/ztomer/homebrew-tap.git" /tmp/homebrew-tap
+          # 2. Clone the tap repository. The token rides each command as a
+          #    one-shot `-c http.extraheader` (the header actions/checkout sends),
+          #    so it never lands in a URL or in the clone's .git/config. Actions
+          #    does not mask the base64 form by itself, hence the add-mask.
+          TAP_AUTH=$(printf 'x-access-token:%s' "$TAP_TOKEN" | base64 | tr -d '\n')
+          echo "::add-mask::$TAP_AUTH"
+          TAP_HEADER="http.https://github.com/.extraheader=AUTHORIZATION: basic $TAP_AUTH"
+          git -c "$TAP_HEADER" clone https://github.com/ztomer/homebrew-tap.git /tmp/homebrew-tap
           cd /tmp/homebrew-tap
           
           # 3. Update the cask file with new version and SHA-256 hash using portable perl
@@ -164,7 +170,7 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add Casks/cadgoose.rb
           git commit -m "Update CadGoose cask to version $CLEAN_VERSION"
-          git push origin main
+          git -c "$TAP_HEADER" push origin main
 
   # ── Linux ──────────────────────────────────────────────
   build-linux:
