@@ -32,3 +32,21 @@ GOH_CI_STEPS='"$GOH_DIR/gates/structural.sh" --full:bash "$GOH_DIR/gates/python.
 # converted to the Kare set on 2026-09-14 when the gate learned to see
 # escapes; nothing else is allowed.
 GOH_ALLOW='🪿 🍁 ☭'
+
+# Every scanner's floor (goh v0.27.0, docs/config.md): a full-scope scan that
+# reads less than this has lost its subject and is red, not clean. Nine tenths
+# of what each read on 2026-10-14 (the house rule); lower one with the tree in
+# the same commit, never to absorb a scan that went blind.
+GOH_EMOJI_MIN_FILES=522               # read 581
+GOH_CONFLICT_MARKERS_MIN_FILES=647    # read 719
+GOH_FILE_LENGTH_MIN_FILES=357         # read 397
+GOH_SECRETS_MIN_FILES=522             # read 581
+GOH_SHELL_LINT_MIN_FILES=23           # read 26
+GOH_EARLY_EXIT_PIPE_MIN_FILES=27      # read 31
+GOH_DEAD_AFTER_EXEC_MIN_FILES=27      # read 31
+GOH_BARE_HOOK_INDEX_MIN_FILES=27      # read 31
+GOH_BARE_PYTHON_MIN_FILES=5           # read 6
+GOH_CHECKOUT_CREDENTIALS_MIN_FILES=2  # read 3
+GOH_MD_LINKS_MIN_LINKS=7              # read 8
+GOH_UNREAPED_SPAWN_MIN_FILES=4        # read 5
+GOH_SUBPROCESS_STDIN_MIN_CALLS=1      # read 1, every one declared
