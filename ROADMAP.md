@@ -49,61 +49,17 @@ dir absent, so it copies; both present, so nothing is touched).
 
 ---
 
-## Phase 0 — Wire in goh 0.27.0 (S, 1 session)
+## Phase 0 — Wire in goh 0.27.0: closed 2026-10-14
 
-**Goal:** `tools/gate.sh --full` green at HEAD and pushed. Measured 2026-10-14
-at `b1d6b50` with goh `51d31a5`: `tools/local_ci.sh` runs 5 steps and only
-step 1, `"$GOH_DIR/gates/structural.sh" --full`, is red (configure, build,
-`run_tests_ci.sh` and `check_test_registration.py` green; 106 s). The
-structural gate stops at its first red, so the three below were found by
-neutralising each in a scratch worktree in turn; past them it is green.
-**Exit:** W.1-W.5 closed, `main` pushed through the pre-push gate.
+`tools/gate.sh --full` green at `37ed5f7`, pushed through the pre-push gate.
 
-- **W.1 Red: `no early-exit pipe under pipefail`** — 7 sites in 3 of 28 shell
-  sources: `scripts/push_release.sh:39` (`head -1`),
-  `scripts/run_tests_ci.sh:39` (`grep -q "\[ PASSED \]"`),
-  `scripts/verify_ci.sh:113,115,188,237,238`. Fix each to the printed shape
-  (`out="$(producer)"; grep -q PAT <<< "$out"`); `goh early-exit-pipe --seed`
-  only for a pipe whose producer genuinely cannot outlive the reader.
-  *Acceptance:* the step green with no seed. Size S.
-- **W.2 Red: `no committed secrets`** —
-  `.github/workflows/build_and_release.yml:154:22: credential expansion in a URL`
-  (`git clone "https://${TAP_TOKEN}@github.com/ztomer/homebrew-tap.git"`, so
-  the token lands in `/tmp/homebrew-tap/.git/config`). Was G0.7; goh 6.3
-  closed its gate half. Fix: replace the whole "Update Homebrew Cask in Tap"
-  step with goh's `tools/release-kit/tap_bump.sh --tap ztomer/homebrew-tap
-  --cask cadgoose --tag vX.Y.Z --artifact build/CadGoose-${VERSION}.dmg`
-  (goh 6.8: a repo that pushes its own tap bump skips the tap's gate; the
-  workflow already checks goh out at `.goh`), or, failing that, clone without
-  the token and pass it as `git -c http.extraheader=...`. *Acceptance:* the
-  step green with no `secret-ok`, and the next release's cask bump lands.
-  Size S.
-- **W.3 Red: `every child process names its stdin`** — 1 call:
-  `tools/check_test_registration.py:30` (`subprocess.call` of the house
-  checker). Declare it (`stdin=subprocess.DEVNULL`). *Acceptance:* the step
-  green. Size S.
-- **W.4 Set the scanner floors.** Printed 2026-10-14:
-  `GOH_EMOJI_MIN_FILES=574 GOH_CONFLICT_MARKERS_MIN_FILES=712
-  GOH_FILE_LENGTH_MIN_FILES=397 GOH_SECRETS_MIN_FILES=574
-  GOH_SHELL_LINT_MIN_FILES=26 GOH_EARLY_EXIT_PIPE_MIN_FILES=28
-  GOH_DEAD_AFTER_EXEC_MIN_FILES=28 GOH_BARE_HOOK_INDEX_MIN_FILES=28
-  GOH_BARE_PYTHON_MIN_FILES=3 GOH_CHECKOUT_CREDENTIALS_MIN_FILES=3
-  GOH_MD_LINKS_MIN_LINKS=8 GOH_UNREAPED_SPAWN_MIN_FILES=5` (read in the
-  scratch worktree, which carried one extra untracked seed file). Paste each
-  into `.gatesrc` at or a little under its count, and add
-  `GOH_SUBPROCESS_STDIN_MIN_CALLS`. *Acceptance:* the `[subject]` line gone;
-  raising one floor past its count turns `every scanner read its declared
-  subject` red (then restore it). Size S.
-- **W.5 The hooks are a goh version behind and goh's installer refuses
-  them.** `install.sh .` writes nothing: `.githooks/pre-commit` and
-  `pre-push` "differ from both the stock hook and our install record", and
-  `doctor.sh .` reports 3 problems — `commit-msg`, `post-rewrite` and
-  `pre-applypatch` missing. The two hand-edited hooks only `exec
-  tools/gate.sh`, and their comments still promise "this repo's OWN vendored
-  gates", gone since `75eb43f` (was G0.8a). Fix: `install.sh --force .` for
-  the stock set unless a public-repo reason for the custom pair is written
-  down. *Acceptance:* `bash "$GOH_DIR/gates/doctor.sh" .` reports 0 problems.
-  Size S.
+- **W.1** `no early-exit pipe under pipefail` (7 sites, no seed): `f86ac8d`
+- **W.2** `no committed secrets`, the tap token via `http.extraheader`: `0bd05f3`.
+  Unproven until the next release's cask bump lands.
+- **W.3** `every child process names its stdin` (1 call): `9c14b16`; the
+  `GOH_CI_STEPS` shim through `gates/python.sh`: `177cba2`
+- **W.4** Scanner floors (13 keys, calibrated red): `37ed5f7`
+- **W.5** Stock hooks reinstalled: `6605f91`
 
 ## Phase 0b — Gate holes and false claims (S, 1 session)
 
