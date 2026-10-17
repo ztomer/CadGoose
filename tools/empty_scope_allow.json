@@ -1,0 +1,7 @@
+{
+  "_": "Gates excused from gates_of_heck's empty-scope rule (checks/check_empty_scope.py). `legitimate` = a gate that SHOULD pass over an empty tree on every host, with the reason; `known_blind` = a defect awaiting a guard, shrink-only.",
+  "legitimate": {
+    "check_fetchcontent.py": "Its subject is the root CMakeLists.txt, which the sweep's skeleton keeps as a SHAPE file, so over the skeleton it reads the real toml11 declaration and judges it: not a pass over nothing. It still refuses a tree with no FetchContent_Declare at all (the floor), and reading a skeleton without CMakeLists.txt goes red. Added 2026-10-17 with the gate (ROADMAP G0.10)."
+  },
+  "known_blind": {}
+}

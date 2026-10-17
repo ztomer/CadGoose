@@ -355,7 +355,7 @@ static int Finish(int rc, const CwdLeakGuard& cwdGuard) {
     // passed over ZERO tests because cmake/Tests.cmake split the filter
     // source at every non-ASCII byte (file(STRINGS) without ENCODING).
     if (::testing::UnitTest::GetInstance()->test_to_run_count() == 0) {
-        printf("\n✗ no test was selected (--gtest_filter=%s); a run that executes "
+        printf("\n✗ no test was selected (filter: %s); a run that executes "
                "nothing is not a pass\n",
                ::testing::GTEST_FLAG(filter).c_str());
         fflush(stdout);
