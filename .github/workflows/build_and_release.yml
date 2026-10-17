@@ -102,6 +102,8 @@ jobs:
         run: GOH_DIR="$PWD/.goh" python3 tools/check_test_registration.py
       - name: Tests never mutate process env or cwd (G0.12)
         run: python3 tools/check_test_process_state.py
+      - name: Platform policy accepts and rejects what it should (G0.5)
+        run: python3 tools/check_platform_policy.py
 
       - name: Coverage Gate
         run: |

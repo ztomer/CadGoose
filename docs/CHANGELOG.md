@@ -1,5 +1,20 @@
 # Changelog
 
+## October 17, 2026 — G0.5: the platform policy is a hard gate
+
+- `cmake/PlatformPolicy.cmake`, included right after `project()`: macOS
+  arm64, Linux x86_64 and Linux aarch64 configure; macOS x86_64, universal
+  builds, 32-bit pointers, other Linux architectures and every other OS fail
+  at configure time with the reason. Before, any UNIX passed as Linux and an
+  Intel Mac failed late at the arm64-only Swift object.
+- Seam: `CG_TARGET_OS` / `CG_TARGET_ARCH` / `CG_TARGET_POINTER_SIZE`, plus a
+  script mode that decides one combination without configuring.
+- `tools/check_platform_policy.py` (in `GOH_CI_STEPS` and CI) checks 14
+  combinations in both directions and one real configure through the seam.
+  Seen red twice: with the Intel-Mac reject removed, and with the include
+  removed from CMakeLists.txt.
+- Found on the way: the minimum macOS is claimed (10.15), not built (G0.14).
+
 ## October 17, 2026 — G0.4: deprecations are build errors
 
 - Re-measured: a clean build had zero warnings. The SDK (27.0) marks

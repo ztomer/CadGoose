@@ -37,6 +37,8 @@ new features here; they go to a separate fork.
 tools/gate.sh [--staged|--full]             # house gates; --full = the CI copy (build + tests)
 ```
 
+- **Platforms**: macOS arm64, Linux x86_64 and Linux aarch64 only;
+  `cmake/PlatformPolicy.cmake` fails the configure for anything else.
 - `build/` is a **Ninja** dir. Rebuild with `cmake --build build --target CadGoose`.
   `make CadGoose` there is a silent no-op that leaves a stale binary.
 - Plain `./build/CadGoose` daemonizes (`posix_spawn`), so `$!` is a dead PID.

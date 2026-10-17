@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.25)  # FetchContent SYSTEM
 project(CadGoose)
 
+# Before anything else: an unsupported OS/arch is a hard failure (G0.5).
+include(cmake/PlatformPolicy.cmake)
+
 # Version string for `CadGoose --version`, derived from the latest git tag at
 # configure time (e.g. "v1.66" or "v1.66-3-gabcdef" for untagged builds).
 execute_process(

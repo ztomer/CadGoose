@@ -76,12 +76,6 @@ to go red once.
   failure reads like an MCP bug. Fix: bind port 0 and read it back. *Proof:* two
   test binaries running the MCP suites at once both pass. (G0.2, which it waited
   on, closed 2026-10-17: the MCP suites now run in CI.)
-- **G0.5 Platform policy is not a hard gate.** CMake rejects only non-macOS and
-  non-Linux systems (`CMakeLists.txt:291`). An Intel Mac configures and fails
-  later at the arm64-only Swift object (`CMakeLists.txt:171`), and a non-x86_64
-  Linux would build untested. Fix: reject macOS x86_64 and any 32-bit target,
-  keep Linux x86_64, behind an overridable `OS`/`ARCH` seam. *Proof:* a test
-  that asserts both the reject and the accept directions on one machine.
 - **G0.6 CI actions are three majors behind, and one runner label moves.**
   `actions/checkout@v4` (latest v7), `actions/cache@v4` (v6),
   `actions/upload-artifact@v4` (v7). `ubuntu-latest` is a moving label. *Proof:*
@@ -116,6 +110,19 @@ to go red once.
   restore it, then make shuffle the gate. *Proof:* `--gtest_shuffle
   --gtest_repeat=3` green as a `GOH_CI_STEPS` step; until then, G0.12's
   cwd guard runs on the fixed order only.
+
+- **G0.14 The minimum macOS is claimed, not built (owner decision).**
+  README says "macOS 10.15+" and `scripts/create_bundle.sh` writes
+  `LSMinimumSystemVersion` 10.15, but nothing sets a deployment target, so
+  the binary's `minos` is the build machine's SDK (measured 2026-10-17: 27.0
+  locally; the release builds on `macos-26`). It also links Homebrew's
+  `libmimalloc` dylib (built for the host OS) and a Swift object targeting
+  macOS 15, and since G0.4 it calls `[NSApp activate]` and `NSBezelStylePush`
+  (macOS 14). The code compiles warning-free at a 14.0 deployment target.
+  *Decision:* which floor to support (26, what ships today; or 14, which needs
+  a bundled mimalloc built for 14 and a CI launch check). *Proof:*
+  `CMAKE_OSX_DEPLOYMENT_TARGET` set, `otool -l` on the DMG's binary and every
+  bundled dylib reports that `minos`, and README and the plist say the same.
 
 ## Phase 1 — Maintenance-line correctness (S-M, 1 session)
 
