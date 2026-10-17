@@ -1,5 +1,17 @@
 # Changelog
 
+## October 17, 2026 — ctest ran zero tests and passed
+
+- `cmake/Tests.cmake` read `tests/gtest_ci_filter.txt` with `file(STRINGS)`
+  and no `ENCODING`, which keeps only runs of printable ASCII: every em dash in
+  a comment split its line, and the tails joined the filter as prose tokens.
+  The `CadGooseTests` ctest entry selected no test and reported Passed in
+  0.01 s. It now reads UTF-8 and validates every token as a gtest pattern
+  (configure fails on prose).
+- `tests/test_main.cpp`: a run that selects zero tests exits 1, whatever the
+  filter source (seen red: `ctest -R CadGooseTests` failed before the read
+  was fixed, and `--gtest_filter=NoSuchTest*` exits 1).
+
 ## October 16, 2026 — G0.1: coverage tiers cover every production source
 
 - `scripts/coverage_eligible.txt` now recurses into `src/common/behaviors/` and

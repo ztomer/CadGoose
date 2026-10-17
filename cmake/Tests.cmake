@@ -297,12 +297,22 @@ if(APPLE)
     # the gate when the call sites disagree (ROADMAP G0.2). Non-comment,
     # non-empty lines join with ':'; empty after parsing is a broken source,
     # and configuring a gate that runs everything is worse than failing here.
+    # ENCODING UTF-8: without it file(STRINGS) keeps only runs of printable
+    # ASCII, so every em dash in a comment split the line and its tail became
+    # a "filter token" -- ctest then ran a filter that matched ZERO tests and
+    # reported Passed (found 2026-10-17). Every token is validated as a gtest
+    # pattern below, so prose can never again pass for a filter.
     file(STRINGS "${CMAKE_CURRENT_SOURCE_DIR}/tests/gtest_ci_filter.txt"
-         CG_TEST_GTEST_FILTER_LINES)
+         CG_TEST_GTEST_FILTER_LINES ENCODING UTF-8)
     set(CG_TEST_GTEST_FILTER_PARTS)
     foreach(CG_FILTER_LINE IN LISTS CG_TEST_GTEST_FILTER_LINES)
         string(STRIP "${CG_FILTER_LINE}" CG_FILTER_LINE)
         if(CG_FILTER_LINE AND NOT CG_FILTER_LINE MATCHES "^#")
+            if(NOT CG_FILTER_LINE MATCHES "^-?[A-Za-z0-9_*?./:-]+$")
+                message(FATAL_ERROR
+                    "tests/gtest_ci_filter.txt: '${CG_FILTER_LINE}' is not a gtest "
+                    "filter pattern (comment lines must start with '#').")
+            endif()
             list(APPEND CG_TEST_GTEST_FILTER_PARTS "${CG_FILTER_LINE}")
         endif()
     endforeach()

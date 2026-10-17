@@ -322,7 +322,18 @@ int main(int argc, char **argv) {
 
     CrashLogger_Init();
     ::testing::InitGoogleTest(&argc, argv);
-    return RUN_ALL_TESTS();
+    const int rc = RUN_ALL_TESTS();
+    // A filter that selects nothing is a red run, never a green one: ctest
+    // passed over ZERO tests because cmake/Tests.cmake split the filter
+    // source at every non-ASCII byte (file(STRINGS) without ENCODING).
+    if (::testing::UnitTest::GetInstance()->test_to_run_count() == 0) {
+        printf("\n✗ no test was selected (--gtest_filter=%s); a run that executes "
+               "nothing is not a pass\n",
+               ::testing::GTEST_FLAG(filter).c_str());
+        fflush(stdout);
+        return 1;
+    }
+    return rc;
 }
 
 // ---------------------------------------------------------------------------
