@@ -197,7 +197,7 @@ int main() {
                     CGContextRef ctx = CGBitmapContextCreate(
                         (void*)f.pixels.data(), f.width, f.height, 8, f.width * 4, cs,
                         (CGBitmapInfo)kCGImageAlphaPremultipliedFirst |
-                            kCGBitmapByteOrder32Little);
+                            (CGBitmapInfo)kCGImageByteOrder32Little);
                     CGColorSpaceRelease(cs);
                     if (ctx) {
                         CGImageRef cgImage = CGBitmapContextCreateImage(ctx);

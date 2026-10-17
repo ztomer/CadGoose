@@ -75,7 +75,7 @@
     [self.refreshBtn setFont:[NSFont fontWithName:@"Maple Mono" size:kRefreshBtnFontSize] ?: [NSFont systemFontOfSize:kRefreshBtnFontSize]];
     [self.refreshBtn setTarget:self];
     [self.refreshBtn setAction:@selector(refreshModels:)];
-    self.refreshBtn.bezelStyle = NSBezelStyleRounded;
+    self.refreshBtn.bezelStyle = NSBezelStylePush;
     [self addSubview:self.refreshBtn];
 
     // Test Connection button (same row as refresh)
@@ -84,7 +84,7 @@
     [testBtn setFont:[NSFont fontWithName:@"Maple Mono" size:kBtnFontSize] ?: [NSFont systemFontOfSize:kBtnFontSize]];
     [testBtn setTarget:self];
     [testBtn setAction:@selector(testConnection:)];
-    testBtn.bezelStyle = NSBezelStyleRounded;
+    testBtn.bezelStyle = NSBezelStylePush;
     testBtn.identifier = @"testConnectionBtn";
     [self addSubview:testBtn];
 

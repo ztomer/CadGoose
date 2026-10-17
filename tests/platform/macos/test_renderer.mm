@@ -27,6 +27,30 @@ static bool tesseract_available() {
     return system("command -v tesseract >/dev/null 2>&1") == 0;
 }
 
+// Renders `draw` into a w x h point bitmap at 2x (what lockFocus produced on a
+// Retina display) through AppKit's current context. lockFocus is
+// soft-deprecated; a bitmap-rep graphics context is the replacement Apple
+// names for drawing into specific pixels.
+static NSBitmapImageRep* RenderBitmap(CGFloat w, CGFloat h, void (^draw)(void)) {
+    NSBitmapImageRep* rep = [[NSBitmapImageRep alloc]
+        initWithBitmapDataPlanes:NULL
+                      pixelsWide:(NSInteger)(w * 2)
+                      pixelsHigh:(NSInteger)(h * 2)
+                   bitsPerSample:8
+                 samplesPerPixel:4
+                        hasAlpha:YES
+                        isPlanar:NO
+                  colorSpaceName:NSDeviceRGBColorSpace
+                     bytesPerRow:0
+                    bitsPerPixel:0];
+    rep.size = NSMakeSize(w, h);
+    [NSGraphicsContext saveGraphicsState];
+    NSGraphicsContext.currentContext = [NSGraphicsContext graphicsContextWithBitmapImageRep:rep];
+    draw();
+    [NSGraphicsContext restoreGraphicsState];
+    return rep;
+}
+
 TEST(Rendering, YAxisFlip) {
     float boundsHeight = 1080.0f;
     float originalY = 200.0f;
@@ -46,32 +70,30 @@ TEST(Rendering, TextMirroringFix) {
     const char* outPng  = "/tmp/test_text_fix.png";
 
     @autoreleasepool {
-        NSImage* img = [[NSImage alloc] initWithSize:NSMakeSize(800, 300)];
-        [img lockFocus];
-        [[NSColor whiteColor] setFill];
-        NSRectFill(NSMakeRect(0, 0, 800, 300));
+        NSBitmapImageRep* rep = RenderBitmap(800, 300, ^{
+            [[NSColor whiteColor] setFill];
+            NSRectFill(NSMakeRect(0, 0, 800, 300));
 
-        CGContextRef ctx = (CGContextRef)[[NSGraphicsContext currentContext] CGContext];
-        NSDictionary* attrs = @{
-            NSFontAttributeName: [NSFont systemFontOfSize:36],
-            NSForegroundColorAttributeName: [NSColor blackColor]
-        };
+            CGContextRef ctx = (CGContextRef)[[NSGraphicsContext currentContext] CGContext];
+            NSDictionary* attrs = @{
+                NSFontAttributeName: [NSFont systemFontOfSize:36],
+                NSForegroundColorAttributeName: [NSColor blackColor]
+            };
 
-        // Method 1: Y-flip with drawAtPoint (mirrors text - BAD)
-        CGContextSaveGState(ctx);
-        CGContextTranslateCTM(ctx, 0, 300);
-        CGContextScaleCTM(ctx, 1.0, -1.0);
-        [@"FLIPPED" drawAtPoint:NSMakePoint(50, 50) withAttributes:attrs];
-        CGContextRestoreGState(ctx);
+            // Method 1: Y-flip with drawAtPoint (mirrors text - BAD)
+            CGContextSaveGState(ctx);
+            CGContextTranslateCTM(ctx, 0, 300);
+            CGContextScaleCTM(ctx, 1.0, -1.0);
+            [@"FLIPPED" drawAtPoint:NSMakePoint(50, 50) withAttributes:attrs];
+            CGContextRestoreGState(ctx);
 
-        // Method 2: No flip, manual Y conversion (correct - USE THIS)
-        [@"NORMAL" drawAtPoint:NSMakePoint(50, 250) withAttributes:attrs];
+            // Method 2: No flip, manual Y conversion (correct - USE THIS)
+            [@"NORMAL" drawAtPoint:NSMakePoint(50, 250) withAttributes:attrs];
 
-        // Method 3: drawInRect without flip (correct - USE THIS)
-        [@"DRAWRECT" drawInRect:NSMakeRect(50, 50, 400, 60) withAttributes:attrs];
-
-        [img unlockFocus];
-        NSData* tiff = [img TIFFRepresentation];
+            // Method 3: drawInRect without flip (correct - USE THIS)
+            [@"DRAWRECT" drawInRect:NSMakeRect(50, 50, 400, 60) withAttributes:attrs];
+        });
+        NSData* tiff = [rep TIFFRepresentation];
         [tiff writeToFile:@(outPath) atomically:YES];
     }
 
@@ -93,24 +115,22 @@ TEST(Rendering, TextRenderingCorrect) {
     const char* outPng  = "/tmp/test_text_render.png";
 
     @autoreleasepool {
-        NSImage* img = [[NSImage alloc] initWithSize:NSMakeSize(800, 300)];
-        [img lockFocus];
-        [[NSColor whiteColor] setFill];
-        NSRectFill(NSMakeRect(0, 0, 800, 300));
+        NSBitmapImageRep* rep = RenderBitmap(800, 300, ^{
+            [[NSColor whiteColor] setFill];
+            NSRectFill(NSMakeRect(0, 0, 800, 300));
 
-        CGContextRef ctx = (CGContextRef)[[NSGraphicsContext currentContext] CGContext];
-        NSDictionary* attrs = @{
-            NSFontAttributeName: [NSFont systemFontOfSize:36],
-            NSForegroundColorAttributeName: [NSColor blackColor]
-        };
+            CGContextRef ctx = (CGContextRef)[[NSGraphicsContext currentContext] CGContext];
+            NSDictionary* attrs = @{
+                NSFontAttributeName: [NSFont systemFontOfSize:36],
+                NSForegroundColorAttributeName: [NSColor blackColor]
+            };
 
-        // Draw text WITHOUT Y-flip (correct approach)
-        // Y=50 in world coords → Y=250 in screen coords (300 - 50)
-        [@"HELLO WORLD" drawAtPoint:NSMakePoint(50, 250) withAttributes:attrs];
-        [@"CORRECT TEXT" drawInRect:NSMakeRect(50, 50, 400, 60) withAttributes:attrs];
-
-        [img unlockFocus];
-        NSData* tiff = [img TIFFRepresentation];
+            // Draw text WITHOUT Y-flip (correct approach)
+            // Y=50 in world coords → Y=250 in screen coords (300 - 50)
+            [@"HELLO WORLD" drawAtPoint:NSMakePoint(50, 250) withAttributes:attrs];
+            [@"CORRECT TEXT" drawInRect:NSMakeRect(50, 50, 400, 60) withAttributes:attrs];
+        });
+        NSData* tiff = [rep TIFFRepresentation];
         [tiff writeToFile:@(outPath) atomically:YES];
     }
 
@@ -132,26 +152,24 @@ TEST(Rendering, DroppedItemTextNotMirrored) {
     const char* outPng  = "/tmp/test_note_render.png";
 
     @autoreleasepool {
-        NSImage* img = [[NSImage alloc] initWithSize:NSMakeSize(400, 200)];
-        [img lockFocus];
-        [[NSColor whiteColor] setFill];
-        NSRectFill(NSMakeRect(0, 0, 400, 200));
+        NSBitmapImageRep* rep = RenderBitmap(400, 200, ^{
+            [[NSColor whiteColor] setFill];
+            NSRectFill(NSMakeRect(0, 0, 400, 200));
 
-        CGContextRef ctx = (CGContextRef)[[NSGraphicsContext currentContext] CGContext];
-        NSDictionary* attrs = @{
-            NSFontAttributeName: [NSFont systemFontOfSize:16],
-            NSForegroundColorAttributeName: [NSColor blackColor]
-        };
+            CGContextRef ctx = (CGContextRef)[[NSGraphicsContext currentContext] CGContext];
+            NSDictionary* attrs = @{
+                NSFontAttributeName: [NSFont systemFontOfSize:16],
+                NSForegroundColorAttributeName: [NSColor blackColor]
+            };
 
-        // Draw note WITHOUT Y-flip (correct approach)
-        CGContextSetRGBFillColor(ctx, 1.0f, 1.0f, 0.8f, 1.0f);
-        CGContextFillRect(ctx, CGRectMake(0, 0, 200, 100));
+            // Draw note WITHOUT Y-flip (correct approach)
+            CGContextSetRGBFillColor(ctx, 1.0f, 1.0f, 0.8f, 1.0f);
+            CGContextFillRect(ctx, CGRectMake(0, 0, 200, 100));
 
-        // Text with manual Y conversion: y=10 in world → y=90 in screen
-        [@"Test Note" drawInRect:NSMakeRect(10, 10, 180, 80) withAttributes:attrs];
-
-        [img unlockFocus];
-        NSData* tiff = [img TIFFRepresentation];
+            // Text with manual Y conversion: y=10 in world → y=90 in screen
+            [@"Test Note" drawInRect:NSMakeRect(10, 10, 180, 80) withAttributes:attrs];
+        });
+        NSData* tiff = [rep TIFFRepresentation];
         [tiff writeToFile:@(outPath) atomically:YES];
     }
 

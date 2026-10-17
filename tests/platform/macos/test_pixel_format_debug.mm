@@ -134,7 +134,7 @@ int main() {
         CGContextRef ctx = CGBitmapContextCreate(
             (void*)captured.data(), capW, capH, 8, capW * 4, cs,
             (CGBitmapInfo)kCGImageAlphaPremultipliedFirst |
-                kCGBitmapByteOrder32Little);
+                (CGBitmapInfo)kCGImageByteOrder32Little);
         CGColorSpaceRelease(cs);
         if (ctx) {
             // Check context data

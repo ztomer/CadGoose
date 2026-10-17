@@ -76,12 +76,6 @@ to go red once.
   failure reads like an MCP bug. Fix: bind port 0 and read it back. *Proof:* two
   test binaries running the MCP suites at once both pass. (G0.2, which it waited
   on, closed 2026-10-17: the MCP suites now run in CI.)
-- **G0.4 Deprecated API, no deprecation gate.** `activateIgnoringOtherApps:`
-  (deprecated in macOS 14) at `src/platform/macos/config_gui.mm:403` and
-  `src/common/behaviors/ai_chat_window.mm:442`. CMake has no
-  `-Werror=deprecated-declarations`, so the next one also lands silently (rule
-  17). *Proof:* the flag on the app and test targets, the build green,
-  reintroducing one call goes red.
 - **G0.5 Platform policy is not a hard gate.** CMake rejects only non-macOS and
   non-Linux systems (`CMakeLists.txt:291`). An Intel Mac configures and fails
   later at the arm64-only Swift object (`CMakeLists.txt:171`), and a non-x86_64

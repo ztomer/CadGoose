@@ -215,7 +215,7 @@ static float* ColorFieldForIdentifier(NSString* ident) {
     [saveThemeBtn setFont:[NSFont fontWithName:@"Maple Mono" size:11] ?: [NSFont systemFontOfSize:11]];
     [saveThemeBtn setTarget:self];
     [saveThemeBtn setAction:@selector(saveTheme:)];
-    saveThemeBtn.bezelStyle = NSBezelStyleRounded;
+    saveThemeBtn.bezelStyle = NSBezelStylePush;
     [self addSubview:saveThemeBtn];
 
     NSButton* openThemeBtn = [[NSButton alloc] initWithFrame:NSMakeRect(190, y, 140, 24)];
@@ -223,7 +223,7 @@ static float* ColorFieldForIdentifier(NSString* ident) {
     [openThemeBtn setFont:[NSFont fontWithName:@"Maple Mono" size:11] ?: [NSFont systemFontOfSize:11]];
     [openThemeBtn setTarget:self];
     [openThemeBtn setAction:@selector(openThemesFolder:)];
-    openThemeBtn.bezelStyle = NSBezelStyleRounded;
+    openThemeBtn.bezelStyle = NSBezelStylePush;
     [self addSubview:openThemeBtn];
     y -= 30;
 

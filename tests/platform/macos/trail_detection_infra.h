@@ -53,7 +53,7 @@ static bool SaveFramePNG(const uint8_t* pixels, int w, int h,
     CGContextRef ctx = CGBitmapContextCreate(
         (void*)pixels, w, h, 8, w * 4, cs,
         (CGBitmapInfo)kCGImageAlphaPremultipliedFirst |
-            kCGBitmapByteOrder32Little);
+            (CGBitmapInfo)kCGImageByteOrder32Little);
     CGColorSpaceRelease(cs);
     if (!ctx) return false;
 

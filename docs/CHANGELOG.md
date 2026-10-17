@@ -1,5 +1,29 @@
 # Changelog
 
+## October 17, 2026 — G0.4: deprecations are build errors
+
+- Re-measured: a clean build had zero warnings. The SDK (27.0) marks
+  `activateIgnoringOtherApps:` `API_TO_BE_DEPRECATED`, which never warns, so
+  no flag alone would have caught it. Defining `API_TO_BE_DEPRECATED` and
+  `API_TO_BE_DEPRECATED_MACOS` as `10.0` surfaced 40 hits (12 sites, 4 APIs).
+- Migrated: `activateIgnoringOtherApps:YES` → `[NSApp activate]` (2 sites;
+  activation is now cooperative, as Apple intends); `lockFocus` →
+  `+[NSImage imageWithSize:flipped:drawingHandler:]` for the menu-bar mute
+  icon and the colour-preview goose, each drawing a snapshot taken at update
+  time, and an `NSBitmapImageRep` context in the OCR tests;
+  `NSBezelStyleRounded` → `NSBezelStylePush` (same value);
+  `kCGBitmapByteOrder*` → `kCGImageByteOrder*` (tests). A probe drawing the
+  same paths both ways matched within 2/255 at 2x; at 1x the new image is
+  rasterised natively instead of downsampled from 2x.
+- Gate: every compiled target gets `-Werror=deprecated-declarations` plus the
+  `API_TO_BE_DEPRECATED` definitions, applied by enumerating the directory's
+  targets, so a new target cannot miss it. Seen red: reintroducing
+  `activateIgnoringOtherApps:` fails the build.
+- toml11 is fetched as `SYSTEM` (CMake floor 3.17 → 3.25), replacing a
+  blanket `-Wno-deprecated-literal-operator` on the app and test targets
+  that hid that deprecation in this project's own code too (980 warnings, all
+  in toml11 v4.4.0's headers, the newest release).
+
 ## October 17, 2026 — G0.9: a new document is never silently untracked
 
 - `.gitignore` dropped its blanket `*.md` and the whitelist behind it (eight

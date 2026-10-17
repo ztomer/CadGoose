@@ -105,43 +105,21 @@ static constexpr float kHighlightAlpha = 0.08f;
 
 @end
 
-@implementation PreviewGooseView
+// The colours one preview frame draws, copied out of g_config at update time.
+struct PreviewGooseColors {
+    ColorRGB body, neck, head, beak, eye, outline;
+};
 
-- (instancetype)initWithFrame:(NSRect)frame {
-    self = [super initWithFrame:frame];
-    if (self) {
-        self.wantsLayer = YES;
-    }
-    return self;
-}
-
-- (void)updatePreview {
-    if (!self.layer) return;
-    NSSize size = self.bounds.size;
-    if (size.width <= 0 || size.height <= 0) return;
-
-    NSImage* img = [[NSImage alloc] initWithSize:size];
-    [img lockFocus];
-    CGContextRef ctx = [[NSGraphicsContext currentContext] CGContext];
-    if (ctx) [self renderGooseInContext:ctx size:size];
-    [img unlockFocus];
-    self.layer.contents = img;
-}
-
-- (void)viewDidMoveToWindow {
-    [self updatePreview];
-}
-
-- (void)renderGooseInContext:(CGContextRef)ctx size:(NSSize)size {
+static void RenderPreviewGoose(CGContextRef ctx, NSSize size, const PreviewGooseColors& c) {
     CGFloat cx = size.width / 2;
     CGFloat cy = size.height / 2 + 10;
 
-    ColorRGB& body = g_config.color.currentBody;
-    ColorRGB& neck = g_config.color.currentNeck;
-    ColorRGB& head = g_config.color.currentHead;
-    ColorRGB& beak = g_config.color.currentBeak;
-    ColorRGB& eye = g_config.color.currentEye;
-    ColorRGB& outline = g_config.color.currentOutline;
+    const ColorRGB& body = c.body;
+    const ColorRGB& neck = c.neck;
+    const ColorRGB& head = c.head;
+    const ColorRGB& beak = c.beak;
+    const ColorRGB& eye = c.eye;
+    const ColorRGB& outline = c.outline;
 
     CGContextSetRGBFillColor(ctx, 0, 0, 0, 0.15);
     CGContextFillEllipseInRect(ctx, CGRectMake(cx - 28, cy - 4, 56, 18));
@@ -188,5 +166,41 @@ static constexpr float kHighlightAlpha = 0.08f;
     CGContextSetRGBFillColor(ctx, eye.r, eye.g, eye.b, 1);
     CGContextFillEllipseInRect(ctx, CGRectMake(cx + 24, cy + 24, 4, 4));
 }
+
+@implementation PreviewGooseView
+
+- (instancetype)initWithFrame:(NSRect)frame {
+    self = [super initWithFrame:frame];
+    if (self) {
+        self.wantsLayer = YES;
+    }
+    return self;
+}
+
+- (void)updatePreview {
+    if (!self.layer) return;
+    NSSize size = self.bounds.size;
+    if (size.width <= 0 || size.height <= 0) return;
+
+    // Snapshot the colours now: the drawing handler may run later (and again
+    // at another backing scale), and must draw what this update saw.
+    const PreviewGooseColors colors = {
+        g_config.color.currentBody, g_config.color.currentNeck, g_config.color.currentHead,
+        g_config.color.currentBeak, g_config.color.currentEye, g_config.color.currentOutline,
+    };
+    NSImage* img = [NSImage imageWithSize:size
+                                  flipped:NO
+                           drawingHandler:^BOOL(NSRect) {
+                               CGContextRef ctx = [[NSGraphicsContext currentContext] CGContext];
+                               if (ctx) RenderPreviewGoose(ctx, size, colors);
+                               return YES;
+                           }];
+    self.layer.contents = img;
+}
+
+- (void)viewDidMoveToWindow {
+    [self updatePreview];
+}
+
 
 @end

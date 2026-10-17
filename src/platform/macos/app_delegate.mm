@@ -153,45 +153,49 @@ bool Config_IsSystemDarkTheme();
 
 - (void)updateMuteMenuItem {
     NSSize size = NSMakeSize(kMenuBarIconSize, kMenuBarIconSize);
-    NSImage* icon = [[NSImage alloc] initWithSize:size];
-    [icon lockFocus];
-    NSRect rect = NSMakeRect(0, 0, size.width, size.height);
-    [[NSColor labelColor] set];
+    // Snapshot the state now: the drawing handler may run later (and again at
+    // another backing scale or appearance) and must draw what this update saw.
+    const bool muted = g_config.general.audioMuted;
+    NSImage* icon = [NSImage imageWithSize:size
+                                   flipped:NO
+                            drawingHandler:^BOOL(NSRect) {
+        [[NSColor labelColor] set];
     
-    // Speaker shape: trapezoid + rectangle
-    NSBezierPath* speaker = [NSBezierPath bezierPath];
-    [speaker moveToPoint:NSMakePoint(kSpeakerX1, kSpeakerY1)];
-    [speaker lineToPoint:NSMakePoint(kSpeakerX2, kSpeakerY2)];
-    [speaker lineToPoint:NSMakePoint(kSpeakerX3, kSpeakerY3)];
-    [speaker lineToPoint:NSMakePoint(kSpeakerX4, kSpeakerY4)];
-    [speaker lineToPoint:NSMakePoint(kSpeakerX5, kSpeakerY5)];
-    [speaker lineToPoint:NSMakePoint(kSpeakerX6, kSpeakerY6)];
-    [speaker closePath];
-    [speaker fill];
+        // Speaker shape: trapezoid + rectangle
+        NSBezierPath* speaker = [NSBezierPath bezierPath];
+        [speaker moveToPoint:NSMakePoint(kSpeakerX1, kSpeakerY1)];
+        [speaker lineToPoint:NSMakePoint(kSpeakerX2, kSpeakerY2)];
+        [speaker lineToPoint:NSMakePoint(kSpeakerX3, kSpeakerY3)];
+        [speaker lineToPoint:NSMakePoint(kSpeakerX4, kSpeakerY4)];
+        [speaker lineToPoint:NSMakePoint(kSpeakerX5, kSpeakerY5)];
+        [speaker lineToPoint:NSMakePoint(kSpeakerX6, kSpeakerY6)];
+        [speaker closePath];
+        [speaker fill];
     
-    if (g_config.general.audioMuted) {
-        // Add slash for muted state
-        NSBezierPath* slash = [NSBezierPath bezierPath];
-        [slash setLineWidth:kSlashLineWidth];
-        [slash moveToPoint:NSMakePoint(kSlashX1, kSlashY1)];
-        [slash lineToPoint:NSMakePoint(kSlashX2, kSlashY2)];
-        [slash stroke];
-    } else {
-        // Add sound waves for unmuted state
-        NSBezierPath* wave1 = [NSBezierPath bezierPath];
-        [wave1 setLineWidth:kWaveLineWidth];
-        [wave1 appendBezierPathWithArcFromPoint:NSMakePoint(kWave1ArcX, kWave1ArcY1) toPoint:NSMakePoint(kWave1ArcX, kWave1ArcY2) radius:kWave1Radius];
-        [wave1 stroke];
+        if (muted) {
+            // Add slash for muted state
+            NSBezierPath* slash = [NSBezierPath bezierPath];
+            [slash setLineWidth:kSlashLineWidth];
+            [slash moveToPoint:NSMakePoint(kSlashX1, kSlashY1)];
+            [slash lineToPoint:NSMakePoint(kSlashX2, kSlashY2)];
+            [slash stroke];
+        } else {
+            // Add sound waves for unmuted state
+            NSBezierPath* wave1 = [NSBezierPath bezierPath];
+            [wave1 setLineWidth:kWaveLineWidth];
+            [wave1 appendBezierPathWithArcFromPoint:NSMakePoint(kWave1ArcX, kWave1ArcY1) toPoint:NSMakePoint(kWave1ArcX, kWave1ArcY2) radius:kWave1Radius];
+            [wave1 stroke];
         
-        NSBezierPath* wave2 = [NSBezierPath bezierPath];
-        [wave2 setLineWidth:kWaveLineWidth];
-        [wave2 appendBezierPathWithArcFromPoint:NSMakePoint(kWave2ArcX, kWave2ArcY1) toPoint:NSMakePoint(kWave2ArcX, kWave2ArcY2) radius:kWave2Radius];
-        [wave2 stroke];
-    }
+            NSBezierPath* wave2 = [NSBezierPath bezierPath];
+            [wave2 setLineWidth:kWaveLineWidth];
+            [wave2 appendBezierPathWithArcFromPoint:NSMakePoint(kWave2ArcX, kWave2ArcY1) toPoint:NSMakePoint(kWave2ArcX, kWave2ArcY2) radius:kWave2Radius];
+            [wave2 stroke];
+        }
     
-    [icon unlockFocus];
+        return YES;
+    }];
     self.muteMenuItem.image = icon;
-    self.muteMenuItem.title = g_config.general.audioMuted ? @"Unmute" : @"Mute";
+    self.muteMenuItem.title = muted ? @"Unmute" : @"Mute";
 }
 
 - (void)toggleMute:(id)sender {

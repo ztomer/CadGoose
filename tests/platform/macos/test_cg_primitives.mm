@@ -43,7 +43,7 @@ static int pixelA(const uint8_t* d, int stride, int x, int cgY, int h) {
 TEST(GooseRender, CGRenderer_DrawEllipse) {
     CGColorSpaceRef cs = CGColorSpaceCreateDeviceRGB();
     CGContextRef ctx = CGBitmapContextCreate(NULL, 100, 100, 8, 0, cs,
-        kCGBitmapByteOrderDefault | (CGBitmapInfo)kCGImageAlphaPremultipliedFirst);
+        (CGBitmapInfo)kCGImageByteOrderDefault | (CGBitmapInfo)kCGImageAlphaPremultipliedFirst);
     ASSERT_NE(ctx, nullptr);
     int s = (int)CGBitmapContextGetBytesPerRow(ctx);
     const uint8_t* d = (const uint8_t*)CGBitmapContextGetData(ctx);
@@ -67,7 +67,7 @@ TEST(GooseRender, CGRenderer_DrawEllipse) {
 TEST(GooseRender, CGRenderer_DrawEllipseOutline) {
     CGColorSpaceRef cs = CGColorSpaceCreateDeviceRGB();
     CGContextRef ctx = CGBitmapContextCreate(NULL, 50, 50, 8, 0, cs,
-        kCGBitmapByteOrderDefault | (CGBitmapInfo)kCGImageAlphaPremultipliedFirst);
+        (CGBitmapInfo)kCGImageByteOrderDefault | (CGBitmapInfo)kCGImageAlphaPremultipliedFirst);
     ASSERT_NE(ctx, nullptr);
     int s = (int)CGBitmapContextGetBytesPerRow(ctx);
     const uint8_t* d = (const uint8_t*)CGBitmapContextGetData(ctx);
@@ -88,7 +88,7 @@ TEST(GooseRender, CGRenderer_DrawEllipseOutline) {
 TEST(GooseRender, CGRenderer_DrawLine) {
     CGColorSpaceRef cs = CGColorSpaceCreateDeviceRGB();
     CGContextRef ctx = CGBitmapContextCreate(NULL, 50, 50, 8, 0, cs,
-        kCGBitmapByteOrderDefault | (CGBitmapInfo)kCGImageAlphaPremultipliedFirst);
+        (CGBitmapInfo)kCGImageByteOrderDefault | (CGBitmapInfo)kCGImageAlphaPremultipliedFirst);
     ASSERT_NE(ctx, nullptr);
     int s = (int)CGBitmapContextGetBytesPerRow(ctx);
     const uint8_t* d = (const uint8_t*)CGBitmapContextGetData(ctx);
@@ -108,7 +108,7 @@ TEST(GooseRender, CGRenderer_DrawLine) {
 TEST(GooseRender, CGRenderer_DrawRect) {
     CGColorSpaceRef cs = CGColorSpaceCreateDeviceRGB();
     CGContextRef ctx = CGBitmapContextCreate(NULL, 50, 50, 8, 0, cs,
-        kCGBitmapByteOrderDefault | (CGBitmapInfo)kCGImageAlphaPremultipliedFirst);
+        (CGBitmapInfo)kCGImageByteOrderDefault | (CGBitmapInfo)kCGImageAlphaPremultipliedFirst);
     ASSERT_NE(ctx, nullptr);
     int s = (int)CGBitmapContextGetBytesPerRow(ctx);
     const uint8_t* d = (const uint8_t*)CGBitmapContextGetData(ctx);
@@ -127,7 +127,7 @@ TEST(GooseRender, CGRenderer_DrawRect) {
 TEST(GooseRender, CGRenderer_DrawRectOutline) {
     CGColorSpaceRef cs = CGColorSpaceCreateDeviceRGB();
     CGContextRef ctx = CGBitmapContextCreate(NULL, 50, 50, 8, 0, cs,
-        kCGBitmapByteOrderDefault | (CGBitmapInfo)kCGImageAlphaPremultipliedFirst);
+        (CGBitmapInfo)kCGImageByteOrderDefault | (CGBitmapInfo)kCGImageAlphaPremultipliedFirst);
     ASSERT_NE(ctx, nullptr);
     int s = (int)CGBitmapContextGetBytesPerRow(ctx);
     const uint8_t* d = (const uint8_t*)CGBitmapContextGetData(ctx);
@@ -146,7 +146,7 @@ TEST(GooseRender, CGRenderer_DrawRectOutline) {
 TEST(GooseRender, CGRenderer_DrawPolygon) {
     CGColorSpaceRef cs = CGColorSpaceCreateDeviceRGB();
     CGContextRef ctx = CGBitmapContextCreate(NULL, 50, 50, 8, 0, cs,
-        kCGBitmapByteOrderDefault | (CGBitmapInfo)kCGImageAlphaPremultipliedFirst);
+        (CGBitmapInfo)kCGImageByteOrderDefault | (CGBitmapInfo)kCGImageAlphaPremultipliedFirst);
     ASSERT_NE(ctx, nullptr);
     int s = (int)CGBitmapContextGetBytesPerRow(ctx);
     const uint8_t* d = (const uint8_t*)CGBitmapContextGetData(ctx);
@@ -167,7 +167,7 @@ TEST(GooseRender, CGRenderer_DrawPolygon) {
 TEST(GooseRender, CGRenderer_DrawRoundedRect) {
     CGColorSpaceRef cs = CGColorSpaceCreateDeviceRGB();
     CGContextRef ctx = CGBitmapContextCreate(NULL, 50, 50, 8, 0, cs,
-        kCGBitmapByteOrderDefault | (CGBitmapInfo)kCGImageAlphaPremultipliedFirst);
+        (CGBitmapInfo)kCGImageByteOrderDefault | (CGBitmapInfo)kCGImageAlphaPremultipliedFirst);
     ASSERT_NE(ctx, nullptr);
     int s = (int)CGBitmapContextGetBytesPerRow(ctx);
     const uint8_t* d = (const uint8_t*)CGBitmapContextGetData(ctx);
@@ -186,7 +186,7 @@ TEST(GooseRender, CGRenderer_DrawRoundedRect) {
 TEST(GooseRender, CGRenderer_Transforms) {
     CGColorSpaceRef cs = CGColorSpaceCreateDeviceRGB();
     CGContextRef ctx = CGBitmapContextCreate(NULL, 50, 50, 8, 0, cs,
-        kCGBitmapByteOrderDefault | (CGBitmapInfo)kCGImageAlphaPremultipliedFirst);
+        (CGBitmapInfo)kCGImageByteOrderDefault | (CGBitmapInfo)kCGImageAlphaPremultipliedFirst);
     ASSERT_NE(ctx, nullptr);
     int s = (int)CGBitmapContextGetBytesPerRow(ctx);
     const uint8_t* d = (const uint8_t*)CGBitmapContextGetData(ctx);

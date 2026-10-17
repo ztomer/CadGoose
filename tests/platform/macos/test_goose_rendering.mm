@@ -93,7 +93,7 @@ TEST(GooseRender, DrawGoose_Basic) {
     Goose* g = createTestGoose();
     CGColorSpaceRef cs = CGColorSpaceCreateDeviceRGB();
     CGContextRef ctx = CGBitmapContextCreate(NULL, 500, 500, 8, 0, cs,
-        kCGBitmapByteOrderDefault | (CGBitmapInfo)kCGImageAlphaPremultipliedFirst);
+        (CGBitmapInfo)kCGImageByteOrderDefault | (CGBitmapInfo)kCGImageAlphaPremultipliedFirst);
     ASSERT_NE(ctx, nullptr);
     int s = (int)CGBitmapContextGetBytesPerRow(ctx);
 
@@ -126,7 +126,7 @@ TEST(GooseRender, DrawGoose_Surprised) {
     g->isSurprised = true;
     CGColorSpaceRef cs = CGColorSpaceCreateDeviceRGB();
     CGContextRef ctx = CGBitmapContextCreate(NULL, 500, 500, 8, 0, cs,
-        kCGBitmapByteOrderDefault | (CGBitmapInfo)kCGImageAlphaPremultipliedFirst);
+        (CGBitmapInfo)kCGImageByteOrderDefault | (CGBitmapInfo)kCGImageAlphaPremultipliedFirst);
     int s = (int)CGBitmapContextGetBytesPerRow(ctx);
 
     DrawGoose(g, ctx);
@@ -155,7 +155,7 @@ TEST(GooseRender, DrawGoose_Chewing) {
 
     CGColorSpaceRef cs = CGColorSpaceCreateDeviceRGB();
     CGContextRef ctx = CGBitmapContextCreate(NULL, 500, 500, 8, 0, cs,
-        kCGBitmapByteOrderDefault | (CGBitmapInfo)kCGImageAlphaPremultipliedFirst);
+        (CGBitmapInfo)kCGImageByteOrderDefault | (CGBitmapInfo)kCGImageAlphaPremultipliedFirst);
     int s = (int)CGBitmapContextGetBytesPerRow(ctx);
 
     DrawGoose(g, ctx);
@@ -181,7 +181,7 @@ TEST(GooseRender, DrawGoose_FacingRight) {
 
     CGColorSpaceRef cs = CGColorSpaceCreateDeviceRGB();
     CGContextRef ctx = CGBitmapContextCreate(NULL, 500, 500, 8, 0, cs,
-        kCGBitmapByteOrderDefault | (CGBitmapInfo)kCGImageAlphaPremultipliedFirst);
+        (CGBitmapInfo)kCGImageByteOrderDefault | (CGBitmapInfo)kCGImageAlphaPremultipliedFirst);
     int s = (int)CGBitmapContextGetBytesPerRow(ctx);
 
     DrawGoose(g, ctx);
@@ -206,7 +206,7 @@ TEST(GooseRender, DrawGoose_FacingLeft) {
 
     CGColorSpaceRef cs = CGColorSpaceCreateDeviceRGB();
     CGContextRef ctx = CGBitmapContextCreate(NULL, 500, 500, 8, 0, cs,
-        kCGBitmapByteOrderDefault | (CGBitmapInfo)kCGImageAlphaPremultipliedFirst);
+        (CGBitmapInfo)kCGImageByteOrderDefault | (CGBitmapInfo)kCGImageAlphaPremultipliedFirst);
     int s = (int)CGBitmapContextGetBytesPerRow(ctx);
 
     DrawGoose(g, ctx);
@@ -229,7 +229,7 @@ TEST(GooseRender, DrawGoose_Resting) {
 
     CGColorSpaceRef cs = CGColorSpaceCreateDeviceRGB();
     CGContextRef ctx = CGBitmapContextCreate(NULL, 500, 500, 8, 0, cs,
-        kCGBitmapByteOrderDefault | (CGBitmapInfo)kCGImageAlphaPremultipliedFirst);
+        (CGBitmapInfo)kCGImageByteOrderDefault | (CGBitmapInfo)kCGImageAlphaPremultipliedFirst);
     int s = (int)CGBitmapContextGetBytesPerRow(ctx);
 
     DrawGoose(g, ctx);
@@ -250,7 +250,7 @@ TEST(GooseRender, DrawGoose_NanPos) {
 
     CGColorSpaceRef cs = CGColorSpaceCreateDeviceRGB();
     CGContextRef ctx = CGBitmapContextCreate(NULL, 100, 100, 8, 0, cs,
-        kCGBitmapByteOrderDefault | (CGBitmapInfo)kCGImageAlphaPremultipliedFirst);
+        (CGBitmapInfo)kCGImageByteOrderDefault | (CGBitmapInfo)kCGImageAlphaPremultipliedFirst);
     ASSERT_NE(ctx, nullptr);
 
     DrawGoose(g, ctx);
@@ -270,7 +270,7 @@ TEST(GooseRender, GooseRender_CallsDrawGoose) {
     Goose* g = createTestGoose();
     CGColorSpaceRef cs = CGColorSpaceCreateDeviceRGB();
     CGContextRef ctx = CGBitmapContextCreate(NULL, 500, 500, 8, 0, cs,
-        kCGBitmapByteOrderDefault | (CGBitmapInfo)kCGImageAlphaPremultipliedFirst);
+        (CGBitmapInfo)kCGImageByteOrderDefault | (CGBitmapInfo)kCGImageAlphaPremultipliedFirst);
     ASSERT_NE(ctx, nullptr);
     int s = (int)CGBitmapContextGetBytesPerRow(ctx);
 
@@ -295,7 +295,7 @@ TEST(GooseRender, Render_DelegatesToDraw) {
     Goose* g = createTestGoose();
     CGColorSpaceRef cs = CGColorSpaceCreateDeviceRGB();
     CGContextRef ctx = CGBitmapContextCreate(NULL, 500, 500, 8, 0, cs,
-        kCGBitmapByteOrderDefault | (CGBitmapInfo)kCGImageAlphaPremultipliedFirst);
+        (CGBitmapInfo)kCGImageByteOrderDefault | (CGBitmapInfo)kCGImageAlphaPremultipliedFirst);
     ASSERT_NE(ctx, nullptr);
     int s = (int)CGBitmapContextGetBytesPerRow(ctx);
 
@@ -315,7 +315,7 @@ TEST(GooseRender, Render_DelegatesToDraw) {
 TEST(GooseRender, CGBitmapContext_CreateImageAfterDraw) {
     CGColorSpaceRef cs = CGColorSpaceCreateDeviceRGB();
     CGContextRef ctx = CGBitmapContextCreate(NULL, 100, 100, 8, 0, cs,
-        kCGBitmapByteOrderDefault | (CGBitmapInfo)kCGImageAlphaPremultipliedFirst);
+        (CGBitmapInfo)kCGImageByteOrderDefault | (CGBitmapInfo)kCGImageAlphaPremultipliedFirst);
     ASSERT_NE(ctx, nullptr);
     int s = (int)CGBitmapContextGetBytesPerRow(ctx);
 
@@ -396,7 +396,7 @@ TEST(GooseRender, DrawThreeGeese_AllVisible) {
     CGColorSpaceRef cs = CGColorSpaceCreateDeviceRGB();
     // Canvas big enough for all 3 geese
     CGContextRef ctx = CGBitmapContextCreate(NULL, 800, 600, 8, 0, cs,
-        kCGBitmapByteOrderDefault | (CGBitmapInfo)kCGImageAlphaPremultipliedFirst);
+        (CGBitmapInfo)kCGImageByteOrderDefault | (CGBitmapInfo)kCGImageAlphaPremultipliedFirst);
     ASSERT_NE(ctx, nullptr);
     int s = (int)CGBitmapContextGetBytesPerRow(ctx);
 

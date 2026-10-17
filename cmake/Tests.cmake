@@ -282,7 +282,7 @@ if(APPLE)
     
     if(APPLE)
         set_target_properties(CadGooseTests PROPERTIES
-            COMPILE_FLAGS "-fobjc-arc -Wno-deprecated-literal-operator"
+            COMPILE_FLAGS "-fobjc-arc"
         )
     endif()
     

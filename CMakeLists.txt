@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.17)
+cmake_minimum_required(VERSION 3.25)  # FetchContent SYSTEM
 project(CadGoose)
 
 # Version string for `CadGoose --version`, derived from the latest git tag at
@@ -80,10 +80,15 @@ endif()
 # provides the `toml11` target (header `<toml.hpp>`), which carries its own
 # include directories, so no manual include paths are needed.
 include(FetchContent)
+# SYSTEM: toml11's headers are third-party, so their warnings are not ours
+# (v4.4.0, the newest release, declares `operator"" _toml`, which clang
+# deprecates). This replaced a blanket -Wno-deprecated-literal-operator on
+# both targets, which hid the same deprecation in this project's own code.
 FetchContent_Declare(
     toml11
     GIT_REPOSITORY https://github.com/ToruNiina/toml11.git
     GIT_TAG v4.4.0
+    SYSTEM
 )
 FetchContent_MakeAvailable(toml11)
 
@@ -158,7 +163,7 @@ if(MACOS)
     )
 
     set_target_properties(CadGoose PROPERTIES
-        COMPILE_FLAGS "-fobjc-arc -Wno-deprecated-literal-operator"
+        COMPILE_FLAGS "-fobjc-arc"
         MACOSX_BUNDLE FALSE
     )
 
@@ -293,3 +298,24 @@ endif()
 
 # Unit tests and the display-bound E2E targets (macOS only).
 include(cmake/Tests.cmake)
+
+# Deprecations are build errors, on every compiled target this file defines
+# (ROADMAP G0.4, house rule 17: the warning is the only notice before an API
+# becomes unavailable). Applied by enumeration, not a list, so a new target
+# cannot be forgotten. Apple marks APIs it is about to retire with
+# API_TO_BE_DEPRECATED, which never warns (activateIgnoringOtherApps:,
+# lockFocus, kCGBitmapByteOrder*, NSBezelStyleRounded all sat in the tree
+# that way); defining it as an already-past version turns every such mark
+# into a deprecation warning, and so into an error.
+if(APPLE)
+    get_property(CG_ALL_TARGETS DIRECTORY PROPERTY BUILDSYSTEM_TARGETS)
+    foreach(CG_TARGET IN LISTS CG_ALL_TARGETS)
+        get_target_property(CG_TARGET_TYPE ${CG_TARGET} TYPE)
+        if(CG_TARGET_TYPE MATCHES "^(EXECUTABLE|STATIC_LIBRARY|SHARED_LIBRARY|MODULE_LIBRARY|OBJECT_LIBRARY)$")
+            target_compile_options(${CG_TARGET} PRIVATE
+                -Wdeprecated-declarations -Werror=deprecated-declarations)
+            target_compile_definitions(${CG_TARGET} PRIVATE
+                API_TO_BE_DEPRECATED=10.0 API_TO_BE_DEPRECATED_MACOS=10.0)
+        endif()
+    endforeach()
+endif()

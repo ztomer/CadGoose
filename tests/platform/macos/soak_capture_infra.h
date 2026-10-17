@@ -161,7 +161,7 @@ static dispatch_semaphore_t g_probeDone = nil;
                 CGContextRef ctx = CGBitmapContextCreate(
                     (void*)src, w, h, 8, bpr, cs,
                     (CGBitmapInfo)kCGImageAlphaPremultipliedFirst |
-                        kCGBitmapByteOrder32Little);
+                        (CGBitmapInfo)kCGImageByteOrder32Little);
                 CGColorSpaceRelease(cs);
                 if (ctx) {
                     CGImageRef img = CGBitmapContextCreateImage(ctx);

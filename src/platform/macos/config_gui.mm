@@ -400,7 +400,7 @@ void ConfigGUI_ShowWindow() {
     }
     [g_configGuiController prepareForDisplay];
     [g_configGuiController.window makeKeyAndOrderFront:nil];
-    [[NSApplication sharedApplication] activateIgnoringOtherApps:YES];
+    [NSApp activate];
 }
 
 void ConfigGUI_CloseWindow() {

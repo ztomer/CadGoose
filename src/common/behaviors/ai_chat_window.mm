@@ -218,7 +218,7 @@ static constexpr float kChatFontSize = 13.0f;
     // Goose selector popup (replaces centered title)
     self.goosePopup = [[NSPopUpButton alloc] initWithFrame:NSMakeRect(kGoosePopupLeftMargin, kGoosePopupY, appBar.frame.size.width - kGoosePopupLeftMargin - kGoosePopupRightReserved, kGoosePopupHeight)];
     self.goosePopup.font = [NSFont fontWithName:@"Maple Mono" size:kChatFontSize] ?: [NSFont systemFontOfSize:kChatFontSize weight:NSFontWeightSemibold];
-    self.goosePopup.bezelStyle = NSBezelStyleRounded;
+    self.goosePopup.bezelStyle = NSBezelStylePush;
     self.goosePopup.target = self;
     self.goosePopup.action = @selector(gooseSelected:);
     self.goosePopup.autoresizingMask = NSViewWidthSizable | NSViewMaxXMargin;
@@ -439,7 +439,7 @@ extern "C" void AI_OpenChat(const char* gooseName) {
             g_chatController = [[AIChatWindowController alloc] initWithGooseName:name];
             [g_chatController.window makeKeyAndOrderFront:nil];
         }
-        [[NSApplication sharedApplication] activateIgnoringOtherApps:YES];
+        [NSApp activate];
     });
 #else
     fprintf(stderr, "[AI] Chat UI not implemented on this platform\n");
