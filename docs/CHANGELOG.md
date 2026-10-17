@@ -1,5 +1,21 @@
 # Changelog
 
+## October 17, 2026 — G0.6: CI runs on named releases
+
+- Pinned to the newest releases (checked against each repository's releases
+  2026-10-17): `actions/checkout` v4 → v7.0.1, `actions/cache` v4 → v6.1.0,
+  `actions/upload-artifact` v4 → v7.0.2, `maxim-lobanov/setup-xcode` v1 →
+  v1.7.0. The release notes for each major in between name only the Node 24
+  runtime, ESM, separate credential storage and new opt-in inputs; nothing
+  this repo uses changed.
+- `ubuntu-latest` (which still means 24.04) → `ubuntu-26.04`, the newest GA
+  runner image; the Dockerfile moves with it. Linux configure and build seen
+  green in Docker on `ubuntu:26.04` (aarch64).
+- `tools/check_ci_pins.py` (in `GOH_CI_STEPS` and CI) refuses a remote
+  `uses:` not pinned to an exact `vX.Y.Z` tag or a commit sha, and any
+  `runs-on` label containing `latest`. Seen red on the old workflows (14
+  findings).
+
 ## October 17, 2026 — G0.10: a clean configure takes 1.5 s, not 80 s
 
 - toml11 v4.4.0 (the newest release) is fetched as its release tarball,

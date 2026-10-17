@@ -71,11 +71,6 @@ dir absent, so it copies; both present, so nothing is touched).
 matches the code. **Exit:** each item's proof is in the tree and has been seen
 to go red once.
 
-- **G0.6 CI actions are three majors behind, and one runner label moves.**
-  `actions/checkout@v4` (latest v7), `actions/cache@v4` (v6),
-  `actions/upload-artifact@v4` (v7). `ubuntu-latest` is a moving label. *Proof:*
-  current majors pinned, a named Ubuntu runner, CI green on a push and a
-  `workflow_dispatch` release dry run.
 - **G0.11 Stale remote branch `origin/unify/harnesses`.** It predates the
   flatten (no merge base with `main`). Its 2026-08-25 file splits are all on
   `main`, and its harness wiring was superseded by `75eb43f`. Delete it on the

@@ -29,7 +29,7 @@ jobs:
       # checkout leaves the job token in git config (http.<host>.extraheader),
       # readable by every later step and refused by the gates_of_heck structural
       # gate's no-credential-in-git-config check (2026-10-08).
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
 
@@ -39,7 +39,7 @@ jobs:
       # the newest Xcode the runner offers to maximize the chance of an SDK that
       # includes FoundationModels.
       - name: Select latest Xcode
-        uses: maxim-lobanov/setup-xcode@v1
+        uses: maxim-lobanov/setup-xcode@v1.7.0
         with:
           xcode-version: latest-stable
 
@@ -59,7 +59,7 @@ jobs:
           fi
 
       - name: Cache ccache
-        uses: actions/cache@v4
+        uses: actions/cache@v6.1.0
         with:
           path: ~/Library/Caches/ccache
           key: ccache-${{ runner.os }}-${{ hashFiles('**/CMakeLists.txt') }}
@@ -94,7 +94,7 @@ jobs:
       #
       # Raise as coverage lands; never lower them to make a red build green.
       - name: Fetch the house gate suite
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
           repository: ztomer/gates_of_heck
@@ -107,6 +107,8 @@ jobs:
         run: python3 tools/check_platform_policy.py
       - name: Tests bind no fixed port or socket path (G0.3)
         run: python3 tools/check_test_endpoints.py
+      - name: CI pins named releases, no moving references (G0.6)
+        run: python3 tools/check_ci_pins.py
 
       - name: Coverage Gate
         run: |
@@ -127,7 +129,7 @@ jobs:
           hdiutil create -volname CadGoose -srcfolder build/CadGoose.app -ov -format UDZO "build/CadGoose-${VERSION}.dmg"
 
       - name: Upload DMG (artifact)
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7.0.2
         with:
           name: CadGoose-macOS-${{ env.VERSION }}
           path: build/CadGoose-${{ env.VERSION }}.dmg
@@ -145,9 +147,9 @@ jobs:
   # ── Linux ──────────────────────────────────────────────
   build-linux:
     name: Build Linux (tar.zst)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
 
@@ -167,7 +169,7 @@ jobs:
       # Tests are macOS-only (behaviors have CoreGraphics dependencies)
 
       - name: Fetch the house gate suite
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
           repository: ztomer/gates_of_heck
@@ -189,7 +191,7 @@ jobs:
           tar --zstd -cf "CadGoose-${VERSION}-linux.tar.zst" cadgoose-linux
 
       - name: Upload tar.zst (artifact)
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7.0.2
         with:
           name: CadGoose-Linux-${{ env.VERSION }}
           path: CadGoose-${{ env.VERSION }}-linux.tar.zst

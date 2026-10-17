@@ -1,4 +1,4 @@
-FROM ubuntu:24.04
+FROM ubuntu:26.04
 
 RUN apt-get update -qq && \
     apt-get install -y -qq cmake g++ libgtk-4-dev libsdl2-dev libsdl2-mixer-dev \
