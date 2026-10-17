@@ -19,8 +19,11 @@ echo "==> Building CadGooseTests..."
 cmake --build "$BUILD_DIR" --target CadGooseTests
 
 echo "==> Running tests (LLVM_PROFILE_FILE=$COV_FILE)..."
+# Same single filter source as run_tests_ci.sh / Tests.cmake — no value copy
+# here (ROADMAP G0.2); this copy had already drifted from the other two.
+FILTER="$(sed '/^#/d; /^[[:space:]]*$/d; s/[[:space:]]//g' tests/gtest_ci_filter.txt | paste -sd: -)"
 LLVM_PROFILE_FILE="$COV_FILE" "$BUILD_DIR/CadGooseTests" \
-    --gtest_filter="-MCPIntegrationTest*:LocalLLMTest*:AccessibilityGUITest*:DraggingIntegration*:WindowTrailTest*"
+    --gtest_filter="$FILTER"
 
 echo "==> Merging and generating report..."
 xcrun llvm-profdata merge -sparse "$COV_FILE" -o default.profdata

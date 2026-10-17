@@ -1,0 +1,24 @@
+# THE CI gtest filter — single source (ROADMAP G0.2).
+#
+# Consumers: scripts/run_tests_ci.sh, cmake/Tests.cmake (add_test) and
+# run_coverage.sh all read THIS file; no call site carries its own copy.
+# tools/check_gtest_filter_parity.py fails the gate if a call site stops
+# consuming it, a second hardcoded --gtest_filter value appears, or an
+# exclusion below lacks its reason line. Format: '#' lines are comments and
+# exactly ONE non-comment line carries the filter (consumers join lines with
+# ':' — and a leading '-' negates every ':'-separated token in this gtest,
+# verified 2026-10-17, so keep it to one line to keep one meaning).
+#
+# One reason per remaining exclusion:
+# - LocalLLMTest* — real-thread timing (download/loading state machine);
+#   excluded pre-2026-02 before the flatten, not audited by G0.2. It passes
+#   locally (3x8, --gtest_shuffle --gtest_repeat=3, 2026-10-17) — un-exclude
+#   with its own measured proof, not piggybacked on this item.
+# - AccessibilityGUITest* — drives the RUNNING CadGoose app over the
+#   Accessibility API (gui_accessibility_fixture.h needs a live GUI session
+#   with AX permission); nothing to drive headless.
+# - DraggingIntegration* — same live-app AX fixture (screen coordinates of
+#   the running app's GooseView); fails without an AX-permission GUI.
+# - WindowTrailTest* — drives a real NSWindow/window-server cycle and
+#   crashes headless (Tests.cmake note); run locally on a display machine.
+-LocalLLMTest*:AccessibilityGUITest*:DraggingIntegration*:WindowTrailTest*

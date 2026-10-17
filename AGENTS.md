@@ -50,8 +50,10 @@ tools/gate.sh [--staged|--full]             # house gates; --full = the CI copy 
   `./config/config.toml` when it exists, else
   `~/Library/Application Support/CadGoose`. Crash backtraces go to
   `crash-<ts>.log`; headless stderr goes to `session-<ts>.log`.
-- **Tests in CI** run with the `--gtest_filter` in `scripts/run_tests_ci.sh`
-  (mirrored in `cmake/Tests.cmake`). Window-server tests carry the
+- **Tests in CI** run with the `--gtest_filter` defined once in
+  `tests/gtest_ci_filter.txt`; `scripts/run_tests_ci.sh` and `cmake/Tests.cmake`
+  consume that file, and `tools/check_gtest_filter_parity.py` fails when a call
+  site stops doing so (no second value copy). Window-server tests carry the
   `requires_display` label and are excluded headless; OCR tests skip without
   `tesseract`.
 - Never run two `CadGooseTests` processes at once: the MCP tests bind a fixed

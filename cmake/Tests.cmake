@@ -291,8 +291,29 @@ if(APPLE)
     # headless CI runner (it crashes), so it's excluded here — run it locally
     # with `./build/CadGooseTests` on a machine with a display.
     enable_testing()
+    # CI gtest filter — derived from the single source tests/gtest_ci_filter.txt
+    # (per-exclusion reasons live there). Do NOT copy values into this file or
+    # into scripts/run_tests_ci.sh; tools/check_gtest_filter_parity.py fails
+    # the gate when the call sites disagree (ROADMAP G0.2). Non-comment,
+    # non-empty lines join with ':'; empty after parsing is a broken source,
+    # and configuring a gate that runs everything is worse than failing here.
+    file(STRINGS "${CMAKE_CURRENT_SOURCE_DIR}/tests/gtest_ci_filter.txt"
+         CG_TEST_GTEST_FILTER_LINES)
+    set(CG_TEST_GTEST_FILTER_PARTS)
+    foreach(CG_FILTER_LINE IN LISTS CG_TEST_GTEST_FILTER_LINES)
+        string(STRIP "${CG_FILTER_LINE}" CG_FILTER_LINE)
+        if(CG_FILTER_LINE AND NOT CG_FILTER_LINE MATCHES "^#")
+            list(APPEND CG_TEST_GTEST_FILTER_PARTS "${CG_FILTER_LINE}")
+        endif()
+    endforeach()
+    if(NOT CG_TEST_GTEST_FILTER_PARTS)
+        message(FATAL_ERROR
+            "tests/gtest_ci_filter.txt yielded no filter tokens — refusing to "
+            "register CadGooseTests with an (implicitly unfiltered) add_test.")
+    endif()
+    string(REPLACE ";" ":" CG_TEST_GTEST_FILTER "${CG_TEST_GTEST_FILTER_PARTS}")
     add_test(NAME CadGooseTests
-             COMMAND CadGooseTests --gtest_filter=-MCPIntegrationTest*:LocalLLMTest*:AccessibilityGUITest*:DraggingIntegration*:WindowTrailTest*:BehaviorToggles.ToysBehaviorRegistered:PortalCleanup.BehaviorHasCleanupFunction:StalinHonk.*
+             COMMAND CadGooseTests --gtest_filter=${CG_TEST_GTEST_FILTER}
              WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
     # Regression guard — runs AFTER the suite (DEPENDS) and fails if the run

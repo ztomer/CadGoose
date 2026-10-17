@@ -57,8 +57,8 @@ in (still gated at runtime by `debug.toTerminal` / `--debug`). Both wrap the sha
 
 ```bash
 ./build/CadGooseTests                    # full suite (needs display for WindowTrail/OCR)
-./build/CadGooseTests --gtest_filter="-WindowTrailTest.*:MCPIntegration*:LocalLLMTest*"
-ctest --output-on-failure                # CI gate: excludes WindowTrailTest.*
+./build/CadGooseTests --gtest_filter=-WindowTrailTest.*   # skip display tests
+ctest --output-on-failure                # CI gate; its filter lives in tests/gtest_ci_filter.txt
 ```
 
 ## Config

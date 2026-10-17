@@ -69,20 +69,11 @@ to go red once.
 
   honest new floors and the size of the drop (rule 8); do not keep the old
   numbers by narrowing the scope.
-- **G0.2 CI excludes tests that were fixed.** The `--gtest_filter` (duplicated
-  in `scripts/run_tests_ci.sh` and `cmake/Tests.cmake:295`) still excludes
-  `BehaviorToggles.ToysBehaviorRegistered`, `PortalCleanup.BehaviorHasCleanupFunction`
-  and `StalinHonk.*`, which were fixed on 2026-06-22 (registry
-  `SaveOriginal`/`RestoreOriginal`). It also excludes all of `MCPIntegrationTest*`,
-  which has run in-process since the hotkey-cache fix removed the main-thread
-  hop. Fix: one filter source, one reason per remaining exclusion, and
-  un-exclude those that pass. *Proof:* the un-excluded tests pass under
-  `--gtest_shuffle --gtest_repeat=3`, and a check fails if the two filter copies
-  differ (or one copy is deleted).
 - **G0.3 MCP tests bind a fixed port (31073).** Two concurrent `CadGooseTests`
   processes collide (`tests/common/test_mcp_http_server.cpp:19,36`), and the
   failure reads like an MCP bug. Fix: bind port 0 and read it back. *Proof:* two
-  test binaries running the MCP suites at once both pass. Depends on G0.2.
+  test binaries running the MCP suites at once both pass. (G0.2, which it waited
+  on, closed 2026-10-17: the MCP suites now run in CI.)
 - **G0.4 Deprecated API, no deprecation gate.** `activateIgnoringOtherApps:`
   (deprecated in macOS 14) at `src/platform/macos/config_gui.mm:403` and
   `src/common/behaviors/ai_chat_window.mm:442`. CMake has no
@@ -123,6 +114,14 @@ to go red once.
   flatten (no merge base with `main`). Its 2026-08-25 file splits are all on
   `main`, and its harness wiring was superseded by `75eb43f`. Delete it on the
   remote; this needs owner approval because it changes the remote.
+- **G0.12 A test run leaves `e-home-unset-test/` in the repo root.** Found
+  2026-10-17 after the G0.2 runs: a `config.toml` and `themes/` written at
+  10:08 into the working tree, so some test writes the app's config relative
+  to the cwd when `HOME` is unset (`ConfigPath.HomeFallbackWhenHomeUnset`
+  unsets it; the name does not match that test's own `/tmp` dir, so find the
+  writer first). Fix: no test may write outside a temp dir it owns. *Proof:*
+  `git status --porcelain` is empty after a full `--gtest_shuffle
+  --gtest_repeat=3` run, as a gate step.
 
 ## Phase 1 — Maintenance-line correctness (S-M, 1 session)
 
@@ -211,7 +210,7 @@ standing rule meanwhile.
   M1.4).
 - `AGENTS.md` (817 lines, mostly session summaries): the plan parts are folded
   here (Next Steps → C2.x and the closed list; Known Bugs → M1.3 and the closed
-  list; "Remaining known issues" → G0.2). The session log was pruned to git
+  list; "Remaining known issues" → G0.2, closed 2026-10-17). The session log was pruned to git
   history. AGENTS.md keeps the agent instructions only.
 - Antigravity conversation "push release" (2026-06-26, release-script and CI
   validator fixes): superseded. `scripts/push_release.sh` and `verify_ci.sh`

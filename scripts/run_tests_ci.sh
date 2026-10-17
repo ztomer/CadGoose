@@ -22,8 +22,17 @@
 set -euo pipefail
 
 TEST_BINARY="./CadGooseTests"
-# Use the coverage script filter (all positive patterns) which works correctly
-FILTER="-MCPIntegrationTest*:LocalLLMTest*:AccessibilityGUITest*:DraggingIntegration*:WindowTrailTest*:BehaviorToggles.ToysBehaviorRegistered:PortalCleanup.BehaviorHasCleanupFunction:StalinHonk.*"
+# The filter is defined ONCE, in tests/gtest_ci_filter.txt (per-exclusion
+# reasons live there). No copy of the value here — a list that drifts from
+# Tests.cmake is the exact defect class ROADMAP G0.2 removed. Refuse to run
+# blind rather than defaulting to a second copy.
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+GTEST_FILTER_FILE="$SCRIPT_DIR/../tests/gtest_ci_filter.txt"
+FILTER="$(sed '/^#/d; /^[[:space:]]*$/d; s/[[:space:]]//g' "$GTEST_FILTER_FILE" | paste -sd: -)"
+if [[ -z "$FILTER" ]]; then
+    echo "FAILED: $GTEST_FILTER_FILE yields an empty filter — refusing to run." >&2
+    exit 2
+fi
 
 echo "Running tests with filter: $FILTER"
 echo "Test binary: $TEST_BINARY"
