@@ -58,7 +58,8 @@ dir absent, so it copies; both present, so nothing is touched).
   Superseded 2026-10-17: the CI step that held the token is gone; the cask
   is bumped by `scripts/push_release.sh` through goh's `tap_bump.sh` and the
   tap's own gate (homebrew-tap T2.1). Proven on a scratch tap: v1.81 with
-  the published DMG is a no-op. The `HOMEBREW_TAP_TOKEN` secret is unused.
+  the published DMG is a no-op. The `HOMEBREW_TAP_TOKEN` secret was deleted
+  (2026-10-17, owner's go-ahead).
 - **W.3** `every child process names its stdin` (1 call): `9c14b16`; the
   `GOH_CI_STEPS` shim through `gates/python.sh`: `177cba2`
 - **W.4** Scanner floors (13 keys, calibrated red): `37ed5f7`

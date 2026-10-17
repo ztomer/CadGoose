@@ -80,7 +80,7 @@ does not touch the tap.
 `version` and `sha256` together, runs the tap's own `tools/gate.sh --full`
 and pushes the commit pinned. A red tap gate pushes nothing. (Until
 2026-10-17 a CI step pushed to the tap with a token, which skipped the tap's
-gate; the `HOMEBREW_TAP_TOKEN` secret is no longer read.)
+gate; the `HOMEBREW_TAP_TOKEN` secret it used was deleted on 2026-10-17.)
 
 ### Manual Override (if needed)
 
