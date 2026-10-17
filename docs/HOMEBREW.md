@@ -69,33 +69,24 @@ By default, the Cask starts with `sha256 :no_check` to simplify initial testing 
 
 ---
 
-## Automated Updates via GitHub Actions
+## How a release updates the tap
 
-The release workflow (`.github/workflows/build_and_release.yml`) automatically updates the Homebrew tap on every release:
+The release workflow (`.github/workflows/build_and_release.yml`) builds the
+macOS DMG and the Linux tar.zst and attaches them to the GitHub release. It
+does not touch the tap.
 
-1. Builds macOS DMG + Linux tar.zst
-2. Calculates DMG SHA-256
-3. Clones `ztomer/homebrew-tap`
-4. Updates `Casks/cadgoose.rb` with new version + SHA-256
-5. Commits and pushes to tap
-
-This runs on `release: published` and `workflow_dispatch` (for re-attaching artifacts). No manual steps needed.
-
-### Requirements
-
-The workflow expects:
-- A `ztomer/homebrew-tap` repo with `Casks/cadgoose.rb`
-- `HOMEBREW_TAP_TOKEN` secret in CadGoose repo (PAT with `repo` scope)
+`scripts/push_release.sh` waits for that run, then bumps the cask with goh's
+`tools/release-kit/tap_bump.sh`: it hashes the attached DMG, rewrites
+`version` and `sha256` together, runs the tap's own `tools/gate.sh --full`
+and pushes the commit pinned. A red tap gate pushes nothing. (Until
+2026-10-17 a CI step pushed to the tap with a token, which skipped the tap's
+gate; the `HOMEBREW_TAP_TOKEN` secret is no longer read.)
 
 ### Manual Override (if needed)
 
 ```bash
-# Download DMG, compute hash
-shasum -a 256 CadGoose-<version>.dmg
-
-# Update Casks/cadgoose.rb in homebrew-tap:
-#   version "<version>"
-#   sha256 "<hash>"
+"$GOH_DIR/tools/release-kit/tap_bump.sh" --tap ztomer/homebrew-tap --cask cadgoose \
+  --tag v<version> --artifact https://github.com/ztomer/CadGoose/releases/download/v<version>/CadGoose-v<version>.dmg
 ```
 
 ---

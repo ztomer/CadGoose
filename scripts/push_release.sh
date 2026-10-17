@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# push_release.sh — tag a release, wait for CI, verify Homebrew tap update
+# push_release.sh — tag a release, wait for CI, bump the Homebrew cask through the tap gate
 # Usage: ./scripts/push_release.sh [vX.Y]  (default: bump minor from latest tag)
 
 set -euo pipefail
@@ -11,7 +11,6 @@ TAP_FILE="Casks/cadgoose.rb"
 # Tunables — no magic numbers in the logic below.
 CI_POLL_ATTEMPTS=60   # max polls while waiting for the release CI run
 CI_POLL_INTERVAL=5     # seconds between CI-run polls
-TAP_SETTLE_SECONDS=10  # wait for the tap GHA to push after CI
 
 info() { echo "→ $*"; }
 ok()   { echo "✓ $*"; }
@@ -110,19 +109,17 @@ CONCLUSION=$(gh run view "$RUN_ID" --repo "$REPO" --json conclusion --jq '.concl
 
 ok "CI passed"
 
-# 6. Verify Homebrew tap cask version.
-#    Read the cask file directly from the tap repo's default branch — authoritative
-#    (no CDN/cache lag) and format-independent (no dependence on the tap
-#    commit-message wording).
-info "Checking Homebrew tap cask version..."
-sleep "$TAP_SETTLE_SECONDS"  # Give the tap GHA time to push
-
-CASK_RAW=$(gh api "repos/$TAP_REPO/contents/$TAP_FILE" --jq '.content' 2>/dev/null | base64 -d 2>/dev/null || true)
-if [[ "$CASK_RAW" == *"version \"$SHORT_VERSION\""* ]]; then
-    ok "Homebrew cask version is $SHORT_VERSION"
-else
-    err "Homebrew cask not updated to $SHORT_VERSION. Cask head: ${CASK_RAW:0:160}"
-fi
+# 6. Bump the Homebrew cask through the tap's OWN gate (homebrew-tap T2.1,
+#    goh 6.8). tap_bump.sh hashes the DMG CI just attached, rewrites version
+#    and sha256 together, runs the tap's tools/gate.sh --full and pushes the
+#    commit pinned; a red tap gate pushes nothing. This used to be a CI step
+#    that pushed to the tap with a token, which skipped that gate by
+#    construction.
+info "Bumping $TAP_FILE in $TAP_REPO via tap_bump.sh..."
+"${GOH_DIR:-$HOME/Projects/gates_of_heck}/tools/release-kit/tap_bump.sh" \
+    --tap "$TAP_REPO" --cask cadgoose --tag "$VERSION" \
+    --artifact "https://github.com/$REPO/releases/download/$VERSION/CadGoose-$VERSION.dmg"
+ok "Homebrew cask is at $SHORT_VERSION, through the tap's gate"
 
 info "Release $VERSION complete!"
 echo
