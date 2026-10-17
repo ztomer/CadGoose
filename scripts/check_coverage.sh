@@ -2,17 +2,22 @@
 # check_coverage.sh — this repo's coverage gate, self-contained.
 #
 # Instrumented configure/build, ctest under LLVM_PROFILE_FILE, profdata merge, and the TOTAL floor
-# against --total-min; then the tier floors below. It needs nothing but this checkout, because a
+# against TOTAL_MIN; then the tier floors below. It needs nothing but this checkout, because a
 # public project cannot gate itself on machinery only its author can fetch.
 #
 # The per-tier steps:
-#   - the per-tier floors over coverage_eligible.txt (P0 >= p0-min,
-#     P1 >= p1-min), measured from the same merged profdata;
+#   - the per-tier floors over coverage_eligible.txt (P0 >= P0_MIN,
+#     P1 >= P1_MIN), measured from the same merged profdata;
 #   - Total scoped to the ELIGIBLE file set, alongside the stricter
 #     whole-binary total above, which honours the same EXCLUDE contract.
 #
-# Flags preserved exactly (the CI workflow passes them):
-#   ./scripts/check_coverage.sh [--p0-min=95] [--p1-min=26] [--total-min=63] [--build-dir=build-cov]
+#   ./scripts/check_coverage.sh [--build-dir=build-cov]
+#
+# The floors are written ONCE, below, and nowhere else (ROADMAP G0.8): they
+# used to be flags, copied into CI, tools/local_ci.sh, this header and the
+# usage line, and the copies drifted (the usage advertised 30/79 while the
+# defaults were 53/85). There are no floor flags to copy any more; raise a
+# floor here, in the same commit as the coverage that earns it.
 #
 # Exit: 0 all floors met | 1 any floor missed | 2 usage/config error.
 set -euo pipefail
@@ -24,18 +29,16 @@ P0_MIN=95
 P1_MIN=26
 TOTAL_MIN=63
 BUILD_DIR="build-cov"
+echo "==> Floors (scripts/check_coverage.sh): P0 ${P0_MIN} / P1 ${P1_MIN} / total ${TOTAL_MIN}"
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
-        --p0-min=*) P0_MIN="${1#*=}" ;;
-        --p1-min=*) P1_MIN="${1#*=}" ;;
-        --total-min=*) TOTAL_MIN="${1#*=}" ;;
         --build-dir=*) BUILD_DIR="${1#*=}" ;;
         --help|-h)
-            echo "Usage: $0 [--p0-min=95] [--p1-min=26] [--total-min=63] [--build-dir=build-cov]"
+            echo "Usage: $0 [--build-dir=$BUILD_DIR]  (floors are set in the script)"
             exit 0
             ;;
-        *) echo "Unknown option: $1"; exit 2 ;;
+        *) echo "Unknown option: $1 (floors are set in the script, not by flag)"; exit 2 ;;
     esac
     shift
 done
@@ -172,7 +175,7 @@ xcrun llvm-profdata merge -sparse $RAWS -o "$PROFDATA" \
 # dependency exposed a floor that had never been met, rather than causing a new failure.
 #
 # The honest arrangement is two measures with their own numbers: the eligible-scope floor stays at
-# --total-min below, and the whole binary gets a SHRINK-ONLY ratchet seeded at what it actually is.
+# TOTAL_MIN above, and the whole binary gets a SHRINK-ONLY ratchet seeded at what it actually is.
 # It may rise and must never fall, which is a real bar; a floor nothing has ever cleared is not.
 FAIL=0
 WHOLE_MIN_FILE="$ROOT/scripts/coverage_whole_binary_floor.txt"

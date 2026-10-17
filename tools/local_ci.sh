@@ -26,7 +26,7 @@ GOH="${GOH_DIR:-}"
 
 ARGS=()
 case "${1:-}" in
-    --coverage) ARGS+=(--step 'bash scripts/check_coverage.sh --p0-min=95 --p1-min=26 --total-min=63 --build-dir=build-cov') ;;
+    --coverage) ARGS+=(--step 'bash scripts/check_coverage.sh --build-dir=build-cov') ;;
     -h|--help)  echo "usage: ./tools/local_ci.sh [--coverage]"; exit 0 ;;
     "")         ;;
     *)          echo "✗ unknown argument: $1" >&2; exit 2 ;;

@@ -1,5 +1,17 @@
 # Changelog
 
+## October 17, 2026 — G0.8: the coverage floors are written once
+
+- Re-measured: the `check_coverage.sh` usage line already matched its
+  defaults (95/26/63, fixed with G0.1), but the same three numbers were
+  written in five places (defaults, header, usage, CI, `tools/local_ci.sh`),
+  and two prose copies had already drifted (the CI comment quoted the
+  pre-G0.1 54.44%/86.01%, ROADMAP's context still said 94/53/85).
+- The `--p0-min`/`--p1-min`/`--total-min` flags are gone; the floors are set
+  in the script only, which prints them when it runs. Passing a floor flag
+  exits 2. CI and `tools/local_ci.sh` call it with `--build-dir` alone, and
+  the stale prose now points at the script.
+
 ## October 17, 2026 — G0.3: test processes share no machine-wide endpoint
 
 - Measured first: two concurrent runs of the MCP suites failed 36 and 41 of

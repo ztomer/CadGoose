@@ -19,9 +19,9 @@ the session log that used to live in AGENTS.md: `git show a3353d2:AGENTS.md`.
   protocol-negotiation change. **No feature work has landed since 2026-09-04**;
   feature development happens in a separate macOS-only fork (D1, ruled: maintenance line).
 - 1697 `TEST`/`TEST_F`/`TEST_P` cases under `tests/`. Coverage ratchet in CI:
-  P0 94 / P1 53 / total 85 (`build_and_release.yml:106`), whole-binary floor 64
-  (`scripts/coverage_whole_binary_floor.txt`) — tiers now cover every production
-  source (G0.1 fixed 2026-10-16: P0 95 / P1 26 / total 63 / whole-binary 66).
+  P0 95 / P1 26 / total 63, set once in `scripts/check_coverage.sh`, and the
+  whole-binary floor in `scripts/coverage_whole_binary_floor.txt`; the tiers
+  cover every production source (G0.1, 2026-10-16).
 - The repo is PUBLIC (MIT). Owner ruling 2026-09-04 (`ae819a7`): it must not
   name or depend on the author's private repositories. Keep it that way here.
 
@@ -76,10 +76,6 @@ to go red once.
   `actions/upload-artifact@v4` (v7). `ubuntu-latest` is a moving label. *Proof:*
   current majors pinned, a named Ubuntu runner, CI green on a push and a
   `workflow_dispatch` release dry run.
-- **G0.8 Stated vs implemented.** The `check_coverage.sh` usage line
-  advertises `--p1-min=30 --total-min=79`, while the defaults are 53/85 (the
-  hook-comment half moved to W.5). *Proof:* the text matches the code,
-  verified by grep.
 - **G0.10 Every clean configure clones toml11 with its full history and all
   of its submodules.** `FetchContent_Declare(toml11 ... GIT_TAG v4.4.0)` sets
   neither `GIT_SHALLOW` nor `GIT_SUBMODULES ""`. The pre-push gate (`rm -rf
