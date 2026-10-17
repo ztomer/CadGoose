@@ -74,10 +74,10 @@ jobs:
           cmake .. -DCMAKE_BUILD_TYPE=Release -DCG_DISABLE_DEBUG_LOG=ON -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
           cmake --build . --config Release --parallel $(sysctl -n hw.logicalcpu)
 
-      - name: Run Tests (fast)
+      - name: Run Tests (fast; two concurrent copies, G0.3)
         run: |
           cd build
-          bash ../scripts/run_tests_ci.sh
+          bash ../scripts/run_tests_concurrent.sh
 
       # Thresholds are a RATCHET set below the measured floor (CI measured
       # P0 95.27%, P1 54.44%, total 86.01% on 2026-08-22) — not an aspiration.
@@ -104,6 +104,8 @@ jobs:
         run: python3 tools/check_test_process_state.py
       - name: Platform policy accepts and rejects what it should (G0.5)
         run: python3 tools/check_platform_policy.py
+      - name: Tests bind no fixed port or socket path (G0.3)
+        run: python3 tools/check_test_endpoints.py
 
       - name: Coverage Gate
         run: |

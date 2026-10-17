@@ -1,6 +1,7 @@
 #include "mcp_server.h"
 #include "command_socket.h"
 #include "config.h"
+#include <mutex>
 #include <thread>
 #include <atomic>
 #include <string>
@@ -12,7 +13,21 @@
 #include <sys/un.h>
 #include <unistd.h>
 
-#define MCP_SOCKET_PATH "/tmp/desktop-goose-mcp.sock"
+static constexpr const char* kDefaultMcpSocketPath = "/tmp/desktop-goose-mcp.sock";
+static std::mutex g_socketPathMutex;
+static std::string g_socketPath = kDefaultMcpSocketPath;
+
+std::string MCP_InternalSocketPath() {
+    std::lock_guard<std::mutex> lock(g_socketPathMutex);
+    return g_socketPath;
+}
+
+std::string MCP_SetInternalSocketPath(std::string path) {
+    std::lock_guard<std::mutex> lock(g_socketPathMutex);
+    if (path.empty()) path = kDefaultMcpSocketPath;
+    std::swap(g_socketPath, path);
+    return path;
+}
 
 // JSON-RPC utilities (defined in mcp_json_rpc.cpp)
 std::string JsonEscape(const std::string& s);
@@ -151,7 +166,7 @@ std::string MCP_HandleRequest(const std::string& line) {
 bool MCP_StartInternalServer() {
     if (g_serverRunning.load()) return true;
 
-    const std::string socketPath = MCP_SOCKET_PATH;
+    const std::string socketPath = MCP_InternalSocketPath();
 
     struct sockaddr_un addr;
     memset(&addr, 0, sizeof(addr));
@@ -188,8 +203,8 @@ bool MCP_StartInternalServer() {
 
     g_serverRunning.store(true);
 
-    g_serverThread = std::thread([]() {
-        fprintf(stderr, "[MCP] Internal server started on %s\n", MCP_SOCKET_PATH);
+    g_serverThread = std::thread([socketPath]() {
+        fprintf(stderr, "[MCP] Internal server started on %s\n", socketPath.c_str());
         while (g_serverRunning.load()) {
             struct sockaddr_un clientAddr;
             socklen_t clientLen = sizeof(clientAddr);
@@ -201,7 +216,7 @@ bool MCP_StartInternalServer() {
             HandleConnection(clientFd);
             close(clientFd);
         }
-        unlink(MCP_SOCKET_PATH);
+        unlink(socketPath.c_str());
     });
 
     return true;

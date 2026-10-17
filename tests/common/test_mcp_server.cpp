@@ -5,11 +5,19 @@
 #include <sys/un.h>
 #include <unistd.h>
 
-#define TEST_MCP_SOCK_PATH "/tmp/desktop-goose-mcp.sock"
+#include <string>
+
+// A socket path this process owns: the default /tmp/desktop-goose-mcp.sock
+// belongs to a running CadGoose, which these tests used to unlink, and to
+// any concurrent test binary (ROADMAP G0.3). Short, for sun_path's 104 bytes.
+static const std::string kTestSockPath =
+    "/tmp/cadgoose-mcp-test-" + std::to_string(getpid()) + ".sock";
+#define TEST_MCP_SOCK_PATH kTestSockPath.c_str()
 
 class McpServerTest : public ::testing::Test {
 protected:
     void SetUp() override {
+        m_savedPath = MCP_SetInternalSocketPath(kTestSockPath);
         unlink(TEST_MCP_SOCK_PATH);
     }
 
@@ -18,7 +26,10 @@ protected:
             MCP_StopInternalServer();
         }
         unlink(TEST_MCP_SOCK_PATH);
+        MCP_SetInternalSocketPath(m_savedPath);
     }
+
+    std::string m_savedPath;
 
     std::string SendRequest(const std::string& json) {
         int fd = socket(AF_UNIX, SOCK_STREAM, 0);

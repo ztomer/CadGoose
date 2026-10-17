@@ -1,5 +1,24 @@
 # Changelog
 
+## October 17, 2026 — G0.3: test processes share no machine-wide endpoint
+
+- Measured first: two concurrent runs of the MCP suites failed 36 and 41 of
+  80 tests (`MCP_StartHTTPServer()` false on port 31073). The class was
+  wider than the port: the internal-server tests bound and unlinked the fixed
+  `/tmp/desktop-goose-mcp.sock` (a running app's socket), and every process
+  shared one `/tmp/cadgoose-test-config` sandbox (three concurrent full runs
+  failed `BehaviorToggles.SaveRoundTrip` and
+  `ConfigThemeColors.NameSearchFallback`).
+- `MCP_StartHTTPServer()` reads the bound port back (`MCP_HTTPPort()`), so
+  `mcpPort` 0 binds a free port; `MCP_SetInternalSocketPath()` points the
+  internal server elsewhere; `main()` makes a `mkdtemp` sandbox per process
+  and removes it after a green run.
+- Gates: `scripts/run_tests_concurrent.sh` runs two copies of the CI test run
+  at once (CI and pre-push), and `tools/check_test_endpoints.py` refuses a
+  literal port, a fixed `mcpPort` or an absolute `.sock` path under
+  `tests/`. Both seen red on the old fixed port. Three concurrent full suites
+  now pass (1676 each).
+
 ## October 17, 2026 — G0.5: the platform policy is a hard gate
 
 - `cmake/PlatformPolicy.cmake`, included right after `project()`: macOS

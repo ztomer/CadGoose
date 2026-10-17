@@ -58,9 +58,13 @@ tools/gate.sh [--staged|--full]             # house gates; --full = the CI copy 
   site stops doing so (no second value copy). Window-server tests carry the
   `requires_display` label and are excluded headless; OCR tests skip without
   `tesseract`.
-- Never run two `CadGooseTests` processes at once: the MCP tests bind a fixed
-  port (ROADMAP G0.3). If they fail with `MCP_StartHTTPServer()` false, check
-  `lsof -nP -iTCP:31073` for a leftover test binary first.
+- Concurrent `CadGooseTests` runs are safe and gated: each process gets its
+  own config sandbox (`/tmp/cadgoose-test-config-XXXXXX`, removed when green),
+  the MCP HTTP tests bind port 0 (`MCP_HTTPPort()` reads it back) and the
+  internal-server tests a per-process socket (`MCP_SetInternalSocketPath`).
+  `scripts/run_tests_concurrent.sh` runs two copies at once in CI and
+  pre-push; `tools/check_test_endpoints.py` refuses a fixed port or socket
+  path under `tests/`.
 
 ## Release
 

@@ -2,7 +2,7 @@
 #
 # CadGooseTests writes real state (every registry change fires
 # OnConfigChange -> Config_SaveAll into ConfigDirPath()). The suite is
-# sandboxed to /tmp/cadgoose-test-config via CADGOOSE_CONFIG_DIR, but any
+# sandboxed to a per-process /tmp/cadgoose-test-config-XXXXXX via CADGOOSE_CONFIG_DIR, but any
 # test that unsets that var mid-suite drops every later save through the
 # <cwd>/config fallback -- the repo's own tracked config.toml. That was the
 # mcp_port 31073->31072 flip. Registered as a ctest test with DEPENDS on

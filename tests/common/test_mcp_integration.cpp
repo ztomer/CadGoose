@@ -59,7 +59,10 @@ class MCPIntegrationTest : public ::testing::Test {
 protected:
     void SetUp() override {
         Config_Init();
-        g_config.ai.mcpPort = 31073; // Use non-default port to avoid conflicts
+        m_savedPort = g_config.ai.mcpPort;
+        // Port 0: the kernel picks a free port, read back via MCP_HTTPPort(),
+        // so concurrent test binaries never collide (ROADMAP G0.3).
+        g_config.ai.mcpPort = 0;
         MCP_StopHTTPServer();
         std::this_thread::sleep_for(std::chrono::milliseconds(200));
         ASSERT_TRUE(MCP_StartHTTPServer());
@@ -68,9 +71,13 @@ protected:
 
     void TearDown() override {
         MCP_StopHTTPServer();
+        g_config.ai.mcpPort = m_savedPort;
     }
 
-    int Port() const { return g_config.ai.mcpPort; }
+    int Port() const { return MCP_HTTPPort(); }
+
+private:
+    int m_savedPort = 0;
 };
 
 TEST_F(MCPIntegrationTest, InitializeReturnsProtocolVersion) {

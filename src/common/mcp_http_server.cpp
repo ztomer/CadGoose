@@ -13,6 +13,7 @@
 static std::thread g_httpThread;
 static std::atomic<bool> g_httpRunning{false};
 static int g_httpFd = -1;
+static std::atomic<int> g_httpPort{0};
 
 static constexpr size_t kHTTPMaxSize = 1024 * 1024; // 1MB max request
 
@@ -136,10 +137,22 @@ bool MCP_StartHTTPServer() {
         return false;
     }
 
+    // The port actually bound: mcpPort 0 asks the kernel for a free one,
+    // which is how tests run without colliding (ROADMAP G0.3).
+    struct sockaddr_in bound;
+    socklen_t boundLen = sizeof(bound);
+    if (getsockname(g_httpFd, (struct sockaddr*)&bound, &boundLen) != 0) {
+        fprintf(stderr, "[MCP-HTTP] Failed to read the bound port\n");
+        close(g_httpFd);
+        g_httpFd = -1;
+        return false;
+    }
+    g_httpPort.store(ntohs(bound.sin_port));
+
     g_httpRunning.store(true);
 
     g_httpThread = std::thread([]() {
-        fprintf(stderr, "[MCP-HTTP] Server started on port %d\n", g_config.ai.mcpPort);
+        fprintf(stderr, "[MCP-HTTP] Server started on port %d\n", g_httpPort.load());
         while (g_httpRunning.load()) {
             struct sockaddr_in clientAddr;
             socklen_t clientLen = sizeof(clientAddr);
@@ -168,6 +181,11 @@ void MCP_StopHTTPServer() {
     if (g_httpThread.joinable()) {
         g_httpThread.join();
     }
+    g_httpPort.store(0);
+}
+
+int MCP_HTTPPort() {
+    return g_httpRunning.load() ? g_httpPort.load() : 0;
 }
 
 bool MCP_IsHTTPRunning() {

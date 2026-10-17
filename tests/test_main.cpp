@@ -292,6 +292,8 @@ TEST(CursorState, HasPos) {
 #include <filesystem>
 #include <system_error>
 
+static int Finish(int rc, const CwdLeakGuard& cwdGuard);
+
 int main(int argc, char **argv) {
     // FIRST, before anything that might resolve a path — including
     // CrashLogger_Init(), which redirects stderr into ConfigDirPath()/logs and
@@ -300,7 +302,15 @@ int main(int argc, char **argv) {
     // there, which is exactly what the repo root looks like and exactly where
     // ctest runs. The suite never loads that file, so a save from unsandboxed
     // state rewrites it with registry defaults — the mcp_port 31073->31072 flip.
-    setenv("CADGOOSE_CONFIG_DIR", "/tmp/cadgoose-test-config", 1);
+    // One sandbox PER PROCESS: a fixed /tmp/cadgoose-test-config was shared
+    // by every concurrent CadGooseTests, which overwrote each other's saves
+    // (BehaviorToggles.SaveRoundTrip failed with three running; ROADMAP G0.3).
+    char sandbox[] = "/tmp/cadgoose-test-config-XXXXXX";
+    if (mkdtemp(sandbox) == nullptr) {
+        fprintf(stderr, "FATAL: cannot create the test config sandbox\n");
+        return 2;
+    }
+    setenv("CADGOOSE_CONFIG_DIR", sandbox, 1);
     setenv("CADGOOSE_HEADLESS_TEST", "1", 1);
 
     // ...and PROVE it took, rather than trusting that no static initializer
@@ -328,7 +338,19 @@ int main(int argc, char **argv) {
     // listeners list owns the pointer.
     auto* cwdGuard = new CwdLeakGuard();
     ::testing::UnitTest::GetInstance()->listeners().Append(cwdGuard);
-    const int rc = RUN_ALL_TESTS();
+    const int rc = Finish(RUN_ALL_TESTS(), *cwdGuard);
+    // A green run leaves nothing behind; a red one keeps its sandbox (and the
+    // session log in it) for the post-mortem.
+    if (rc == 0) {
+        std::error_code ec;
+        std::filesystem::remove_all(sandbox, ec);
+    } else {
+        printf("test config sandbox kept for inspection: %s\n", sandbox);
+    }
+    return rc;
+}
+
+static int Finish(int rc, const CwdLeakGuard& cwdGuard) {
     // A filter that selects nothing is a red run, never a green one: ctest
     // passed over ZERO tests because cmake/Tests.cmake split the filter
     // source at every non-ASCII byte (file(STRINGS) without ENCODING).
@@ -339,13 +361,13 @@ int main(int argc, char **argv) {
         fflush(stdout);
         return 1;
     }
-    if (!cwdGuard->Findings().empty()) {
+    if (!cwdGuard.Findings().empty()) {
         // stdout, beside gtest's own report: CrashLogger_Init() may have
         // redirected stderr into the sandbox's session log.
         printf("\n✗ tests wrote into the working directory (%s); a test may "
                "write only inside a temp dir it owns:\n",
                std::filesystem::current_path().string().c_str());
-        for (const auto& line : cwdGuard->Findings()) printf("  %s\n", line.c_str());
+        for (const auto& line : cwdGuard.Findings()) printf("  %s\n", line.c_str());
         fflush(stdout);
         return 1;
     }

@@ -16,7 +16,9 @@ protected:
 
     void SetUp() override {
         originalPort = g_config.ai.mcpPort;
-        g_config.ai.mcpPort = 31073;
+        // Port 0: the kernel picks a free port, read back via MCP_HTTPPort(),
+        // so concurrent test binaries never collide (ROADMAP G0.3).
+        g_config.ai.mcpPort = 0;
     }
 
     void TearDown() override {
@@ -33,7 +35,7 @@ protected:
         struct sockaddr_in addr;
         memset(&addr, 0, sizeof(addr));
         addr.sin_family = AF_INET;
-        addr.sin_port = htons(31073);
+        addr.sin_port = htons((uint16_t)MCP_HTTPPort());
         inet_pton(AF_INET, "127.0.0.1", &addr.sin_addr);
 
         if (connect(fd, (struct sockaddr*)&addr, sizeof(addr)) != 0) {

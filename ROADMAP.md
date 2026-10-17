@@ -71,11 +71,6 @@ dir absent, so it copies; both present, so nothing is touched).
 matches the code. **Exit:** each item's proof is in the tree and has been seen
 to go red once.
 
-- **G0.3 MCP tests bind a fixed port (31073).** Two concurrent `CadGooseTests`
-  processes collide (`tests/common/test_mcp_http_server.cpp:19,36`), and the
-  failure reads like an MCP bug. Fix: bind port 0 and read it back. *Proof:* two
-  test binaries running the MCP suites at once both pass. (G0.2, which it waited
-  on, closed 2026-10-17: the MCP suites now run in CI.)
 - **G0.6 CI actions are three majors behind, and one runner label moves.**
   `actions/checkout@v4` (latest v7), `actions/cache@v4` (v6),
   `actions/upload-artifact@v4` (v7). `ubuntu-latest` is a moving label. *Proof:*
