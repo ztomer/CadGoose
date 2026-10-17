@@ -2,27 +2,92 @@
 #include <string>
 #include <filesystem>
 #include <cstdlib>
+#include <fstream>
+#include <unistd.h>
 #include "config.h"
 
 namespace fs = std::filesystem;
 
-TEST(ConfigPath, EnvVarOverridesDefault) {
-    // Save/restore, never bare-unset: this suite runs with the CADGOOSE_CONFIG_DIR
-    // sandbox installed by main(), and a test that leaves the var unset drops every
-    // LATER test's Config_SaveAll through the <cwd>/config fallback — i.e. into the
-    // repo's own tracked config/config.toml (the mcp_port 31073->31072 flip).
-    const char* savedConfigDir = std::getenv("CADGOOSE_CONFIG_DIR");
-    std::string testDir = "/tmp/cadgoose-test-config";
-    fs::create_directories(testDir);
-    setenv("CADGOOSE_CONFIG_DIR", testDir.c_str(), 1);
-    fs::path dir = ConfigDirPath();
-    EXPECT_EQ(dir.string(), testDir);
-    if (savedConfigDir) {
-        setenv("CADGOOSE_CONFIG_DIR", savedConfigDir, 1);
-    } else {
-        unsetenv("CADGOOSE_CONFIG_DIR");
+// ConfigDirPath() is tested through ResolveConfigDir over explicit sources.
+// No test here may setenv/unsetenv/chdir: the process environment and cwd are
+// shared with every thread in the binary, and the old versions of these tests
+// mutated both mid-suite (ROADMAP G0.12; tools/check_test_process_state.py
+// keeps it that way).
+namespace {
+
+// A temp dir this test owns, removed on every exit path.
+struct OwnedTempDir {
+    fs::path path;
+    OwnedTempDir() {
+        std::string tmpl = (fs::temp_directory_path() / "cadgoose-cfgdir-XXXXXX").string();
+        path = mkdtemp(tmpl.data()) != nullptr ? fs::path(tmpl) : fs::path();
     }
-    fs::remove_all(testDir);
+    ~OwnedTempDir() {
+        std::error_code ec;
+        if (!path.empty()) fs::remove_all(path, ec);
+    }
+    OwnedTempDir(const OwnedTempDir&) = delete;
+    OwnedTempDir& operator=(const OwnedTempDir&) = delete;
+};
+
+}  // namespace
+
+TEST(ConfigPath, EnvVarOverridesDefault) {
+    ConfigDirSources src;
+    src.configDirEnv = "/somewhere/cadgoose-test-config";
+    src.home = "/Users/nobody";
+    src.cwd = "/nonexistent-cwd";
+    EXPECT_EQ(ResolveConfigDir(src), fs::path("/somewhere/cadgoose-test-config"));
+}
+
+TEST(ConfigPath, EmptyEnvValuesAreUnset) {
+    // An empty CADGOOSE_CONFIG_DIR used to resolve to the relative path "",
+    // i.e. wherever the process happened to be.
+    const fs::path cwd = "/nonexistent-cwd";
+    ConfigDirSources src = ConfigDirSources_FromEnv(
+        [](const char* name) -> const char* {
+            if (std::string(name) == "CADGOOSE_CONFIG_DIR") return "";
+            if (std::string(name) == "HOME") return "/Users/nobody";
+            return nullptr;
+        },
+        cwd);
+    EXPECT_FALSE(src.configDirEnv.has_value());
+    ASSERT_TRUE(src.home.has_value());
+    EXPECT_EQ(*src.home, "/Users/nobody");
+    EXPECT_TRUE(ResolveConfigDir(src).is_absolute());
+}
+
+TEST(ConfigPath, CwdConfigTomlWinsOverHome) {
+    OwnedTempDir cwd;
+    ASSERT_FALSE(cwd.path.empty());
+    fs::create_directories(cwd.path / "config");
+    { std::ofstream(cwd.path / "config" / "config.toml") << "\n"; }
+    ConfigDirSources src;
+    src.home = "/Users/nobody";
+    src.cwd = cwd.path;
+    EXPECT_EQ(ResolveConfigDir(src), cwd.path / "config");
+}
+
+TEST(ConfigPath, ProcessSourcesMatchTheSuiteSandbox) {
+    // main() installs CADGOOSE_CONFIG_DIR before any thread starts; the
+    // impure wrapper must read it back unchanged.
+    ConfigDirSources src = ConfigDirSources_FromProcess();
+    ASSERT_TRUE(src.configDirEnv.has_value());
+    EXPECT_EQ(ConfigDirPath(), fs::path(*src.configDirEnv));
+}
+
+TEST(ConfigPath, OverrideWinsAndRestores) {
+    const fs::path before = ConfigDirPath();
+    {
+        ScopedConfigDirOverride guard("/tmp/cadgoose-override-probe");
+        EXPECT_EQ(ConfigDirPath(), fs::path("/tmp/cadgoose-override-probe"));
+        {
+            ScopedConfigDirOverride inner("/tmp/cadgoose-override-inner");
+            EXPECT_EQ(ConfigDirPath(), fs::path("/tmp/cadgoose-override-inner"));
+        }
+        EXPECT_EQ(ConfigDirPath(), fs::path("/tmp/cadgoose-override-probe"));
+    }
+    EXPECT_EQ(ConfigDirPath(), before);
 }
 
 TEST(ConfigPath, ThemesDirSucceeds) {
@@ -61,40 +126,23 @@ TEST(ConfigPath, SetStringConfigValue) {
 }
 
 TEST(ConfigPath, HomeFallbackWhenNoConfigToml) {
-    const char* savedConfigDir = std::getenv("CADGOOSE_CONFIG_DIR");
-    fs::path savedCwd = fs::current_path();
-    unsetenv("CADGOOSE_CONFIG_DIR");
-    std::string tempDir = "/tmp/cadgoose-home-test";
-    fs::create_directories(tempDir);
-    fs::current_path(tempDir);
-    fs::path result = ConfigDirPath();
-    fs::current_path(savedCwd);
-    if (savedConfigDir) {
-        setenv("CADGOOSE_CONFIG_DIR", savedConfigDir, 1);
-    } else {
-        unsetenv("CADGOOSE_CONFIG_DIR");
-    }
-    fs::remove_all(tempDir);
-    const char* home = std::getenv("HOME");
-    ASSERT_NE(home, nullptr);
-    fs::path expected = fs::path(home) / "Library" / "Application Support" / "CadGoose";
-    EXPECT_EQ(result, expected);
+    OwnedTempDir cwd;  // empty: no config/config.toml
+    ASSERT_FALSE(cwd.path.empty());
+    ConfigDirSources src;
+    src.home = "/Users/nobody";
+    src.cwd = cwd.path;
+#if defined(__APPLE__)
+    EXPECT_EQ(ResolveConfigDir(src),
+              fs::path("/Users/nobody") / "Library" / "Application Support" / "CadGoose");
+#else
+    EXPECT_EQ(ResolveConfigDir(src), fs::path("/Users/nobody") / ".config" / "desktop-goose");
+#endif
 }
 
 TEST(ConfigPath, HomeFallbackWhenHomeUnset) {
-    const char* savedConfigDir = std::getenv("CADGOOSE_CONFIG_DIR");
-    const char* savedHome = std::getenv("HOME");
-    fs::path savedCwd = fs::current_path();
-    unsetenv("CADGOOSE_CONFIG_DIR");
-    unsetenv("HOME");
-    std::string tempDir = "/tmp/cadgoose-home-unset-test";
-    fs::create_directories(tempDir);
-    fs::current_path(tempDir);
-    fs::path expected = fs::current_path();
-    fs::path result = ConfigDirPath();
-    fs::current_path(savedCwd);
-    if (savedHome) setenv("HOME", savedHome, 1);
-    if (savedConfigDir) setenv("CADGOOSE_CONFIG_DIR", savedConfigDir, 1);
-    fs::remove_all(tempDir);
-    EXPECT_EQ(result, expected);
+    OwnedTempDir cwd;
+    ASSERT_FALSE(cwd.path.empty());
+    ConfigDirSources src;  // no env at all
+    src.cwd = cwd.path;
+    EXPECT_EQ(ResolveConfigDir(src), cwd.path);
 }

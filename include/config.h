@@ -5,6 +5,7 @@
 #include <filesystem>
 #include <vector>
 #include <functional>
+#include <optional>
 #include <toml.hpp>
 #include "ring_buffer.h"
 
@@ -121,6 +122,44 @@ extern std::vector<ConfigOption> g_configRegistry;
 void OnConfigChange();
 
 std::filesystem::path ConfigDirPath();
+
+// Every input ConfigDirPath() reads, captured as a value. The resolution is a
+// pure function of it, so it is tested without setenv/unsetenv/chdir: those
+// mutate process-global state that every other thread reads (getenv's pointer
+// can dangle mid-read), which once dropped a config.toml and themes/ into the
+// repo root under a torn relative name (ROADMAP G0.12).
+struct ConfigDirSources {
+    std::optional<std::string> configDirEnv;   // CADGOOSE_CONFIG_DIR
+    std::optional<std::string> home;           // HOME
+    std::optional<std::string> xdgConfigHome;  // XDG_CONFIG_HOME (Linux only)
+    std::filesystem::path cwd;
+};
+// Reads the sources through `getenvFn` (std::getenv in production), copying
+// each value at once; an empty value is treated as unset.
+ConfigDirSources ConfigDirSources_FromEnv(const std::function<const char*(const char*)>& getenvFn,
+                                          std::filesystem::path cwd);
+ConfigDirSources ConfigDirSources_FromProcess();
+std::filesystem::path ResolveConfigDir(const ConfigDirSources& src);
+
+// Thread-safe in-process override that wins over every source above; the
+// seam tests use instead of mutating CADGOOSE_CONFIG_DIR mid-suite. Returns
+// the previous override so a caller can restore it (ScopedConfigDirOverride).
+std::optional<std::filesystem::path> Config_ExchangeDirOverride(
+    std::optional<std::filesystem::path> dir);
+
+class ScopedConfigDirOverride {
+public:
+    explicit ScopedConfigDirOverride(std::filesystem::path dir)
+        : m_previous(Config_ExchangeDirOverride(std::move(dir))) {}
+    ~ScopedConfigDirOverride() { Config_ExchangeDirOverride(std::move(m_previous)); }
+    ScopedConfigDirOverride(const ScopedConfigDirOverride&) = delete;
+    ScopedConfigDirOverride& operator=(const ScopedConfigDirOverride&) = delete;
+    ScopedConfigDirOverride(ScopedConfigDirOverride&&) = delete;
+    ScopedConfigDirOverride& operator=(ScopedConfigDirOverride&&) = delete;
+
+private:
+    std::optional<std::filesystem::path> m_previous;
+};
 
 void Config_InitRegistry();
 void Config_Init();

@@ -91,6 +91,14 @@ tools/gate.sh [--staged|--full]             # house gates; --full = the CI copy 
   call and `RandRange(360) == 51` on the second.
 - **Effect registrations** in `effect_reg_*.mm` are static-initialized, so any
   binary that links them can exercise them through `EffectGetRegistrations()`.
+- **Tests never mutate the process environment or cwd** (no
+  `setenv`/`unsetenv`/`chdir`/`current_path(path)`; enforced by
+  `tools/check_test_process_state.py`). Every thread reads them, and a test
+  that did once leaked a config into the repo root (G0.12). Use
+  `ResolveConfigDir(ConfigDirSources)` or `ScopedConfigDirOverride`, or split
+  a pure function of the value out (`Log_LevelFor`). Every test is also
+  checked for writes into the cwd by `tests/cwd_leak_guard.h`, and the binary
+  exits 1 naming the offender.
 - **Headless tests** set `CADGOOSE_HEADLESS_TEST=1`, which makes the actor
   `.mm` files skip their `NSWindow` allocation. Audio is gated separately by
   `AudioSuppressed()` (enabled/muted).

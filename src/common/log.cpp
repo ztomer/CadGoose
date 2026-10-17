@@ -20,14 +20,15 @@
 
 LogLevel g_logLevel = LogLevel::Info;
 
-void Log_InitLevel(bool debugMode) {
-    if (const char* v = std::getenv("CADGOOSE_VERBOSE")) {
-        if (*v && std::strcmp(v, "0") != 0) {
-            g_logLevel = LogLevel::Debug;
-            return;
-        }
+LogLevel Log_LevelFor(bool debugMode, const char* verboseEnv) {
+    if (verboseEnv != nullptr && *verboseEnv != '\0' && std::strcmp(verboseEnv, "0") != 0) {
+        return LogLevel::Debug;
     }
-    g_logLevel = debugMode ? LogLevel::Debug : LogLevel::Info;
+    return debugMode ? LogLevel::Debug : LogLevel::Info;
+}
+
+void Log_InitLevel(bool debugMode) {
+    g_logLevel = Log_LevelFor(debugMode, std::getenv("CADGOOSE_VERBOSE"));
 }
 
 void CG_Logv(LogLevel level, const char* tag, const char* fmt, ...) {

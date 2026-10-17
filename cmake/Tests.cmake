@@ -17,6 +17,8 @@ if(APPLE)
     # names, so a variable indirection would hide every file from it.
     add_executable(CadGooseTests
         tests/test_main.cpp
+        tests/cwd_leak_guard.cpp
+        tests/common/test_cwd_leak_guard.cpp
         src/common/crash_logger.mm
         tests/test_goose_behavior.cpp
         tests/test_goose_integration.cpp

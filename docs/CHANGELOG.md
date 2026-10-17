@@ -1,5 +1,27 @@
 # Changelog
 
+## October 17, 2026 — G0.12: no test writes outside a temp dir it owns
+
+- Cause class: tests mutated process-global state that every thread reads.
+  `ConfigPath.*` called `setenv`/`unsetenv` on `HOME` and
+  `CADGOOSE_CONFIG_DIR` and `chdir`'d mid-suite; `ConfigLoadAll`/`ConfigSave`
+  swapped `CADGOOSE_CONFIG_DIR` (and leaked it on an `ASSERT` return);
+  `LogTest` set `CADGOOSE_VERBOSE`. The leaked `e-home-unset-test/` is the
+  tail of the test's own `/tmp/cadgoose-home-unset-test`, read as a relative
+  path, which fits a `getenv` pointer read across a concurrent `setenv`. The
+  exact writer was not reproduced; the class is removed instead.
+- `ConfigDirPath()` is now the pure `ResolveConfigDir(ConfigDirSources)` over
+  values copied from the environment at once, plus a mutex-guarded in-process
+  override (`ScopedConfigDirOverride`). An empty `CADGOOSE_CONFIG_DIR` no
+  longer resolves to the relative path `""`. `Log_InitLevel` reads through the
+  pure `Log_LevelFor`.
+- Gates: `tools/check_test_process_state.py` (no env or cwd mutation under
+  `tests/`, ratcheted allowlist of one: `main()`), in `GOH_CI_STEPS` and CI;
+  `tests/cwd_leak_guard.h` snapshots the cwd and `<cwd>/config/` around every
+  test, and the binary exits 1 naming the test. Both seen red: the checker on
+  the old tests, the guard on planted relative writes.
+- Found on the way: the suite fails under `--gtest_shuffle` (G0.13).
+
 ## October 17, 2026 — ctest ran zero tests and passed
 
 - `cmake/Tests.cmake` read `tests/gtest_ci_filter.txt` with `file(STRINGS)`

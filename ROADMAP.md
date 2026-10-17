@@ -71,8 +71,6 @@ dir absent, so it copies; both present, so nothing is touched).
 matches the code. **Exit:** each item's proof is in the tree and has been seen
 to go red once.
 
-  honest new floors and the size of the drop (rule 8); do not keep the old
-  numbers by narrowing the scope.
 - **G0.3 MCP tests bind a fixed port (31073).** Two concurrent `CadGooseTests`
   processes collide (`tests/common/test_mcp_http_server.cpp:19,36`), and the
   failure reads like an MCP bug. Fix: bind port 0 and read it back. *Proof:* two
@@ -118,14 +116,18 @@ to go red once.
   flatten (no merge base with `main`). Its 2026-08-25 file splits are all on
   `main`, and its harness wiring was superseded by `75eb43f`. Delete it on the
   remote; this needs owner approval because it changes the remote.
-- **G0.12 A test run leaves `e-home-unset-test/` in the repo root.** Found
-  2026-10-17 after the G0.2 runs: a `config.toml` and `themes/` written at
-  10:08 into the working tree, so some test writes the app's config relative
-  to the cwd when `HOME` is unset (`ConfigPath.HomeFallbackWhenHomeUnset`
-  unsets it; the name does not match that test's own `/tmp` dir, so find the
-  writer first). Fix: no test may write outside a temp dir it owns. *Proof:*
-  `git status --porcelain` is empty after a full `--gtest_shuffle
-  --gtest_repeat=3` run, as a gate step.
+- **G0.13 The suite is order-dependent.** Measured 2026-10-17 at `08bbe7a`:
+  20 `--gtest_shuffle` seeds (11-30) of the CI-filtered suite all fail. 56
+  distinct tests fail in at least one order, 7 seeds die by signal (SIGSEGV
+  139 / SIGBUS 138, last test `AppActions.GetStatusWithUnpinnedItem`,
+  `GooseFixture.TickThenDrawStillRenders`, `GooseRender.*`), and the top
+  offenders are global-state families (`BallBehavior`, `BreadCrumbsBehavior`,
+  `MCPTools`, `BehaviorJailTest`, `BehaviorPresenceTest`, `BehaviorRegistry`,
+  `BehaviorPortalTest`). The fixed order hides it. Name the shared state each
+  family leans on (registry, actor manager, world, config), make each fixture
+  restore it, then make shuffle the gate. *Proof:* `--gtest_shuffle
+  --gtest_repeat=3` green as a `GOH_CI_STEPS` step; until then, G0.12's
+  cwd guard runs on the fixed order only.
 
 ## Phase 1 — Maintenance-line correctness (S-M, 1 session)
 

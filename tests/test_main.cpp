@@ -286,6 +286,7 @@ TEST(CursorState, HasPos) {
 }
 
 #include "crash_logger.h"
+#include "cwd_leak_guard.h"
 
 #include <cstdio>
 #include <filesystem>
@@ -322,6 +323,11 @@ int main(int argc, char **argv) {
 
     CrashLogger_Init();
     ::testing::InitGoogleTest(&argc, argv);
+
+    // Every test is checked for writes into the cwd (ROADMAP G0.12); the
+    // listeners list owns the pointer.
+    auto* cwdGuard = new CwdLeakGuard();
+    ::testing::UnitTest::GetInstance()->listeners().Append(cwdGuard);
     const int rc = RUN_ALL_TESTS();
     // A filter that selects nothing is a red run, never a green one: ctest
     // passed over ZERO tests because cmake/Tests.cmake split the filter
@@ -330,6 +336,16 @@ int main(int argc, char **argv) {
         printf("\n✗ no test was selected (--gtest_filter=%s); a run that executes "
                "nothing is not a pass\n",
                ::testing::GTEST_FLAG(filter).c_str());
+        fflush(stdout);
+        return 1;
+    }
+    if (!cwdGuard->Findings().empty()) {
+        // stdout, beside gtest's own report: CrashLogger_Init() may have
+        // redirected stderr into the sandbox's session log.
+        printf("\n✗ tests wrote into the working directory (%s); a test may "
+               "write only inside a temp dir it owns:\n",
+               std::filesystem::current_path().string().c_str());
+        for (const auto& line : cwdGuard->Findings()) printf("  %s\n", line.c_str());
         fflush(stdout);
         return 1;
     }

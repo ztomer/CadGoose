@@ -22,27 +22,59 @@ static std::string ToLower(std::string s) {
     return s;
 }
 
-std::filesystem::path ConfigDirPath() {
-    if (const char* envDir = std::getenv("CADGOOSE_CONFIG_DIR")) {
-        return fs::path(envDir);
-    }
-    if (fs::exists(fs::current_path() / "config" / "config.toml")) {
-        return fs::current_path() / "config";
+ConfigDirSources ConfigDirSources_FromEnv(const std::function<const char*(const char*)>& getenvFn,
+                                          fs::path cwd) {
+    auto nonEmpty = [&getenvFn](const char* name) -> std::optional<std::string> {
+        const char* v = getenvFn(name);
+        if (v == nullptr || *v == '\0') return std::nullopt;
+        return std::string(v);  // copied at once: never hold getenv's pointer
+    };
+    ConfigDirSources src;
+    src.configDirEnv = nonEmpty("CADGOOSE_CONFIG_DIR");
+    src.home = nonEmpty("HOME");
+    src.xdgConfigHome = nonEmpty("XDG_CONFIG_HOME");
+    src.cwd = std::move(cwd);
+    return src;
+}
+
+ConfigDirSources ConfigDirSources_FromProcess() {
+    std::error_code ec;
+    return ConfigDirSources_FromEnv([](const char* name) { return std::getenv(name); },
+                                    fs::current_path(ec));
+}
+
+// Empty values arrive as nullopt (ConfigDirSources_FromEnv): an empty CADGOOSE_CONFIG_DIR
+// used to resolve to the relative path "", i.e. whatever the cwd was.
+fs::path ResolveConfigDir(const ConfigDirSources& src) {
+    if (src.configDirEnv) return fs::path(*src.configDirEnv);
+    std::error_code ec;
+    if (fs::exists(src.cwd / "config" / "config.toml", ec)) {
+        return src.cwd / "config";
     }
 #if defined(__APPLE__)
-    if (const char* home = std::getenv("HOME")) {
-        if (*home) return fs::path(home) / "Library" / "Application Support" / "CadGoose";
-    }
-    return fs::current_path();
+    if (src.home) return fs::path(*src.home) / "Library" / "Application Support" / "CadGoose";
 #else
-    if (const char* xdg = std::getenv("XDG_CONFIG_HOME")) {
-        if (*xdg) return fs::path(xdg) / "desktop-goose";
-    }
-    if (const char* home = std::getenv("HOME")) {
-        if (*home) return fs::path(home) / ".config" / "desktop-goose";
-    }
-    return fs::current_path();
+    if (src.xdgConfigHome) return fs::path(*src.xdgConfigHome) / "desktop-goose";
+    if (src.home) return fs::path(*src.home) / ".config" / "desktop-goose";
 #endif
+    return src.cwd;
+}
+
+static std::mutex g_configDirOverrideMutex;
+static std::optional<fs::path> g_configDirOverride;
+
+std::optional<fs::path> Config_ExchangeDirOverride(std::optional<fs::path> dir) {
+    std::lock_guard<std::mutex> lock(g_configDirOverrideMutex);
+    std::swap(g_configDirOverride, dir);
+    return dir;
+}
+
+std::filesystem::path ConfigDirPath() {
+    {
+        std::lock_guard<std::mutex> lock(g_configDirOverrideMutex);
+        if (g_configDirOverride) return *g_configDirOverride;
+    }
+    return ResolveConfigDir(ConfigDirSources_FromProcess());
 }
 
 std::string Config_GetPath() {

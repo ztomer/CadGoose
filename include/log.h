@@ -16,6 +16,10 @@ extern LogLevel g_logLevel;
 
 // Set g_logLevel from debugMode / the CADGOOSE_VERBOSE env var. Call once at start.
 void Log_InitLevel(bool debugMode);
+// The pure half of Log_InitLevel: the level for a debugMode flag and a
+// CADGOOSE_VERBOSE value (nullptr = unset). Tests call this rather than
+// setenv, which races every thread that reads the environment.
+LogLevel Log_LevelFor(bool debugMode, const char* verboseEnv);
 
 // Implementation; prefer the macros below. Adds the "[tag] " prefix and newline.
 void CG_Logv(LogLevel level, const char* tag, const char* fmt, ...)

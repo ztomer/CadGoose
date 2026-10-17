@@ -50,17 +50,13 @@ bool WaitForContent(const std::string& path, const char* needle, int timeoutMs =
 }
 
 // Restores every global this file perturbs: the log level, the async engine,
-// the CADGOOSE_VERBOSE env var, and the debug.toTerminal config gate.
+// and the debug.toTerminal config gate. The environment is never touched:
+// CADGOOSE_VERBOSE handling is tested through the pure Log_LevelFor.
 class LogTest : public ::testing::Test {
 protected:
     void SetUp() override {
         m_savedLevel = g_logLevel;
         m_savedToTerminal = g_config.debug.toTerminal;
-        if (const char* v = std::getenv("CADGOOSE_VERBOSE")) {
-            m_hadVerbose = true;
-            m_savedVerbose = v;
-        }
-        unsetenv("CADGOOSE_VERBOSE");
         g_logLevel = LogLevel::Info;
     }
 
@@ -68,11 +64,6 @@ protected:
         Log_Shutdown();  // idempotent when not running
         g_logLevel = m_savedLevel;
         g_config.debug.toTerminal = m_savedToTerminal;
-        if (m_hadVerbose) {
-            setenv("CADGOOSE_VERBOSE", m_savedVerbose.c_str(), 1);
-        } else {
-            unsetenv("CADGOOSE_VERBOSE");
-        }
         for (const auto& p : m_temps) unlink(p.c_str());
     }
 
@@ -85,8 +76,6 @@ protected:
 private:
     LogLevel m_savedLevel = LogLevel::Info;
     bool m_savedToTerminal = false;
-    bool m_hadVerbose = false;
-    std::string m_savedVerbose;
     std::vector<std::string> m_temps;
 };
 
@@ -95,29 +84,28 @@ private:
 // ── Log_InitLevel ──────────────────────────────────────────
 
 TEST_F(LogTest, InitLevelFollowsDebugModeFlag) {
-    Log_InitLevel(true);
-    EXPECT_EQ(g_logLevel, LogLevel::Debug);
+    EXPECT_EQ(Log_LevelFor(true, nullptr), LogLevel::Debug);
+    EXPECT_EQ(Log_LevelFor(false, nullptr), LogLevel::Info);
+}
 
+TEST_F(LogTest, InitLevelAppliesTheResolvedLevel) {
+    // The suite never sets CADGOOSE_VERBOSE, so the impure wrapper must agree
+    // with the pure resolver over the real (unset or inherited) value.
     Log_InitLevel(false);
-    EXPECT_EQ(g_logLevel, LogLevel::Info);
+    EXPECT_EQ(g_logLevel, Log_LevelFor(false, std::getenv("CADGOOSE_VERBOSE")));
 }
 
 TEST_F(LogTest, VerboseEnvForcesDebugEvenWhenDebugModeIsOff) {
-    setenv("CADGOOSE_VERBOSE", "1", 1);
-    Log_InitLevel(false);
-    EXPECT_EQ(g_logLevel, LogLevel::Debug) << "CADGOOSE_VERBOSE must win over debugMode=false";
+    EXPECT_EQ(Log_LevelFor(false, "1"), LogLevel::Debug)
+        << "CADGOOSE_VERBOSE must win over debugMode=false";
 }
 
 TEST_F(LogTest, VerboseEnvSetToZeroDoesNotForceDebug) {
-    setenv("CADGOOSE_VERBOSE", "0", 1);
-    Log_InitLevel(false);
-    EXPECT_EQ(g_logLevel, LogLevel::Info) << "\"0\" must be treated as off";
+    EXPECT_EQ(Log_LevelFor(false, "0"), LogLevel::Info) << "\"0\" must be treated as off";
 }
 
 TEST_F(LogTest, VerboseEnvSetToEmptyDoesNotForceDebug) {
-    setenv("CADGOOSE_VERBOSE", "", 1);
-    Log_InitLevel(false);
-    EXPECT_EQ(g_logLevel, LogLevel::Info) << "an empty value must be treated as unset";
+    EXPECT_EQ(Log_LevelFor(false, ""), LogLevel::Info) << "an empty value must be treated as unset";
 }
 
 // ── CG_Logv / the sync stderr path ─────────────────────────

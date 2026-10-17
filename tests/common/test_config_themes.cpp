@@ -13,14 +13,14 @@ namespace fs = std::filesystem;
 
 TEST(ConfigLoadAll, LoadsConfigFile) {
     Config_Init();
-    std::string savedDir;
-    if (const char* env = std::getenv("CADGOOSE_CONFIG_DIR")) savedDir = env;
 
     char dirTemplate[] = "/tmp/cadgoose_cfg_XXXXXX";
     char* dirResult = mkdtemp(dirTemplate);
     ASSERT_NE(dirResult, nullptr);
     std::filesystem::path tmpDir(dirResult);
-    setenv("CADGOOSE_CONFIG_DIR", tmpDir.string().c_str(), 1);
+    // Scoped in-process override, restored on every exit path (an ASSERT
+    // return included); never setenv, which races every reading thread.
+    ScopedConfigDirOverride configDir(tmpDir);
 
     std::ofstream out(tmpDir / "config.toml");
     out << "[General]\nglobal_scale = 4.25\n";
@@ -38,23 +38,16 @@ TEST(ConfigLoadAll, LoadsConfigFile) {
     *(float*)opt->ptr = saved;
     std::error_code ec;
     std::filesystem::remove_all(tmpDir, ec);
-    if (!savedDir.empty()) {
-        setenv("CADGOOSE_CONFIG_DIR", savedDir.c_str(), 1);
-    } else {
-        unsetenv("CADGOOSE_CONFIG_DIR");
-    }
 }
 
 TEST(ConfigLoadAll, NoConfigFileFallback) {
     Config_Init();
-    std::string savedDir;
-    if (const char* env = std::getenv("CADGOOSE_CONFIG_DIR")) savedDir = env;
 
     char dirTemplate[] = "/tmp/cadgoose_empty_XXXXXX";
     char* dirResult = mkdtemp(dirTemplate);
     ASSERT_NE(dirResult, nullptr);
     std::filesystem::path tmpDir(dirResult);
-    setenv("CADGOOSE_CONFIG_DIR", tmpDir.string().c_str(), 1);
+    ScopedConfigDirOverride configDir(tmpDir);
 
     g_config.color.currentBody = {0.0f, 0.0f, 0.0f};
 
@@ -64,23 +57,16 @@ TEST(ConfigLoadAll, NoConfigFileFallback) {
 
     std::error_code ec;
     std::filesystem::remove_all(tmpDir, ec);
-    if (!savedDir.empty()) {
-        setenv("CADGOOSE_CONFIG_DIR", savedDir.c_str(), 1);
-    } else {
-        unsetenv("CADGOOSE_CONFIG_DIR");
-    }
 }
 
 TEST(ConfigLoadAll, CorruptConfigFileCatch) {
     Config_Init();
-    std::string savedDir;
-    if (const char* env = std::getenv("CADGOOSE_CONFIG_DIR")) savedDir = env;
 
     char dirTemplate[] = "/tmp/cadgoose_corrupt_XXXXXX";
     char* dirResult = mkdtemp(dirTemplate);
     ASSERT_NE(dirResult, nullptr);
     std::filesystem::path tmpDir(dirResult);
-    setenv("CADGOOSE_CONFIG_DIR", tmpDir.string().c_str(), 1);
+    ScopedConfigDirOverride configDir(tmpDir);
 
     std::ofstream out(tmpDir / "config.toml");
     out << "{{{{ NOT VALID TOML @@@@\n";
@@ -91,11 +77,6 @@ TEST(ConfigLoadAll, CorruptConfigFileCatch) {
 
     std::error_code ec;
     std::filesystem::remove_all(tmpDir, ec);
-    if (!savedDir.empty()) {
-        setenv("CADGOOSE_CONFIG_DIR", savedDir.c_str(), 1);
-    } else {
-        unsetenv("CADGOOSE_CONFIG_DIR");
-    }
 }
 
 TEST(ConfigUpdateActiveTheme, CustomMode) {
@@ -248,14 +229,12 @@ TEST(ConfigThemeColors, EmptyName) {
 }
 
 TEST(ConfigSave, GooseNamesArrayWritten) {
-    std::string savedDir;
-    if (const char* env = std::getenv("CADGOOSE_CONFIG_DIR")) savedDir = env;
 
     char dirTemplate[] = "/tmp/cadgoose_names_XXXXXX";
     char* dirResult = mkdtemp(dirTemplate);
     ASSERT_NE(dirResult, nullptr);
     std::filesystem::path tmpDir(dirResult);
-    setenv("CADGOOSE_CONFIG_DIR", tmpDir.string().c_str(), 1);
+    ScopedConfigDirOverride configDir(tmpDir);
 
     Config_Init();
     g_config.gooseNames.clear();
@@ -274,11 +253,6 @@ TEST(ConfigSave, GooseNamesArrayWritten) {
     g_config.gooseNames.clear();
     std::error_code ec;
     std::filesystem::remove_all(tmpDir, ec);
-    if (!savedDir.empty()) {
-        setenv("CADGOOSE_CONFIG_DIR", savedDir.c_str(), 1);
-    } else {
-        unsetenv("CADGOOSE_CONFIG_DIR");
-    }
 }
 
 TEST(ConfigSave, SaveGooseNamesFunction) {
@@ -291,14 +265,12 @@ TEST(ConfigSave, SaveGooseNamesFunction) {
 }
 
 TEST(ConfigSave, SaveGooseNamesWithGoose) {
-    std::string savedDir;
-    if (const char* env = std::getenv("CADGOOSE_CONFIG_DIR")) savedDir = env;
 
     char dirTemplate[] = "/tmp/cadgoose_gname_XXXXXX";
     char* dirResult = mkdtemp(dirTemplate);
     ASSERT_NE(dirResult, nullptr);
     std::filesystem::path tmpDir(dirResult);
-    setenv("CADGOOSE_CONFIG_DIR", tmpDir.string().c_str(), 1);
+    ScopedConfigDirOverride configDir(tmpDir);
 
     Config_Init();
     ActorManager::Instance().destroyAllOfType(ActorType::Goose);
@@ -319,11 +291,6 @@ TEST(ConfigSave, SaveGooseNamesWithGoose) {
     g_config.gooseNames.clear();
     ActorManager::Instance().destroyAllOfType(ActorType::Goose);
     std::filesystem::remove_all(tmpDir, ec);
-    if (!savedDir.empty()) {
-        setenv("CADGOOSE_CONFIG_DIR", savedDir.c_str(), 1);
-    } else {
-        unsetenv("CADGOOSE_CONFIG_DIR");
-    }
 }
 
 TEST(ConfigThemeColors, DefaultName) {
