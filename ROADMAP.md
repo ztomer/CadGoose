@@ -20,8 +20,8 @@ the session log that used to live in AGENTS.md: `git show a3353d2:AGENTS.md`.
   feature development happens in a separate macOS-only fork (D1, ruled: maintenance line).
 - 1697 `TEST`/`TEST_F`/`TEST_P` cases under `tests/`. Coverage ratchet in CI:
   P0 94 / P1 53 / total 85 (`build_and_release.yml:106`), whole-binary floor 64
-  (`scripts/coverage_whole_binary_floor.txt`) — but see G0.1 for what the tiers
-  actually measure.
+  (`scripts/coverage_whole_binary_floor.txt`) — tiers now cover every production
+  source (G0.1 fixed 2026-10-16: P0 95 / P1 26 / total 63 / whole-binary 66).
 - The repo is PUBLIC (MIT). Owner ruling 2026-09-04 (`ae819a7`): it must not
   name or depend on the author's private repositories. Keep it that way here.
 
@@ -67,15 +67,6 @@ dir absent, so it copies; both present, so nothing is touched).
 matches the code. **Exit:** each item's proof is in the tree and has been seen
 to go red once.
 
-- **G0.1 Coverage tiers skip 43 production files.** `scripts/coverage_eligible.txt`
-  globs `src/common/*.cpp` (P0) and `src/platform/macos/*.mm` (P1). `compgen -G`
-  does not recurse, so `src/common/behaviors/` (17 behavior `.cpp` + 12 AI/LLM
-  `.mm`) and the 14 `src/common/*.mm` files (`goose_drawing.mm`,
-  `item_renderer.mm`, the actor `.mm` files...) are in NO tier. Only the
-  whole-binary floor of 64 sees them. Fix: tiers cover every production source,
-  or name each file in an `EXCLUDE` with a reason. Add a check that fails when a
-  file under `src/` matches no tier. *Proof:* add an untiered `.cpp`, and the
-  check goes red. *Risk:* P0 and P1 drop once the scope grows. Record the
   honest new floors and the size of the drop (rule 8); do not keep the old
   numbers by narrowing the scope.
 - **G0.2 CI excludes tests that were fixed.** The `--gtest_filter` (duplicated

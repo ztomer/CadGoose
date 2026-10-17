@@ -11,10 +11,14 @@
 
 # P0 — portable C++ (core logic)
 P0:src/common/*.cpp
+P0:src/common/behaviors/*.cpp
 P0:include/*.h
 
 # P1 — platform-specific ObjC++ (window mgmt, platform backends)
 P1:src/platform/macos/*.mm
+P1:src/platform/macos/renderer/*.mm
+P1:src/common/*.mm
+P1:src/common/behaviors/*.mm
 
 # ── EXCLUDE ───────────────────────────────────────────────────────────────
 # Files removed from the measurement entirely. Every entry needs a stated
@@ -37,3 +41,8 @@ P1:src/platform/macos/*.mm
 #     synthesizes CGEvents to drag an item for manual verification. Reachable
 #     only from app_actions.cpp's debug command dispatch, never on a user path.
 EXCLUDE:src/platform/macos/item_window_test.mm
+
+# (b) Linux-only platform shell: these sources build only in the Linux target and
+# are not part of the macOS coverage binary measured by check_coverage.sh.
+# Logic that is shared lives under src/common and is covered there.
+EXCLUDE:src/platform/linux/*

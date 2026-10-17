@@ -1,5 +1,15 @@
 # Changelog
 
+## October 16, 2026 — G0.1: coverage tiers cover every production source
+
+- `scripts/coverage_eligible.txt` now recurses into `src/common/behaviors/` and
+  `src/common/*.mm` (P0/P1 globs); `src/platform/linux/*` excluded with reason.
+- `scripts/check_coverage_tiers.py` (new) fails if any `.cpp`/`.mm` under `src/`
+  is neither tiered nor excluded; an untiered `.cpp` makes it go red.
+- Honest floors recorded: P0 95 / P1 26 / total 63 / whole-binary 66
+  (was P0 94 / P1 53 / total 85 / 64, which understated scope).
+- Measured: P0 95.22%, P1 26.75%, eligible total 63.93%, whole binary 66.84%.
+
 ## September 21, 2026 — MCP SEP-2575: initialize negotiates protocol version, latest by default
 
 - `initialize` now echoes the client's requested `protocolVersion` when it is a

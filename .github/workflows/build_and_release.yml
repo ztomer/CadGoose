@@ -103,7 +103,7 @@ jobs:
 
       - name: Coverage Gate
         run: |
-          bash scripts/check_coverage.sh --p0-min=94 --p1-min=53 --total-min=85 --build-dir=build-cov
+          bash scripts/check_coverage.sh --p0-min=95 --p1-min=26 --total-min=63 --build-dir=build-cov
 
       - name: Determine version
         uses: ./.github/actions/determine-version

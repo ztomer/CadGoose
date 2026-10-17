@@ -12,7 +12,7 @@
 #     whole-binary total above, which honours the same EXCLUDE contract.
 #
 # Flags preserved exactly (the CI workflow passes them):
-#   ./scripts/check_coverage.sh [--p0-min=94] [--p1-min=53] [--total-min=85] [--build-dir=build-cov]
+#   ./scripts/check_coverage.sh [--p0-min=95] [--p1-min=26] [--total-min=63] [--build-dir=build-cov]
 #
 # Exit: 0 all floors met | 1 any floor missed | 2 usage/config error.
 set -euo pipefail
@@ -20,9 +20,9 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 ELIGIBLE_FILE="$ROOT/scripts/coverage_eligible.txt"
 
-P0_MIN=94
-P1_MIN=53
-TOTAL_MIN=85
+P0_MIN=95
+P1_MIN=26
+TOTAL_MIN=63
 BUILD_DIR="build-cov"
 
 while [[ $# -gt 0 ]]; do
@@ -32,7 +32,7 @@ while [[ $# -gt 0 ]]; do
         --total-min=*) TOTAL_MIN="${1#*=}" ;;
         --build-dir=*) BUILD_DIR="${1#*=}" ;;
         --help|-h)
-            echo "Usage: $0 [--p0-min=94] [--p1-min=30] [--total-min=79] [--build-dir=build-cov]"
+            echo "Usage: $0 [--p0-min=95] [--p1-min=26] [--total-min=63] [--build-dir=build-cov]"
             exit 0
             ;;
         *) echo "Unknown option: $1"; exit 2 ;;
