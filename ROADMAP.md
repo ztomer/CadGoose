@@ -106,6 +106,19 @@ to go red once.
   `CMAKE_OSX_DEPLOYMENT_TARGET` set, `otool -l` on the DMG's binary and every
   bundled dylib reports that `minos`, and README and the plist say the same.
 
+- **G0.15 CI's coverage gate has been red since `647d6e0` (owner decision).**
+  G0.1 raised `scripts/coverage_whole_binary_floor.txt` to 66 from a local
+  measurement (66.84%), but CI, the only place the floor is enforced,
+  measured 64.58% on that same commit and 64.73% on `6cf700d` (run
+  39074323297; P0 95.21 / P1 26.63 / eligible total 64.03 all pass). CI is
+  headless, so the display and OCR tests a dev machine runs are skipped
+  there. Between `6a9991c` and `08bbe7a` the coverage run measured nothing
+  at all (0.72%: ctest selected zero tests), which hid this. The script
+  says the floor "may rise and must never fall", so lowering it to 64 is the
+  owner's call. *Decision:* seed the floor at CI's measure (64), or measure
+  it on a display machine and enforce it only there. *Proof:* the
+  `Build macOS (DMG)` job green on a push.
+
 ## Phase 1 — Maintenance-line correctness (S-M, 1 session)
 
 **Goal:** no setting, state or race that silently does something other than
