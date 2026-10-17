@@ -18,7 +18,9 @@ if(APPLE)
     add_executable(CadGooseTests
         tests/test_main.cpp
         tests/cwd_leak_guard.cpp
+        tests/test_rng_seed.cpp
         tests/common/test_cwd_leak_guard.cpp
+        tests/common/test_rng_seed_listener.cpp
         src/common/crash_logger.mm
         tests/test_goose_behavior.cpp
         tests/test_goose_integration.cpp

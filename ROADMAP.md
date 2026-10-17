@@ -84,9 +84,14 @@ to go red once.
   `MCPTools`, `BehaviorJailTest`, `BehaviorPresenceTest`, `BehaviorRegistry`,
   `BehaviorPortalTest`). The fixed order hides it. Name the shared state each
   family leans on (registry, actor manager, world, config), make each fixture
-  restore it, then make shuffle the gate. *Proof:* `--gtest_shuffle
-  --gtest_repeat=3` green as a `GOH_CI_STEPS` step; until then, G0.12's
-  cwd guard runs on the fixed order only.
+  restore it, then make shuffle the gate. The same leak shows without
+  shuffle: under `--gtest_repeat=20` the same 12 tests (`BehaviorPresenceTest`
+  x4, `BehaviorRegistry` x4, `BehaviorToggle` x3, `GUIConfigTest.DefaultValues`)
+  fail on 19 of 20 iterations, i.e. every one after the first (measured
+  2026-10-17). Random draws are already per-test deterministic (each test is
+  seeded from its name). *Proof:* `--gtest_shuffle --gtest_repeat=3` green as
+  a `GOH_CI_STEPS` step; until then, G0.12's cwd guard runs on the fixed
+  order only.
 
 - **G0.14 The minimum macOS is claimed, not built (owner decision).**
   README says "macOS 10.15+" and `scripts/create_bundle.sh` writes

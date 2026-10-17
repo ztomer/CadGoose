@@ -1,5 +1,19 @@
 # Changelog
 
+## October 17, 2026 — every test draws the same random numbers every run
+
+- Found by the first pre-push run of G0.3's concurrent copies:
+  `GooseStateMachine.FetchTimeoutWorks` failed in one copy, and reproduces
+  alone (2 failures in 5000 repeats, no concurrency). In the tick that times
+  the fetch out, the goose picks a random wander target; when that target
+  happens to be "reached" it rolls a new TEXT fetch, so the test's outcome
+  depended on `rng_util`'s engine, seeded from `std::random_device`.
+- Class fix: `tests/test_rng_seed.h` seeds the engine before every test from
+  the test's own name (FNV-1a), so each test's draws are a function of the
+  test alone, in any order. 0 failures in 5000 repeats after;
+  `TestRngSeed.EachTestStartsFromTheSeedOfItsName` pins it and was seen red
+  with the listener removed.
+
 ## October 17, 2026 — G0.6: CI runs on named releases
 
 - Pinned to the newest releases (checked against each repository's releases

@@ -287,6 +287,7 @@ TEST(CursorState, HasPos) {
 
 #include "crash_logger.h"
 #include "cwd_leak_guard.h"
+#include "test_rng_seed.h"
 
 #include <cstdio>
 #include <filesystem>
@@ -338,6 +339,8 @@ int main(int argc, char **argv) {
     // listeners list owns the pointer.
     auto* cwdGuard = new CwdLeakGuard();
     ::testing::UnitTest::GetInstance()->listeners().Append(cwdGuard);
+    // ...and starts from a random sequence fixed by its own name.
+    ::testing::UnitTest::GetInstance()->listeners().Append(new TestRngSeeder());
     const int rc = Finish(RUN_ALL_TESTS(), *cwdGuard);
     // A green run leaves nothing behind; a red one keeps its sandbox (and the
     // session log in it) for the post-mortem.
