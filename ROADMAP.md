@@ -97,12 +97,6 @@ to go red once.
   advertises `--p1-min=30 --total-min=79`, while the defaults are 53/85 (the
   hook-comment half moved to W.5). *Proof:* the text matches the code,
   verified by grep.
-- **G0.9 `.gitignore` ignores `*.md` behind a whitelist.** Any new doc is
-  silently untracked: this file needed a whitelist entry to be committed, and a
-  stale entry for a deleted `docs/CLEANUP_PLAN.md` was still listed. Fix:
-  replace the blanket rule with explicit ignores for the generated markdown
-  (`tools/profiling/soak_results_*.md`, stray probe files). *Proof:* a new
-  `docs/X.md` shows up in `git status`.
 - **G0.10 Every clean configure clones toml11 with its full history and all
   of its submodules.** `FetchContent_Declare(toml11 ... GIT_TAG v4.4.0)` sets
   neither `GIT_SHALLOW` nor `GIT_SUBMODULES ""`. The pre-push gate (`rm -rf

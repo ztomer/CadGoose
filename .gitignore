@@ -1,6 +1,4 @@
 .vscode/
-*.md
-!README.md
 
 build/
 build-release/
@@ -25,14 +23,6 @@ wlr-virtual-pointer-unstable-v1-protocol.c
 FoundationLLM.*
 # The Swift wrapper's SOURCE, which CMakeLists.txt compiles; the rule above is for its products.
 !src/common/behaviors/FoundationLLM.swift
-!ROADMAP.md
-!AGENTS.md
-!docs/CHANGELOG.md
-!docs/HOMEBREW.md
-!docs/ARCH.md
-!docs/MCP.md
-!docs/PROTOCOL.md
-!docs/README_LINUX.md
 config/logs/
 *.profdata
 *.profraw

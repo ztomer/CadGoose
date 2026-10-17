@@ -1,5 +1,17 @@
 # Changelog
 
+## October 17, 2026 — G0.9: a new document is never silently untracked
+
+- `.gitignore` dropped its blanket `*.md` and the whitelist behind it (eight
+  entries plus `!README.md`). The only generated markdown,
+  `tools/profiling/soak_results_*.md`, was already ignored by name in
+  `tools/profiling/.gitignore`; the stray untracked `emoji_probe.md` was
+  trashed.
+- `tools/check_new_sources_visible.py` (in `GOH_CI_STEPS`) asks
+  `git check-ignore --no-index` whether a new file of each source kind in
+  each source directory (16 probes) would be ignored. Seen red on the old
+  `.gitignore` (three markdown probes); a new `docs/*.md` now shows as `??`.
+
 ## October 17, 2026 — G0.12: no test writes outside a temp dir it owns
 
 - Cause class: tests mutated process-global state that every thread reads.
