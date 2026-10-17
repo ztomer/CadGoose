@@ -1,5 +1,20 @@
 # Changelog
 
+## October 17, 2026 — G0.10: a clean configure takes 1.5 s, not 80 s
+
+- toml11 v4.4.0 (the newest release) is fetched as its release tarball,
+  pinned by `URL_HASH SHA256`, instead of a `GIT_TAG` clone that pulled the
+  whole history and every submodule (nlohmann/json, doctest, a Hugo theme).
+  Measured on clean configures: 86.2 s and 78.1 s before, 1.52 s and 1.59 s
+  after; `_deps/toml11-src` 368 MB → 2.8 MB; `tests/extlib/` holds no files.
+- toml11's own CMakeLists.txt is no longer run (its 13 compiler-flag probes
+  and a CMake deprecation warning for `CMP0127 OLD`); the header-only
+  `toml11` INTERFACE target is defined in CMakeLists.txt as a SYSTEM include.
+- `tools/check_fetchcontent.py` (in `GOH_CI_STEPS`) refuses a
+  `FetchContent_Declare` that clones git or lacks a hashed URL; seen red on
+  the old declaration. The Linux build was checked in Docker
+  (`ubuntu:24.04`, aarch64): configure and build green.
+
 ## October 17, 2026 — G0.8: the coverage floors are written once
 
 - Re-measured: the `check_coverage.sh` usage line already matched its

@@ -78,22 +78,32 @@ elseif(UNIX)
     set(LINUX TRUE)
 endif()
 
-# toml11 — fetched at configure time instead of vendored as a git submodule.
-# Pinned to a specific commit for reproducible builds. The fetched package
-# provides the `toml11` target (header `<toml.hpp>`), which carries its own
-# include directories, so no manual include paths are needed.
+# toml11 (header-only), fetched at configure time as the v4.4.0 release
+# tarball (the newest release), pinned by hash. Not a git clone (ROADMAP
+# G0.10): GIT_TAG fetched the full history and every submodule (nlohmann/json,
+# doctest, a Hugo theme), 368 MB for 0.35 MB of tarball, on every clean
+# configure, including the pre-push gate's.
+#
+# Its own CMakeLists.txt is not run (SOURCE_SUBDIR names a directory without
+# one): for a consumer it defines only an INTERFACE target over include/, and
+# running it cost 13 compiler-flag probes and a CMake deprecation warning
+# (it sets policy CMP0127 to OLD). The target is defined here instead, as a
+# SYSTEM include so its headers' warnings are not ours (v4.4.0 declares
+# `operator"" _toml`, which clang deprecates; this replaced a blanket
+# -Wno-deprecated-literal-operator that hid the same thing in our own code).
 include(FetchContent)
-# SYSTEM: toml11's headers are third-party, so their warnings are not ours
-# (v4.4.0, the newest release, declares `operator"" _toml`, which clang
-# deprecates). This replaced a blanket -Wno-deprecated-literal-operator on
-# both targets, which hid the same deprecation in this project's own code.
 FetchContent_Declare(
     toml11
-    GIT_REPOSITORY https://github.com/ToruNiina/toml11.git
-    GIT_TAG v4.4.0
-    SYSTEM
+    URL https://github.com/ToruNiina/toml11/archive/refs/tags/v4.4.0.tar.gz
+    URL_HASH SHA256=815bfe6792aa11a13a133b86e7f0f45edc5d71eb78f5fb6686c49c7f792b9049
+    SOURCE_SUBDIR cadgoose-header-only-no-cmake
 )
 FetchContent_MakeAvailable(toml11)
+if(NOT EXISTS "${toml11_SOURCE_DIR}/include/toml.hpp")
+    message(FATAL_ERROR "toml11 fetch has no include/toml.hpp under ${toml11_SOURCE_DIR}")
+endif()
+add_library(toml11 INTERFACE)
+target_include_directories(toml11 SYSTEM INTERFACE "${toml11_SOURCE_DIR}/include")
 
 if(MACOS)
     enable_language(OBJCXX)

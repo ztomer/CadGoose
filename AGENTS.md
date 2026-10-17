@@ -45,7 +45,8 @@ tools/gate.sh [--staged|--full]             # house gates; --full = the CI copy 
   Use `--foreground` when you need to attach (profiling, debugging).
 - **Dependencies**: `build.sh` installs `cmake ninja googletest mimalloc` via
   Homebrew (`SKIP_DEPS=1` skips this). toml11 comes in through CMake
-  `FetchContent` (`GIT_TAG` in CMakeLists.txt); there is no submodule.
+  `FetchContent` as a release tarball pinned by `URL_HASH` (CMakeLists.txt;
+  `tools/check_fetchcontent.py` refuses a git clone); there is no submodule.
 - `CG_DISABLE_DEBUG_LOG=ON` compiles debug logging out of the **app target
   only**. The test target keeps it, so `test_log.cpp` still runs.
 - **Logs/crashes**: `<ConfigDir>/logs/`. `ConfigDirPath()` prefers

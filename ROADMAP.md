@@ -76,15 +76,6 @@ to go red once.
   `actions/upload-artifact@v4` (v7). `ubuntu-latest` is a moving label. *Proof:*
   current majors pinned, a named Ubuntu runner, CI green on a push and a
   `workflow_dispatch` release dry run.
-- **G0.10 Every clean configure clones toml11 with its full history and all
-  of its submodules.** `FetchContent_Declare(toml11 ... GIT_TAG v4.4.0)` sets
-  neither `GIT_SHALLOW` nor `GIT_SUBMODULES ""`. The pre-push gate (`rm -rf
-  build && cmake ...`) therefore spends minutes on every push cloning
-  nlohmann/json, doctest and a Hugo theme that nothing builds (measured on the
-  2026-10-12 push). Fix: a shallow fetch with no submodules, or a release
-  tarball with `URL_HASH`. *Proof:* `build/_deps/toml11-src/tests/extlib/` is
-  empty after configure, and the configure step's wall time is recorded before
-  and after.
 - **G0.11 Stale remote branch `origin/unify/harnesses`.** It predates the
   flatten (no merge base with `main`). Its 2026-08-25 file splits are all on
   `main`, and its harness wiring was superseded by `75eb43f`. Delete it on the
