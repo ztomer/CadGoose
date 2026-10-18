@@ -23,7 +23,8 @@ public func cIsAvailable() -> Int32 {
 // Returns a code describing why the FoundationModels backend is (un)available,
 // so the UI can tell the user what to do rather than a generic failure:
 //   0 = available
-//   1 = framework not present (app built without the macOS 26 SDK, or OS < 26)
+//   1 = framework not present (app built without the macOS 26 SDK; the OS
+//       itself is never older, since 26 is the deployment floor, G0.14)
 //   2 = device not eligible for Apple Intelligence
 //   3 = Apple Intelligence not enabled in System Settings
 //   4 = model still downloading / not ready
@@ -31,41 +32,37 @@ public func cIsAvailable() -> Int32 {
 @_cdecl("FoundationLLM_AvailabilityCode")
 public func cAvailabilityCode() -> Int32 {
     #if canImport(FoundationModels)
-    if #available(macOS 26.0, *) {
-        let model = SystemLanguageModel.default
-        switch model.availability {
-        case .available:
-            return 0
-        case .unavailable(let reason):
-            switch reason {
-            case .deviceNotEligible: return 2
-            case .appleIntelligenceNotEnabled: return 3
-            case .modelNotReady: return 4
-            @unknown default: return 5
-            }
-        @unknown default:
-            return 5
+    switch SystemLanguageModel.default.availability {
+    case .available:
+        return 0
+    case .unavailable(let reason):
+        switch reason {
+        case .deviceNotEligible: return 2
+        case .appleIntelligenceNotEnabled: return 3
+        case .modelNotReady: return 4
+        @unknown default: return 5
         }
+    @unknown default:
+        return 5
     }
-    #endif
+    #else
     return 1
+    #endif
 }
 
 @_cdecl("FoundationLLM_ContextSize")
 public func cContextSize() -> Int32 {
     #if canImport(FoundationModels)
-    if #available(macOS 26.0, *) {
-        return 4096  // default context size; actual model.contextSize not available on all SDKs
-    }
-    #endif
+    return 4096  // default context size; actual model.contextSize not available on all SDKs
+    #else
     return 0
+    #endif
 }
 
 // Callback type: receives a C string and a context pointer
 public typealias GenerateCallback = @convention(c) (UnsafePointer<CChar>?, UnsafeMutableRawPointer?) -> Void
 
 @_cdecl("FoundationLLM_Generate")
-@available(macOS 26.0, *)
 public func cGenerate(prompt: UnsafePointer<CChar>, temperature: Float, callback: GenerateCallback?, context: UnsafeMutableRawPointer?) {
     #if canImport(FoundationModels)
     guard cIsAvailable() == 1 else {

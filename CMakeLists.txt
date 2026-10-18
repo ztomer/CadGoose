@@ -1,4 +1,7 @@
 cmake_minimum_required(VERSION 3.25)  # FetchContent SYSTEM
+# The minimum macOS, before project() as CMAKE_OSX_DEPLOYMENT_TARGET must be
+# (ROADMAP G0.14). The floor is written there and only there.
+include(cmake/MacOSFloor.cmake)
 project(CadGoose)
 
 # Before anything else: an unsupported OS/arch is a hard failure (G0.5).
@@ -131,19 +134,35 @@ if(MACOS)
         message(FATAL_ERROR "Cocoa framework not found")
     endif()
 
+    # mimalloc replaces malloc process-wide. It is built here, from the
+    # v3.5.3 release tarball (the newest release) pinned by hash, as the
+    # single object file its README recommends for a static override: the
+    # object's constructor makes its zone the default one, so every
+    # allocation, the system frameworks' included, goes through it. It used to
+    # be Homebrew's libmimalloc dylib, copied into the bundle, which carries
+    # the minos of whatever macOS built the bottle (27.0 on the author's Mac):
+    # the floor CadGoose claimed was not the floor it shipped (ROADMAP G0.14).
+    # Built here it inherits CMAKE_OSX_DEPLOYMENT_TARGET like our own code,
+    # and the bundle carries no dylib at all.
     option(USE_MIMALLOC "Use mimalloc allocator" ON)
     if(USE_MIMALLOC)
-        find_library(MIMALLOC_LIBRARY mimalloc)
-        find_path(MIMALLOC_INCLUDE_DIR mimalloc.h)
-        if(MIMALLOC_LIBRARY AND MIMALLOC_INCLUDE_DIR)
-            message(STATUS "mimalloc found: ${MIMALLOC_LIBRARY}")
-        else()
-            message(WARNING "mimalloc not found, falling back to system malloc")
-        endif()
+        set(MI_BUILD_SHARED OFF)
+        set(MI_BUILD_TESTS OFF)
+        # The object's copy step depends on the static target, so it stays on.
+        set(MI_BUILD_STATIC ON)
+        set(MI_BUILD_OBJECT ON)
+        FetchContent_Declare(
+            mimalloc
+            URL https://github.com/microsoft/mimalloc/archive/refs/tags/v3.5.3.tar.gz
+            URL_HASH SHA256=3b4a15153a59905995f7070296ed604bb5ccc00cabb8b93446931aff77224d47
+            SYSTEM
+        )
+        FetchContent_MakeAvailable(mimalloc)
+        set(CG_MIMALLOC mimalloc-obj)
+        message(STATUS "mimalloc: v3.5.3 object file, static override")
     else()
         message(STATUS "mimalloc disabled via USE_MIMALLOC=OFF")
-        unset(MIMALLOC_LIBRARY)
-        unset(MIMALLOC_INCLUDE_DIR)
+        set(CG_MIMALLOC "")
     endif()
 
     add_executable(CadGoose ${SOURCES})
@@ -165,14 +184,13 @@ if(MACOS)
         ${COREVIDEO_LIBRARY}
         ${QUARTZCORE_LIBRARY}
         Threads::Threads
-        ${MIMALLOC_LIBRARY}
+        ${CG_MIMALLOC}
     )
 
     target_include_directories(CadGoose PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/include
         ${CMAKE_CURRENT_SOURCE_DIR}/src/platform/macos
         ${CMAKE_CURRENT_SOURCE_DIR}/src/common
-        ${MIMALLOC_INCLUDE_DIR}
     )
 
     set_target_properties(CadGoose PROPERTIES
@@ -180,13 +198,14 @@ if(MACOS)
         MACOSX_BUNDLE FALSE
     )
 
-    # Compile Swift FoundationLLM wrapper (CMake doesn't support Swift with Unix Makefiles)
+    # Compile Swift FoundationLLM wrapper (CMake doesn't support Swift with Unix Makefiles).
+    # Its target triple carries the floor from cmake/MacOSFloor.cmake (G0.14).
     execute_process(COMMAND xcrun --show-sdk-path OUTPUT_VARIABLE MACOS_SDK_PATH OUTPUT_STRIP_TRAILING_WHITESPACE)
     set(SWIFT_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/common/behaviors/FoundationLLM.swift")
     set(SWIFT_OBJ "${CMAKE_CURRENT_BINARY_DIR}/FoundationLLM.o")
     add_custom_command(
         OUTPUT ${SWIFT_OBJ}
-        COMMAND swiftc -c -parse-as-library ${SWIFT_SRC} -o ${SWIFT_OBJ} -emit-module-path "${CMAKE_CURRENT_BINARY_DIR}/FoundationLLM.swiftmodule" -target arm64-apple-macos15 -sdk "${MACOS_SDK_PATH}"
+        COMMAND swiftc -c -parse-as-library ${SWIFT_SRC} -o ${SWIFT_OBJ} -emit-module-path "${CMAKE_CURRENT_BINARY_DIR}/FoundationLLM.swiftmodule" -target arm64-apple-macos${CMAKE_OSX_DEPLOYMENT_TARGET} -sdk "${MACOS_SDK_PATH}"
         DEPENDS ${SWIFT_SRC}
         COMMENT "Compiling FoundationLLM.swift"
         VERBATIM

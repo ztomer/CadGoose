@@ -8,6 +8,12 @@ cask "cadgoose" do
   desc "Agentic overlay companion (Desktop Goose clone with multi-goose, custom behaviors, AI chat, etc.)"
   homepage "https://github.com/ztomer/CadGoose"
 
+  # What the binary is built for: Apple silicon (G0.5) and the macOS floor in
+  # cmake/MacOSFloor.cmake (G0.14). A bare symbol is a minimum (">="); the
+  # string form ">= :tahoe" is deprecated in Homebrew.
+  depends_on arch: :arm64
+  depends_on macos: :tahoe
+
   # The downloaded DMG contains the self-contained CadGoose.app bundle
   app "CadGoose.app"
 

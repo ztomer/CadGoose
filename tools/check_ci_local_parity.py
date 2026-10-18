@@ -22,12 +22,12 @@ import re
 import shlex
 import sys
 
-MIN_CI_SCRIPTS = 9  # 10 in .github/workflows/ on 2026-10-18
+MIN_CI_SCRIPTS = 10  # 11 in .github/workflows/ on 2026-10-18
 
-EXEMPT = {
-    "scripts/create_bundle.sh": "packaging, not a gate: it assembles the release .app "
-    "that only CI publishes; nothing it checks is a property of the pushed commit",
-}
+# Empty since G0.14: scripts/create_bundle.sh was exempt as "packaging, not a
+# gate", until the bundle became the thing that proves the macOS floor (it runs
+# tools/check_macos_floor.py on what it builds), so the local gate builds it too.
+EXEMPT: dict[str, str] = {}
 
 SCRIPT = re.compile(r"(?:\.\./)*((?:scripts|tools)/[\w./-]+\.(?:sh|py))\b")
 RUN_INLINE = re.compile(r"^(\s*)-?\s*run:\s*(\S.*)$")

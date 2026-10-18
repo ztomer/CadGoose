@@ -75,18 +75,25 @@ to go red once.
   flatten (no merge base with `main`). Its 2026-08-25 file splits are all on
   `main`, and its harness wiring was superseded by `75eb43f`. Delete it on the
   remote; this needs owner approval because it changes the remote.
-- **G0.14 The minimum macOS is claimed, not built (owner decision).**
-  README says "macOS 10.15+" and `scripts/create_bundle.sh` writes
-  `LSMinimumSystemVersion` 10.15, but nothing sets a deployment target, so
-  the binary's `minos` is the build machine's SDK (measured 2026-10-17: 27.0
-  locally; the release builds on `macos-26`). It also links Homebrew's
-  `libmimalloc` dylib (built for the host OS) and a Swift object targeting
-  macOS 15, and since G0.4 it calls `[NSApp activate]` and `NSBezelStylePush`
-  (macOS 14). The code compiles warning-free at a 14.0 deployment target.
-  *Decision:* which floor to support (26, what ships today; or 14, which needs
-  a bundled mimalloc built for 14 and a CI launch check). *Proof:*
-  `CMAKE_OSX_DEPLOYMENT_TARGET` set, `otool -l` on the DMG's binary and every
-  bundled dylib reports that `minos`, and README and the plist say the same.
+- **G0.17 `hdiutil create` is deprecated (found closing G0.14).** On macOS 27
+  it prints "'hdiutil create -volname -format ...' is deprecated. Please use
+  'diskutil image create from/blank'". CI's DMG step uses it and builds on
+  `macos-26`, where the replacement is not yet verified to exist (house rule
+  17: migrate on sight, but not onto a tool the runner may lack). *Proof:*
+  the Create DMG step runs `diskutil image create from` on the CI runner, and
+  `tools/check_macos_floor.py --dmg` reads the result green.
+
+- **G0.18 `tools/homebrew/cadgoose.rb` is a drifted copy of the tap's cask
+  (found closing G0.14).** It says version 0.5.3 with the sha256
+  `UPDATE_ME_AFTER_CI_BUILDS_DMG`, so the `brew install --cask
+  tools/homebrew/cadgoose.rb` that docs/HOMEBREW.md recommends fails its
+  checksum; `brew style` finds 6 offenses (a deprecated `postflight` block,
+  the description over 80 characters) that ztomer/homebrew-tap's copy fixed
+  long ago. G0.14 gave it the tap's `depends_on` lines, so the floor check
+  has something true to hold. *Fix:* delete it, point docs/HOMEBREW.md at the
+  tap, and move the floor check's cask clause to the tap's gate. *Proof:* no
+  cask in this tree, and the tap's gate holds `depends_on macos:` to
+  `cmake/MacOSFloor.cmake`.
 
 ## Phase 1 — Maintenance-line correctness (S-M, 1 session)
 

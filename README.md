@@ -8,7 +8,7 @@ Desktop goose for macOS (primary) and Linux (experimental). Transparent per-goos
 
 | Platform | Status |
 |---|---|
-| macOS 10.15+ | Supported — AppKit + Core Graphics. Apple Intelligence features need macOS 26+. |
+| macOS 26+ | Supported — Apple silicon, AppKit + Core Graphics. The on-device AI needs Apple Intelligence turned on. |
 | Linux (GTK4/Wayland/X11) | Experimental — not recommended for daily use. |
 
 ## Features
@@ -50,8 +50,9 @@ xattr -dr com.apple.quarantine /Applications/CadGoose.app
 compiles out all debug-level logging (`CG_DEBUG`/`DebugLog`/`LogTick`/`DEBUG_LOG` →
 `((void)0)`, zero per-frame overhead) for the app target. `build_debug.sh` leaves logging
 in (still gated at runtime by `debug.toTerminal` / `--debug`). Both wrap the shared
-`build.sh` engine, which auto-installs `cmake ninja googletest mimalloc` via Homebrew
-(`SKIP_DEPS=1` to skip). toml11 is fetched via CMake `FetchContent` (no submodules).
+`build.sh` engine, which auto-installs `cmake ninja googletest` via Homebrew
+(`SKIP_DEPS=1` to skip). toml11 and mimalloc are fetched via CMake `FetchContent` (no
+submodules). The minimum macOS is set in `cmake/MacOSFloor.cmake` and nowhere else.
 
 ## Test
 

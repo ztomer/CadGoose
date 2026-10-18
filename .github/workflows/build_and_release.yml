@@ -44,7 +44,7 @@ jobs:
           xcode-version: latest-stable
 
       - name: Install dependencies
-        run: brew install cmake googletest mimalloc ccache
+        run: brew install cmake googletest ccache
 
       - name: Verify FoundationModels SDK support
         run: |
@@ -134,6 +134,12 @@ jobs:
       - name: Create DMG
         run: |
           hdiutil create -volname CadGoose -srcfolder build/CadGoose.app -ov -format UDZO "build/CadGoose-${VERSION}.dmg"
+
+      # The shipped artifact, not the tree: mount the DMG and hold its plist
+      # and the minos of every Mach-O inside it to cmake/MacOSFloor.cmake
+      # (G0.14). --probe first proves the check can go red on this runner.
+      - name: The DMG is built for the macOS floor it claims (G0.14)
+        run: python3 tools/check_macos_floor.py --dmg "build/CadGoose-${VERSION}.dmg" --probe
 
       - name: Upload DMG (artifact)
         uses: actions/upload-artifact@v7.0.2

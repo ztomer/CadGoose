@@ -23,7 +23,7 @@ EXTRA_CMAKE_ARGS="${EXTRA_CMAKE_ARGS:-}"
 # ── Dependency check (macOS / Homebrew) ────────────────────
 # Required Homebrew formulae. CMake also links system frameworks (Cocoa,
 # CoreML, curl, …) which ship with macOS and need no install.
-BREW_DEPS=(cmake ninja googletest mimalloc)
+BREW_DEPS=(cmake ninja googletest)
 
 check_dependencies() {
     if [[ "$(uname)" != "Darwin" ]]; then
@@ -41,7 +41,7 @@ Install Homebrew first:
   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
 Then re-run ./build.sh. (Or set SKIP_DEPS=1 to bypass this check if you have
-cmake, ninja, googletest and mimalloc installed by other means.)
+cmake, ninja and googletest installed by other means.)
 EOF
         exit 1
     fi

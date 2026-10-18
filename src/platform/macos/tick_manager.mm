@@ -96,9 +96,7 @@ static constexpr float kDisplayLinkDefaultFps = 60;
     [self setupGlobalKeyMonitor];
     NSScreen* screen = [NSScreen mainScreen];
     self.displayLink = [screen displayLinkWithTarget:self selector:@selector(onFrameRefresh:)];
-    if (@available(macOS 14.0, *)) {
-        self.displayLink.preferredFrameRateRange = CAFrameRateRangeMake(kDisplayLinkMinFps, kDisplayLinkMaxFps, kDisplayLinkDefaultFps);
-    }
+    self.displayLink.preferredFrameRateRange = CAFrameRateRangeMake(kDisplayLinkMinFps, kDisplayLinkMaxFps, kDisplayLinkDefaultFps);
     [self.displayLink addToRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
 }
 

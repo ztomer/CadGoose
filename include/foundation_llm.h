@@ -10,7 +10,7 @@ int FoundationLLM_IsAvailable(void);
 
 // Reason code for (un)availability of the FoundationModels backend:
 //   0 = available
-//   1 = framework not present (built without macOS 26 SDK, or OS < 26)
+//   1 = framework not present (built without the macOS 26 SDK)
 //   2 = device not eligible for Apple Intelligence
 //   3 = Apple Intelligence not enabled in System Settings
 //   4 = model still downloading / not ready

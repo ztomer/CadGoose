@@ -270,7 +270,7 @@ if(APPLE)
         GTest::GTest
         GTest::Main
         Threads::Threads
-        ${MIMALLOC_LIBRARY}
+        ${CG_MIMALLOC}
     )
     target_link_options(CadGooseTests PRIVATE "-L/usr/lib/swift")
     else()
@@ -285,7 +285,6 @@ if(APPLE)
         ${CMAKE_CURRENT_SOURCE_DIR}/include
         ${CMAKE_CURRENT_SOURCE_DIR}/src/common
         ${CMAKE_CURRENT_SOURCE_DIR}/src/platform/macos
-        ${MIMALLOC_INCLUDE_DIR}
     )
 
     # The reset seams in include/test_seams.h compile into this binary only;

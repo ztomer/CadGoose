@@ -43,10 +43,14 @@ tools/gate.sh [--staged|--full]             # house gates; --full = the CI copy 
   `make CadGoose` there is a silent no-op that leaves a stale binary.
 - Plain `./build/CadGoose` daemonizes (`posix_spawn`), so `$!` is a dead PID.
   Use `--foreground` when you need to attach (profiling, debugging).
-- **Dependencies**: `build.sh` installs `cmake ninja googletest mimalloc` via
-  Homebrew (`SKIP_DEPS=1` skips this). toml11 comes in through CMake
-  `FetchContent` as a release tarball pinned by `URL_HASH` (CMakeLists.txt;
+- **Dependencies**: `build.sh` installs `cmake ninja googletest` via
+  Homebrew (`SKIP_DEPS=1` skips this). toml11 and mimalloc come in through CMake
+  `FetchContent` as release tarballs pinned by `URL_HASH` (CMakeLists.txt;
   `tools/check_fetchcontent.py` refuses a git clone); there is no submodule.
+  mimalloc is linked as one object file, so the bundle carries no dylib.
+- **Minimum macOS**: 26, written once in `cmake/MacOSFloor.cmake` (G0.14).
+  `tools/check_macos_floor.py` holds README, the cask, Info.plist and the
+  `minos` of every Mach-O in the bundle to it; `scripts/create_bundle.sh` runs it.
 - `CG_DISABLE_DEBUG_LOG=ON` compiles debug logging out of the **app target
   only**. The test target keeps it, so `test_log.cpp` still runs.
 - **Logs/crashes**: `<ConfigDir>/logs/`. `ConfigDirPath()` prefers

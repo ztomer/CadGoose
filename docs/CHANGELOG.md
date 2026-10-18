@@ -1,5 +1,45 @@
 # Changelog
 
+## October 18, 2026 — G0.14: the minimum macOS is built, not claimed (macOS 26)
+
+- Owner ruling 2026-10-18: the floor is macOS 26, the macOS CI builds the
+  release on (`macos-26`). It is written once, in `cmake/MacOSFloor.cmake`,
+  which CMakeLists.txt includes before `project()` to set
+  `CMAKE_OSX_DEPLOYMENT_TARGET`. The Swift object's `-target` triple (it said
+  macOS 15) and Info.plist's `LSMinimumSystemVersion` (it said 10.15) derive
+  it; a configure that asks for another target is refused rather than
+  silently overridden. README, AGENTS.md and the in-repo cask say 26.
+- Red baseline at `e092375` (bundle built from the tree as it was):
+  `CadGoose` minos 27.0, the bundled `libmimalloc.3.dylib` minos 27.0 (a
+  Homebrew bottle carries the minos of the macOS that built it), the plist
+  10.15, README 10.15+, the cask with no `depends_on macos`, and two literal
+  floors outside the one source (the Swift triple, the plist template): 8 lines
+  of red.
+- mimalloc is now built here, from the v3.5.3 release tarball pinned by hash,
+  as the one object file its README recommends for a static override, so it
+  inherits the floor and the bundle carries no dylib at all. Verified active
+  (`MIMALLOC_VERBOSE=1` reports v3.5.3 at process init; the stats count the
+  process's allocations). Homebrew's mimalloc left `build.sh` and CI.
+- `tools/check_macos_floor.py` is the proof, in three places: inside
+  `scripts/create_bundle.sh` on every bundle it builds; in CI on the mounted
+  DMG (`--dmg`); and in the local pre-push gate, which now builds the bundle
+  (so `create_bundle.sh` is no longer exempt in
+  `tools/check_ci_local_parity.py`). Red on: any Mach-O anywhere in the .app
+  with a minos other than the floor, or none; the plist; the README's
+  platform row; a README or docs claim below the floor; the cask's
+  `depends_on macos:`; any tracked file that writes a floor literal (a second
+  source). `--probe` plants 16 defects into clang-built fixture bundles
+  (restamped with `vtool`) and synthetic text, and is red unless each goes red
+  and the clean fixtures stay green.
+- House rule 17: the build at the explicit 26.0 target is warning-free, with
+  deprecations as errors as before (the old implicit target was the SDK's,
+  27.0 locally, so lowering it surfaced none). Two availability checks were
+  dead at a 26 floor and went: `@available(macOS 14.0, *)` around the display
+  link's frame-rate range, and `#available(macOS 26.0, *)` in
+  `FoundationLLM.swift`.
+- Found on the way, filed: `hdiutil create` is deprecated on macOS 27 (G0.17),
+  and `tools/homebrew/cadgoose.rb` is a drifted copy of the tap's cask (G0.18).
+
 ## October 18, 2026 — G0.16 and G0.15: CI's coverage gate green again, and the local gate runs it
 
 - G0.13's push went red in CI's Coverage Gate (run 39152075565 at

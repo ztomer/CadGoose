@@ -45,6 +45,10 @@ RAW_VERSION="${BUNDLE_VERSION:-$(git -C "$PROJECT_DIR" describe --tags --always 
 SHORT_VERSION="${RAW_VERSION#v}"
 # CFBundleVersion must be a monotonic build number — use the commit count.
 BUILD_NUMBER="$(git -C "$PROJECT_DIR" rev-list --count HEAD 2>/dev/null || echo 1)"
+# LSMinimumSystemVersion is the floor the binary was built for, read from the
+# one place it is written (ROADMAP G0.14); it once said 10.15 here, on its own.
+MACOS_FLOOR="$(cmake -P "${PROJECT_DIR}/cmake/MacOSFloor.cmake")"
+[ -n "$MACOS_FLOOR" ] || { echo "ERROR: cmake/MacOSFloor.cmake printed no floor"; exit 1; }
 
 # Parse options
 CLEAN=false
@@ -152,7 +156,7 @@ cat > "${CONTENTS_DIR}/Info.plist" <<PLIST
     <key>CFBundleVersion</key>
     <string>${BUILD_NUMBER}</string>
     <key>LSMinimumSystemVersion</key>
-    <string>10.15</string>
+    <string>${MACOS_FLOOR}</string>
     <key>NSHighResolutionCapable</key>
     <true/>
     <key>NSRequiresAquaSystemAppearance</key>
@@ -259,6 +263,11 @@ if command -v codesign &>/dev/null; then
         echo "Bundle signed." || \
         echo "WARNING: Code signing failed"
 fi
+
+# The bundle states the floor it was built for, in every Mach-O it carries and
+# in its plist, or it is not a bundle (ROADMAP G0.14). Red stops the build.
+echo "Checking the macOS floor..."
+python3 "${PROJECT_DIR}/tools/check_macos_floor.py" --bundle "$BUNDLE_DIR"
 
 # Summary
 echo ""
