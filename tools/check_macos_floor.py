@@ -9,8 +9,11 @@ cmake/MacOSFloor.cmake and nowhere else.
 
 What is red:
   always      the README's platform row is not the floor; a README/docs
-              "macOS N+" claim below it; the cask's `depends_on macos` is
-              not the floor; any tracked file other than MacOSFloor.cmake
+              "macOS N+" claim below it; a Homebrew cask in this tree (the
+              cask lives in ztomer/homebrew-tap, whose gate holds its
+              `depends_on macos` to this floor, G0.18: a copy here drifted to
+              a placeholder sha and a version 1.x behind); any tracked file
+              other than MacOSFloor.cmake
               writes a floor literal (a deployment-target flag, a
               -target ...-macosN triple, an LSMinimumSystemVersion string):
               a second source is how the claim and the build drifted apart.
@@ -41,12 +44,7 @@ import tempfile
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 FLOOR_FILE = ROOT / "cmake" / "MacOSFloor.cmake"
 README = "README.md"
-CASK = "tools/homebrew/cadgoose.rb"
 TAG = "[macos_floor]"
-
-# Homebrew's macOS symbols, by major. A floor whose major is missing here is
-# red until it is added, rather than letting the cask go unchecked.
-CODENAMES = {14: "sonoma", 15: "sequoia", 26: "tahoe"}
 
 # Prose that may name old floors: history, not a claim.
 PROSE_HISTORY = {"docs/CHANGELOG.md", "ROADMAP.md"}
@@ -62,8 +60,8 @@ SECOND_SOURCE = [
 ]
 README_ROW = re.compile(r"^\|\s*macOS\s+([\d.]+)\+?\s*\|", re.M)
 OS_CLAIM = re.compile(r"\bmacOS\s+(\d+(?:\.\d+)*)\+")
-# Homebrew reads a bare symbol as a minimum; its ">= :name" string form is deprecated.
-CASK_DEP = re.compile(r"depends_on\s+macos:\s*(\S+)")
+# A Homebrew cask definition: the tap's, never a copy here (G0.18).
+CASK_DEF = re.compile(r"^\s*cask\s+[\"']", re.M)
 
 # The planted defects probe_bundles() expects to go red.
 BUNDLE_PLANTS = 6
@@ -118,14 +116,10 @@ def claim_errors(text: str, floor: str, where: str) -> list[str]:
             for m in OS_CLAIM.findall(text) if version(m) < version(floor)]
 
 
-def cask_errors(text: str, floor: str, where: str = CASK) -> list[str]:
-    major = version(floor)[0]
-    if major not in CODENAMES:
-        return [f"{TAG} no Homebrew codename for macOS {major}: add it to CODENAMES"]
-    found = CASK_DEP.findall(text)
-    want = f":{CODENAMES[major]}"
-    if found != [want]:
-        return [f"{where}: needs exactly `depends_on macos: {want}`, has {found or 'none'}"]
+def cask_copy_errors(text: str, where: str) -> list[str]:
+    if CASK_DEF.search(text):
+        return [f"{where}: a Homebrew cask in this tree; the cask is ztomer/homebrew-tap's "
+                "Casks/cadgoose.rb, and its gate (tools/cask_floor.sh) holds it to this floor"]
     return []
 
 
@@ -148,7 +142,6 @@ def tracked_text_files() -> list[str]:
 
 def static_errors(floor: str) -> tuple[list[str], int]:
     errors = readme_errors((ROOT / README).read_text(encoding="utf-8"), floor)
-    errors += cask_errors((ROOT / CASK).read_text(encoding="utf-8"), floor)
     scanned = 0
     for rel in tracked_text_files():
         path = ROOT / rel
@@ -159,6 +152,8 @@ def static_errors(floor: str) -> tuple[list[str], int]:
         except (UnicodeDecodeError, OSError):
             continue
         scanned += 1
+        if rel.endswith(".rb"):
+            errors += cask_copy_errors(text, rel)
         if rel.endswith(".md") and rel not in PROSE_HISTORY:
             errors += claim_errors(text, floor, rel)
         if rel not in PROSE_HISTORY:
@@ -237,14 +232,18 @@ def bundle_errors(app: pathlib.Path, floor: str) -> tuple[list[str], int]:
 @contextlib.contextmanager
 def mounted(dmg: pathlib.Path):
     with tempfile.TemporaryDirectory(prefix="cadgoose-dmg-") as mnt:
-        res = run(["hdiutil", "attach", "-readonly", "-nobrowse", "-noautoopen",
-                   "-mountpoint", mnt, str(dmg)])
+        # diskutil image, not hdiutil: hdiutil attach/detach are deprecated on
+        # macOS 27 (G0.17). The mount point must exist on macOS 26 (measured on
+        # the macos-26 runner, 26.6.2); TemporaryDirectory made it.
+        res = run(["diskutil", "image", "attach", "--readOnly", "--nobrowse",
+                   "--mountPoint", mnt, str(dmg)])
         if res.returncode != 0:
-            sys.exit(f"✗ {TAG} hdiutil attach {dmg} failed: {res.stderr.strip()}")
+            sys.exit(f"✗ {TAG} diskutil image attach {dmg} failed: "
+                     f"{(res.stderr or res.stdout).strip()}")
         try:
             yield pathlib.Path(mnt)
         finally:
-            run(["hdiutil", "detach", "-force", mnt])
+            run(["diskutil", "eject", mnt])
 
 
 # ── calibration ────────────────────────────────────────────────────────────
@@ -332,15 +331,11 @@ def probe(floor: str) -> list[str]:
         print(f"→ {TAG} probe: the {BUNDLE_PLANTS} Mach-O plants need the Apple toolchain; "
               "they run in CI's DMG job and the local pre-push gate, not on this host")
 
-    other = next(name for m, name in CODENAMES.items() if m != major)
     static_plants = [
         ("README row below", readme_errors(f"| macOS {below}+ | Supported |\n", floor)),
         ("README with no row", readme_errors("macOS only\n", floor)),
         ("docs claim below", claim_errors(f"needs macOS {below}+ to run", floor, "x.md")),
-        ("cask without depends_on", cask_errors('cask "x" do\nend\n', floor)),
-        ("cask on another OS", cask_errors(f"depends_on macos: :{other}", floor)),
-        ("cask in the deprecated form", cask_errors(f'depends_on macos: ">= :{CODENAMES[major]}"',
-                                                    floor)),
+        ("a cask copy in the tree", cask_copy_errors('cask "cadgoose" do\nend\n', "x.rb")),
         ("second source: triple", second_source_errors(f"-target arm64-apple-macos{floor}", "x")),
         ("second source: plist", second_source_errors(
             f"<key>LSMinimumSystemVersion</key>\n    <string>{floor}</string>", "x")),
@@ -349,7 +344,7 @@ def probe(floor: str) -> list[str]:
     failures += [f"probe {name}: planted defect stayed green" for name, errs in static_plants if not errs]
     clean_static = (readme_errors(f"| macOS {major}+ | Supported |\n", floor)
                     + claim_errors(f"macOS {major}+ and macOS {above}+", floor, "x.md")
-                    + cask_errors(f"depends_on macos: :{CODENAMES[major]}", floor)
+                    + cask_copy_errors("class Foo < Formula\nend\n", "x.rb")
                     + second_source_errors("-target arm64-apple-macos${CMAKE_OSX_DEPLOYMENT_TARGET}", "x"))
     if clean_static:
         failures.append(f"probe: clean static text went red: {clean_static}")
@@ -394,7 +389,7 @@ def main() -> int:
         print(f"✗ {TAG} {e}", file=sys.stderr)
     if errors:
         return 1
-    print(f"✓ {TAG} the floor is macOS {floor}: README, cask and {scanned} tracked files agree, "
+    print(f"✓ {TAG} the floor is macOS {floor}: README and {scanned} tracked files agree, no cask copy, "
           "and nothing else writes it")
     return 0
 

@@ -131,9 +131,17 @@ jobs:
           chmod +x scripts/create_bundle.sh
           BUNDLE_VERSION="${VERSION#v}" ./scripts/create_bundle.sh --clean
 
+      # diskutil image, not `hdiutil create`: deprecated on macOS 27 (G0.17).
+      # Probed on this runner (macos-26, 26.6.2) on 2026-10-18 before moving:
+      # `diskutil image create from` exists there and makes a UDZO image. A
+      # folder source becomes the volume root, so the .app is staged in one,
+      # and the destination is removed first (there is no -ov).
       - name: Create DMG
         run: |
-          hdiutil create -volname CadGoose -srcfolder build/CadGoose.app -ov -format UDZO "build/CadGoose-${VERSION}.dmg"
+          stage="$RUNNER_TEMP/dmg-root"
+          rm -rf "$stage" "build/CadGoose-${VERSION}.dmg" && mkdir -p "$stage"
+          ditto build/CadGoose.app "$stage/CadGoose.app"
+          diskutil image create from --format UDZO --volumeName CadGoose "$stage" "build/CadGoose-${VERSION}.dmg"
 
       # The shipped artifact, not the tree: mount the DMG and hold its plist
       # and the minos of every Mach-O inside it to cmake/MacOSFloor.cmake

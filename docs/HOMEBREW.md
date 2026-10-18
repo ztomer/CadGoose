@@ -1,71 +1,24 @@
 # Installing CadGoose with Homebrew Cask
 
-You can install CadGoose on macOS using a Homebrew Cask. This method automates downloading the DMG, copying the application bundle to your `/Applications` directory, and recursively stripping the macOS quarantine attribute so the app opens instantly on the first run without Gatekeeper blocks.
-
-## How the Quarantine Removal Works
-
-When you download unsigned applications on macOS, the OS applies an extended attribute called `com.apple.quarantine`, prompting a warning that the app "is damaged" or "comes from an unidentified developer."
-
-The Homebrew Cask includes a `postflight` hook that executes recursively after copying the application to your machine:
-
-```ruby
-postflight do
-  system_command "xattr",
-                 args: ["-rd", "com.apple.quarantine", "#{appdir}/CadGoose.app"],
-                 sudo: false
-end
-```
-
-This automatically runs `/usr/bin/xattr -rd com.apple.quarantine /Applications/CadGoose.app` behind the scenes, whitelisting the app and letting you launch it instantly!
-
----
-
-## Installation Methods
-
-### Option 1: Direct Local Installation (Recommended for testing)
-
-You can install CadGoose directly using the cask definition stored in this repository:
+The cask lives in [ztomer/homebrew-tap](https://github.com/ztomer/homebrew-tap)
+(`Casks/cadgoose.rb`), not in this repository:
 
 ```bash
-# Run from the root of the CadGoose repository
-brew install --cask tools/homebrew/cadgoose.rb
-```
-
-### Option 2: Set Up a Custom GitHub Tap
-
-If you want to host the installer on GitHub so anyone can install it with a simple `brew install`, follow these steps:
-
-1. **Create a new GitHub repository** named `homebrew-tap` (or similar) under your username (e.g., `ztomer/homebrew-tap`). Homebrew taps must start with the prefix `homebrew-`.
-2. **Add the cask file** to your repository under a `Casks` folder:
-   - Create the directory: `Casks/`
-   - Copy the cask file: `Casks/cadgoose.rb`
-3. **Make the repository public**.
-4. **Install it from anywhere** using the following commands:
-
-```bash
-# Tap your repository
 brew tap ztomer/tap
-
-# Install CadGoose
 brew install --cask cadgoose
 ```
 
----
+It downloads the release DMG, checks its SHA-256, copies `CadGoose.app` to
+`/Applications` and removes the `com.apple.quarantine` attribute, so the
+unsigned app opens on first launch without the Gatekeeper "damaged" prompt.
+It requires Apple silicon and the macOS floor in `cmake/MacOSFloor.cmake`
+(`depends_on arch: :arm64`, `depends_on macos:`).
 
-## Maintenance and Integrity Checks
-
-By default, the Cask starts with `sha256 :no_check` to simplify initial testing and allow installing local custom builds. However, for formal public releases, it is highly recommended to enforce strict cryptographic SHA-256 integrity checks.
-
-### Manual Update:
-1. Download the release DMG.
-2. Calculate the SHA-256 hash of the DMG file:
-   ```bash
-   shasum -a 256 CadGoose-v1.9.dmg
-   ```
-3. Open your tap's `Casks/cadgoose.rb` and replace `:no_check` or the old hash with the new hash string:
-   ```ruby
-   sha256 "your_generated_sha256_hash_here"
-   ```
+There is no cask in this tree (G0.18): a copy here drifted to version 0.5.3
+with a placeholder checksum, so the local install it was documented for
+failed. `tools/check_macos_floor.py` refuses one, and the tap's own gate
+(`tools/cask_floor.sh`) holds the cask's `depends_on macos:` to this repo's
+floor at the tag the cask ships.
 
 ---
 

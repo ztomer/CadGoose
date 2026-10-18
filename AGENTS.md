@@ -49,8 +49,9 @@ tools/gate.sh [--staged|--full]             # house gates; --full = the CI copy 
   `tools/check_fetchcontent.py` refuses a git clone); there is no submodule.
   mimalloc is linked as one object file, so the bundle carries no dylib.
 - **Minimum macOS**: 26, written once in `cmake/MacOSFloor.cmake` (G0.14).
-  `tools/check_macos_floor.py` holds README, the cask, Info.plist and the
-  `minos` of every Mach-O in the bundle to it; `scripts/create_bundle.sh` runs it.
+  `tools/check_macos_floor.py` holds README, Info.plist and the `minos` of every
+  Mach-O in the bundle to it; `scripts/create_bundle.sh` runs it. The cask is the
+  tap's, and the tap's gate (`tools/cask_floor.sh`) holds it to the same file.
 - `CG_DISABLE_DEBUG_LOG=ON` compiles debug logging out of the **app target
   only**. The test target keeps it, so `test_log.cpp` still runs.
 - **Logs/crashes**: `<ConfigDir>/logs/`. `ConfigDirPath()` prefers
@@ -80,9 +81,10 @@ tools/gate.sh [--staged|--full]             # house gates; --full = the CI copy 
 - **Release loop rule**: a release is done only when the remote Actions run is
   green end to end and the DMG is attached. On any failure, fix it locally,
   push, and recreate the tag until it is.
-- **Homebrew rule**: once the DMG is attached, the workflow updates
-  `Casks/cadgoose.rb` in the tap with the version and SHA-256. Confirm the cask
-  version matches the tag; it is a manual step if the tap token is absent.
+- **Homebrew rule**: the cask is `Casks/cadgoose.rb` in ztomer/homebrew-tap,
+  never a copy here. Once the DMG is attached, `scripts/push_release.sh` bumps it
+  through the tap's own gate (goh `tap_bump.sh`); confirm the cask version
+  matches the tag.
 
 ## Durable facts (verified 2026-10-12)
 
