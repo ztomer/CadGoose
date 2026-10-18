@@ -65,6 +65,9 @@ OS_CLAIM = re.compile(r"\bmacOS\s+(\d+(?:\.\d+)*)\+")
 # Homebrew reads a bare symbol as a minimum; its ">= :name" string form is deprecated.
 CASK_DEP = re.compile(r"depends_on\s+macos:\s*(\S+)")
 
+# The planted defects probe_bundles() expects to go red.
+BUNDLE_PLANTS = 6
+
 MACHO_MAGIC = {
     b"\xcf\xfa\xed\xfe", b"\xce\xfa\xed\xfe", b"\xfe\xed\xfa\xcf", b"\xfe\xed\xfa\xce",
     b"\xca\xfe\xba\xbe", b"\xca\xfe\xba\xbf",
@@ -246,10 +249,8 @@ def mounted(dmg: pathlib.Path):
 
 # ── calibration ────────────────────────────────────────────────────────────
 
-def probe(floor: str) -> list[str]:
-    """Every planted defect goes red; the clean fixture stays green."""
-    major = version(floor)[0]
-    below, above = f"{major - 1}.0", f"{major + 1}.0"
+def probe_bundles(floor: str, below: str, above: str) -> list[str]:
+    """The Mach-O half: fixture bundles built by clang and restamped by vtool."""
     failures = []
     with tempfile.TemporaryDirectory(prefix="cadgoose-floor-probe-") as tmp:
         work = pathlib.Path(tmp)
@@ -312,6 +313,24 @@ def probe(floor: str) -> list[str]:
         app = fixture("no-exe")
         (app / "Contents" / "MacOS" / "Probe").unlink()
         expect("executable missing", app, "lost its subject")
+    return failures
+
+
+def probe(floor: str) -> list[str]:
+    """Every planted defect goes red; the clean fixture stays green."""
+    major = version(floor)[0]
+    below, above = f"{major - 1}.0", f"{major + 1}.0"
+    failures = []
+    if sys.platform == "darwin":
+        failures += probe_bundles(floor, below, above)
+        bundle_plants = BUNDLE_PLANTS
+    else:
+        # Not a skip that hides anything: the Mach-O plants need clang, vtool and
+        # otool, and they run wherever a bundle is built (the DMG job, the local
+        # pre-push gate). On macOS a missing toolchain is red, not this branch.
+        bundle_plants = 0
+        print(f"→ {TAG} probe: the {BUNDLE_PLANTS} Mach-O plants need the Apple toolchain; "
+              "they run in CI's DMG job and the local pre-push gate, not on this host")
 
     other = next(name for m, name in CODENAMES.items() if m != major)
     static_plants = [
@@ -335,7 +354,7 @@ def probe(floor: str) -> list[str]:
     if clean_static:
         failures.append(f"probe: clean static text went red: {clean_static}")
     if not failures:
-        print(f"✓ {TAG} probe: {7 + len(static_plants)} planted defects each went red, "
+        print(f"✓ {TAG} probe: {bundle_plants + len(static_plants)} planted defects each went red, "
               "the clean fixtures stayed green")
     return failures
 

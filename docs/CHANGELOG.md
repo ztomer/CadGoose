@@ -28,9 +28,12 @@
   with a minos other than the floor, or none; the plist; the README's
   platform row; a README or docs claim below the floor; the cask's
   `depends_on macos:`; any tracked file that writes a floor literal (a second
-  source). `--probe` plants 16 defects into clang-built fixture bundles
+  source). `--probe` plants 15 defects into clang-built fixture bundles
   (restamped with `vtool`) and synthetic text, and is red unless each goes red
-  and the clean fixtures stay green.
+  and the clean fixtures stay green. The 6 Mach-O plants need clang, vtool
+  and otool, so on Linux (the goh probe runner in CI's Style Gates job) only
+  the 9 text plants run, and it says so; the first push went red there on
+  `xcrun` (run 39158993336), fixed in the next commit.
 - House rule 17: the build at the explicit 26.0 target is warning-free, with
   deprecations as errors as before (the old implicit target was the SDK's,
   27.0 locally, so lowering it surfaced none). Two availability checks were
