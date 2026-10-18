@@ -75,25 +75,18 @@ to go red once.
   flatten (no merge base with `main`). Its 2026-08-25 file splits are all on
   `main`, and its harness wiring was superseded by `75eb43f`. Delete it on the
   remote; this needs owner approval because it changes the remote.
-- **G0.17 `hdiutil create` is deprecated (found closing G0.14).** On macOS 27
-  it prints "'hdiutil create -volname -format ...' is deprecated. Please use
-  'diskutil image create from/blank'". CI's DMG step uses it and builds on
-  `macos-26`, where the replacement is not yet verified to exist (house rule
-  17: migrate on sight, but not onto a tool the runner may lack). *Proof:*
-  the Create DMG step runs `diskutil image create from` on the CI runner, and
-  `tools/check_macos_floor.py --dmg` reads the result green.
-
-- **G0.18 `tools/homebrew/cadgoose.rb` is a drifted copy of the tap's cask
-  (found closing G0.14).** It says version 0.5.3 with the sha256
-  `UPDATE_ME_AFTER_CI_BUILDS_DMG`, so the `brew install --cask
-  tools/homebrew/cadgoose.rb` that docs/HOMEBREW.md recommends fails its
-  checksum; `brew style` finds 6 offenses (a deprecated `postflight` block,
-  the description over 80 characters) that ztomer/homebrew-tap's copy fixed
-  long ago. G0.14 gave it the tap's `depends_on` lines, so the floor check
-  has something true to hold. *Fix:* delete it, point docs/HOMEBREW.md at the
-  tap, and move the floor check's cask clause to the tap's gate. *Proof:* no
-  cask in this tree, and the tap's gate holds `depends_on macos:` to
-  `cmake/MacOSFloor.cmake`.
+- **G0.17 DONE 2026-10-18** (`7e6b66f`): probed first on `macos-26` (26.6.2,
+  run 39172273083): `diskutil image create from` exists there; `diskutil image
+  attach --mountPoint` needs the directory to exist. The Create DMG step uses
+  `diskutil image create from`, the floor check mounts with `diskutil image
+  attach`/`eject`, and `check_macos_floor.py --dmg` read the result green on CI
+  (run 39172989067).
+- **G0.18 DONE 2026-10-18** (`7e6b66f`; homebrew-tap `731d9a1`, `b03dc29`): the
+  in-tree cask is deleted and `check_macos_floor.py` refuses any cask copy;
+  docs/HOMEBREW.md points at the tap, whose gate (`tools/cask_floor.sh`) holds
+  `depends_on macos:` to `cmake/MacOSFloor.cmake` at the shipped tag. The tap's
+  `gate.sh --full` had never run its declared steps; fixed there, and goh's push
+  gate now runs declared `GOH_CI_STEPS` whatever a repo's gate calls.
 
 ## Phase 1 — Maintenance-line correctness (S-M, 1 session)
 

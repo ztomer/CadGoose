@@ -1,5 +1,16 @@
 # Changelog
 
+## October 18, 2026 — G0.17/G0.18: the DMG is made by `diskutil image`; the cask is the tap's
+
+- `hdiutil create`/`attach`/`detach` are deprecated on macOS 27. After probing
+  the `macos-26` runner, CI builds the DMG with `diskutil image create from`
+  (the .app staged in a folder, UDZO) and `tools/check_macos_floor.py --dmg`
+  mounts it with `diskutil image attach --readOnly --nobrowse`.
+- `tools/homebrew/cadgoose.rb` (0.5.3, a placeholder checksum) is deleted; the
+  floor check refuses a cask in this tree, and the clause holding the cask's
+  `depends_on macos:` to `cmake/MacOSFloor.cmake` runs in ztomer/homebrew-tap's
+  gate (`tools/cask_floor.sh`).
+
 ## October 18, 2026 — G0.14: the minimum macOS is built, not claimed (macOS 26)
 
 - Owner ruling 2026-10-18: the floor is macOS 26, the macOS CI builds the
