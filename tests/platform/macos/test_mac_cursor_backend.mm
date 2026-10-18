@@ -7,8 +7,32 @@
 // anyone. Real movement is covered by the display-dependent drag suites.
 #import <gtest/gtest.h>
 #import "mac_cursor_backend.h"
+#import <CoreGraphics/CoreGraphics.h>
 
 namespace {
+
+// The pointer is wherever the user left it, and a display left of or above
+// the main one has negative global coordinates: x=-231 on a two-display desk
+// failed the old ">= 0" check under --gtest_repeat (ROADMAP G0.13). What a
+// working read guarantees is a point on some active display.
+::testing::AssertionResult OnSomeDisplay(Vector2 p) {
+    uint32_t displays = 0;
+    CGGetActiveDisplayList(0, nullptr, &displays);
+    if (displays == 0) return ::testing::AssertionSuccess() << "no display to check against";
+    uint32_t under = 0;
+    CGGetDisplaysWithPoint(CGPointMake(p.x, p.y), 0, nullptr, &under);
+    if (under > 0) return ::testing::AssertionSuccess();
+    return ::testing::AssertionFailure()
+           << "(" << p.x << ", " << p.y << ") is on none of " << displays << " displays";
+}
+
+// The check above can say no.
+TEST(MacCursorBackendTest, OnSomeDisplayRefusesAPointOffEveryScreen) {
+    uint32_t displays = 0;
+    CGGetActiveDisplayList(0, nullptr, &displays);
+    if (displays == 0) GTEST_SKIP() << "no display";
+    EXPECT_FALSE(OnSomeDisplay({-1.0e6f, -1.0e6f}));
+}
 
 TEST(MacCursorBackendTest, NameCapsInit) {
     MacCursorBackend backend;
@@ -22,18 +46,13 @@ TEST(MacCursorBackendTest, GetCursorPosReturnsScreenCoords) {
     MacCursorBackend backend;
     EXPECT_TRUE(backend.Init());
 
-    Vector2 pos = backend.GetCursorPos();
-    // A real event source on a real machine yields non-negative coords;
-    // (-1,-1) is the documented failure sentinel.
-    EXPECT_GE(pos.x, 0.0f);
-    EXPECT_GE(pos.y, 0.0f);
+    EXPECT_TRUE(OnSomeDisplay(backend.GetCursorPos()));
 }
 
 TEST(MacCursorBackendTest, GetCursorPosWorksWithoutExplicitInit) {
     // Exercises the lazily-created-source fallback path.
     MacCursorBackend backend;
-    Vector2 pos = backend.GetCursorPos();
-    EXPECT_GE(pos.x, 0.0f);
+    EXPECT_TRUE(OnSomeDisplay(backend.GetCursorPos()));
 }
 
 TEST(MacCursorBackendTest, MoveAbsToCurrentPositionIsNoOp) {
