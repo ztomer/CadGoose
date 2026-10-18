@@ -90,8 +90,14 @@ tools/gate.sh [--staged|--full]             # house gates; --full = the CI copy 
   subscriptions, the behavior registry, `g_config`, `g_world`, `g_time`, the
   cursor provider, module file-statics (the `*_ResetForTest()` seams in
   `include/test_seams.h`, compiled into `CadGooseTests` only), the test
-  doubles, and audio (the suite is muted). New process-wide state gets its
-  reset there; the shuffle step in `.gatesrc` goes red when one is missing.
+  doubles, audio (the suite is muted, and the test binary has no route to the
+  speakers at all: a clip starts in a silent sink that `Audio_StartedForTest`
+  reads, so playback is asserted unmuted without a sound), and the hour
+  (`Nighttime_SetForTest(false)`: the suite runs in daytime whatever the
+  clock says). New process-wide state gets its reset there; the shuffle step
+  in `.gatesrc` goes red when one is missing. Coverage that came from state
+  one test leaked into the next is gone with it (G0.16): a path counts as
+  covered only through a test that sets up its own precondition.
   A test behavior's callbacks may capture the test's stack, so the registry
   is restored to the app's own snapshot (`RestoreOriginal()`); there is no
   "restore everything ever registered".
@@ -113,7 +119,11 @@ tools/gate.sh [--staged|--full]             # house gates; --full = the CI copy 
   exits 1 naming the offender.
 - **Headless tests** set `CADGOOSE_HEADLESS_TEST=1`, which makes the actor
   `.mm` files skip their `NSWindow` allocation. Audio is gated separately by
-  `AudioSuppressed()` (enabled/muted).
+  `AudioSuppressed()` (enabled/muted), and under `CG_TEST_SEAMS` never
+  reaches the device.
+- **The pre-push gate runs every gate CI runs**, the coverage gate included
+  (`GOH_CI_STEPS` in `.gatesrc`; `tools/check_ci_local_parity.py` refuses a
+  CI gate script no local step runs). A new CI gate goes into both.
 - **MCP config handlers** run on the HTTP server thread and must not hop to the
   main thread. Hotkeys are read through the lock-free cache
   (`include/hotkey_cache.h`); the strings in `g_config` are read only under

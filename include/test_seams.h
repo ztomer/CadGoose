@@ -15,6 +15,8 @@
 #error "test_seams.h is for the CadGooseTests target only (CG_TEST_SEAMS)"
 #endif
 
+#include <optional>
+
 void Jail_ResetForTest();
 void Portal_ResetForTest();
 void Presence_ResetForTest();
@@ -22,5 +24,16 @@ void Breadcrumbs_ResetForTest();
 void Honcker_ResetForTest();
 void Toys_ResetForTest();
 void GooseSeparationCache_ResetForTest();
+
+// Audio (src/platform/macos/audio.mm). The test binary has no output device:
+// every clip starts in a silent sink instead, which these read and drain.
+enum class AudioClip { Honk, Gulag, Pat, Bite, MudSquish };
+int Audio_StartedForTest(AudioClip clip);  // started and not yet finished
+void Audio_FinishAllForTest();             // every started clip ends
+
+// Night (src/common/goose.cpp: geese walk slower from 23:00 to 06:00). A
+// value pins it; nullopt reads the wall clock again, as the app does.
+void Nighttime_SetForTest(std::optional<bool> night);
+bool Nighttime_IsNowForTest();
 
 #endif

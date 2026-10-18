@@ -43,6 +43,9 @@ if(APPLE)
         tests/common/test_behavior_core.cpp
         tests/common/test_behavior_physics.cpp
         tests/common/test_leafpile_scaling.cpp
+        tests/common/test_leafpile_actor.mm
+        tests/common/test_accept_loop.cpp
+        tests/common/test_goose_tick.cpp
         tests/common/test_footprint_registration.cpp
         tests/common/test_behavior_toggle.cpp
         tests/common/test_pomodoro_quiet.cpp

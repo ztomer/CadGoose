@@ -116,54 +116,67 @@ void Audio_Init() {
     DEBUG_LOG("Audio initialized");
 }
 
-// Find the first idle player in the pool and call [play] on it. No
-// currentTime=0 seek (that's the expensive step). If everything's busy,
-// drop the trigger — sub-perceptible at the cadences we fire at.
+// ── The output device, and the test binary's silent stand-in for it ──────
+//
+// The test binary (CG_TEST_SEAMS) has no route to the speakers at all: a clip
+// "starts" by joining a set the tests read and finish, so the pool logic
+// below runs for real -- gate, lazy init, first-idle pick, drop when busy --
+// and the suite stays silent whatever the mute flag says. Muting alone kept
+// the suite quiet by never reaching that logic, which is how it fell out of
+// the coverage measure (ROADMAP G0.16).
+#ifdef CG_TEST_SEAMS
+#include "test_seams.h"
+
+static NSMutableSet<AVAudioPlayer*>* SilentSink() {
+    static NSMutableSet<AVAudioPlayer*>* started = [NSMutableSet set];
+    return started;
+}
+static bool IsPlaying(AVAudioPlayer* p) { return [SilentSink() containsObject:p]; }
+static void StartPlaying(AVAudioPlayer* p) { [SilentSink() addObject:p]; }
+#else
+static bool IsPlaying(AVAudioPlayer* p) { return p.isPlaying; }
+static void StartPlaying(AVAudioPlayer* p) { [p play]; }
+#endif
+
+// Find the first idle player in the pool and start it. No currentTime=0 seek
+// (that's the expensive step). If everything's busy, drop the trigger --
+// sub-perceptible at the cadences we fire at.
 static void PlayFromPool(AVAudioPlayer* const* pool, int count) {
+    if (AudioSuppressed()) return;
+    if (!g_audioInitialized.load()) Audio_Init();
+    if (AudioSuppressed()) return;  // Init may have muted (no assets)
     for (int i = 0; i < count; ++i) {
         AVAudioPlayer* p = pool[i];
-        if (p && !p.isPlaying) { [p play]; return; }
+        if (p && !IsPlaying(p)) { StartPlaying(p); return; }
     }
 }
 
-void Audio_PlayHonk() {
-    if (AudioSuppressed()) return;
-    if (!g_audioInitialized.load()) Audio_Init();
-    if (AudioSuppressed()) return;
-    PlayFromPool(g_honkPool, kHonkPoolDepth);
-}
+void Audio_PlayHonk() { PlayFromPool(g_honkPool, kHonkPoolDepth); }
+void Audio_PlayGulag() { PlayFromPool(g_gulagPool, 2); }
+void Audio_PlayPat() { PlayFromPool(g_patPool, kPatPoolDepth); }
+void Audio_PlayBite() { PlayFromPool(&g_bitePlayer, 1); }
+void Audio_PlayMudSquish() { PlayFromPool(&g_mudPlayer, 1); }
 
-void Audio_PlayGulag() {
-    if (AudioSuppressed()) return;
-    if (!g_audioInitialized.load()) Audio_Init();
-    if (AudioSuppressed()) return;
-    PlayFromPool(g_gulagPool, 2);
-}
-
-void Audio_PlayPat() {
-    if (AudioSuppressed()) return;
-    if (!g_audioInitialized.load()) Audio_Init();
-    if (AudioSuppressed()) return;
-    PlayFromPool(g_patPool, kPatPoolDepth);
-}
-
-void Audio_PlayBite() {
-    if (AudioSuppressed()) return;
-    if (!g_audioInitialized.load()) Audio_Init();
-    if (AudioSuppressed()) return;
-    if (g_bitePlayer && !g_bitePlayer.isPlaying) {
-        [g_bitePlayer play];
+#ifdef CG_TEST_SEAMS
+int Audio_StartedForTest(AudioClip clip) {
+    AVAudioPlayer* const* pool = nullptr;
+    int count = 0;
+    switch (clip) {
+        case AudioClip::Honk: pool = g_honkPool; count = kHonkPoolDepth; break;
+        case AudioClip::Gulag: pool = g_gulagPool; count = 2; break;
+        case AudioClip::Pat: pool = g_patPool; count = kPatPoolDepth; break;
+        case AudioClip::Bite: pool = &g_bitePlayer; count = 1; break;
+        case AudioClip::MudSquish: pool = &g_mudPlayer; count = 1; break;
     }
+    int started = 0;
+    for (int i = 0; i < count; ++i) {
+        if (pool[i] && IsPlaying(pool[i])) ++started;
+    }
+    return started;
 }
 
-void Audio_PlayMudSquish() {
-    if (AudioSuppressed()) return;
-    if (!g_audioInitialized.load()) Audio_Init();
-    if (AudioSuppressed()) return;
-    if (g_mudPlayer && !g_mudPlayer.isPlaying) {
-        [g_mudPlayer play];
-    }
-}
+void Audio_FinishAllForTest() { [SilentSink() removeAllObjects]; }
+#endif
 
 void Audio_SetMuted(bool muted) {
     g_audioMuted.store(muted);

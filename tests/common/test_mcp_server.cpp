@@ -181,3 +181,17 @@ TEST_F(McpServerTest, RequestTooLarge) {
     std::string resp = SendRequest(json);
     EXPECT_TRUE(resp.empty());
 }
+
+// Start reports failure, and leaves nothing running, when its socket path
+// cannot be bound.
+TEST_F(McpServerTest, APathTooLongForAUnixSocketIsRefused) {
+    MCP_SetInternalSocketPath(kTestSockPath + std::string(200, 'x'));
+    EXPECT_FALSE(MCP_StartInternalServer());
+    EXPECT_FALSE(MCP_IsInternalRunning());
+}
+
+TEST_F(McpServerTest, AMissingDirectoryFailsTheBind) {
+    MCP_SetInternalSocketPath(kTestSockPath + "-no-such-dir/s");
+    EXPECT_FALSE(MCP_StartInternalServer());
+    EXPECT_FALSE(MCP_IsInternalRunning());
+}

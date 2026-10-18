@@ -57,7 +57,12 @@ void DestroyAllActors() {
 // whichever later test spun it first, by which time AudioLifecycleTest had
 // released the players: the WindowLifecycleTest.OrderFrontShowsCloseHides
 // SIGSEGV/SIGBUS seeds.
+//
+// Muting is the second wall: the test binary has no route to the device at
+// all (audio.mm's silent sink under CG_TEST_SEAMS), and a clip one test
+// started must not still be "playing" in the next.
 void SilenceAudio() {
+    Audio_FinishAllForTest();
     Audio_Cleanup();
     Audio_SetMuted(true);
     Audio_SetEnabled(true);
@@ -67,6 +72,7 @@ void SilenceAudio() {
 
 void GlobalState_Capture() {
     SilenceAudio();
+    Nighttime_SetForTest(false);  // from the first test on (see Restore)
     BehaviorRegistry::Instance().SaveOriginal();
     Captured() = Baseline{g_config, g_world, g_time, g_cursorProvider};
 }
@@ -97,6 +103,9 @@ void GlobalState_Restore() {
     Honcker_ResetForTest();
     Toys_ResetForTest();
     GooseSeparationCache_ResetForTest();
+    // Day, whatever the clock says: the suite once ran differently after
+    // 23:00, and so did its coverage.
+    Nighttime_SetForTest(false);
     AI_TextMeme_Reset();
 
     // ...and inside the test doubles: a canned response or failure one test

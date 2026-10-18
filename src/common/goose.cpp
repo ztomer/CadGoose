@@ -35,7 +35,19 @@ static constexpr int kNighttimeEndHour = 6;
 static constexpr float kShudderDirChangeThreshold = 90.0f;
 static constexpr int kNighttimeCheckIntervalSec = 60;
 
+#ifdef CG_TEST_SEAMS
+#include <optional>
+#include "test_seams.h"
+// The suite must not depend on the hour it runs at (G0.16): the reset
+// listener pins day, and the tests that care about night say so.
+static std::optional<bool> s_nightForTest;
+void Nighttime_SetForTest(std::optional<bool> night) { s_nightForTest = night; }
+#endif
+
 static bool IsNighttime() {
+#ifdef CG_TEST_SEAMS
+    if (s_nightForTest) return *s_nightForTest;
+#endif
     // H6: Cache nighttime status in an atomic<bool> so every physics tick can
     // read it without acquiring a mutex. The cached value is refreshed at most
     // once per kNighttimeCheckIntervalSec using a lightweight try_lock so
@@ -65,6 +77,10 @@ static bool IsNighttime() {
     }
     return s_isNight.load(std::memory_order_relaxed);
 }
+
+#ifdef CG_TEST_SEAMS
+bool Nighttime_IsNowForTest() { return IsNighttime(); }
+#endif
 static constexpr float kFetchCurvatureRange = 200.0f;
 static constexpr float kFetchCurvatureCenter = 100.0f;
 static constexpr float kFetchCurvatureDivisor = 100.0f;

@@ -8,6 +8,7 @@
 #include "ring_buffer.h"
 #include "hotkey.h"
 #include "platform_input_mock.h"
+#include "actor.h"
 
 struct MockCrumbCursorProvider : public ICursorProvider {
     CursorState cursor;
@@ -252,4 +253,66 @@ TEST_F(BehaviorBreadcrumbsTest, KeyHoldDragDropsAdditionalCrumbs) {
     EXPECT_EQ(g_world.crumbs.size(), (size_t)2);
     EXPECT_FLOAT_EQ(g_world.crumbs.back().pos.x, 200);
     EXPECT_FLOAT_EQ(g_world.crumbs.back().pos.y, 100);
+}
+
+// Every dropped crumb has a sprite (a BreadcrumbActor). Whatever retires the
+// crumb -- the goose eating it, or the cap pushing out the oldest -- must
+// retire that sprite too, or it hangs on screen with no crumb behind it.
+// These used to pass only by accident: deactivateCrumbActor's search ran
+// over actors earlier tests had leaked (ROADMAP G0.16).
+namespace {
+
+int ActiveCrumbSpritesAt(float x, float y) {
+    auto& mgr = ActorManager::Instance();
+    int n = 0;
+    for (int i = 0; i < mgr.totalCount(); ++i) {
+        Actor* a = mgr.getByIndex(i);
+        if (a && a->actorType() == ActorType::Breadcrumb && a->isActive() &&
+            a->position().x == x && a->position().y == y) {
+            ++n;
+        }
+    }
+    return n;
+}
+
+}  // namespace
+
+TEST_F(BehaviorBreadcrumbsTest, EatingACrumbRetiresItsSprite) {
+    auto* b = BehaviorRegistry::Instance().Get("breadcrumbs");
+    ASSERT_NE(b, nullptr);
+    b->init(ctx);
+
+    goose->pos = {1500, 900};  // far away while the crumb is dropped
+    mockCursor.set(300, 400);
+    const int keyCode = KeyNameToKeyCode(g_config.behaviors.breadCrumbs.hotkey);
+    PlatformInputMock_SetKeyState(keyCode, true);
+    b->tick(goose, ctx, 0.016, 100.0);
+    ASSERT_EQ(ActiveCrumbSpritesAt(300, 400), 1);
+
+    PlatformInputMock_SetKeyState(keyCode, false);
+    goose->pos = {300, 400};
+    b->tick(goose, ctx, 0.016, 101.0);
+
+    EXPECT_TRUE(g_world.crumbs.empty());
+    EXPECT_EQ(ActiveCrumbSpritesAt(300, 400), 0);
+}
+
+TEST_F(BehaviorBreadcrumbsTest, TheCapRetiresTheOldestCrumbsSprite) {
+    auto* b = BehaviorRegistry::Instance().Get("breadcrumbs");
+    ASSERT_NE(b, nullptr);
+    b->init(ctx);
+    g_config.behaviors.breadCrumbs.maxCrumbs = 1;
+
+    goose->pos = {1500, 900};
+    const int keyCode = KeyNameToKeyCode(g_config.behaviors.breadCrumbs.hotkey);
+    PlatformInputMock_SetKeyState(keyCode, true);
+    mockCursor.set(100, 100);
+    b->tick(goose, ctx, 0.016, 100.0);
+    const float next = 100.0f + g_config.behaviors.breadCrumbs.spawnDist + 10.0f;
+    mockCursor.set(next, 100);
+    b->tick(goose, ctx, 0.016, 101.0);
+
+    ASSERT_EQ(g_world.crumbs.size(), (size_t)1);
+    EXPECT_EQ(ActiveCrumbSpritesAt(100, 100), 0) << "the pushed-out crumb's sprite";
+    EXPECT_EQ(ActiveCrumbSpritesAt(next, 100), 1) << "the surviving crumb's sprite";
 }

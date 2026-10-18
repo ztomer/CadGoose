@@ -5,6 +5,7 @@
 #pragma once
 
 struct WorldContext;
+class IRenderer;
 #include "actor.h"
 #include <vector>
 
@@ -30,6 +31,26 @@ public:
     void kick(Vector2 kickVelocity, double currentTime, float gooseSpeedPercentage);
 
     double timeCreated() const { return m_timeCreated; }
+    float alphaMult() const { return m_alphaMult; }
+    const std::vector<LeafParticle>& leaves() const { return m_leaves; }
+
+    // Where the leaves are, at the current globalScale, relative to the pile
+    // centre (y up the screen = negative, height folded in). render() sizes
+    // the window from it and drawLeaves() lays out inside it, so the two
+    // cannot disagree about the scale: they once did, because the window's
+    // draw block captured the scale at creation and render() read it fresh.
+    struct LeafBounds {
+        float minX, maxX, minY, maxY;
+        float centerX() const { return (minX + maxX) * 0.5f; }
+        float centerY() const { return (minY + maxY) * 0.5f; }
+        // Square, covering the farthest leaf in either axis, plus padding.
+        float windowSize() const;
+    };
+    LeafBounds leafBounds() const;
+
+    // Draws every leaf into a window of leafBounds().windowSize(), origin at
+    // its top-left corner. The pile's window draw block is exactly this call.
+    void drawLeaves(IRenderer& r) const;
 
 private:
     static constexpr int LEAVES_PER_PILE = 128;

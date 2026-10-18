@@ -163,3 +163,81 @@ TEST_F(McpHttpServerTest, PostLargeBodyTriggersContentRead) {
     ASSERT_FALSE(resp.empty());
     EXPECT_TRUE(resp.find("HTTP/1.1 200") != std::string::npos);
 }
+
+// ── What the server refuses ──────────────────────────────────────────────
+// A request over the 1 MB cap, however it is over, is dropped: the
+// connection closes with no response, and the server keeps serving.
+
+namespace {
+
+// Sends everything it can (the server may close mid-stream, which must not
+// raise SIGPIPE in the test process), then reads whatever comes back.
+std::string SendRaw(int port, const std::string& bytes) {
+    const int fd = socket(AF_INET, SOCK_STREAM, 0);
+    if (fd < 0) return "<no socket>";
+    int on = 1;
+    setsockopt(fd, SOL_SOCKET, SO_NOSIGPIPE, &on, sizeof(on));
+    sockaddr_in addr{};
+    addr.sin_family = AF_INET;
+    addr.sin_port = htons(static_cast<uint16_t>(port));
+    inet_pton(AF_INET, "127.0.0.1", &addr.sin_addr);
+    if (connect(fd, reinterpret_cast<sockaddr*>(&addr), sizeof(addr)) != 0) {
+        close(fd);
+        return "<no connection>";
+    }
+    size_t sent = 0;
+    while (sent < bytes.size()) {
+        const ssize_t n = write(fd, bytes.data() + sent, bytes.size() - sent);
+        if (n <= 0) break;
+        sent += static_cast<size_t>(n);
+    }
+    shutdown(fd, SHUT_WR);
+    std::string response;
+    char buf[4096];
+    for (ssize_t n; (n = read(fd, buf, sizeof(buf))) > 0;) response.append(buf, static_cast<size_t>(n));
+    close(fd);
+    return response;
+}
+
+constexpr size_t kCap = 1024 * 1024;  // mcp_http_server.cpp kHTTPMaxSize
+
+}  // namespace
+
+TEST_F(McpHttpServerTest, HeadersPastTheCapAreDropped) {
+    ASSERT_TRUE(MCP_StartHTTPServer());
+    EXPECT_EQ(SendRaw(MCP_HTTPPort(), std::string(kCap + 8192, 'a')), "");
+    EXPECT_NE(SendRequest("GET / HTTP/1.1\r\n\r\n"), "") << "the server must keep serving";
+}
+
+TEST_F(McpHttpServerTest, AContentLengthPastTheCapIsRefused) {
+    ASSERT_TRUE(MCP_StartHTTPServer());
+    const std::string req =
+        "POST / HTTP/1.1\r\nContent-Length: " + std::to_string(kCap + 1) + "\r\n\r\n{}";
+    EXPECT_EQ(SendRaw(MCP_HTTPPort(), req), "");
+}
+
+TEST_F(McpHttpServerTest, ABodyThatTakesTheRequestPastTheCapIsDropped) {
+    ASSERT_TRUE(MCP_StartHTTPServer());
+    // The length itself is allowed; headers plus that body are not.
+    const std::string req = "POST / HTTP/1.1\r\nContent-Length: " + std::to_string(kCap) +
+                            "\r\n\r\n" + std::string(kCap, ' ');
+    EXPECT_EQ(SendRaw(MCP_HTTPPort(), req), "");
+}
+
+TEST_F(McpHttpServerTest, APortAlreadyInUseFailsToStart) {
+    const int holder = socket(AF_INET, SOCK_STREAM, 0);
+    ASSERT_GE(holder, 0);
+    sockaddr_in addr{};
+    addr.sin_family = AF_INET;
+    addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+    socklen_t len = sizeof(addr);
+    ASSERT_EQ(bind(holder, reinterpret_cast<sockaddr*>(&addr), sizeof(addr)), 0);
+    ASSERT_EQ(listen(holder, 1), 0);
+    ASSERT_EQ(getsockname(holder, reinterpret_cast<sockaddr*>(&addr), &len), 0);
+
+    g_config.ai.mcpPort = ntohs(addr.sin_port);  // the holder's, kernel-chosen
+    EXPECT_FALSE(MCP_StartHTTPServer());
+    EXPECT_FALSE(MCP_IsHTTPRunning());
+    EXPECT_EQ(MCP_HTTPPort(), 0);
+    close(holder);
+}
