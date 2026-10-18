@@ -115,7 +115,7 @@ jobs:
       - name: CI pins named releases, no moving references (G0.6)
         run: python3 tools/check_ci_pins.py
       - name: Every CI gate also runs in the local pre-push gate (G0.16)
-        run: python3 tools/check_ci_local_parity.py
+        run: GOH_DIR="$PWD/.goh" python3 .goh/checks/check_ci_local_parity.py
 
       - name: Coverage Gate
         run: |

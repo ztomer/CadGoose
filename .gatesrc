@@ -5,7 +5,7 @@ GOH_MAX_LINES=500                 # file-length cap; unset disables the check
 # local_ci step list (tools/local_ci.sh delegates to gates/local_ci.sh, which
 # reads this): every gate CI runs, CI's coverage gate included (G0.16: it
 # used to be an opt-in --coverage flag the pre-push hook never passed, and a
-# push went red in CI after 12 green local steps). tools/check_ci_local_parity.py
+# push went red in CI after 12 green local steps). $GOH_DIR/checks/check_ci_local_parity.py
 # refuses a CI gate script that no step here runs.
 # NOTE: steps are COLON-separated by the shared runner, so a step string must
 # never contain a colon — hence $GOH_DIR resolved here, not ${GOH_DIR:-...}.
@@ -13,7 +13,13 @@ GOH_MAX_LINES=500                 # file-length cap; unset disables the check
 # inherits exported variables.
 # GOH_DIR is set in the author's environment; this project does not default it to a path
 # that only exists on one machine.
-GOH_CI_STEPS='"$GOH_DIR/gates/structural.sh" --full:bash "$GOH_DIR/gates/python.sh" tools/check_test_registration.py:bash "$GOH_DIR/gates/python.sh" tools/check_gtest_filter_parity.py:bash "$GOH_DIR/gates/python.sh" tools/check_test_process_state.py:bash "$GOH_DIR/gates/python.sh" tools/check_new_sources_visible.py:bash "$GOH_DIR/gates/python.sh" tools/check_platform_policy.py:bash "$GOH_DIR/gates/python.sh" tools/check_test_endpoints.py:bash "$GOH_DIR/gates/python.sh" tools/check_fetchcontent.py:bash "$GOH_DIR/gates/python.sh" tools/check_ci_pins.py:rm -rf build && cmake -S . -B build -DCMAKE_BUILD_TYPE=Release && cmake --build build --config Release --parallel $(sysctl -n hw.ncpu):cd build && bash ../scripts/run_tests_concurrent.sh:cd build && bash ../scripts/run_tests_shuffled.sh:bash scripts/create_bundle.sh --clean && bash "$GOH_DIR/gates/python.sh" tools/check_macos_floor.py --probe:bash "$GOH_DIR/gates/python.sh" tools/check_ci_local_parity.py:bash scripts/check_coverage.sh --build-dir=build-cov'
+GOH_CI_STEPS='"$GOH_DIR/gates/structural.sh" --full:bash "$GOH_DIR/gates/python.sh" tools/check_test_registration.py:bash "$GOH_DIR/gates/python.sh" tools/check_gtest_filter_parity.py:bash "$GOH_DIR/gates/python.sh" tools/check_test_process_state.py:bash "$GOH_DIR/gates/python.sh" tools/check_new_sources_visible.py:bash "$GOH_DIR/gates/python.sh" tools/check_platform_policy.py:bash "$GOH_DIR/gates/python.sh" tools/check_test_endpoints.py:bash "$GOH_DIR/gates/python.sh" tools/check_fetchcontent.py:bash "$GOH_DIR/gates/python.sh" tools/check_ci_pins.py:rm -rf build && cmake -S . -B build -DCMAKE_BUILD_TYPE=Release && cmake --build build --config Release --parallel $(sysctl -n hw.ncpu):cd build && bash ../scripts/run_tests_concurrent.sh:cd build && bash ../scripts/run_tests_shuffled.sh:bash scripts/create_bundle.sh --clean && bash "$GOH_DIR/gates/python.sh" tools/check_macos_floor.py --probe:bash "$GOH_DIR/gates/python.sh" "$GOH_DIR/checks/check_ci_local_parity.py":bash scripts/check_coverage.sh --build-dir=build-cov'
+# CI/local parity (goh checks/check_ci_local_parity.py). Floor: 10 repo
+# scripts in CI's run: steps on 2026-10-18. No exemptions since G0.14:
+# scripts/create_bundle.sh was exempt as "packaging, not a gate" until the
+# bundle became what proves the macOS floor, so the local gate builds it too.
+GOH_CI_PARITY_MIN_SCRIPTS=10
+GOH_CI_PARITY_EXEMPT=''
 # GOH_EXCLUDE='vendor/|\.generated\.'   # shared vendor/generated exemption
 # GOH_LINE_EXCLUDE='third_party/'       # length-only alias
 # GOH_PY_COV_MIN=95

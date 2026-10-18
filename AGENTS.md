@@ -126,7 +126,7 @@ tools/gate.sh [--staged|--full]             # house gates; --full = the CI copy 
   `AudioSuppressed()` (enabled/muted), and under `CG_TEST_SEAMS` never
   reaches the device.
 - **The pre-push gate runs every gate CI runs**, the coverage gate included
-  (`GOH_CI_STEPS` in `.gatesrc`; `tools/check_ci_local_parity.py` refuses a
+  (`GOH_CI_STEPS` in `.gatesrc`; goh's `checks/check_ci_local_parity.py` refuses a
   CI gate script no local step runs). A new CI gate goes into both.
 - **MCP config handlers** run on the HTTP server thread and must not hop to the
   main thread. Hotkeys are read through the lock-free cache
