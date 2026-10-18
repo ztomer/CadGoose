@@ -1,4 +1,5 @@
 #include <gtest/gtest.h>
+#include "test_seams.h"
 #include "behavior.h"
 #include "goose.h"
 #include "config.h"
@@ -25,7 +26,7 @@ protected:
         EventBus::Instance().Clear();
         BehaviorStateManager::Instance().ClearAll();
         if (!BehaviorRegistry::Instance().Get("jail")) {
-            BehaviorRegistry::Instance().Restore();
+            BehaviorRegistry::Instance().RestoreOriginal();
         }
         savedControlJail = g_config.behaviors.control.jail;
         g_config.behaviors.control.jail = true;
@@ -61,8 +62,6 @@ protected:
     ICursorProvider* savedProvider = nullptr;
 
     void resetJailStatics() {
-        // Declared in behavior_jail.cpp
-        extern void Jail_ResetForTest();
         Jail_ResetForTest();
     }
 

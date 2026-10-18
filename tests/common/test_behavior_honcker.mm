@@ -45,7 +45,7 @@ protected:
         EventBus::Instance().Clear();
         BehaviorStateManager::Instance().ClearAll();
         if (!BehaviorRegistry::Instance().Get("honcker")) {
-            BehaviorRegistry::Instance().Restore();
+            BehaviorRegistry::Instance().RestoreOriginal();
         }
         goose = new HonkSpyGoose(1);
         ctx.goose = goose;

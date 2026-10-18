@@ -11,17 +11,28 @@ extern "C" void Presence_UpdateStatusFromBehavior(const char* status);
 extern "C" void Presence_SetGooseWindowVisible(bool visible);
 
 static bool s_lastVisible = true;
+// The status throttle. It was a function-local static that init never reset,
+// so a re-enabled presence (or the next test) inherited the last tick's time.
+static double s_lastUpdate = 0.0;
+
+static void ResetState() {
+    s_lastVisible = true;
+    s_lastUpdate = 0.0;
+}
 
 static void init(BehaviorContext& ctx) {
     (void)ctx;
-    s_lastVisible = true;
+    ResetState();
 }
+
+#ifdef CG_TEST_SEAMS
+void Presence_ResetForTest() { ResetState(); }
+#endif
 
 static void tick(Goose* goose, BehaviorContext& ctx, double dt, double time) {
     (void)dt;
-    static double lastUpdate = 0.0;
-    if (time - lastUpdate < 0.5) return;
-    lastUpdate = time;
+    if (time - s_lastUpdate < 0.5) return;
+    s_lastUpdate = time;
 
     const char* status = "Wandering";
     switch (goose->state) {

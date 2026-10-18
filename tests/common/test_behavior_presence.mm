@@ -3,6 +3,7 @@
 #include "goose.h"
 #include "config.h"
 #include "world.h"
+#include "../global_state_reset.h"
 
 // Tracking globals set by stub implementations below
 static int s_updateCount = 0;
@@ -30,7 +31,7 @@ protected:
 
         BehaviorStateManager::Instance().ClearAll();
         if (!BehaviorRegistry::Instance().Get("presence")) {
-            BehaviorRegistry::Instance().Restore();
+            BehaviorRegistry::Instance().RestoreOriginal();
         }
         goose = new Goose(1, "goose", 1920, 1080);
         goose->behaviorsEnabled = true;
@@ -131,4 +132,34 @@ TEST_F(BehaviorPresenceTest, RenderNoOp) {
     auto* b = BehaviorRegistry::Instance().Get("presence");
     ASSERT_NE(b, nullptr);
     b->render(goose, ctx, nullptr);
+}
+
+// The throttle used to be a function-local static that nothing reset: after
+// one test ticked presence at t=1000, every later tick before t=1000.5 was
+// swallowed, so these tests failed on every --gtest_repeat iteration after the
+// first (ROADMAP G0.13). A fresh init starts a fresh throttle...
+TEST_F(BehaviorPresenceTest, InitRestartsTheThrottle) {
+    auto* b = BehaviorRegistry::Instance().Get("presence");
+    ASSERT_NE(b, nullptr);
+    b->init(ctx);
+    b->tick(goose, ctx, 0.016, 1000.0);
+    ASSERT_EQ(s_updateCount, 1);
+
+    b->init(ctx);
+    b->tick(goose, ctx, 0.016, 1.0);
+    EXPECT_EQ(s_updateCount, 2);
+}
+
+// ...and so does the harness's between-tests restore, for a test that ticks
+// without calling init first.
+TEST_F(BehaviorPresenceTest, GlobalRestoreRestartsTheThrottle) {
+    auto* b = BehaviorRegistry::Instance().Get("presence");
+    ASSERT_NE(b, nullptr);
+    b->init(ctx);
+    b->tick(goose, ctx, 0.016, 1000.0);
+    ASSERT_EQ(s_updateCount, 1);
+
+    GlobalState_Restore();
+    b->tick(goose, ctx, 0.016, 1.0);
+    EXPECT_EQ(s_updateCount, 2);
 }

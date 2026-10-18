@@ -54,22 +54,23 @@ public:
     const std::vector<Behavior*>& GetAll() const { return behaviors; }
     size_t GetBehaviorCount() const { return behaviors.size(); }
 
+#ifdef CG_TEST_SEAMS
+    // Test seams (include/test_seams.h): compiled into CadGooseTests only.
     void Clear();
-
-    // Re-register all behaviors that were registered via static init.
-    // Needed after Clear() to restore the registry for subsequent tests.
-    void Restore();
-
-    // Snapshot the original app behaviors (before any test modifications).
+    // Snapshot the app's own behaviors, once, before any test registers one.
     void SaveOriginal();
-
-    // Restore to the original app behaviors (excluding test behaviors).
+    // Back to that snapshot. There is deliberately no "restore everything
+    // ever registered": a test behavior's callbacks capture the test's stack,
+    // and putting one back made the next RenderAll call into a dead frame
+    // (the GooseRender SIGSEGV/SIGBUS shuffle seeds, ROADMAP G0.13).
     void RestoreOriginal();
+#endif
 
 private:
     std::vector<Behavior*> behaviors;
-    std::vector<Behavior*> _registry; // permanent copy, never cleared
+#ifdef CG_TEST_SEAMS
     std::vector<Behavior*> _originalBehaviors; // snapshot of app behaviors at startup
+#endif
 };
 
 #define REGISTER_BEHAVIOR(b) \

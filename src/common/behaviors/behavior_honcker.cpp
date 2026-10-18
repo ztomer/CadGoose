@@ -29,7 +29,14 @@ static constexpr float kHonkBubbleAlpha = 0.8f;
 static bool s_wasPressed = false;
 static CGImageRef s_honkImage = nullptr;
 
+#ifdef CG_TEST_SEAMS
+void Honcker_ResetForTest() { s_wasPressed = false; }
+#endif
+
 static void init(BehaviorContext& ctx) {
+    // A fresh enable starts with the key up; inheriting the last edge state
+    // would swallow (or invent) the first press.
+    s_wasPressed = false;
     if (!s_honkImage) {
         s_honkImage = g_assets.GetBehaviorImage("Assets/Images/OtherGfx/honk.png");
     }

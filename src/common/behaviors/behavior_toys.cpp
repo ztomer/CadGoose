@@ -25,6 +25,10 @@ static constexpr float kToyWanderDetectRange = 200.0f;
 
 static int s_nextToyId = 0;
 
+#ifdef CG_TEST_SEAMS
+void Toys_ResetForTest() { s_nextToyId = 0; }
+#endif
+
 static void init(BehaviorContext& ctx) {
     s_nextToyId = 0;
     (void)ctx;

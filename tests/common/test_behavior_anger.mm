@@ -48,7 +48,7 @@ protected:
         EventBus::Instance().Clear();
         BehaviorStateManager::Instance().ClearAll();
         if (!BehaviorRegistry::Instance().Get("anger")) {
-            BehaviorRegistry::Instance().Restore();
+            BehaviorRegistry::Instance().RestoreOriginal();
         }
         savedProvider = g_cursorProvider;
         g_cursorProvider = &mockCursor;

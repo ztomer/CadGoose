@@ -1,4 +1,5 @@
 #include <gtest/gtest.h>
+#include "test_seams.h"
 #include "behavior.h"
 #include "goose.h"
 #include "config.h"
@@ -15,7 +16,7 @@ protected:
         EventBus::Instance().Clear();
         BehaviorStateManager::Instance().ClearAll();
         if (!BehaviorRegistry::Instance().Get("portal")) {
-            BehaviorRegistry::Instance().Restore();
+            BehaviorRegistry::Instance().RestoreOriginal();
         }
         savedControlPortals = g_config.behaviors.control.portals;
         g_config.behaviors.control.portals = true;
@@ -46,7 +47,6 @@ protected:
     BehaviorContext ctx{};
 
     void resetPortalStatics() {
-        extern void Portal_ResetForTest();
         Portal_ResetForTest();
     }
 

@@ -38,7 +38,6 @@ static constexpr float kDragResistanceProbability = 0.05f;
 
 void BehaviorRegistry::Register(Behavior& behavior) {
     behaviors.push_back(&behavior);
-    _registry.push_back(&behavior);
 }
 
 Behavior* BehaviorRegistry::Get(const char* id) {
@@ -187,24 +186,19 @@ void BehaviorRegistry::CleanupAll(Goose* goose) {
     BehaviorStateManager::Instance().RemoveForGoose(goose->id);
 }
 
+#ifdef CG_TEST_SEAMS
 void BehaviorRegistry::Clear() {
     behaviors.clear();
 }
 
-void BehaviorRegistry::Restore() {
-    behaviors = _registry;
-}
-
-// Snapshot the original app behaviors (before any test modifications).
-// Call this once at test startup.
 void BehaviorRegistry::SaveOriginal() {
     _originalBehaviors = behaviors;
 }
 
-// Restore to the original app behaviors (excluding test behaviors).
 void BehaviorRegistry::RestoreOriginal() {
     behaviors = _originalBehaviors;
 }
+#endif
 
 // ===========================
 // Ball Physics

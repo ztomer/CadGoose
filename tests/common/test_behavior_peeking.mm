@@ -33,7 +33,7 @@ protected:
     void SetUp() override {
         BehaviorStateManager::Instance().ClearAll();
         if (!BehaviorRegistry::Instance().Get("peeking")) {
-            BehaviorRegistry::Instance().Restore();
+            BehaviorRegistry::Instance().RestoreOriginal();
         }
         goose = new Goose(1, "spy", 1920, 1080);
         goose->behaviorsEnabled = true;

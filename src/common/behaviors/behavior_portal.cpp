@@ -25,6 +25,13 @@ static bool s_p0Pressed = false;
 static bool s_p1Pressed = false;
 static bool s_p2Pressed = false;
 
+static void ResetState() {
+    s_portalsOn = true;
+    s_p0Pressed = false;
+    s_p1Pressed = false;
+    s_p2Pressed = false;
+}
+
 static void init(BehaviorContext& ctx) {
     auto* state = BehaviorStateManager::Instance().GetOrCreate<PortalState>(ctx.goose->id, "portal");
     s_portalsOn = true;
@@ -136,21 +143,14 @@ static void render(Goose* goose, BehaviorContext& ctx, IRenderer* irenderer) {
     (void)goose; (void)ctx; (void)irenderer;
 }
 
-// Test helper: reset all static state between test cases
-void Portal_ResetForTest() {
-    s_portalsOn = true;
-    s_p0Pressed = false;
-    s_p1Pressed = false;
-    s_p2Pressed = false;
-}
+#ifdef CG_TEST_SEAMS
+void Portal_ResetForTest() { ResetState(); }
+#endif
 
 static void cleanup(BehaviorContext& ctx) {
     (void)ctx;
     ActorManager::Instance().destroyAllOfType(ActorType::Portal);
-    s_portalsOn = true;
-    s_p0Pressed = false;
-    s_p1Pressed = false;
-    s_p2Pressed = false;
+    ResetState();
 }
 
 static Behavior g_portalBehavior = BEHAVIOR_DEF_CUSTOM(

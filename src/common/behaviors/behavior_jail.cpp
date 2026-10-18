@@ -116,8 +116,7 @@ static void render(Goose* goose, BehaviorContext& ctx, IRenderer* irenderer) {
     (void)goose; (void)ctx; (void)irenderer;
 }
 
-// Test helper: reset all static state between test cases
-void Jail_ResetForTest() {
+static void ResetState() {
     s_oWasKeyDown = false;
     s_pWasKeyDown = false;
     s_jails.clear();
@@ -125,12 +124,12 @@ void Jail_ResetForTest() {
     s_lastInputTime = 0;
 }
 
+#ifdef CG_TEST_SEAMS
+void Jail_ResetForTest() { ResetState(); }
+#endif
+
 static void cleanup(BehaviorContext&) {
-    s_oWasKeyDown = false;
-    s_pWasKeyDown = false;
-    s_jails.clear();
-    s_jailsActive = false;
-    s_lastInputTime = 0;
+    ResetState();
     // Remove all jail actors
     auto& mgr = ActorManager::Instance();
     for (int i = mgr.totalCount() - 1; i >= 0; i--) {

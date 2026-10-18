@@ -123,14 +123,14 @@ TEST(BehaviorRegistryTest, ClearEmptiesBehaviors) {
 
     reg.Clear();
     EXPECT_EQ(reg.GetBehaviorCount(), 0u);
-    reg.Restore();
+    reg.RestoreOriginal();
 }
 
 TEST(BehaviorRegistryTest, GetReturnsNullAfterClear) {
     auto& reg = BehaviorRegistry::Instance();
     reg.Clear();
     EXPECT_EQ(reg.Get("ball"), nullptr);
-    reg.Restore();
+    reg.RestoreOriginal();
 }
 
 // ===========================

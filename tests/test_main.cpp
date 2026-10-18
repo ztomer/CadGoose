@@ -21,8 +21,9 @@ class CadGooseTestEnvironment : public ::testing::Environment {
 public:
     void SetUp() override { 
         Config_Init();
-        g_assets.Init(); 
-        BehaviorRegistry::Instance().SaveOriginal();
+        g_assets.Init();
+        // The registry snapshot is taken with the rest of the shared state,
+        // once, by GlobalStateRestorer (tests/global_state_reset.h).
     }
 };
 static ::testing::Environment* const kCadGooseEnv =
@@ -288,6 +289,7 @@ TEST(CursorState, HasPos) {
 #include "crash_logger.h"
 #include "cwd_leak_guard.h"
 #include "test_rng_seed.h"
+#include "global_state_reset.h"
 
 #include <cstdio>
 #include <filesystem>
@@ -341,6 +343,8 @@ int main(int argc, char **argv) {
     ::testing::UnitTest::GetInstance()->listeners().Append(cwdGuard);
     // ...and starts from a random sequence fixed by its own name.
     ::testing::UnitTest::GetInstance()->listeners().Append(new TestRngSeeder());
+    // ...and from the same shared state, whatever ran before it (G0.13).
+    ::testing::UnitTest::GetInstance()->listeners().Append(new GlobalStateRestorer());
     const int rc = Finish(RUN_ALL_TESTS(), *cwdGuard);
     // A green run leaves nothing behind; a red one keeps its sandbox (and the
     // session log in it) for the post-mortem.

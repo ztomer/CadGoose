@@ -85,11 +85,16 @@ tools/gate.sh [--staged|--full]             # house gates; --full = the CI copy 
 - **ActorManager owns actors.** Tests must not `delete` an actor after `add()`.
   Deactivate it and let `cleanup()` delete it, or the heap corrupts later
   (SIGBUS mid-suite).
-- **`EventBus::Clear()`** belongs in `SetUp()` of any test that subscribes,
-  because subscriptions persist across tests.
-- **Registry snapshot**: tests that clear `BehaviorRegistry` must restore with
-  `RestoreOriginal()` (the snapshot is taken in `tests/test_main.cpp`), never
-  `Restore()`.
+- **Shared state is restored after every test** by `GlobalStateRestorer`
+  (`tests/global_state_reset.h`): actors, behavior states, event-bus
+  subscriptions, the behavior registry, `g_config`, `g_world`, `g_time`, the
+  cursor provider, module file-statics (the `*_ResetForTest()` seams in
+  `include/test_seams.h`, compiled into `CadGooseTests` only), the test
+  doubles, and audio (the suite is muted). New process-wide state gets its
+  reset there; the shuffle step in `.gatesrc` goes red when one is missing.
+  A test behavior's callbacks may capture the test's stack, so the registry
+  is restored to the app's own snapshot (`RestoreOriginal()`); there is no
+  "restore everything ever registered".
 - **Cursor mocks**: a default `CursorState` has `caps=CAP_NONE`, so `hasPos()`
   is false until `mockCursor.set(x, y)`, and cursor-driven ticks exit early.
 - **Config defaults**: the struct initializers (`include/config_sections.h`)

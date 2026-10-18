@@ -17,7 +17,7 @@ protected:
     void SetUp() override {
         BehaviorStateManager::Instance().ClearAll();
         if (!BehaviorRegistry::Instance().Get("rainbow")) {
-            BehaviorRegistry::Instance().Restore();
+            BehaviorRegistry::Instance().RestoreOriginal();
         }
         ctx.goose = MakeGoose(0);
         ctx.time = 0;

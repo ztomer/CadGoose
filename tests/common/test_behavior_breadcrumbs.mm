@@ -24,7 +24,7 @@ protected:
         EventBus::Instance().Clear();
         BehaviorStateManager::Instance().ClearAll();
         if (!BehaviorRegistry::Instance().Get("breadcrumbs")) {
-            BehaviorRegistry::Instance().Restore();
+            BehaviorRegistry::Instance().RestoreOriginal();
         }
         PlatformInputMock_Reset();
 

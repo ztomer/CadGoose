@@ -14,7 +14,7 @@ protected:
         EventBus::Instance().Clear();
         BehaviorStateManager::Instance().ClearAll();
         if (!BehaviorRegistry::Instance().Get("toys")) {
-            BehaviorRegistry::Instance().Restore();
+            BehaviorRegistry::Instance().RestoreOriginal();
         }
         ActorManager::Instance().destroyAllOfType(ActorType::Toy);
         goose = new Goose(1, "goose", 1920, 1080);

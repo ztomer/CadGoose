@@ -102,7 +102,7 @@ TEST(BehaviorException, InitThrowsInInitAll) {
 
     AppActions_ClearGeese();
     BehaviorRegistry::Instance().Clear();
-    BehaviorRegistry::Instance().Restore();
+    BehaviorRegistry::Instance().RestoreOriginal();
 }
 
 TEST(BehaviorException, TickThrowsInTickAll) {
@@ -125,7 +125,7 @@ TEST(BehaviorException, TickThrowsInTickAll) {
 
     AppActions_ClearGeese();
     BehaviorRegistry::Instance().Clear();
-    BehaviorRegistry::Instance().Restore();
+    BehaviorRegistry::Instance().RestoreOriginal();
 }
 
 TEST(BehaviorException, RenderThrowsInRenderPass) {
@@ -148,7 +148,7 @@ TEST(BehaviorException, RenderThrowsInRenderPass) {
 
     AppActions_ClearGeese();
     BehaviorRegistry::Instance().Clear();
-    BehaviorRegistry::Instance().Restore();
+    BehaviorRegistry::Instance().RestoreOriginal();
 }
 
 TEST(BehaviorException, CleanupThrowsInCleanupAll) {
@@ -165,7 +165,7 @@ TEST(BehaviorException, CleanupThrowsInCleanupAll) {
 
     AppActions_ClearGeese();
     BehaviorRegistry::Instance().Clear();
-    BehaviorRegistry::Instance().Restore();
+    BehaviorRegistry::Instance().RestoreOriginal();
 }
 
 TEST(BehaviorException, CleanupThrowsInTickAllTransition) {
@@ -194,7 +194,7 @@ TEST(BehaviorException, CleanupThrowsInTickAllTransition) {
 
     AppActions_ClearGeese();
     BehaviorRegistry::Instance().Clear();
-    BehaviorRegistry::Instance().Restore();
+    BehaviorRegistry::Instance().RestoreOriginal();
 }
 
 TEST(BehaviorException, InitThrowsInTickAllTransition) {
@@ -219,5 +219,5 @@ TEST(BehaviorException, InitThrowsInTickAllTransition) {
 
     AppActions_ClearGeese();
     BehaviorRegistry::Instance().Clear();
-    BehaviorRegistry::Instance().Restore();
+    BehaviorRegistry::Instance().RestoreOriginal();
 }

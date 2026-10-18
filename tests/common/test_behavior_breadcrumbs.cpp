@@ -56,8 +56,11 @@ TEST(BreadCrumbsBehavior, BreadCrumbReset) {
 TEST(BreadCrumbsBehavior, BreadCrumbSpawnAtPosition) {
     auto& mgr = BehaviorStateManager::Instance();
     auto* state = mgr.GetOrCreate<BreadCrumbState>(0, "breadcrumbs");
-    state->Reset();
+    // Five free slots. A new Crumb is born active, so the slots are freed
+    // after they exist; this used to pass only when an earlier test had left
+    // five freed crumbs in the shared state (ROADMAP G0.13).
     state->crumbs.resize(5);
+    state->Reset();
 
     for (auto& crumb : state->crumbs) {
         if (!crumb.active) {

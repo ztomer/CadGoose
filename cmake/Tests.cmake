@@ -19,6 +19,8 @@ if(APPLE)
         tests/test_main.cpp
         tests/cwd_leak_guard.cpp
         tests/test_rng_seed.cpp
+        tests/global_state_reset.cpp
+        tests/common/test_global_state_reset.cpp
         tests/common/test_cwd_leak_guard.cpp
         tests/common/test_rng_seed_listener.cpp
         src/common/crash_logger.mm
@@ -281,6 +283,10 @@ if(APPLE)
         ${CMAKE_CURRENT_SOURCE_DIR}/src/platform/macos
         ${MIMALLOC_INCLUDE_DIR}
     )
+
+    # The reset seams in include/test_seams.h compile into this binary only;
+    # the app never defines CG_TEST_SEAMS, so it cannot call one (G0.13).
+    target_compile_definitions(CadGooseTests PRIVATE CG_TEST_SEAMS=1)
     
     if(APPLE)
         set_target_properties(CadGooseTests PROPERTIES

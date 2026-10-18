@@ -19,7 +19,7 @@ protected:
     void SetUp() override {
         BehaviorStateManager::Instance().ClearAll();
         if (!BehaviorRegistry::Instance().Get("acid")) {
-            BehaviorRegistry::Instance().Restore();
+            BehaviorRegistry::Instance().RestoreOriginal();
         }
         savedSpinSpeed = g_config.behaviors.acid.spinSpeed;
         savedHonkInterval = g_config.behaviors.acid.honkInterval;

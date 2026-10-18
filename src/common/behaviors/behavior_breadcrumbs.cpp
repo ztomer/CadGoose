@@ -37,10 +37,18 @@ static void deactivateCrumbActor(const Vector2& crumbPos) {
     }
 }
 
-static void init(BehaviorContext& ctx) {
+static void ResetState() {
     s_wasKeyDown = false;
     s_lastKeyCheck = 0;
     s_nextCrumbId = 0;
+}
+
+#ifdef CG_TEST_SEAMS
+void Breadcrumbs_ResetForTest() { ResetState(); }
+#endif
+
+static void init(BehaviorContext& ctx) {
+    ResetState();
     g_world.crumbs.clear();
     (void)ctx;
 }

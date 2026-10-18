@@ -47,7 +47,7 @@ protected:
     void SetUp() override {
         BehaviorStateManager::Instance().ClearAll();
         if (!BehaviorRegistry::Instance().Get("boredom")) {
-            BehaviorRegistry::Instance().Restore();
+            BehaviorRegistry::Instance().RestoreOriginal();
         }
         goose = new HonkSpyGoose(1);
         ctx.goose = goose;

@@ -20,7 +20,7 @@ protected:
     void SetUp() override {
         BehaviorStateManager::Instance().ClearAll();
         if (!BehaviorRegistry::Instance().Get("drag")) {
-            BehaviorRegistry::Instance().Restore();
+            BehaviorRegistry::Instance().RestoreOriginal();
         }
         savedProvider = g_cursorProvider;
         g_cursorProvider = &mockCursor;

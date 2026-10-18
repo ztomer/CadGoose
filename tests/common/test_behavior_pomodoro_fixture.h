@@ -55,7 +55,7 @@ protected:
         EventBus::Instance().Clear();
         BehaviorStateManager::Instance().ClearAll();
         if (!BehaviorRegistry::Instance().Get("pomodoro")) {
-            BehaviorRegistry::Instance().Restore();
+            BehaviorRegistry::Instance().RestoreOriginal();
         }
         savedPomoEnabled = g_config.behaviors.systems.pomodoro;
         savedWorkMin = g_config.behaviors.pomodoro.workMinutes;

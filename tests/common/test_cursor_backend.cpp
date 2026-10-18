@@ -64,6 +64,9 @@ TEST(CursorBackendSuite, ReadWithoutGetPosCaps) {
 }
 
 TEST(CursorBackendSuite, SingletonManagerExists) {
+    // The app inits the manager at launch; this test used to borrow that from
+    // whichever earlier test had called Init (ROADMAP G0.13).
+    g_backendManager.Init();
     EXPECT_NE(g_backendManager.GetActiveBackend(), nullptr);
     EXPECT_NE(g_cursorProvider, nullptr);
 }

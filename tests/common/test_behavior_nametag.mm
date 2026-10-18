@@ -36,7 +36,7 @@ protected:
     void SetUp() override {
         BehaviorStateManager::Instance().ClearAll();
         if (!BehaviorRegistry::Instance().Get("nametag")) {
-            BehaviorRegistry::Instance().Restore();
+            BehaviorRegistry::Instance().RestoreOriginal();
         }
         goose = new Goose(1, "TestGoose", 1920, 1080);
         goose->behaviorsEnabled = true;

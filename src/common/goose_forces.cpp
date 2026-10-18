@@ -64,6 +64,12 @@ void GooseSeparationCache_Update(const std::vector<Goose*>& geese) {
 }
 
 // C-fix: Exposed so wander logic can query fetching count without getGeese().
+#ifdef CG_TEST_SEAMS
+// A test that ticks a goose directly (not through ActorManager::tickAll) reads
+// whatever the last tickAll left here: other tests' geese, pushing it apart.
+void GooseSeparationCache_ResetForTest() { s_sepCache.count = 0; }
+#endif
+
 int GooseSeparationCache_CountFetching() {
     return s_sepCache.CountFetching();
 }
