@@ -88,35 +88,6 @@ to go red once.
   `CMAKE_OSX_DEPLOYMENT_TARGET` set, `otool -l` on the DMG's binary and every
   bundled dylib reports that `minos`, and README and the plist say the same.
 
-- **G0.15 CI's coverage gate has been red since `647d6e0` (owner decision).**
-  G0.1 raised `scripts/coverage_whole_binary_floor.txt` to 66 from a local
-  measurement (66.84%), but CI, the only place the floor is enforced,
-  measured 64.58% on that same commit and 64.73% on `6cf700d` (run
-  39074323297; P0 95.21 / P1 26.63 / eligible total 64.03 all pass). CI is
-  headless, so the display and OCR tests a dev machine runs are skipped
-  there. Between `6a9991c` and `08bbe7a` the coverage run measured nothing
-  at all (0.72%: ctest selected zero tests), which hid this. The script
-  says the floor "may rise and must never fall", so lowering it to 64 is the
-  owner's call. *Decision:* seed the floor at CI's measure (64), or measure
-  it on a display machine and enforce it only there. *Proof:* the
-  `Build macOS (DMG)` job green on a push.
-
-- **G0.16 G0.13 dropped CI's coverage below its floors, and the local gate
-  could not see it.** CI run 39152075565 (`2883650`) against 39075406586
-  (`e1a197c`): P0 95.21 -> 94.86, P1 26.63 -> 23.81, eligible total 64.03 ->
-  62.56, all three under their floors (95 / 26 / 63). Per file (CI's own
-  tables): `actor_leafpile.mm` 141 -> 25 covered lines, `audio.mm` 98 -> 78,
-  the MCP servers' accept loops moved to `accept_loop.cpp` with 10 lines
-  uncovered, `behavior_breadcrumbs.cpp` -4. The cause: those lines were
-  reached only through state one test leaked into the next (leaf piles left
-  in the actor manager, an unmuted suite), which G0.13 rightly stopped. The
-  push passed 12 local steps because the coverage gate was not one of them
-  (`tools/local_ci.sh --coverage`, never passed by the pre-push hook).
-  *Proof:* the three floors pass in CI without lowering any, with the lost
-  paths covered by tests that assert them; the local gate runs CI's coverage
-  gate and `tools/check_ci_local_parity.py` refuses a CI gate the local gate
-  lacks, each seen red first.
-
 ## Phase 1 — Maintenance-line correctness (S-M, 1 session)
 
 **Goal:** no setting, state or race that silently does something other than

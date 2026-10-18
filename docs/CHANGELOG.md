@@ -1,5 +1,42 @@
 # Changelog
 
+## October 18, 2026 — G0.16 and G0.15: CI's coverage gate green again, and the local gate runs it
+
+- G0.13's push went red in CI's Coverage Gate (run 39152075565 at
+  `2883650`): P0 95.21 -> 94.86, P1 26.63 -> 23.81, eligible total 64.03 ->
+  62.56, all under their floors. CI's own per-file tables against run
+  39075406586 (`e1a197c`) named the loss: `actor_leafpile.mm` 141 -> 25
+  covered lines, the MCP servers' accept loops moved into `accept_loop.cpp`
+  with 10 lines uncovered, `audio.mm` -20, `assets.mm` -6,
+  `behavior_breadcrumbs.cpp` -4. Those lines had been reached only through
+  state one test leaked into the next (leaf piles left in the actor
+  manager, an unmuted suite, leaked crumb sprites), which G0.13 ended.
+- Covered again by tests that set up their own preconditions and assert
+  (`a01882f`): the leaf pile's lifetime, kick, drawing and window; audio
+  playback through a silent sink the test binary has instead of a device
+  (`Audio_StartedForTest`), so the suite never reaches the speakers;
+  `AcceptLoop`'s contract; MCP refusals (socket path, occupied port,
+  oversize requests); crumb sprites retired with their crumbs; the goose's
+  cursor tick, Stalin honk and night speed. The night factor read the wall
+  clock, so coverage depended on the hour CI ran; the restorer now pins day.
+- Two defects found on the way: a kicked leaf never came to rest (gravity
+  and a 30% bounce meet at a fixed point above the rest threshold), so a
+  kicked pile redrew all 128 leaves every frame for its whole life; and the
+  pile's window drew with the scale captured at creation while it was
+  sized with the current one.
+- The hole: the pre-push gate passed 12 steps because CI's coverage gate
+  was not one of them (an opt-in `--coverage` flag the hook never passed).
+  It is a `GOH_CI_STEPS` step now (`25ffbbb`), and
+  `tools/check_ci_local_parity.py` (local and CI) refuses any script a
+  workflow runs that no local step runs; seen red on the old `.gatesrc`.
+  The first push through it ran 14 steps, coverage included.
+- G0.15, owner ruling 2026-10-18: "Seed at CI's ~64". The whole-binary
+  ratchet (66, set from a local measure CI never reached) was seeded at 64
+  (`bb6f739`), then raised to CI's headless measure on the fixed code,
+  rounded down: 65.74% in run 39155874041, so 65. It only rises from here.
+- CI on `bb6f739` (run 39155874041): P0 95.53 / P1 28.27 / eligible 65.09,
+  whole binary 65.74; the whole Build macOS (DMG) job green.
+
 ## October 18, 2026 — G0.13: the suite passes in any order
 
 - Red baseline at `e1a197c`: all 20 `--gtest_shuffle` seeds (11-30) of the
