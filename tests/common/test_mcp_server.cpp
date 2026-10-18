@@ -5,7 +5,10 @@
 #include <sys/un.h>
 #include <unistd.h>
 
+#include <atomic>
+#include <chrono>
 #include <string>
+#include <thread>
 
 // A socket path this process owns: the default /tmp/desktop-goose-mcp.sock
 // belongs to a running CadGoose, which these tests used to unlink, and to
@@ -67,6 +70,38 @@ TEST_F(McpServerTest, StartStopCycle) {
     EXPECT_TRUE(MCP_IsInternalRunning());
     MCP_StopInternalServer();
     EXPECT_FALSE(MCP_IsInternalRunning());
+}
+
+// Stop used to close the listening fd while the server thread sat in accept()
+// on it, and Darwin's close() can then wait on that accept forever: the suite
+// hung in McpServerTest's TearDown on iteration 18 of --gtest_repeat=20
+// (ROADMAP G0.13). A hang cannot be asserted from the hung thread, so the
+// cycles run on a worker under a deadline.
+TEST_F(McpServerTest, StartStopNeverHangs) {
+    constexpr int kCycles = 2000;
+    std::atomic<int> cycles{0};
+    std::atomic<bool> done{false};
+    std::thread worker([&] {
+        for (int i = 0; i < kCycles; ++i) {
+            if (!MCP_StartInternalServer()) break;
+            // A request first, as the hung test did: the thread is then
+            // back in accept() for the second time when Stop arrives.
+            if (i % 2 == 0) SendRequest("{\"jsonrpc\":\"2.0\",\"method\":\"notifications/initialized\"}");
+            MCP_StopInternalServer();
+            ++cycles;
+        }
+        done = true;
+    });
+    const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(60);
+    while (!done && std::chrono::steady_clock::now() < deadline) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
+    if (!done) {
+        worker.detach();  // stuck in close(); nothing can join it
+        FAIL() << "start/stop hung after " << cycles.load() << " cycles";
+    }
+    worker.join();
+    EXPECT_EQ(cycles.load(), kCycles);
 }
 
 TEST_F(McpServerTest, StartIdempotent) {

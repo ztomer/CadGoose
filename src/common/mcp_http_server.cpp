@@ -1,6 +1,6 @@
 #include "mcp_server.h"
 #include "config.h"
-#include <thread>
+#include "accept_loop.h"
 #include <atomic>
 #include <string>
 #include <cstring>
@@ -10,9 +10,7 @@
 #include <netinet/in.h>
 #include <unistd.h>
 
-static std::thread g_httpThread;
-static std::atomic<bool> g_httpRunning{false};
-static int g_httpFd = -1;
+static AcceptLoop g_httpServer;  // include/accept_loop.h
 static std::atomic<int> g_httpPort{0};
 
 static constexpr size_t kHTTPMaxSize = 1024 * 1024; // 1MB max request
@@ -106,16 +104,16 @@ static void HandleHTTPConnection(int clientFd) {
 }
 
 bool MCP_StartHTTPServer() {
-    if (g_httpRunning.load()) return true;
+    if (g_httpServer.Running()) return true;
 
-    g_httpFd = socket(AF_INET, SOCK_STREAM, 0);
-    if (g_httpFd < 0) {
+    const int fd = socket(AF_INET, SOCK_STREAM, 0);
+    if (fd < 0) {
         fprintf(stderr, "[MCP-HTTP] Failed to create socket\n");
         return false;
     }
 
     int opt = 1;
-    setsockopt(g_httpFd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+    setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
 
     struct sockaddr_in addr;
     memset(&addr, 0, sizeof(addr));
@@ -123,17 +121,15 @@ bool MCP_StartHTTPServer() {
     addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
     addr.sin_port = htons((uint16_t)g_config.ai.mcpPort);
 
-    if (bind(g_httpFd, (struct sockaddr*)&addr, sizeof(addr)) != 0) {
+    if (bind(fd, (struct sockaddr*)&addr, sizeof(addr)) != 0) {
         fprintf(stderr, "[MCP-HTTP] Failed to bind port %d\n", g_config.ai.mcpPort);
-        close(g_httpFd);
-        g_httpFd = -1;
+        close(fd);
         return false;
     }
 
-    if (listen(g_httpFd, 8) != 0) {
+    if (listen(fd, 8) != 0) {
         fprintf(stderr, "[MCP-HTTP] Failed to listen\n");
-        close(g_httpFd);
-        g_httpFd = -1;
+        close(fd);
         return false;
     }
 
@@ -141,53 +137,33 @@ bool MCP_StartHTTPServer() {
     // which is how tests run without colliding (ROADMAP G0.3).
     struct sockaddr_in bound;
     socklen_t boundLen = sizeof(bound);
-    if (getsockname(g_httpFd, (struct sockaddr*)&bound, &boundLen) != 0) {
+    if (getsockname(fd, (struct sockaddr*)&bound, &boundLen) != 0) {
         fprintf(stderr, "[MCP-HTTP] Failed to read the bound port\n");
-        close(g_httpFd);
-        g_httpFd = -1;
+        close(fd);
         return false;
     }
     g_httpPort.store(ntohs(bound.sin_port));
 
-    g_httpRunning.store(true);
-
-    g_httpThread = std::thread([]() {
-        fprintf(stderr, "[MCP-HTTP] Server started on port %d\n", g_httpPort.load());
-        while (g_httpRunning.load()) {
-            struct sockaddr_in clientAddr;
-            socklen_t clientLen = sizeof(clientAddr);
-            int clientFd = accept(g_httpFd, (struct sockaddr*)&clientAddr, &clientLen);
-            if (clientFd < 0) {
-                if (!g_httpRunning.load()) break;
-                continue;
-            }
-            HandleHTTPConnection(clientFd);
-        }
-        fprintf(stderr, "[MCP-HTTP] Server stopped\n");
-    });
-
+    if (!g_httpServer.Start(fd, [](int clientFd) { HandleHTTPConnection(clientFd); })) {
+        fprintf(stderr, "[MCP-HTTP] Failed to start the server thread\n");
+        g_httpPort.store(0);
+        return false;
+    }
+    fprintf(stderr, "[MCP-HTTP] Server started on port %d\n", g_httpPort.load());
     return true;
 }
 
 void MCP_StopHTTPServer() {
-    if (!g_httpRunning.exchange(false)) return;
-
-    if (g_httpFd >= 0) {
-        shutdown(g_httpFd, SHUT_RDWR);
-        close(g_httpFd);
-        g_httpFd = -1;
-    }
-
-    if (g_httpThread.joinable()) {
-        g_httpThread.join();
-    }
+    if (!g_httpServer.Running()) return;
+    g_httpServer.Stop();
     g_httpPort.store(0);
+    fprintf(stderr, "[MCP-HTTP] Server stopped\n");
 }
 
 int MCP_HTTPPort() {
-    return g_httpRunning.load() ? g_httpPort.load() : 0;
+    return g_httpServer.Running() ? g_httpPort.load() : 0;
 }
 
 bool MCP_IsHTTPRunning() {
-    return g_httpRunning.load();
+    return g_httpServer.Running();
 }

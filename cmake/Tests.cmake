@@ -154,6 +154,7 @@ if(APPLE)
         src/common/event_bus.cpp
         src/common/mcp_server.cpp
         src/common/mcp_http_server.cpp
+        src/common/accept_loop.cpp
         src/common/mcp_json_rpc.cpp
         src/common/mcp_handlers.cpp
         src/common/ai_mcp_bridge.cpp
@@ -364,6 +365,7 @@ if(APPLE)
     add_executable(trail_detection_test
         tests/platform/macos/test_window_trail_detection.mm
         src/platform/macos/command_socket.mm
+        src/common/accept_loop.cpp
     )
     target_enable_asan(trail_detection_test)
     target_include_directories(trail_detection_test PRIVATE
@@ -390,6 +392,7 @@ if(APPLE)
     add_executable(soak_fetch_test
         tests/platform/macos/test_soak_fetch_visibility.mm
         src/platform/macos/command_socket.mm
+        src/common/accept_loop.cpp
     )
     target_enable_asan(soak_fetch_test)
     target_include_directories(soak_fetch_test PRIVATE
@@ -412,6 +415,7 @@ if(APPLE)
     add_executable(multi_goose_test
         tests/platform/macos/test_multi_goose.mm
         src/platform/macos/command_socket.mm
+        src/common/accept_loop.cpp
     )
     target_enable_asan(multi_goose_test)
     target_include_directories(multi_goose_test PRIVATE

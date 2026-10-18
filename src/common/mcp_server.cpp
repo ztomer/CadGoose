@@ -1,6 +1,7 @@
 #include "mcp_server.h"
 #include "command_socket.h"
 #include "config.h"
+#include "accept_loop.h"
 #include <mutex>
 #include <thread>
 #include <atomic>
@@ -44,10 +45,9 @@ std::string HandleResourcesList();
 std::string HandleResourcesRead(const std::string& uri);
 std::string ExecuteTool(const std::string& name, const std::string& argsJson);
 
-// Server globals
-static std::thread g_serverThread;
-static std::atomic<bool> g_serverRunning{false};
-static int g_serverFd = -1;
+// The internal server: one socket, one thread (include/accept_loop.h).
+static AcceptLoop g_server;
+static std::string g_serverSocketPath;  // the path bound, for the unlink at Stop
 
 static bool WriteAll(int fd, const std::string& data) {
     size_t written = 0;
@@ -164,7 +164,7 @@ std::string MCP_HandleRequest(const std::string& line) {
 }
 
 bool MCP_StartInternalServer() {
-    if (g_serverRunning.load()) return true;
+    if (g_server.Running()) return true;
 
     const std::string socketPath = MCP_InternalSocketPath();
 
@@ -176,8 +176,8 @@ bool MCP_StartInternalServer() {
         return false;
     }
 
-    g_serverFd = socket(AF_UNIX, SOCK_STREAM, 0);
-    if (g_serverFd < 0) {
+    const int fd = socket(AF_UNIX, SOCK_STREAM, 0);
+    if (fd < 0) {
         fprintf(stderr, "[MCP] Failed to create socket\n");
         return false;
     }
@@ -186,60 +186,41 @@ bool MCP_StartInternalServer() {
     memcpy(addr.sun_path, socketPath.c_str(), socketPath.size() + 1);
 
     unlink(socketPath.c_str());
-    if (bind(g_serverFd, (struct sockaddr*)&addr, sizeof(addr)) != 0) {
+    if (bind(fd, (struct sockaddr*)&addr, sizeof(addr)) != 0) {
         fprintf(stderr, "[MCP] Failed to bind socket\n");
-        close(g_serverFd);
-        g_serverFd = -1;
+        close(fd);
         return false;
     }
 
-    if (listen(g_serverFd, 8) != 0) {
+    if (listen(fd, 8) != 0) {
         fprintf(stderr, "[MCP] Failed to listen on socket\n");
-        close(g_serverFd);
-        g_serverFd = -1;
+        close(fd);
         unlink(socketPath.c_str());
         return false;
     }
 
-    g_serverRunning.store(true);
-
-    g_serverThread = std::thread([socketPath]() {
-        fprintf(stderr, "[MCP] Internal server started on %s\n", socketPath.c_str());
-        while (g_serverRunning.load()) {
-            struct sockaddr_un clientAddr;
-            socklen_t clientLen = sizeof(clientAddr);
-            int clientFd = accept(g_serverFd, (struct sockaddr*)&clientAddr, &clientLen);
-            if (clientFd < 0) {
-                if (!g_serverRunning.load()) break;
-                continue;
-            }
+    if (!g_server.Start(fd, [](int clientFd) {
             HandleConnection(clientFd);
             close(clientFd);
-        }
+        })) {
+        fprintf(stderr, "[MCP] Failed to start the internal server thread\n");
         unlink(socketPath.c_str());
-    });
-
+        return false;
+    }
+    g_serverSocketPath = socketPath;
+    fprintf(stderr, "[MCP] Internal server started on %s\n", socketPath.c_str());
     return true;
 }
 
 void MCP_StopInternalServer() {
-    if (!g_serverRunning.exchange(false)) return;
-
-    if (g_serverFd >= 0) {
-        shutdown(g_serverFd, SHUT_RDWR);
-        close(g_serverFd);
-        g_serverFd = -1;
-    }
-
-    if (g_serverThread.joinable()) {
-        g_serverThread.join();
-    }
-
+    if (!g_server.Running()) return;
+    g_server.Stop();
+    unlink(g_serverSocketPath.c_str());
     fprintf(stderr, "[MCP] Internal server stopped\n");
 }
 
 bool MCP_IsInternalRunning() {
-    return g_serverRunning.load();
+    return g_server.Running();
 }
 
 int MCP_RunStdioServer() {

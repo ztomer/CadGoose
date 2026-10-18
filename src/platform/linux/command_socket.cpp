@@ -1,4 +1,5 @@
 #include "command_socket.h"
+#include "accept_loop.h"
 
 #include <atomic>
 #include <condition_variable>
@@ -26,9 +27,8 @@ struct PendingRequest {
 };
 
 CommandHandler g_commandHandler;
-std::thread g_serverThread;
-std::atomic<bool> g_serverRunning{false};
-int g_serverFd = -1;
+AcceptLoop g_server;  // include/accept_loop.h
+std::string g_serverSocketPath;
 
 std::string EscapeField(const std::string& input) {
     std::string escaped;
@@ -135,7 +135,7 @@ std::string CommandSocket_GetPath() {
 }
 
 bool CommandSocket_StartServer(CommandHandler handler, std::string* errorOut) {
-    if (g_serverRunning.load()) return true;
+    if (g_server.Running()) return true;
 
     const std::string socketPath = CommandSocket_GetPath();
     sockaddr_un addr{};
@@ -149,8 +149,8 @@ bool CommandSocket_StartServer(CommandHandler handler, std::string* errorOut) {
         fs::create_directories(fs::path(socketPath).parent_path(), ec);
     }
 
-    g_serverFd = socket(AF_UNIX, SOCK_STREAM, 0);
-    if (g_serverFd < 0) {
+    const int fd = socket(AF_UNIX, SOCK_STREAM, 0);
+    if (fd < 0) {
         if (errorOut) *errorOut = "Unable to create command socket";
         return false;
     }
@@ -159,52 +159,36 @@ bool CommandSocket_StartServer(CommandHandler handler, std::string* errorOut) {
     std::strncpy(addr.sun_path, socketPath.c_str(), sizeof(addr.sun_path) - 1);
 
     unlink(socketPath.c_str());
-    if (bind(g_serverFd, reinterpret_cast<sockaddr*>(&addr), sizeof(addr)) != 0) {
+    if (bind(fd, reinterpret_cast<sockaddr*>(&addr), sizeof(addr)) != 0) {
         if (errorOut) *errorOut = "Unable to bind command socket";
-        close(g_serverFd);
-        g_serverFd = -1;
+        close(fd);
         return false;
     }
 
-    if (listen(g_serverFd, 8) != 0) {
+    if (listen(fd, 8) != 0) {
         if (errorOut) *errorOut = "Unable to listen on command socket";
-        close(g_serverFd);
-        g_serverFd = -1;
+        close(fd);
         unlink(socketPath.c_str());
         return false;
     }
 
     g_commandHandler = std::move(handler);
-    g_serverRunning.store(true);
-    g_serverThread = std::thread([socketPath]() {
-        while (g_serverRunning.load()) {
-            const int clientFd = accept(g_serverFd, nullptr, nullptr);
-            if (clientFd < 0) {
-                if (!g_serverRunning.load()) break;
-                continue;
-            }
-
+    if (!g_server.Start(fd, [](int clientFd) {
             HandleClientConnection(clientFd);
             close(clientFd);
-        }
-
+        })) {
+        if (errorOut) *errorOut = "Unable to start the command socket thread";
         unlink(socketPath.c_str());
-    });
-
+        return false;
+    }
+    g_serverSocketPath = socketPath;
     return true;
 }
 
 void CommandSocket_StopServer() {
-    if (!g_serverRunning.exchange(false)) return;
-
-    if (g_serverFd >= 0) {
-        close(g_serverFd);
-        g_serverFd = -1;
-    }
-
-    if (g_serverThread.joinable()) {
-        g_serverThread.join();
-    }
+    if (!g_server.Running()) return;
+    g_server.Stop();
+    unlink(g_serverSocketPath.c_str());
 }
 
 bool CommandSocket_Send(const std::vector<std::string>& args, std::string* responseOut, std::string* errorOut) {
