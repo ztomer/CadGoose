@@ -79,6 +79,11 @@ jobs:
           cd build
           bash ../scripts/run_tests_concurrent.sh
 
+      - name: Run Tests (three shuffled orders, G0.13)
+        run: |
+          cd build
+          bash ../scripts/run_tests_shuffled.sh
+
       # The coverage floors live in scripts/check_coverage.sh and nowhere
       # else (G0.8). They are a RATCHET set below the measured value (G0.1
       # measured P0 95.22%, P1 26.75%, eligible total 63.93% on 2026-10-16),

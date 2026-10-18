@@ -1,5 +1,34 @@
 # Changelog
 
+## October 18, 2026 — G0.13: the suite passes in any order
+
+- Red baseline at `e1a197c`: all 20 `--gtest_shuffle` seeds (11-30) of the
+  CI-filtered suite failed, 10 by signal; under `--gtest_repeat=20` the same
+  12 tests failed on every iteration after the first, and iteration 18 hung.
+- Class fix: `tests/global_state_reset.h` restores the shared state after
+  every test, after draining the main run loop: actors, behavior states,
+  event-bus subscriptions, the behavior registry, `g_config`, `g_world`,
+  `g_time`, the cursor provider, the test doubles, audio (the suite is now
+  muted), and module file-statics through `*_ResetForTest()` seams
+  (`include/test_seams.h`) that compile into `CadGooseTests` only.
+- The crashes had two real causes. `BehaviorRegistry::Restore()` put back
+  every behavior ever registered, including test behaviors whose callbacks
+  captured a finished test's stack (deleted). And nothing muted the suite, so
+  honks played out loud and the players' `finishedPlaying:` callbacks reached
+  them after `AudioLifecycleTest` had released them.
+- The hang: all four socket servers stopped by closing the listening fd while
+  their thread sat in `accept()` on it. `include/accept_loop.h` polls the
+  socket and a wake pipe, and closes only after the join.
+- Also fixed on the way: the presence throttle was a function-local static
+  that `init` never reset, two tests borrowed a predecessor's setup, and
+  `MacCursorBackendTest` assumed the pointer is never left of the main
+  display.
+- Gate: `scripts/run_tests_shuffled.sh` (three shuffled orders, a fresh
+  seed each run, printed for replay) is a `GOH_CI_STEPS` step and a CI step.
+  Calibrated: with the command-socket stub's reset removed it went red on two
+  seeds (`MCPTools`), while the fixed-order run stayed green.
+- After: 20/20 seeds green, `--gtest_repeat=20` green, the step green.
+
 ## October 17, 2026 — every test draws the same random numbers every run
 
 - Found by the first pre-push run of G0.3's concurrent copies:

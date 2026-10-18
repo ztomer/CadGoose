@@ -1,5 +1,7 @@
 #!/bin/bash
 # Runs the test binary under the CI filter and reports its real exit status.
+# Extra arguments go to the binary (scripts/run_tests_shuffled.sh passes the
+# shuffle flags).
 #
 # HISTORY — do not re-add the crash swallow.
 # This script used to treat exit codes 139 (SIGSEGV), 134 (SIGABRT) and 138
@@ -39,7 +41,7 @@ echo "Test binary: $TEST_BINARY"
 
 # Run the test binary and capture output
 set +e
-OUTPUT=$("$TEST_BINARY" --gtest_filter="$FILTER" 2>&1)
+OUTPUT=$("$TEST_BINARY" --gtest_filter="$FILTER" "$@" 2>&1)
 EXIT_CODE=$?
 set -e
 

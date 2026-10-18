@@ -75,24 +75,6 @@ to go red once.
   flatten (no merge base with `main`). Its 2026-08-25 file splits are all on
   `main`, and its harness wiring was superseded by `75eb43f`. Delete it on the
   remote; this needs owner approval because it changes the remote.
-- **G0.13 The suite is order-dependent.** Measured 2026-10-17 at `08bbe7a`:
-  20 `--gtest_shuffle` seeds (11-30) of the CI-filtered suite all fail. 56
-  distinct tests fail in at least one order, 7 seeds die by signal (SIGSEGV
-  139 / SIGBUS 138, last test `AppActions.GetStatusWithUnpinnedItem`,
-  `GooseFixture.TickThenDrawStillRenders`, `GooseRender.*`), and the top
-  offenders are global-state families (`BallBehavior`, `BreadCrumbsBehavior`,
-  `MCPTools`, `BehaviorJailTest`, `BehaviorPresenceTest`, `BehaviorRegistry`,
-  `BehaviorPortalTest`). The fixed order hides it. Name the shared state each
-  family leans on (registry, actor manager, world, config), make each fixture
-  restore it, then make shuffle the gate. The same leak shows without
-  shuffle: under `--gtest_repeat=20` the same 12 tests (`BehaviorPresenceTest`
-  x4, `BehaviorRegistry` x4, `BehaviorToggle` x3, `GUIConfigTest.DefaultValues`)
-  fail on 19 of 20 iterations, i.e. every one after the first (measured
-  2026-10-17). Random draws are already per-test deterministic (each test is
-  seeded from its name). *Proof:* `--gtest_shuffle --gtest_repeat=3` green as
-  a `GOH_CI_STEPS` step; until then, G0.12's cwd guard runs on the fixed
-  order only.
-
 - **G0.14 The minimum macOS is claimed, not built (owner decision).**
   README says "macOS 10.15+" and `scripts/create_bundle.sh` writes
   `LSMinimumSystemVersion` 10.15, but nothing sets a deployment target, so
