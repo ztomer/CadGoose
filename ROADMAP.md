@@ -101,6 +101,22 @@ to go red once.
   it on a display machine and enforce it only there. *Proof:* the
   `Build macOS (DMG)` job green on a push.
 
+- **G0.16 G0.13 dropped CI's coverage below its floors, and the local gate
+  could not see it.** CI run 39152075565 (`2883650`) against 39075406586
+  (`e1a197c`): P0 95.21 -> 94.86, P1 26.63 -> 23.81, eligible total 64.03 ->
+  62.56, all three under their floors (95 / 26 / 63). Per file (CI's own
+  tables): `actor_leafpile.mm` 141 -> 25 covered lines, `audio.mm` 98 -> 78,
+  the MCP servers' accept loops moved to `accept_loop.cpp` with 10 lines
+  uncovered, `behavior_breadcrumbs.cpp` -4. The cause: those lines were
+  reached only through state one test leaked into the next (leaf piles left
+  in the actor manager, an unmuted suite), which G0.13 rightly stopped. The
+  push passed 12 local steps because the coverage gate was not one of them
+  (`tools/local_ci.sh --coverage`, never passed by the pre-push hook).
+  *Proof:* the three floors pass in CI without lowering any, with the lost
+  paths covered by tests that assert them; the local gate runs CI's coverage
+  gate and `tools/check_ci_local_parity.py` refuses a CI gate the local gate
+  lacks, each seen red first.
+
 ## Phase 1 — Maintenance-line correctness (S-M, 1 session)
 
 **Goal:** no setting, state or race that silently does something other than

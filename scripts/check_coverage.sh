@@ -148,7 +148,7 @@ fi
 echo "==> cmake configure + build (CODE_COVERAGE=ON, ${BUILD_DIR#$ROOT/})"
 cmake -S "$ROOT" -B "$BUILD_DIR" -DCMAKE_BUILD_TYPE=Release -DCODE_COVERAGE=ON >/dev/null 2>&1 \
     || { echo "ERROR: cmake configure failed" >&2; exit 1; }
-cmake --build "$BUILD_DIR" >/dev/null 2>&1 \
+cmake --build "$BUILD_DIR" --parallel "$(sysctl -n hw.logicalcpu)" >/dev/null 2>&1 \
     || { echo "ERROR: coverage build failed" >&2; exit 1; }
 
 # Hard fail, never warn: coverage measured over a failing suite is partial data wearing a green

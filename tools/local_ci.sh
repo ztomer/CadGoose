@@ -17,27 +17,23 @@
 # (the shared house suite's gates/local_ci.sh) owns the skeleton — fail accumulator,
 # log-on-failure, Kare styling — that used to be copy-pasted per repo.
 #
-#   ./tools/local_ci.sh              steps from .gatesrc (gates + build + tests)
-#   ./tools/local_ci.sh --coverage   also the coverage gate (slow: separate build)
+#   ./tools/local_ci.sh              every step in .gatesrc, coverage included
+#
+# There is no opt-in coverage flag any more (G0.16): the coverage gate is a
+# GOH_CI_STEPS step like the rest, because a gate CI enforces and the pre-push
+# hook skips is how a push passed 12 local steps and went red in CI.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 GOH="${GOH_DIR:-}"
 
-ARGS=()
 case "${1:-}" in
-    --coverage) ARGS+=(--step 'bash scripts/check_coverage.sh --build-dir=build-cov') ;;
-    -h|--help)  echo "usage: ./tools/local_ci.sh [--coverage]"; exit 0 ;;
+    -h|--help)  echo "usage: ./tools/local_ci.sh"; exit 0 ;;
     "")         ;;
     *)          echo "✗ unknown argument: $1" >&2; exit 2 ;;
 esac
 
-if [ "${1:-}" != "--coverage" ]; then
-    printf '%s\n' \
-        "⚠ coverage gate skipped — pass --coverage (it needs its own instrumented build)" >&2
-fi
-
 # The shared runner executes step commands in the invocation CWD; every step
 # in GOH_CI_STEPS is repo-root-relative.
 cd "$ROOT"
-exec "$GOH/gates/local_ci.sh" "${ARGS[@]+"${ARGS[@]}"}" "$ROOT"
+exec "$GOH/gates/local_ci.sh" "$ROOT"
