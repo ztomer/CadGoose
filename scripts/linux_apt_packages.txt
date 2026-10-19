@@ -1,0 +1,14 @@
+# The apt packages every Linux CI job installs, one list for all of them: the
+# release job once lacked libgtest-dev that the PR job had, and its configure
+# went red the day the Linux suite (cmake/TestsLinux.cmake) needed GTest.
+cmake
+g++
+libgtk-4-dev
+libsdl2-dev
+libsdl2-mixer-dev
+libgdk-pixbuf-2.0-dev
+libwayland-dev
+libx11-dev
+libxtst-dev
+libgtest-dev
+zstd

@@ -32,7 +32,7 @@ case "$(uname -s)" in
             exit 2
         fi
         IMAGE="cadgoose-linux-ci"
-        docker build --quiet --tag "$IMAGE" --file "$ROOT/Dockerfile" "$ROOT/cmake" > /dev/null < /dev/null
+        docker build --quiet --tag "$IMAGE" --file "$ROOT/Dockerfile" "$ROOT/scripts" > /dev/null < /dev/null
         docker run --rm --volume "$ROOT:/work:ro" --env CG_LINUX_BUILD_DIR=/tmp/build \
             "$IMAGE" bash /work/scripts/run_tests_linux.sh < /dev/null
         ;;

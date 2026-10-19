@@ -1,19 +1,11 @@
 FROM ubuntu:26.04
 
+# The same apt list CI's Linux jobs install (scripts/linux_apt_packages.txt),
+# so the local Linux suite (scripts/run_tests_linux.sh, built with
+# scripts/ as its context) cannot pass on a package CI lacks.
+COPY linux_apt_packages.txt /tmp/linux_apt_packages.txt
 RUN apt-get update -qq && \
-    apt-get install -y -qq cmake g++ libgtk-4-dev libsdl2-dev libsdl2-mixer-dev \
-      libgdk-pixbuf-2.0-dev libwayland-dev libx11-dev libxtst-dev zstd \
-      ninja-build git ca-certificates wget && \
+    apt-get install -y -qq $(grep -v '^#' /tmp/linux_apt_packages.txt) && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
-
-# Install googletest (for CadGooseTests target)
-RUN git clone --depth 1 --branch v1.15.2 https://github.com/google/googletest.git /tmp/googletest && \
-    mkdir -p /tmp/googletest/build && \
-    cd /tmp/googletest/build && \
-    cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_GMOCK=OFF && \
-    make -j$(nproc) install && \
-    rm -rf /tmp/googletest
-
-WORKDIR /work
 
 WORKDIR /work

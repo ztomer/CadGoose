@@ -13,6 +13,10 @@
   `scripts/run_tests_linux.sh` runs in CI's Linux job and, through the repo's
   Dockerfile image, in the local pre-push gate. Red first: the new
   `ConfigStartup` test failed on Linux (scale 1 for 1.75, ball false for true).
+  The release workflow's Linux job then went red (run 39249238185): its apt
+  list lacked the `libgtest-dev` the PR job had. Both jobs and the Dockerfile
+  now install `scripts/linux_apt_packages.txt`, one list, and the release job
+  runs the Linux suite on the build it ships.
 - **M1.6** MCP `set_config` flipped plain `bool` fields of `g_config` on the
   MCP server thread. It now sends `set_config <key> <value>` over the command
   socket like every other mutating tool, and `AppActions_HandleCommand`
