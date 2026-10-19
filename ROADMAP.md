@@ -93,7 +93,9 @@ to go red once.
 **Goal:** no setting, state or race that silently does something other than
 what it says. **Exit:** each proof below is green in CI.
 
-M1.1-M1.3 closed 2026-10-18; M1.5-M1.7 closed 2026-10-19 (docs/CHANGELOG.md).
+M1.1-M1.3 closed 2026-10-18; M1.5-M1.7 closed 2026-10-19. M1.7 is `5ca7055`
+(test `6361127`): the `get_config` and `resources/read` TSan cases exit 134
+against the pre-fix handler and pass clean after it; docs/CHANGELOG.md.
 Open:
 
 - **M1.4 Notarization** (carried from the old plan). Developer ID signing, the
