@@ -1,5 +1,21 @@
 # Changelog
 
+## October 19, 2026 — The release binary is quiet
+
+- `main()` wrote `[DEBUG] main() starting`, every argv entry and the
+  `AppCli_HandleCommand` return code to stderr on every launch, `CadGoose
+  --version` included. Those three are gone (the argv ones ran before `--debug`
+  was even parsed, so no switch could have governed them); the three
+  NSApplication prints after them are `DEBUG_LOG` now (off unless `--debug`,
+  compiled out of the release build). Nothing in the tests or
+  `tools/profiling` read them. The class is a gate:
+  `scripts/check_quiet_version.sh` runs the binary and fails unless
+  `--version` prints exactly its one version line and exits 0, and fails on any
+  `[DEBUG]` literal in `src/` outside a logging macro's own prefix. Red first
+  on the real pre-fix binary (five stray lines around `CadGoose v1.82`, exit
+  1); green after. Wired into the macOS release job, the Linux PR job and the
+  local pre-push steps, with its own test on fake binaries.
+
 ## October 19, 2026 — M1.7: MCP reads of the settings on the owning thread
 
 - **M1.7** MCP `get_config` and `resources/read` read the plain `bool` fields

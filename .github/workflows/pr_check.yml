@@ -47,6 +47,10 @@ jobs:
         run: rm -rf build && cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
       - name: Build
         run: cmake --build build --config Release --parallel $(nproc)
+      - name: Release binary is quiet
+        run: |
+          bash tests/profiling/test_check_quiet_version.sh
+          bash scripts/check_quiet_version.sh build/CadGoose
       # The Linux suite (ROADMAP M1.5). This step was commented out because the
       # macOS suite links ObjC++ and Cocoa; cmake/TestsLinux.cmake builds the
       # portable config layer into its own binary instead, so Linux-only

@@ -159,18 +159,10 @@ extern "C" void Presence_SetGooseWindowVisible(bool visible) {
 int main(int argc, char** argv) {
     srand((unsigned int)time(NULL));
     if (g_debugMode) OpenLogFile();
-    fprintf(stderr, "[DEBUG] main() starting, argc=%d\n", argc);
-    fflush(stderr);
-    for (int i = 0; i < argc; i++) {
-        fprintf(stderr, "[DEBUG] argv[%d]=%s\n", i, argv[i]);
-    }
-    fflush(stderr);
-
     char* runArgv[] = { argv[0], nullptr };
     int runArgc = 1;
 
     const int cliStatus = AppCli_HandleCommand(argc, argv, &runArgc);
-    fprintf(stderr, "[DEBUG] AppCli_HandleCommand returned %d\n", cliStatus);
     if (cliStatus >= 0) return cliStatus;
 
     for (int i = 0; i < argc; i++) {
@@ -202,16 +194,16 @@ int main(int argc, char** argv) {
         // Create menu bar so app is considered "active"
         [NSApp setMainMenu:[[NSMenu alloc] init]];
 
-        fprintf(stderr, "[DEBUG] Got NSApplication: %p, running=%d\n", (__bridge void*)app, [app isRunning]);
+        DEBUG_LOG("Got NSApplication: %p, running=%d", (__bridge void*)app, [app isRunning]);
 
         AppDelegate* delegate = [[AppDelegate alloc] init];
         app.delegate = delegate;
 
         [app finishLaunching];
-        fprintf(stderr, "[DEBUG] finishLaunching done, running=%d\n", [app isRunning]);
+        DEBUG_LOG("finishLaunching done, running=%d", [app isRunning]);
 
         [[NSRunningApplication currentApplication] activateWithOptions:0];
-        fprintf(stderr, "[DEBUG] activated, running=%d\n", [app isRunning]);
+        DEBUG_LOG("activated, running=%d", [app isRunning]);
 
         DEBUG_LOG("Starting run loop...");
         [app run];

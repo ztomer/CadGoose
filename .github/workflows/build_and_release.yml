@@ -74,6 +74,13 @@ jobs:
           cmake .. -DCMAKE_BUILD_TYPE=Release -DCG_DISABLE_DEBUG_LOG=ON -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
           cmake --build . --config Release --parallel $(sysctl -n hw.logicalcpu)
 
+      # The shipped binary prints nothing but its version for --version: a
+      # stray debug print in main() once did (scripts/check_quiet_version.sh).
+      - name: Release binary is quiet
+        run: |
+          bash tests/profiling/test_check_quiet_version.sh
+          bash scripts/check_quiet_version.sh build/CadGoose
+
       - name: Run Tests (fast; two concurrent copies, G0.3)
         run: |
           cd build
