@@ -4,6 +4,7 @@
 // unsynchronized access as an error and halt_on_error makes it a red exit.
 #include <gtest/gtest.h>
 #include <atomic>
+#include <chrono>
 #include <cstdlib>
 #include <filesystem>
 #include <string>
@@ -103,15 +104,22 @@ TEST_F(ConfigSaveRace, SaveAgainstMcpSetConfig) {
 // socket and be answered on the owning thread -- here the stub answers with a
 // canned reply, so a clean run also proves the MCP thread never touched g_config.
 namespace {
-// This thread plays the main thread: it toggles the settings while the MCP
-// thread issues `request`.
+// This thread plays the main thread: it toggles the settings, for as long as
+// it takes the MCP thread to issue 200 `request`s (and no longer than 20 s), so
+// the two are certain to overlap however the scheduler starts them.
 template <typename Request>
 void RaceMainWritesAgainst(Request request) {
     std::atomic<bool> stop{false};
+    std::atomic<int> issued{0};
     std::thread mcp([&] {
-        for (int i = 0; !stop.load(std::memory_order_relaxed); ++i) request(i);
+        for (int i = 0; !stop.load(std::memory_order_relaxed); ++i) {
+            request(i);
+            issued.fetch_add(1, std::memory_order_relaxed);
+        }
     });
-    for (int i = 0; i < 20000; ++i) {
+    const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(20);
+    for (int i = 0; issued.load(std::memory_order_relaxed) < 200 &&
+                    std::chrono::steady_clock::now() < deadline; ++i) {
         g_config.behaviors.fun.ball = (i & 1) != 0;
         g_config.behaviors.info.nametag = (i & 1) == 0;
     }
