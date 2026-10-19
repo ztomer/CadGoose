@@ -75,6 +75,13 @@ void GlobalState_Capture() {
     Nighttime_SetForTest(false);  // from the first test on (see Restore)
     BehaviorRegistry::Instance().SaveOriginal();
     Captured() = Baseline{g_config, g_world, g_time, g_cursorProvider};
+    // The hotkey cache is derived from the captured strings, and Restore()
+    // syncs it after every test. Sync it here too: the environment called
+    // Config_Init(), which does not load config and does not seed the cache,
+    // so without this the FIRST test of the process read key code 0 while its
+    // own fixture set the real key and failed (BehaviorHonckerTest.TickKeyRelease
+    // at shuffle seed 84651, 2026-10-19).
+    Hotkey_SyncFromConfig();
 }
 
 void GlobalState_Restore() {

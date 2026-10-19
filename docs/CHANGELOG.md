@@ -14,7 +14,21 @@
   `[DEBUG]` literal in `src/` outside a logging macro's own prefix. Red first
   on the real pre-fix binary (five stray lines around `CadGoose v1.82`, exit
   1); green after. Wired into the macOS release job, the Linux PR job and the
-  local pre-push steps, with its own test on fake binaries.
+  local pre-push steps, with its own test on fake binaries. `actions/checkout`
+  is shallow by default, so on the pushed commit neither job had the tags
+  `git describe` needs and CMake stamped the short sha into `--version`
+  (`CadGoose 1b8384e`); the gate rightly refused it (runs 39261025046 and
+  39261025087). Both jobs now check out full history.
+
+## October 19, 2026 — The first test sees a synced hotkey cache
+
+- `GlobalState_Capture()` snapshotted `g_config` but not the key-code cache
+  derived from it, and `Config_Init()` does not load config or seed that cache.
+  The first test of a process therefore read key code 0 until the first
+  post-test restore synced it: `CadGooseTests --gtest_filter=BehaviorHonckerTest.TickKeyRelease`
+  alone fails every time, and a shuffled CI run (seed 84651) that put it first
+  failed the same way. Capture now calls `Hotkey_SyncFromConfig()`, as every
+  restore already did; that seed passes, three orders.
 
 ## October 19, 2026 — M1.7: MCP reads of the settings on the owning thread
 
