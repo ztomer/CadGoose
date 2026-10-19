@@ -1,5 +1,18 @@
 # Changelog
 
+## October 19, 2026 — M1.7: MCP reads of the settings on the owning thread
+
+- **M1.7** MCP `get_config` and `resources/read` read the plain `bool` fields
+  of `g_config` on the MCP server thread, racing the main-thread writers (the
+  config window, a socket `enable`, `set_config`); in `--mcp` stdio mode they
+  also reported the MCP process's own copy. Both now send `get_config [group]`
+  over the command socket and `AppActions_HandleCommand` answers it on the
+  main thread (`McpConfigJson`, `src/common/mcp_config_json.cpp`). Red first:
+  two new `CadGooseTsanTests` cases (a main-thread writer against `get_config`
+  and against `resources/read`) exited 134 on the race at mcp_handlers.cpp;
+  clean after. The MCP suites that read `g_config` through `get_config` read
+  it through `AppActions_HandleCommand` via the stub's handler seam.
+
 ## October 19, 2026 — M1.5/M1.6: Linux keeps its settings, MCP writes on the owning thread
 
 - **M1.5** Linux's start path called `Config_Init()` and never

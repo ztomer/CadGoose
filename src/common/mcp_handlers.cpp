@@ -9,68 +9,12 @@
 extern std::string JsonEscape(const std::string& s);
 extern std::string ExtractArg(const std::string& json, const std::string& key);
 
-// MCP config handlers run on the internal server's background thread. Hotkey
-// strings are accessed under the hotkey-cache mutex (Hotkey_Name /
-// Hotkey_SetName). The bool fields are written only on the main thread:
-// set_config sends a command over the socket, as every mutating tool does
-// (ROADMAP M1.6). Reads of them here (get_config, resources) still race a
-// main-thread write; that half is open in ROADMAP.
-
-// --- Helper: serialize a bool to JSON "true"/"false" ---
-static std::string BoolJson(bool v) { return v ? "true" : "false"; }
-
-// --- Helper: serialize a behavior group to JSON ---
-struct BoolField { const char* name; bool* ptr; };
-
-static std::string SerializeBoolGroup(const std::vector<BoolField>& fields) {
-    std::string j = "{";
-    for (size_t i = 0; i < fields.size(); i++) {
-        if (i > 0) j += ",";
-        j += std::string("\"") + fields[i].name + "\":" + BoolJson(*fields[i].ptr);
-    }
-    j += "}";
-    return j;
-}
-
-static std::string ConfigToJson() {
-    std::string j = "{";
-    j += "\"fun\":" + SerializeBoolGroup({
-        {"ball", &g_config.behaviors.fun.ball},
-        {"breadCrumbs", &g_config.behaviors.fun.breadCrumbs},
-        {"hats", &g_config.behaviors.fun.hats},
-        {"rainbow", &g_config.behaviors.fun.rainbow},
-        {"acid", &g_config.behaviors.fun.acid},
-        {"anger", &g_config.behaviors.fun.anger}
-    }) + ",";
-    j += "\"control\":" + SerializeBoolGroup({
-        {"honcker", &g_config.behaviors.control.honcker},
-        {"jail", &g_config.behaviors.control.jail},
-        {"portals", &g_config.behaviors.control.portals},
-        {"drag", &g_config.behaviors.control.drag}
-    }) + ",";
-    j += "\"info\":" + SerializeBoolGroup({
-        {"nametag", &g_config.behaviors.info.nametag},
-        {"presence", &g_config.behaviors.info.presence},
-        {"configGUI", &g_config.behaviors.info.configGUI}
-    }) + ",";
-    j += "\"systems\":" + SerializeBoolGroup({
-        {"health", &g_config.behaviors.systems.health},
-        {"ai", &g_config.behaviors.systems.ai},
-        {"pomodoro", &g_config.behaviors.systems.pomodoro}
-    }) + ",";
-    // Hotkey strings are read under the hotkey-cache mutex (Hotkey_Name) so this
-    // is safe to call from the MCP server thread without hopping to the main
-    // thread. The bool fields above are plain bytes; racing them is benign.
-    j += "\"honcker_hotkey\":\"" + JsonEscape(Hotkey_Name(HotkeyId::HonckerHonk)) + "\",";
-    j += "\"jail_hotkey_o\":\"" + JsonEscape(Hotkey_Name(HotkeyId::JailSet)) + "\",";
-    j += "\"jail_hotkey_p\":\"" + JsonEscape(Hotkey_Name(HotkeyId::JailToggle)) + "\",";
-    j += "\"portal_hotkey_1\":\"" + JsonEscape(Hotkey_Name(HotkeyId::Portal1)) + "\",";
-    j += "\"portal_hotkey_2\":\"" + JsonEscape(Hotkey_Name(HotkeyId::Portal2)) + "\",";
-    j += "\"portal_hotkey_0\":\"" + JsonEscape(Hotkey_Name(HotkeyId::Portal0)) + "\",";
-    j += "\"breadcrumbs_hotkey\":\"" + JsonEscape(Hotkey_Name(HotkeyId::Breadcrumbs)) + "\"";
-    j += "}";
-    return j;
-}
+// MCP config handlers run on the internal server's background thread, which
+// must never touch the plain bool fields of g_config: the main thread owns
+// them. Every read and write of them is a command over the socket, answered
+// by AppActions_HandleCommand on the main thread (ROADMAP M1.6 set_config,
+// M1.7 get_config and resources/read). Hotkey strings are the exception:
+// Hotkey_SetName / Hotkey_Name take the hotkey-cache mutex.
 
 // --- MCP protocol version negotiation (SEP-2575) ---
 // Supported versions, oldest first. The latest entry is the default answer
@@ -185,44 +129,40 @@ std::string HandleResourcesList() {
         "]}";
 }
 
-std::string HandleResourcesRead(const std::string& uri) {
-    // Reads hotkey strings (via ConfigToJson, mutex-guarded) and bool fields
-    // (lock-free, benign race) — safe directly on the MCP server thread.
-    std::string json;
-    if (uri == "config://behaviors") {
-        json = ConfigToJson();
-    } else if (uri == "config://behaviors/fun") {
-        json = SerializeBoolGroup({
-            {"ball", &g_config.behaviors.fun.ball},
-            {"breadCrumbs", &g_config.behaviors.fun.breadCrumbs},
-            {"hats", &g_config.behaviors.fun.hats},
-            {"rainbow", &g_config.behaviors.fun.rainbow},
-            {"acid", &g_config.behaviors.fun.acid},
-            {"anger", &g_config.behaviors.fun.anger}
-        });
-    } else if (uri == "config://behaviors/control") {
-        json = SerializeBoolGroup({
-            {"honcker", &g_config.behaviors.control.honcker},
-            {"jail", &g_config.behaviors.control.jail},
-            {"portals", &g_config.behaviors.control.portals},
-            {"drag", &g_config.behaviors.control.drag}
-        });
-    } else if (uri == "config://behaviors/info") {
-        json = SerializeBoolGroup({
-            {"nametag", &g_config.behaviors.info.nametag},
-            {"presence", &g_config.behaviors.info.presence},
-            {"configGUI", &g_config.behaviors.info.configGUI}
-        });
-    } else if (uri == "config://behaviors/systems") {
-        json = SerializeBoolGroup({
-            {"health", &g_config.behaviors.systems.health},
-            {"ai", &g_config.behaviors.systems.ai},
-            {"pomodoro", &g_config.behaviors.systems.pomodoro}
-        });
-    } else {
-        return "";
+// Sends one command to the app and returns its answer with line ends removed;
+// *ok says whether the app answered at all.
+static std::string AskApp(const std::vector<std::string>& cmdArgs, bool* ok) {
+    std::string response;
+    std::string error;
+    *ok = CommandSocket_Send(cmdArgs, &response, &error);
+    if (!*ok) {
+        return error.empty() ? "error: failed to send command to goose" : "error: " + error;
     }
-    return "{\"contents\":[{\"uri\":\"" + JsonEscape(uri) + "\",\"mimeType\":\"application/json\",\"text\":\"" + JsonEscape(json) + "\"}]}";
+    std::string trimmed;
+    for (char c : response) {
+        if (c == '\n' || c == '\r') continue;
+        trimmed += c;
+    }
+    return trimmed;
+}
+
+std::string HandleResourcesRead(const std::string& uri) {
+    // The settings are read by the app on its main thread (ROADMAP M1.7).
+    static const std::unordered_map<std::string, std::string> groups = {
+        {"config://behaviors", ""},
+        {"config://behaviors/fun", "fun"},
+        {"config://behaviors/control", "control"},
+        {"config://behaviors/info", "info"},
+        {"config://behaviors/systems", "systems"},
+    };
+    auto it = groups.find(uri);
+    if (it == groups.end()) return "";
+    std::vector<std::string> cmdArgs = {"get_config"};
+    if (!it->second.empty()) cmdArgs.push_back(it->second);
+    bool ok = false;
+    const std::string json = AskApp(cmdArgs, &ok);
+    return "{\"contents\":[{\"uri\":\"" + JsonEscape(uri) + "\",\"mimeType\":\"" +
+           (ok ? "application/json" : "text/plain") + "\",\"text\":\"" + JsonEscape(json) + "\"}]}";
 }
 
 std::string MCP_GetOpenAITools() {
@@ -270,9 +210,8 @@ std::string ExecuteTool(const std::string& name, const std::string& argsJson) {
         if (!key.empty()) {
             return "config for '" + key + "' - use resources/config:// URIs for structured data";
         }
-        // ConfigToJson reads hotkey strings under the hotkey-cache mutex and bool
-        // fields lock-free, so it is safe on the MCP server thread directly.
-        return ConfigToJson();
+        // The bool settings belong to the main thread: ask the app (M1.7).
+        cmd = "get_config";
     } else if (name == "set_config") {
         std::string key = ExtractArg(argsJson, "key");
         std::string value = ExtractArg(argsJson, "value");
@@ -317,17 +256,6 @@ std::string ExecuteTool(const std::string& name, const std::string& argsJson) {
         }
     }
 
-    std::string response;
-    std::string error;
-    if (!CommandSocket_Send(cmdArgs, &response, &error)) {
-        if (!error.empty()) return "error: " + error;
-        return "error: failed to send command to goose";
-    }
-
-    std::string trimmed;
-    for (char c : response) {
-        if (c == '\n' || c == '\r') continue;
-        trimmed += c;
-    }
-    return trimmed;
+    bool ok = false;
+    return AskApp(cmdArgs, &ok);
 }

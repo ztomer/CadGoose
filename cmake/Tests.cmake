@@ -164,6 +164,7 @@ if(APPLE)
         src/common/accept_loop.cpp
         src/common/mcp_json_rpc.cpp
         src/common/mcp_handlers.cpp
+        src/common/mcp_config_json.cpp
         src/common/ai_mcp_bridge.cpp
         src/common/ai_local_llm_mock.cpp
         src/common/ai_text_meme_mock.cpp

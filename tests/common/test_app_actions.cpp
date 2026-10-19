@@ -417,3 +417,25 @@ TEST(AppActions, SpawnGooseEmptyNameAtNonZeroIndex) {
     g_config.gooseNames.clear();
     AppActions_ClearGeese();
 }
+
+// ROADMAP M1.7: get_config is answered here, on the main thread, so the MCP
+// thread never reads the bool settings itself.
+TEST(AppActions, GetConfigAllReportsLiveSettings) {
+    const bool orig = g_config.behaviors.fun.ball;
+    g_config.behaviors.fun.ball = true;
+    std::string r = AppActions_HandleCommand({"get_config"});
+    EXPECT_NE(r.find("\"ball\":true"), std::string::npos);
+    EXPECT_NE(r.find("honcker_hotkey"), std::string::npos);
+    g_config.behaviors.fun.ball = false;
+    r = AppActions_HandleCommand({"get_config"});
+    EXPECT_NE(r.find("\"ball\":false"), std::string::npos);
+    g_config.behaviors.fun.ball = orig;
+}
+
+TEST(AppActions, GetConfigOneGroupAndUnknownGroup) {
+    std::string r = AppActions_HandleCommand({"get_config", "fun"});
+    EXPECT_EQ(r.find("\"honcker\""), std::string::npos);
+    EXPECT_NE(r.find("\"ball\""), std::string::npos);
+    r = AppActions_HandleCommand({"get_config", "bogus"});
+    EXPECT_NE(r.find("error: unknown config group 'bogus'"), std::string::npos);
+}

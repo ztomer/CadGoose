@@ -1,4 +1,5 @@
 #include "app_actions.h"
+#include "mcp_config_json.h"
 #include "config.h"
 #include "world.h"
 #include "behavior.h"
@@ -226,6 +227,15 @@ std::string AppActions_HandleCommand(const std::vector<std::string>& args) {
     if (args.empty()) return "error missing command\n";
 
     const std::string& command = args.front();
+    if (command == "get_config") {
+        // The MCP get_config tool and resources/read, answered here so the
+        // bool settings are read on the thread that owns them (ROADMAP M1.7).
+        const std::string group = args.size() > 1 ? args[1] : "";
+        const std::string json = McpConfigJson(group);
+        if (json.empty()) return "error: unknown config group '" + group + "'\n";
+        return json + "\n";
+    }
+
     if (command == "set_config") {
         if (args.size() < 3) return "error: usage: set_config <key> <value>\n";
         if (!SetMcpConfigBool(args[1], args[2])) {

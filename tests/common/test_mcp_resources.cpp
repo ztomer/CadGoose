@@ -3,10 +3,23 @@
 #include <vector>
 #include "mcp_server.h"
 #include "config.h"
+#include "app_actions.h"
+#include "command_socket.h"
 
 extern void CommandSocketStub_SetResult(bool success);
 extern void CommandSocketStub_SetResponse(const std::string& response);
 extern void CommandSocketStub_SetError(const std::string& error);
+void CommandSocketStub_SetHandler(CommandHandler handler);
+void CommandSocketStub_Reset();
+
+// get_config and resources/read are answered by the app on its main thread
+// (ROADMAP M1.7): the MCP thread only sends the command. These tests read the
+// settings through the same handler the real socket hands the command to.
+class MCPConfigReads : public ::testing::Test {
+protected:
+    void SetUp() override { CommandSocketStub_SetHandler(AppActions_HandleCommand); }
+    void TearDown() override { CommandSocketStub_Reset(); }
+};
 
 TEST(MCPResources, ListReturnsAllUris) {
     std::string resp = MCP_HandleRequest(
@@ -25,7 +38,7 @@ TEST(MCPResources, ListHasMimeType) {
     EXPECT_NE(resp.find("application/json"), std::string::npos);
 }
 
-TEST(MCPResources, ReadBehaviors) {
+TEST_F(MCPConfigReads, MCPResources_ReadBehaviors) {
     std::string resp = MCP_HandleRequest(
         "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"resources/read\","
         "\"params\":{\"uri\":\"config://behaviors\"}}");
@@ -37,7 +50,7 @@ TEST(MCPResources, ReadBehaviors) {
     EXPECT_NE(resp.find("honcker_hotkey"), std::string::npos);
 }
 
-TEST(MCPResources, ReadFun) {
+TEST_F(MCPConfigReads, MCPResources_ReadFun) {
     std::string resp = MCP_HandleRequest(
         "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"resources/read\","
         "\"params\":{\"uri\":\"config://behaviors/fun\"}}");
@@ -50,7 +63,7 @@ TEST(MCPResources, ReadFun) {
     EXPECT_EQ(resp.find("honcker"), std::string::npos);
 }
 
-TEST(MCPResources, ReadControl) {
+TEST_F(MCPConfigReads, MCPResources_ReadControl) {
     std::string resp = MCP_HandleRequest(
         "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"resources/read\","
         "\"params\":{\"uri\":\"config://behaviors/control\"}}");
@@ -61,7 +74,7 @@ TEST(MCPResources, ReadControl) {
     EXPECT_EQ(resp.find("ball"), std::string::npos);
 }
 
-TEST(MCPResources, ReadInfo) {
+TEST_F(MCPConfigReads, MCPResources_ReadInfo) {
     std::string resp = MCP_HandleRequest(
         "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"resources/read\","
         "\"params\":{\"uri\":\"config://behaviors/info\"}}");
@@ -71,7 +84,7 @@ TEST(MCPResources, ReadInfo) {
     EXPECT_EQ(resp.find("health"), std::string::npos);
 }
 
-TEST(MCPResources, ReadSystems) {
+TEST_F(MCPConfigReads, MCPResources_ReadSystems) {
     std::string resp = MCP_HandleRequest(
         "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"resources/read\","
         "\"params\":{\"uri\":\"config://behaviors/systems\"}}");
@@ -95,7 +108,7 @@ TEST(MCPResources, ReadMissingUri) {
     EXPECT_NE(resp.find("\"code\":-32602"), std::string::npos);
 }
 
-TEST(MCPDirect, CallToolWrapsResponse) {
+TEST_F(MCPConfigReads, MCPDirect_CallToolWrapsResponse) {
     std::string resp = MCP_CallTool("get_config", "{}");
     EXPECT_NE(resp.find("\"type\":\"text\""), std::string::npos);
     EXPECT_NE(resp.find("fun"), std::string::npos);
@@ -149,7 +162,7 @@ TEST(MCPEdgeCase, NumericIdZero) {
     EXPECT_NE(resp.find("\"id\":0"), std::string::npos);
 }
 
-TEST(MCPEdgeCase, SetAllTogglesThenVerifyGetConfig) {
+TEST_F(MCPConfigReads, MCPEdgeCase_SetAllTogglesThenVerifyGetConfig) {
     std::vector<bool*> toggles = {
         &g_config.behaviors.fun.ball,
         &g_config.behaviors.fun.hats,
@@ -190,7 +203,7 @@ TEST(MCPEdgeCase, CanCallMCPHandleRequestReentrant) {
     EXPECT_NE(resp2.find("config://behaviors"), std::string::npos);
 }
 
-TEST(MCPEdgeCase, AllDefaultHotkeysAppearInGetConfig) {
+TEST_F(MCPConfigReads, MCPEdgeCase_AllDefaultHotkeysAppearInGetConfig) {
     std::string resp = MCP_CallTool("get_config", "{}");
     for (const auto& val : {"f", "o", "p", "1", "2", "0"}) {
         EXPECT_NE(resp.find(R"(\")" + std::string(val) + R"(\")"),
@@ -200,7 +213,7 @@ TEST(MCPEdgeCase, AllDefaultHotkeysAppearInGetConfig) {
     EXPECT_NE(resp.find("right shift"), std::string::npos);
 }
 
-TEST(MCPEdgeCase, SetAndGetHotkeyRoundTrip) {
+TEST_F(MCPConfigReads, MCPEdgeCase_SetAndGetHotkeyRoundTrip) {
     std::string orig = g_config.behaviors.jail.hotkeyO;
     std::string resp = MCP_CallTool("set_hotkey",
         "{\"hotkey\":\"jail_hotkey_o\",\"value\":\"cmd+shift+j\"}");
@@ -226,7 +239,7 @@ TEST(MCPEdgeCase, LargeHotkeyValue) {
     g_config.behaviors.honcker.hotkey = orig;
 }
 
-TEST(MCPEdgeCase, GetConfigResponseStartsWithContentWrapper) {
+TEST_F(MCPConfigReads, MCPEdgeCase_GetConfigResponseStartsWithContentWrapper) {
     std::string resp = MCP_CallTool("get_config", "{}");
     EXPECT_NE(resp.find(R"("content")"), std::string::npos);
     EXPECT_NE(resp.find(R"("type":"text")"), std::string::npos);

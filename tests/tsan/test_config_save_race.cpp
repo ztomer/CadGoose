@@ -96,6 +96,51 @@ TEST_F(ConfigSaveRace, SaveAgainstMcpSetConfig) {
     CommandSocketStub_Reset();
 }
 
+// ROADMAP M1.7: the read half. MCP `get_config` and `resources/read` run on the
+// MCP server thread; the bool settings belong to the main thread (the config
+// window, a socket `enable`, `set_config` all write them there). Reading them
+// on the MCP thread raced those writes. The read must go through the command
+// socket and be answered on the owning thread -- here the stub answers with a
+// canned reply, so a clean run also proves the MCP thread never touched g_config.
+namespace {
+// This thread plays the main thread: it toggles the settings while the MCP
+// thread issues `request`.
+template <typename Request>
+void RaceMainWritesAgainst(Request request) {
+    std::atomic<bool> stop{false};
+    std::thread mcp([&] {
+        for (int i = 0; !stop.load(std::memory_order_relaxed); ++i) request(i);
+    });
+    for (int i = 0; i < 20000; ++i) {
+        g_config.behaviors.fun.ball = (i & 1) != 0;
+        g_config.behaviors.info.nametag = (i & 1) == 0;
+    }
+    stop.store(true);
+    mcp.join();
+}
+}  // namespace
+
+TEST_F(ConfigSaveRace, McpGetConfigAgainstMainThreadWrites) {
+    CommandSocketStub_Reset();
+    RaceMainWritesAgainst([](int) { MCP_CallTool("get_config", "{}"); });
+    const auto sent = CommandSocketStub_GetCommands();
+    ASSERT_FALSE(sent.empty());
+    EXPECT_EQ(sent.front()[0], "get_config");
+    CommandSocketStub_Reset();
+}
+
+TEST_F(ConfigSaveRace, McpResourceReadAgainstMainThreadWrites) {
+    CommandSocketStub_Reset();
+    RaceMainWritesAgainst([](int i) {
+        MCP_HandleRequest(i & 1 ? R"({"jsonrpc":"2.0","id":1,"method":"resources/read","params":{"uri":"config://behaviors/fun"}})"
+                                : R"({"jsonrpc":"2.0","id":1,"method":"resources/read","params":{"uri":"config://behaviors"}})");
+    });
+    const auto sent = CommandSocketStub_GetCommands();
+    ASSERT_FALSE(sent.empty());
+    EXPECT_EQ(sent.front()[0], "get_config");
+    CommandSocketStub_Reset();
+}
+
 TEST_F(ConfigSaveRace, GetAgainstSetHotkeyThroughRegistry) {
     std::atomic<bool> stop{false};
     std::thread mcp([&] {

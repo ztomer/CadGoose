@@ -93,19 +93,9 @@ to go red once.
 **Goal:** no setting, state or race that silently does something other than
 what it says. **Exit:** each proof below is green in CI.
 
-M1.1-M1.3 closed 2026-10-18; M1.5 and M1.6 closed 2026-10-19 (docs/CHANGELOG.md).
+M1.1-M1.3 closed 2026-10-18; M1.5-M1.7 closed 2026-10-19 (docs/CHANGELOG.md).
 Open:
 
-- **M1.7 MCP reads of the bool settings race main-thread writes.** M1.6 moved
-  every `set_config` WRITE onto the main thread, but `get_config` and
-  `resources/read` (`ConfigToJson`, mcp_handlers.cpp) still read the plain
-  `bool` fields on the MCP thread while the config window, a socket `enable`,
-  or `set_config` writes them on the main one. In `--mcp` stdio mode they also
-  report the MCP process's own copy, not the running app's. Fix the same way:
-  a socket command that answers from the main thread. *Proof:* a
-  `CadGooseTsanTests` case racing `get_config` against a main-thread toggle is
-  clean, and the many MCP suites that read `g_config` through `get_config`
-  move to the stub's handler seam (`CommandSocketStub_SetHandler`).
 - **M1.4 Notarization** (carried from the old plan). Developer ID signing, the
   hardened runtime and the `com.apple.security.cs.allow-jit` entitlement;
   `notarytool` submit and staple; remove the `xattr` step from the README, the
