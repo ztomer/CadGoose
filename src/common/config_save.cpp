@@ -1,3 +1,4 @@
+#include "config_string.h"
 #include <fstream>
 #include <toml.hpp>
 #include "config_helpers.h"
@@ -39,9 +40,11 @@ void Config_SaveAll() {
         } else if (opt.type == CFG_FLOAT) {
             config[section][key] = *(float*)opt.ptr;
         } else {
-            config[section][key] = std::string(*(std::string*)opt.ptr);
+            config[section][key] = ConfigOption_GetString(opt);
         }
     }
+
+    config["meta"]["schema_version"] = kConfigSchemaVersion;
 
     config["color"]["goose"] = toml::table{{"r", g_config.color.goose.r}, {"g", g_config.color.goose.g}, {"b", g_config.color.goose.b}};
     config["color"]["beak"] = toml::table{{"r", g_config.color.beak.r}, {"g", g_config.color.beak.g}, {"b", g_config.color.beak.b}};

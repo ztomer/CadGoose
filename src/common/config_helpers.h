@@ -128,21 +128,6 @@ inline bool section_has_key(const toml::basic_value<toml::type_config>& config, 
     return find_case_insensitive(section_tbl, key) != section_tbl.end();
 }
 
-template<typename T>
-void set_by_type(ConfigType type, void* ptr, T val) {
-    if (type == CFG_BOOL) *(bool*)ptr = val;
-    else if (type == CFG_INT) *(int*)ptr = val;
-    else if (type == CFG_FLOAT) *(float*)ptr = val;
-    else *(std::string*)ptr = val;
-}
-
-template<typename T>
-T get_by_type(ConfigType type, void* ptr) {
-    if (type == CFG_BOOL) return *(bool*)ptr;
-    if (type == CFG_INT) return *(int*)ptr;
-    if (type == CFG_FLOAT) return *(float*)ptr;
-    return *(std::string*)ptr;
-}
 }
 
 #endif

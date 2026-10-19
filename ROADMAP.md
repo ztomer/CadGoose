@@ -93,23 +93,20 @@ to go red once.
 **Goal:** no setting, state or race that silently does something other than
 what it says. **Exit:** each proof below is green in CI.
 
-- **M1.1 `audio_enabled` is overwritten on every load.**
-  `src/common/config_load.cpp:113` forces `audioEnabled = true` on macOS each
-  time the config loads. The setting is registered (`config_registry_generated.cpp:22`)
-  and settable over the socket and MCP, but it never holds. This is a one-time
-  migration for configs written by an old `false` default that was left running
-  forever. Fix: a versioned one-shot migration, or remove the key. *Proof:* set
-  `false`, reload, and it stays `false`; an old-schema file migrates once.
-- **M1.2 Hotkey save race (documented, not fixed).** `Config_SaveAll` (via
-  `config_registry_behaviors.cpp`) reads the hotkey strings without the hotkey
-  mutex, racing an MCP `set_hotkey`. It is cold-path and non-crashing, but it is
-  a real data race. *Proof:* the save path reads through `Hotkey_Name()`, and a
-  TSan test that races save against `set_hotkey` is clean.
-- **M1.3 Trail-detection false positive (status unverified since 2026-06-22).**
-  The trail scan counted frames containing dropped items as "trails". Measure
-  first. *Proof:* `tools/profiling/run_trail_test.sh` reports 0 trails with
-  dropped items on screen and at least 1 for a planted trail. Close with the
-  measurement if it already holds.
+M1.1-M1.3 closed 2026-10-18 (docs/CHANGELOG.md). Two siblings they surfaced:
+
+- **M1.5 Linux never loads config.toml.** `src/platform/linux/main.cpp`
+  calls `Config_Init()` and never `Config_LoadAll()`, while `OnConfigChange`
+  saves: every Linux setting is written and lost at the next start. One line,
+  but the Linux tests are disabled in CI (pr_check.yml), so nothing would
+  prove it. *Proof:* a Linux-run test that saves a value, restarts the load
+  path and reads it back.
+- **M1.6 Registry bools written across threads.** MCP `set_config`
+  (`mcp_handlers.cpp` SetConfigValue) flips plain `bool` fields on the MCP
+  thread that `Config_SaveAll` and the tick loop read on the main thread; the
+  comment there calls it benign, but it is a data race (UB). M1.2 closed the
+  string half under one lock. *Proof:* a `CadGooseTsanTests` case racing save
+  against `set_config` is clean.
 - **M1.4 Notarization** (carried from the old plan). Developer ID signing, the
   hardened runtime and the `com.apple.security.cs.allow-jit` entitlement;
   `notarytool` submit and staple; remove the `xattr` step from the README, the

@@ -1,3 +1,4 @@
+#include "config_string.h"
 #include "config_registry.h"
 #include "config_helpers.h"
 #include "hotkey_cache.h"
@@ -114,7 +115,7 @@ static std::string OptionValueToString(const ConfigOption& opt) {
     if (opt.type == CFG_BOOL) return *(bool*)opt.ptr ? "1" : "0";
     if (opt.type == CFG_INT) return std::to_string(*(int*)opt.ptr);
     if (opt.type == CFG_FLOAT) { std::ostringstream stream; stream << *(float*)opt.ptr; return stream.str(); }
-    return *(std::string*)opt.ptr;
+    return ConfigOption_GetString(opt);
 }
 
 const ConfigOption* Config_FindOptionByKey(const std::string& key) {
@@ -154,7 +155,7 @@ static bool AssignValueToOption(const ConfigOption& opt, const std::string& rawV
             *(float*)opt.ptr = val;
             return true;
         }
-        *(std::string*)opt.ptr = rawValue;
+        ConfigOption_SetString(opt, rawValue);
         return true;
     } catch (const std::invalid_argument&) {
         if (errorOut) *errorOut = "Invalid value for " + std::string(opt.key);

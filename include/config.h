@@ -167,6 +167,16 @@ void Config_SaveAll();
 void Config_SaveGooseNames();
 void Config_LoadAll();
 void Config_Load(const toml::basic_value<toml::type_config>& config);
+
+// config.toml schema version this build writes, as [meta] schema_version. A
+// file without the key is version 1. Config_Load runs Config_MigrateSchema
+// first, and every save stamps the current version, so each migration step
+// runs once per file and never again (ROADMAP M1.1).
+//   1 -> 2: audio_enabled = false was the shipped default until 2026-06-28 and
+//           poisoned every config written from it; repair it to true once.
+inline constexpr int kConfigSchemaVersion = 2;
+int Config_SchemaVersionOf(const toml::basic_value<toml::type_config>& config);
+toml::basic_value<toml::type_config> Config_MigrateSchema(toml::basic_value<toml::type_config> config);
 std::string Config_GetPath();
 std::filesystem::path Config_GetThemesDir();
 const ConfigOption *Config_FindOptionByKey(const std::string &key);

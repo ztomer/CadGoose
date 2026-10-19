@@ -145,7 +145,7 @@ Typed coordinate wrappers (`include/coordinate_system.h`): `DevicePoint`, `World
 
 **Config key consistency**: GUI `addRow:` calls, config registry, and behavior `configPtr` all use the same registry keys. `lookupKey` field differentiates cross-section collisions (e.g., `snap_distance` lives in both Physics and Step).
 
-**Config self-healing**: macOS `Config_LoadAll` forces `audio_enabled = true` to repair configs poisoned by the old default.
+**Config schema migrations**: every save stamps `[meta] schema_version` (`kConfigSchemaVersion`, config.h); `Config_Load` runs `Config_MigrateSchema` on the parsed file first, so each step runs once per file. Step 1 to 2 repairs `audio_enabled = false` written by the pre-2026-06-28 default; after it, a user's `false` holds.
 
 ### AI System
 

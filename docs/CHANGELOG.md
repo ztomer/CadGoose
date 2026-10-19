@@ -1,5 +1,32 @@
 # Changelog
 
+## October 18, 2026 — M1.1-M1.3: settings hold, the save path is race-free, the trail scan is measured
+
+- **M1.1** `Config_LoadAll` forced `audio_enabled = true` on every macOS load
+  (the 2026-06-28 "self-healing" for configs written by the old `false`
+  default), so a user's `false` never held. It is now a versioned one-shot
+  migration: saves stamp `[meta] schema_version` (`kConfigSchemaVersion` = 2),
+  `Config_Load` runs `Config_MigrateSchema` on the parsed file first, and step
+  1 to 2 rewrites the FILE's `audio_enabled = false` to true, once. Red first:
+  5 of 7 `ConfigSchemaTest` cases failed with the force in place; verified on
+  the real app (a v2 file with `false` reports `audio_enabled=0`).
+- **M1.2** Every `CFG_STRING` registry field is read and written only through
+  `ConfigOption_GetString`/`SetString` (config_string.h) under one mutex, which
+  the hotkey cache now shares, so `Config_SaveAll`, a registry `set`, a reload
+  and MCP `set_hotkey` serialize. The dead `set_by_type`/`get_by_type`
+  helpers are gone. New `CadGooseTsanTests` (-fsanitize=thread, run by
+  `scripts/run_tests_tsan.sh` in CI and the pre-push gate): red first, TSan
+  reported the save/`set_hotkey` data race and exited 134; clean after.
+- **M1.3** Measured: it does not reproduce. The analysis moved out of the
+  capture binary into `tests/platform/macos/trail_analysis.h`, which the live
+  `trail_detection_test` and the new headless `TrailAnalysis` tests both run.
+  Dropped items on screen give 0 trail pixels; a planted one-frame trail is
+  detected (and a detector that counts items that stay goes red on both
+  cases). Live, on this machine: three runs of `trail_detection_test` against
+  the app, 0 trail pixels each. One real defect found in the instrument:
+  `PixelDelta` read BGRA bytes 1-3, ignoring blue and counting alpha, so a
+  blue-only trail was invisible; it now reads bytes 0-2 (red test first).
+
 ## October 18, 2026 — G0.17/G0.18: the DMG is made by `diskutil image`; the cask is the tap's
 
 - `hdiutil create`/`attach`/`detach` are deprecated on macOS 27. After probing

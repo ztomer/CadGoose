@@ -1,14 +1,16 @@
 #include "hotkey_cache.h"
 #include "hotkey.h"
 #include "config.h"
+#include "config_string.h"
 
 #include <array>
 #include <atomic>
 #include <mutex>
 
-// One mutex for the canonical g_config hotkey strings; the resolved key codes
-// live in lock-free atomics read by the per-frame behavior ticks.
-static std::mutex g_hotkeyMutex;
+// The canonical g_config hotkey strings are registry strings, so they share the
+// registry's one string lock (config_string.h): a save or a registry `set`
+// serializes against Hotkey_SetName. The resolved key codes live in lock-free
+// atomics read by the per-frame behavior ticks.
 static std::array<std::atomic<int>, static_cast<size_t>(HotkeyId::Count)> g_keyCodes = {};
 
 // Map a hotkey id to its canonical std::string field in g_config.
@@ -32,7 +34,7 @@ int Hotkey_KeyCode(HotkeyId id) {
 }
 
 std::string Hotkey_Name(HotkeyId id) {
-    std::lock_guard<std::mutex> lock(g_hotkeyMutex);
+    std::lock_guard<std::mutex> lock(Config_StringMutex());
     std::string* f = FieldFor(id);
     return f ? *f : std::string();
 }
@@ -40,13 +42,13 @@ std::string Hotkey_Name(HotkeyId id) {
 void Hotkey_SetName(HotkeyId id, const std::string& name) {
     if (static_cast<size_t>(id) >= static_cast<size_t>(HotkeyId::Count)) return;
     int code = KeyNameToKeyCode(name);  // parse outside the lock
-    std::lock_guard<std::mutex> lock(g_hotkeyMutex);
+    std::lock_guard<std::mutex> lock(Config_StringMutex());
     if (std::string* f = FieldFor(id)) *f = name;
     g_keyCodes[static_cast<size_t>(id)].store(code, std::memory_order_relaxed);
 }
 
 void Hotkey_SyncFromConfig() {
-    std::lock_guard<std::mutex> lock(g_hotkeyMutex);
+    std::lock_guard<std::mutex> lock(Config_StringMutex());
     for (size_t i = 0; i < static_cast<size_t>(HotkeyId::Count); i++) {
         std::string* f = FieldFor(static_cast<HotkeyId>(i));
         g_keyCodes[i].store(f ? KeyNameToKeyCode(*f) : -1, std::memory_order_relaxed);

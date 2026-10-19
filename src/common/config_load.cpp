@@ -1,3 +1,4 @@
+#include "config_string.h"
 #include <filesystem>
 #include <vector>
 #include <algorithm>
@@ -7,7 +8,44 @@
 
 namespace fs = std::filesystem;
 
-void Config_Load(const toml::basic_value<toml::type_config>& config) {
+int Config_SchemaVersionOf(const toml::basic_value<toml::type_config>& config) {
+    int version = 1;  // a file written before the key existed
+    if (!config.is_table()) return version;
+    const auto& root = config.as_table();
+    auto meta = config_helpers::find_case_insensitive(root, "meta");
+    if (meta != root.end() && meta->second.is_table() &&
+        config_helpers::section_has_key(config, "meta", "schema_version")) {
+        config_helpers::get_int(config, "meta", "schema_version", version);
+    }
+    return version;
+}
+
+// Each step upgrades a parsed file by one version. A step reads and rewrites
+// the FILE's values, never g_config, so it cannot clobber a setting the file
+// does not carry, and it never runs on a file that is already current.
+toml::basic_value<toml::type_config> Config_MigrateSchema(toml::basic_value<toml::type_config> config) {
+    if (!config.is_table()) return config;
+    int version = Config_SchemaVersionOf(config);
+    if (version < 2) {
+        auto& root = config.as_table();
+        auto general = config_helpers::find_case_insensitive(root, "General");
+        if (general != root.end() && general->second.is_table()) {
+            auto& section = general->second.as_table();
+            auto key = config_helpers::find_case_insensitive(section, "audio_enabled");
+            if (key != section.end() && key->second.is_boolean() && !key->second.as_boolean()) {
+                key->second = true;
+            }
+        }
+        version = 2;
+    }
+    auto& meta = config.as_table()["meta"];
+    if (!meta.is_table()) meta = toml::table{};
+    meta.as_table()["schema_version"] = version;
+    return config;
+}
+
+void Config_Load(const toml::basic_value<toml::type_config>& file) {
+    const auto config = Config_MigrateSchema(file);
     for (const auto& opt : g_configRegistry) {
         if (!config_helpers::section_has_key(config, opt.section, opt.key)) continue;
 
@@ -30,7 +68,7 @@ void Config_Load(const toml::basic_value<toml::type_config>& config) {
         } else if (opt.type == CFG_STRING) {
             std::string val;
             if (config_helpers::get_string(config, opt.section, opt.key, val)) {
-                *(std::string*)opt.ptr = val;
+                ConfigOption_SetString(opt, std::move(val));
             }
         }
     }
@@ -109,9 +147,6 @@ void Config_LoadAll() {
     }
     Config_UpdateActiveTheme();
     Hotkey_SyncFromConfig();  // seed the lock-free hotkey cache
-#ifdef __APPLE__
-    g_config.general.audioEnabled = true; // Force enabled on macOS to prevent silent poisoning
-#endif
 }
 
 bool Config_LoadThemeColors(const std::string& themeName, ColorRGB& body, ColorRGB& neck, ColorRGB& head, ColorRGB& beak, ColorRGB& eye, ColorRGB& outline) {

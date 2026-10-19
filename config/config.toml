@@ -1,5 +1,8 @@
 goose = ["Goose 0"]
 
+[meta]
+schema_version = 2
+
 [Debug]
 to_terminal = false
 visuals = false

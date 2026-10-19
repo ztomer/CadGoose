@@ -1,3 +1,4 @@
+#include "config_string.h"
 #include "ui_factory.h"
 #include "ui_controls.h"
 #include "config.h"
@@ -110,13 +111,13 @@ void PopulateConfigSection(GtkWidget* container, const char* sectionName) {
             GtkWidget* row = gtk_box_new(GTK_ORIENTATION_VERTICAL, 4);
             gtk_box_append(GTK_BOX(row), gtk_label_new(opt.label));
             GtkWidget* entry = gtk_entry_new();
-            gtk_editable_set_text(GTK_EDITABLE(entry), ((std::string*)opt.ptr)->c_str());
+            gtk_editable_set_text(GTK_EDITABLE(entry), ConfigOption_GetString(opt).c_str());
             if (std::string(opt.label).find("Key") != std::string::npos) {
                 gtk_entry_set_visibility(GTK_ENTRY(entry), FALSE);
             }
             g_signal_connect(entry, "changed", G_CALLBACK(+[](GtkEditable* e, gpointer d){
                 ConfigOption* o = (ConfigOption*)d;
-                *(std::string*)o->ptr = gtk_editable_get_text(e);
+                ConfigOption_SetString(*o, gtk_editable_get_text(e));
                 if (o->onChange) o->onChange();
             }), &opt);
             gtk_box_append(GTK_BOX(row), entry);

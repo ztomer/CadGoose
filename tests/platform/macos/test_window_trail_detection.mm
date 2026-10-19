@@ -112,29 +112,13 @@ int main() {
         frames[i] = s_ring[idx];
     }
 
-    // Find the drop frame: look for the largest frame-to-frame delta
-    // within the last ~30 frames (the drop should create a big pixel change
-    // as the ItemWindow appears with its dropped item content).
-    int dropFrame = 1;
-    FrameDelta maxDelta;
-    maxDelta.changedPixels = 0;
-
-    // Only search the second half of the buffer (drop happens after trigger)
-    int searchStart = nFrames / 2;
-    if (searchStart < 2) searchStart = 2;
-
-    for (int i = searchStart; i < nFrames; ++i) {
-        FrameDelta d = ComputeDelta(frames[i-1], frames[i]);
-        if (d.changedPixels > maxDelta.changedPixels) {
-            maxDelta = d;
-            dropFrame = i;
-        }
-    }
-
+    // The analysis is trail_analysis.h's, shared with the headless unit tests.
+    const TrailReport report = AnalyzeTrailFrames(frames);
+    const int dropFrame = report.dropFrame;
     fprintf(stderr, "  Drop frame (max delta): %d (%d changed pixels)\n",
-            dropFrame, maxDelta.changedPixels);
+            dropFrame, report.dropChangedPixels);
 
-    // Save all frames
+    // Save frames around the drop
     int saveFrom = std::max(0, dropFrame - 10);
     int saveTo = std::min(nFrames, dropFrame + 10);
     for (int i = saveFrom; i < saveTo; ++i) {
@@ -158,61 +142,20 @@ int main() {
                 (i == dropFrame) ? " <-- DROP" : "");
     }
 
-    // Trail analysis: temporal 4-frame comparison around drop
-    int trailPixels = 0;
-    int trailClusters = 0;
-    int peakCluster = 0;
-    bool trailDetected = false;
+    const int trailPixels = report.trailPixels;
+    const int trailClusters = report.trailClusters;
+    const int peakCluster = report.peakCluster;
+    const bool trailDetected = report.trailDetected;
 
-    if (dropFrame >= 2 && dropFrame + 3 <= nFrames) {
-        int A = dropFrame - 2;
-        int B = dropFrame;
-        int C = dropFrame + 1;
-        int D = dropFrame + 2;
-
-        // Find drop position: look for the largest cluster of changed pixels
-        // in the drop frame (this is where the ItemWindow appeared)
-        float itemX = -1, itemY = -1;
-
-        // Estimate item position: centroid of changed pixels at drop
-        FrameDelta dropDelta = ComputeDelta(frames[B-1], frames[B]);
-        if (dropDelta.changedPixels > 100) {
-            // Compute centroid of changed pixels
-            double cx = 0, cy = 0;
-            int count = 0;
-            int w = frames[B].width;
-            CaptureResult& prev = frames[B-1];
-            CaptureResult& cur = frames[B];
-            for (int y = 0; y < cur.height; y += 4) {
-                for (int x = 0; x < w; x += 4) {
-                    size_t idx = (size_t)(y * w + x) * 4;
-                    float pd = PixelDelta(&prev.pixels[idx], &cur.pixels[idx]);
-                    if (pd > 500.0f) {
-                        cx += x; cy += y;
-                        count++;
-                    }
-                }
-            }
-            if (count > 10) {
-                itemX = (float)(cx / count);
-                itemY = (float)(cy / count);
-            }
-        }
-
+    if (report.analyzed) {
+        const CaptureResult& B = frames[dropFrame];
+        const std::vector<uint8_t>& mask = report.mask;
         fprintf(stderr, "\n  Temporal 4-frame analysis (A=%d B=%d C=%d D=%d):\n",
-                A, B, C, D);
-        fprintf(stderr, "    estimated item pos: (%.0f, %.0f)\n", itemX, itemY);
-
-        auto mask = BuildTrailMask(
-            frames[A], frames[B], frames[C], frames[D],
-            itemX, itemY);
-
-        trailPixels = AnalyzeTrailMask(mask,
-            frames[B].width, frames[B].height,
-            &trailClusters, &trailPixels, &peakCluster);
+                dropFrame - 2, dropFrame, dropFrame + 1, dropFrame + 2);
+        fprintf(stderr, "    estimated item pos: (%.0f, %.0f)\n", report.itemX, report.itemY);
 
         // Save trail mask
-        std::vector<uint8_t> maskRGB(frames[B].pixels.size(), 0);
+        std::vector<uint8_t> maskRGB(B.pixels.size(), 0);
         for (size_t i = 0; i < mask.size(); ++i) {
             if (mask[i] > 0) {
                 size_t p = i * 4;
@@ -222,11 +165,11 @@ int main() {
                 maskRGB[p + 3] = 255;
             }
         }
-        SaveFramePNG(maskRGB.data(), frames[B].width, frames[B].height,
+        SaveFramePNG(maskRGB.data(), B.width, B.height,
                      "/tmp/trail_test_frames/trail_mask.png");
 
         // Save overlay: frame B with trail pixels highlighted
-        std::vector<uint8_t> overlay = frames[B].pixels;
+        std::vector<uint8_t> overlay = B.pixels;
         for (size_t i = 0; i < mask.size(); ++i) {
             if (mask[i] > 0) {
                 size_t p = i * 4;
@@ -235,13 +178,11 @@ int main() {
                 overlay[p + 2] = 255;
             }
         }
-        SaveFramePNG(overlay.data(), frames[B].width, frames[B].height,
+        SaveFramePNG(overlay.data(), B.width, B.height,
                      "/tmp/trail_test_frames/trail_overlay.png");
 
         fprintf(stderr, "    trail pixels: %d in %d clusters (peak %d)\n",
                 trailPixels, trailClusters, peakCluster);
-
-        trailDetected = (trailPixels > 20 && trailClusters > 0);
     }
 
     // ---- Report ----
