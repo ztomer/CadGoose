@@ -17,6 +17,10 @@
   list lacked the `libgtest-dev` the PR job had. Both jobs and the Dockerfile
   now install `scripts/linux_apt_packages.txt`, one list, and the release job
   runs the Linux suite on the build it ships.
+- `AcceptLoop.HandsEachClientOverAsABlockingSocket` counted a client after
+  replying to it, so the test could assert before the count (96 of 3000
+  repeats failed; it reddened a shuffled pre-push run). It counts first now:
+  0 of 3000.
 - **M1.6** MCP `set_config` flipped plain `bool` fields of `g_config` on the
   MCP server thread. It now sends `set_config <key> <value>` over the command
   socket like every other mutating tool, and `AppActions_HandleCommand`

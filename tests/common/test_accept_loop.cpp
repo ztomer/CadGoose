@@ -70,10 +70,14 @@ TEST(AcceptLoop, HandsEachClientOverAsABlockingSocket) {
     ASSERT_TRUE(loop.Start(listenFd, [&](int fd) {
         // The listener is non-blocking; a client must not inherit that.
         blocking = (fcntl(fd, F_GETFL, 0) & O_NONBLOCK) == 0;
+        // Counted BEFORE the reply: the client's read of 'k' is what orders
+        // this handler's effects before the assertions below. Counted after,
+        // the second client could read 'k' and assert while ++served had not
+        // run yet (1 failure in ~30 runs; red in a shuffled gate run).
+        ++served;
         const char reply = 'k';
         (void)write(fd, &reply, 1);
         close(fd);
-        ++served;
     }));
     EXPECT_TRUE(loop.Running());
 
