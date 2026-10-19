@@ -39,6 +39,10 @@ jobs:
         with:
           persist-credentials: false
           submodules: recursive
+          # Full history so `git describe --tags` can name the version: a
+          # shallow clone has no tags, and CMake then stamps the short sha into
+          # --version, which scripts/check_quiet_version.sh rightly refuses.
+          fetch-depth: 0
       - name: Install dependencies
         run: |
           sudo apt-get update -qq

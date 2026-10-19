@@ -32,6 +32,10 @@ jobs:
       - uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
+          # Full history so `git describe --tags` can name the version: a
+          # shallow clone has no tags, and CMake then stamps the short sha into
+          # --version, which scripts/check_quiet_version.sh rightly refuses.
+          fetch-depth: 0
 
       # FoundationModels (the local "Foundation" AI provider) only exists in the
       # macOS 26+ SDK. canImport() is evaluated at compile time, so building
