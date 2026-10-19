@@ -93,20 +93,19 @@ to go red once.
 **Goal:** no setting, state or race that silently does something other than
 what it says. **Exit:** each proof below is green in CI.
 
-M1.1-M1.3 closed 2026-10-18 (docs/CHANGELOG.md). Two siblings they surfaced:
+M1.1-M1.3 closed 2026-10-18; M1.5 and M1.6 closed 2026-10-19 (docs/CHANGELOG.md).
+Open:
 
-- **M1.5 Linux never loads config.toml.** `src/platform/linux/main.cpp`
-  calls `Config_Init()` and never `Config_LoadAll()`, while `OnConfigChange`
-  saves: every Linux setting is written and lost at the next start. One line,
-  but the Linux tests are disabled in CI (pr_check.yml), so nothing would
-  prove it. *Proof:* a Linux-run test that saves a value, restarts the load
-  path and reads it back.
-- **M1.6 Registry bools written across threads.** MCP `set_config`
-  (`mcp_handlers.cpp` SetConfigValue) flips plain `bool` fields on the MCP
-  thread that `Config_SaveAll` and the tick loop read on the main thread; the
-  comment there calls it benign, but it is a data race (UB). M1.2 closed the
-  string half under one lock. *Proof:* a `CadGooseTsanTests` case racing save
-  against `set_config` is clean.
+- **M1.7 MCP reads of the bool settings race main-thread writes.** M1.6 moved
+  every `set_config` WRITE onto the main thread, but `get_config` and
+  `resources/read` (`ConfigToJson`, mcp_handlers.cpp) still read the plain
+  `bool` fields on the MCP thread while the config window, a socket `enable`,
+  or `set_config` writes them on the main one. In `--mcp` stdio mode they also
+  report the MCP process's own copy, not the running app's. Fix the same way:
+  a socket command that answers from the main thread. *Proof:* a
+  `CadGooseTsanTests` case racing `get_config` against a main-thread toggle is
+  clean, and the many MCP suites that read `g_config` through `get_config`
+  move to the stub's handler seam (`CommandSocketStub_SetHandler`).
 - **M1.4 Notarization** (carried from the old plan). Developer ID signing, the
   hardened runtime and the `com.apple.security.cs.allow-jit` entitlement;
   `notarytool` submit and staple; remove the `xattr` step from the README, the

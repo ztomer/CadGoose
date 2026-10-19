@@ -42,13 +42,14 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y -qq cmake g++ libgtk-4-dev libsdl2-dev libsdl2-mixer-dev libgdk-pixbuf-2.0-dev libwayland-dev libx11-dev libxtst-dev
+          sudo apt-get install -y -qq cmake g++ libgtk-4-dev libsdl2-dev libsdl2-mixer-dev libgdk-pixbuf-2.0-dev libwayland-dev libx11-dev libxtst-dev libgtest-dev
       - name: Configure
         run: rm -rf build && cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
       - name: Build
         run: cmake --build build --config Release --parallel $(nproc)
-      # Tests are macOS-only (behaviors have CoreGraphics dependencies)
-      # - name: Test
-      #   run: |
-      #     cd build
-      #     ctest --output-on-failure -j$(nproc)
+      # The Linux suite (ROADMAP M1.5). This step was commented out because the
+      # macOS suite links ObjC++ and Cocoa; cmake/TestsLinux.cmake builds the
+      # portable config layer into its own binary instead, so Linux-only
+      # defects have something that can go red.
+      - name: Test (Linux suite, M1.5)
+        run: bash scripts/run_tests_linux.sh

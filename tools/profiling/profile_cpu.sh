@@ -1,10 +1,48 @@
 #!/usr/bin/env bash
-# profile_cpu.sh — shim. The canonical harness lives in $GOH_DIR/tools/profiling
-# (branch unify/profiling); fixes land there, never here.
-GOH="${GOH_DIR:-}"
-CANON="$GOH/tools/profiling/profile_cpu.sh"
-if [ ! -x "$CANON" ]; then
-    echo "✗ profile_cpu.sh: canonical harness missing under $GOH/tools/profiling (is GOH_DIR right?)" >&2
-    exit 2
+# profile_cpu.sh - CPU profiling with Time Profiler
+
+DURATION=${2:-30}
+PID=$1
+
+if [ -z "$PID" ]; then
+    # Read whole, then the first: `pgrep | head -1` is a race under a caller's pipefail
+    # (goh early-exit-pipe).
+    pids="$(pgrep -f "CadGoose" || true)"
+    PID="$(head -n1 <<<"$pids")"
 fi
-exec "$CANON" "$@"
+
+if [ -z "$PID" ]; then
+    echo "Error: CadGoose not running. Pass PID or start CadGoose first."
+    exit 1
+fi
+
+TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+. "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/_cadgoose.sh"
+OUTPUT_DIR="$(cg_root)/tools/profiling"
+TRACE_FILE="${OUTPUT_DIR}/cpu_profile_${TIMESTAMP}.trace"
+
+echo "Profiling CPU for $DURATION seconds (PID: $PID)..."
+echo "Saving to: $TRACE_FILE"
+
+xctrace record \
+    --template "Time Profiler" \
+    --duration $DURATION \
+    --pid $PID \
+    --output "$TRACE_FILE" \
+    2>&1
+
+if [ -f "$TRACE_FILE" ]; then
+    echo ""
+    echo "=== Top CPU Consumers ==="
+    # The analysis is read whole: `xctrace | head -30 || echo` let head's early exit decide the
+    # branch (goh early-exit-pipe).
+    if analysis="$(xctrace analyze --detailed "$TRACE_FILE" 2>/dev/null)"; then
+        head -30 <<<"$analysis"
+    else
+        echo "Profile saved to: $TRACE_FILE"
+    fi
+    echo "Open in Instruments: open \"$TRACE_FILE\""
+else
+    echo "Error: Profile failed"
+    exit 1
+fi

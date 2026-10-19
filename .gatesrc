@@ -13,12 +13,13 @@ GOH_MAX_LINES=500                 # file-length cap; unset disables the check
 # inherits exported variables.
 # GOH_DIR is set in the author's environment; this project does not default it to a path
 # that only exists on one machine.
-GOH_CI_STEPS='"$GOH_DIR/gates/structural.sh" --full:bash "$GOH_DIR/gates/python.sh" tools/check_test_registration.py:bash "$GOH_DIR/gates/python.sh" tools/check_gtest_filter_parity.py:bash "$GOH_DIR/gates/python.sh" tools/check_test_process_state.py:bash "$GOH_DIR/gates/python.sh" tools/check_new_sources_visible.py:bash "$GOH_DIR/gates/python.sh" tools/check_platform_policy.py:bash "$GOH_DIR/gates/python.sh" tools/check_test_endpoints.py:bash "$GOH_DIR/gates/python.sh" tools/check_fetchcontent.py:bash "$GOH_DIR/gates/python.sh" tools/check_ci_pins.py:rm -rf build && cmake -S . -B build -DCMAKE_BUILD_TYPE=Release && cmake --build build --config Release --parallel $(sysctl -n hw.ncpu):cd build && bash ../scripts/run_tests_concurrent.sh:cd build && bash ../scripts/run_tests_shuffled.sh:cd build && bash ../scripts/run_tests_tsan.sh:bash scripts/create_bundle.sh --clean && bash "$GOH_DIR/gates/python.sh" tools/check_macos_floor.py --probe:bash "$GOH_DIR/gates/python.sh" "$GOH_DIR/checks/check_ci_local_parity.py":bash scripts/check_coverage.sh --build-dir=build-cov'
-# CI/local parity (goh checks/check_ci_local_parity.py). Floor: 11 repo
-# scripts in CI's run: steps on 2026-10-18 (run_tests_tsan.sh joined, M1.2). No exemptions since G0.14:
+GOH_CI_STEPS='"$GOH_DIR/gates/structural.sh" --full:bash "$GOH_DIR/gates/python.sh" tools/check_test_registration.py:bash "$GOH_DIR/gates/python.sh" tools/check_gtest_filter_parity.py:bash "$GOH_DIR/gates/python.sh" tools/check_test_process_state.py:bash "$GOH_DIR/gates/python.sh" tools/check_new_sources_visible.py:bash "$GOH_DIR/gates/python.sh" tools/check_platform_policy.py:bash "$GOH_DIR/gates/python.sh" tools/check_test_endpoints.py:bash "$GOH_DIR/gates/python.sh" tools/check_fetchcontent.py:bash "$GOH_DIR/gates/python.sh" tools/check_ci_pins.py:rm -rf build && cmake -S . -B build -DCMAKE_BUILD_TYPE=Release && cmake --build build --config Release --parallel $(sysctl -n hw.ncpu):cd build && bash ../scripts/run_tests_concurrent.sh:cd build && bash ../scripts/run_tests_shuffled.sh:cd build && bash ../scripts/run_tests_tsan.sh:bash scripts/run_tests_linux.sh:bash tests/profiling/test_run_trail_test.sh:bash scripts/create_bundle.sh --clean && bash "$GOH_DIR/gates/python.sh" tools/check_macos_floor.py --probe:bash "$GOH_DIR/gates/python.sh" "$GOH_DIR/checks/check_ci_local_parity.py":bash scripts/check_coverage.sh --build-dir=build-cov'
+# CI/local parity (goh checks/check_ci_local_parity.py). Floor: 12 repo
+# scripts in CI's run: steps on 2026-10-19 (run_tests_linux.sh joined, M1.5;
+# locally it runs the suite in the repo's Dockerfile image). No exemptions since G0.14:
 # scripts/create_bundle.sh was exempt as "packaging, not a gate" until the
 # bundle became what proves the macOS floor, so the local gate builds it too.
-GOH_CI_PARITY_MIN_SCRIPTS=11
+GOH_CI_PARITY_MIN_SCRIPTS=12
 GOH_CI_PARITY_EXEMPT=''
 # GOH_EXCLUDE='vendor/|\.generated\.'   # shared vendor/generated exemption
 # GOH_LINE_EXCLUDE='third_party/'       # length-only alias

@@ -128,6 +128,12 @@ int AppCli_HandleCommand(int argc, char** argv, int* appArgc) {
             *appArgc = 1;
             return -1;
         }
+        // The path this build's command socket binds: scripts that drive the
+        // app (tools/profiling) ask the binary instead of hard-coding it.
+        if (std::string(argv[i]) == "--socket-path") {
+            std::cout << CommandSocket_GetPath() << std::endl;
+            return 0;
+        }
         if (std::string(argv[i]) == "--version" || std::string(argv[i]) == "-v") {
             std::cout << "CadGoose " << CADGOOSE_VERSION << std::endl;
             return 0;
@@ -154,6 +160,7 @@ int AppCli_HandleCommand(int argc, char** argv, int* appArgc) {
             << "  CadGoose\n"
             << "  CadGoose --debug\n"
             << "  CadGoose --version\n"
+            << "  CadGoose --socket-path (print the command socket path)\n"
             << "  CadGoose --mcp (run MCP stdio server)\n"
             << "  CadGoose start\n"
             << "  CadGoose start --foreground\n"

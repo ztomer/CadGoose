@@ -8,11 +8,17 @@
 #include <filesystem>
 #include <string>
 #include <thread>
+#include <vector>
+#include "command_socket.h"
 #include "config.h"
 #include "config_string.h"
 #include "hotkey_cache.h"
+#include "mcp_server.h"
 
 namespace fs = std::filesystem;
+
+std::vector<std::vector<std::string>> CommandSocketStub_GetCommands();
+void CommandSocketStub_Reset();
 
 namespace {
 
@@ -68,6 +74,26 @@ TEST_F(ConfigSaveRace, SaveAgainstRegistryStringWrite) {
     const ConfigOption* opt = Config_FindOptionByKey("custom_model");
     ASSERT_NE(opt, nullptr);
     RaceSaveAgainst([opt](int i) { ConfigOption_SetString(*opt, (i & 1) ? kLongA : kLongB); });
+}
+
+// ROADMAP M1.6: MCP `set_config` runs on the MCP server thread. It used to
+// flip the plain bool fields of g_config right there, racing every
+// main-thread reader (Config_SaveAll here, the tick loop in the app). The
+// write must reach g_config only on the thread that owns it.
+TEST_F(ConfigSaveRace, SaveAgainstMcpSetConfig) {
+    CommandSocketStub_Reset();
+    RaceSaveAgainst([](int i) {
+        MCP_CallTool("set_config", (i & 1) ? R"({"key":"behaviors.fun.ball","value":true})"
+                                           : R"({"key":"behaviors.fun.ball","value":false})");
+    });
+    // Clean under TSan is only half the proof: the write must also have been
+    // sent to the owning thread, not dropped.
+    const auto sent = CommandSocketStub_GetCommands();
+    ASSERT_FALSE(sent.empty());
+    ASSERT_EQ(sent.front().size(), 3U);
+    EXPECT_EQ(sent.front()[0], "set_config");
+    EXPECT_EQ(sent.front()[1], "behaviors.fun.ball");
+    CommandSocketStub_Reset();
 }
 
 TEST_F(ConfigSaveRace, GetAgainstSetHotkeyThroughRegistry) {

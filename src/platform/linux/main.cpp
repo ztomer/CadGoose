@@ -19,7 +19,7 @@ static void on_activate(GtkApplication* app) {
 
     if (initialized) return;
 
-    Config_Init();
+    Config_Startup();
     setup_overlay_window(app);
     g_backendManager.Init();
 

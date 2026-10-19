@@ -8,6 +8,7 @@
 #include <fstream>
 #include <iomanip>
 #include <sstream>
+#include <unordered_map>
 #include <cstdlib>
 
 #if defined(__linux__)
@@ -192,10 +193,47 @@ std::string AppActions_GetStatus() {
     return out.str();
 }
 
+// The MCP `set_config` bool fields (ROADMAP M1.6). Applied here, by the
+// command socket's handler, which runs on the main thread that owns g_config;
+// the MCP server thread only sends the command.
+static bool SetMcpConfigBool(const std::string& key, const std::string& value) {
+    static const std::unordered_map<std::string, bool*> boolFields = {
+        {"behaviors.fun.ball", &g_config.behaviors.fun.ball},
+        {"behaviors.fun.breadCrumbs", &g_config.behaviors.fun.breadCrumbs},
+        {"behaviors.fun.hats", &g_config.behaviors.fun.hats},
+        {"behaviors.fun.rainbow", &g_config.behaviors.fun.rainbow},
+        {"behaviors.fun.acid", &g_config.behaviors.fun.acid},
+        {"behaviors.fun.anger", &g_config.behaviors.fun.anger},
+        {"behaviors.control.honcker", &g_config.behaviors.control.honcker},
+        {"behaviors.control.jail", &g_config.behaviors.control.jail},
+        {"behaviors.control.portals", &g_config.behaviors.control.portals},
+        {"behaviors.control.drag", &g_config.behaviors.control.drag},
+        {"behaviors.info.nametag", &g_config.behaviors.info.nametag},
+        {"behaviors.info.presence", &g_config.behaviors.info.presence},
+        {"behaviors.info.configGUI", &g_config.behaviors.info.configGUI},
+        {"behaviors.info.visible", &g_config.behaviors.info.visible},
+        {"behaviors.systems.health", &g_config.behaviors.systems.health},
+        {"behaviors.systems.ai", &g_config.behaviors.systems.ai},
+        {"behaviors.systems.pomodoro", &g_config.behaviors.systems.pomodoro},
+    };
+    auto it = boolFields.find(key);
+    if (it == boolFields.end()) return false;
+    *it->second = (value == "true");
+    return true;
+}
+
 std::string AppActions_HandleCommand(const std::vector<std::string>& args) {
     if (args.empty()) return "error missing command\n";
 
     const std::string& command = args.front();
+    if (command == "set_config") {
+        if (args.size() < 3) return "error: usage: set_config <key> <value>\n";
+        if (!SetMcpConfigBool(args[1], args[2])) {
+            return "error: unknown config key '" + args[1] + "'\n";
+        }
+        return "ok: " + args[1] + " set to " + args[2] + "\n";
+    }
+
     if (command == "spawn") {
         Goose* goose = AppActions_SpawnGoose(args.size() > 1 ? args[1] : "");
         return "ok id=" + std::to_string(goose->id) + "\n";

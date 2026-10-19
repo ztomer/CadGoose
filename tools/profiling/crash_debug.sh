@@ -1,10 +1,46 @@
-#!/usr/bin/env bash
-# crash_debug.sh — shim. The canonical harness lives in $GOH_DIR/tools/profiling
-# (branch unify/profiling); fixes land there, never here.
-GOH="${GOH_DIR:-}"
-CANON="$GOH/tools/profiling/crash_debug.sh"
-if [ ! -x "$CANON" ]; then
-    echo "✗ crash_debug.sh: canonical harness missing under $GOH/tools/profiling (is GOH_DIR right?)" >&2
-    exit 2
+#!/bin/bash
+# crash_debug.sh — Launch CadGoose under lldb to capture crash backtrace
+#
+# Usage:
+#   ./crash_debug.sh                 # build + launch under lldb
+#   ./crash_debug.sh --attach <PID>  # attach to running process
+#
+# On crash: backtrace saved to /tmp/cadgoose_crash_*.txt
+
+set -euo pipefail
+
+. "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/_cadgoose.sh"
+PROJECT_DIR="$(cg_root)"
+BUILD_DIR="$PROJECT_DIR/build"
+TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+OUTPUT_FILE="/tmp/cadgoose_crash_${TIMESTAMP}.txt"
+
+echo "=== CadGoose Crash Debug ==="
+echo "Timestamp: $TIMESTAMP"
+echo "Output: $OUTPUT_FILE"
+
+if [ "${1:-}" = "--attach" ] && [ -n "${2:-}" ]; then
+    PID="$2"
+    echo "Attaching to PID $PID..."
+    lldb -b -p "$PID" -o "bt all" -o "frame variable" -o "quit" 2>&1 | tee "$OUTPUT_FILE"
+elif [ ! -f "$BUILD_DIR/CadGoose" ]; then
+    echo "Building CadGoose..."
+    (cd "$BUILD_DIR" && cmake .. -DCMAKE_BUILD_TYPE=Release && make -j$(sysctl -n hw.logicalcpu) CadGoose)
+    echo "Launching CadGoose under lldb..."
+    echo "Trigger the crash by interacting with the app."
+    lldb -b "$BUILD_DIR/CadGoose" -o "run" -o "bt all" -o "frame variable" -o "quit" 2>&1 | tee "$OUTPUT_FILE"
+else
+    echo "Launching CadGoose under lldb..."
+    echo "Trigger the crash by interacting with the app."
+    lldb -b "$BUILD_DIR/CadGoose" -o "run" -o "bt all" -o "frame variable" -o "quit" 2>&1 | tee "$OUTPUT_FILE"
 fi
-exec "$CANON" "$@"
+
+echo ""
+echo "Debug log saved to: $OUTPUT_FILE"
+if grep -q "stop reason" "$OUTPUT_FILE" 2>/dev/null; then
+    echo "CRASH DETECTED — backtrace in $OUTPUT_FILE"
+    exit 10
+else
+    echo "Process exited normally."
+    exit 0
+fi

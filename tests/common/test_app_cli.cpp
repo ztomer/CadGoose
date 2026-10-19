@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 #include "app_cli.h"
+#include "command_socket.h"
 #include <string>
 #include <vector>
 
@@ -56,6 +57,20 @@ TEST_F(AppCliTest, VersionFlagReturnsZeroWithoutSocket) {
     int ret = runAppCli(2, argv);
     EXPECT_EQ(ret, 0);
     // --version must exit before touching the running-instance socket.
+    EXPECT_TRUE(CommandSocketStub_GetCommands().empty());
+}
+
+// The profiling scripts wait for the app's command socket. They used to
+// hard-code a path the app never binds (/tmp/desktop-goose-mcp.sock is the
+// MCP server's, which exists only when MCP is enabled); they now ask the
+// binary under test, so the path has one source: CommandSocket_GetPath().
+TEST_F(AppCliTest, SocketPathFlagPrintsTheCommandSocketPath) {
+    const char* argv[] = {"CadGoose", "--socket-path"};
+    testing::internal::CaptureStdout();
+    int ret = runAppCli(2, argv);
+    const std::string out = testing::internal::GetCapturedStdout();
+    EXPECT_EQ(ret, 0);
+    EXPECT_EQ(out, CommandSocket_GetPath() + "\n");
     EXPECT_TRUE(CommandSocketStub_GetCommands().empty());
 }
 

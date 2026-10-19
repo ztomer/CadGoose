@@ -149,6 +149,11 @@ void Config_LoadAll() {
     Hotkey_SyncFromConfig();  // seed the lock-free hotkey cache
 }
 
+void Config_Startup() {
+    Config_Init();
+    Config_LoadAll();
+}
+
 bool Config_LoadThemeColors(const std::string& themeName, ColorRGB& body, ColorRGB& neck, ColorRGB& head, ColorRGB& beak, ColorRGB& eye, ColorRGB& outline) {
     if (themeName.empty() || themeName == "Default") return false;
     

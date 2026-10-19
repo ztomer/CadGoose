@@ -166,6 +166,11 @@ void Config_Init();
 void Config_SaveAll();
 void Config_SaveGooseNames();
 void Config_LoadAll();
+// What every platform's app start does to its settings: build the registry,
+// then read config.toml over the defaults. The one start path both mains call,
+// so a platform cannot initialise the registry and never load the file it
+// saves to (ROADMAP M1.5: Linux did exactly that).
+void Config_Startup();
 void Config_Load(const toml::basic_value<toml::type_config>& config);
 
 // config.toml schema version this build writes, as [meta] schema_version. A

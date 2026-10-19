@@ -89,6 +89,11 @@ jobs:
           cd build
           bash ../scripts/run_tests_tsan.sh
 
+      # The profiling harness, driven on fakes: it waits on the socket the
+      # binary names and restores the desktop on every exit (run_trail_test.sh).
+      - name: Profiling scripts restore the desktop and find the app's socket
+        run: bash tests/profiling/test_run_trail_test.sh
+
       # The coverage floors live in scripts/check_coverage.sh and nowhere
       # else (G0.8). They are a RATCHET set below the measured value (G0.1
       # measured P0 95.22%, P1 26.75%, eligible total 63.93% on 2026-10-16),

@@ -1,15 +1,10 @@
-# Canonical home: the author's shared house-tools checkout
-
-Every script here is a thin exec shim to
-`$GOH_DIR/tools/profiling/<same name>`, when GOH_DIR is configured.
-Fixes land there; this directory exists so repo-relative entry points keep
-working. Historical run artifacts (soak_results_*.md) remain repo-local.
-
----
-
 # CadGoose Profiling Tools
 
-This folder contains scripts for profiling CadGoose performance.
+This folder contains scripts for profiling CadGoose performance. They act on
+this checkout (`CG_PROFILE_ROOT` names another) and ask the built binary for
+its command socket (`CadGoose --socket-path`, via `_cadgoose.sh`) rather than
+typing the path. `analyze_trace.sh` is a shim to the house suite's generic
+trace ranker (`$GOH_DIR/tools/profiling`), which ranks any repo's trace.
 
 ## Usage
 
@@ -44,7 +39,7 @@ Simple 60-second CPU profile, saves to quick_profile.md
 ```bash
 ./hotspot_profile.sh [DURATION_SECONDS]
 ```
-Fully automated: builds CadGoose (Release), launches it, waits for MCP socket,
+Fully automated: builds CadGoose (Release), launches it, waits for its command socket,
 records a `DURATION_SECONDS`-second Time Profiler trace, calls `analyze_trace.sh`
 to print a ranked hotspot report, then kills the app.
 Saves trace + report to `/tmp/hotspot_<timestamp>/`.
@@ -54,7 +49,7 @@ Requires `xctrace` (Xcode CLT). May need `sudo` on some macOS versions.
 ```bash
 ./multi_goose_profile.sh [NUM_GEESE] [DURATION_SECONDS]
 ```
-Same as `hotspot_profile.sh` but spawns N geese (default: 5) via the MCP socket
+Same as `hotspot_profile.sh` but spawns N geese (default: 5) with `CadGoose spawn`
 before profiling. Exposes O(N²) separation-force and per-goose render hotspots
 that are invisible with a single goose.
 
@@ -72,9 +67,11 @@ Saves report alongside the trace as `<trace>.hotspots.txt`.
 ```
 Full automated trail detection. Auto-re-launches in Ghostty (needs
 Screen Recording permission), hides all other windows, builds,
-launches CadGoose, runs v4 cyan-pixel test, restores desktop.
-Exit: 0=clean, 10=trail, 11=item not visible, 97=build fail.
-Output: `/tmp/trail_test_YYYYMMDD_HHMMSS/`
+launches CadGoose, runs v4 cyan-pixel test, restores desktop. The restore
+runs from an EXIT trap, so a failed build or test restores it too; pinned by
+`tests/profiling/test_run_trail_test.sh`.
+Exit: 0=clean, 10=trail, 11=item not visible, 97=build fail, 98=socket timeout.
+Output: `$TMPDIR/trail_test_YYYYMMDD_HHMMSS/`
 
 ### Crash Debug (lldb)
 ```bash

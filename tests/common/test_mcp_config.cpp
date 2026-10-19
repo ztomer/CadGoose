@@ -4,10 +4,19 @@
 #include "mcp_server.h"
 #include "config.h"
 
+#include "app_actions.h"
+#include "command_socket.h"
+
+// set_config is applied by the app's command handler on the main thread
+// (ROADMAP M1.6); the stub hands the command to it as the real socket would.
+void CommandSocketStub_SetHandler(CommandHandler handler);
+void CommandSocketStub_Reset();
+
 class MCPConfigTest : public ::testing::Test {
 protected:
     void SetUp() override {
         Config_Init();
+        CommandSocketStub_SetHandler(AppActions_HandleCommand);
         savedBall = g_config.behaviors.fun.ball;
         savedBreadcrumbs = g_config.behaviors.fun.breadCrumbs;
         savedHats = g_config.behaviors.fun.hats;
@@ -36,6 +45,7 @@ protected:
     }
 
     void TearDown() override {
+        CommandSocketStub_Reset();
         g_config.behaviors.fun.ball = savedBall;
         g_config.behaviors.fun.breadCrumbs = savedBreadcrumbs;
         g_config.behaviors.fun.hats = savedHats;

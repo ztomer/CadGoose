@@ -328,8 +328,9 @@ else()
     message(FATAL_ERROR "Unsupported platform. Only macOS and Linux are supported.")
 endif()
 
-# Unit tests and the display-bound E2E targets (macOS only).
+# Unit tests and the display-bound E2E targets (macOS), and the Linux suite.
 include(cmake/Tests.cmake)
+include(cmake/TestsLinux.cmake)
 
 # Deprecations are build errors, on every compiled target this file defines
 # (ROADMAP G0.4, house rule 17: the warning is the only notice before an API

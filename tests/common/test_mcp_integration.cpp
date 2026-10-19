@@ -13,6 +13,14 @@
 #include "mcp_server.h"
 #include "config.h"
 
+#include "app_actions.h"
+#include "command_socket.h"
+
+// set_config is applied by the app's command handler on the main thread
+// (ROADMAP M1.6); the stub hands the command to it as the real socket would.
+void CommandSocketStub_SetHandler(CommandHandler handler);
+void CommandSocketStub_Reset();
+
 static std::string SendHTTPRequest(const std::string& body, int port) {
     int sock = socket(AF_INET, SOCK_STREAM, 0);
     if (sock < 0) return "";
@@ -59,6 +67,7 @@ class MCPIntegrationTest : public ::testing::Test {
 protected:
     void SetUp() override {
         Config_Init();
+        CommandSocketStub_SetHandler(AppActions_HandleCommand);
         m_savedPort = g_config.ai.mcpPort;
         // Port 0: the kernel picks a free port, read back via MCP_HTTPPort(),
         // so concurrent test binaries never collide (ROADMAP G0.3).
@@ -70,6 +79,7 @@ protected:
     }
 
     void TearDown() override {
+        CommandSocketStub_Reset();
         MCP_StopHTTPServer();
         g_config.ai.mcpPort = m_savedPort;
     }

@@ -1,5 +1,40 @@
 # Changelog
 
+## October 19, 2026 — M1.5/M1.6: Linux keeps its settings, MCP writes on the owning thread
+
+- **M1.5** Linux's start path called `Config_Init()` and never
+  `Config_LoadAll()`, so every Linux setting was saved and lost at the next
+  start. Both platforms now start through one `Config_Startup()` (init, then
+  load), so the paths cannot diverge again; the macOS "Reload configuration"
+  item, which called the idempotent `Config_Init()` and so reloaded nothing,
+  now re-reads the file. CI ran no Linux test at all: the step was commented
+  out because the macOS suite links ObjC++ and Cocoa. `cmake/TestsLinux.cmake`
+  builds the portable config layer into `CadGooseLinuxTests`, which
+  `scripts/run_tests_linux.sh` runs in CI's Linux job and, through the repo's
+  Dockerfile image, in the local pre-push gate. Red first: the new
+  `ConfigStartup` test failed on Linux (scale 1 for 1.75, ball false for true).
+- **M1.6** MCP `set_config` flipped plain `bool` fields of `g_config` on the
+  MCP server thread. It now sends `set_config <key> <value>` over the command
+  socket like every other mutating tool, and `AppActions_HandleCommand`
+  applies it on the main thread; in `--mcp` stdio mode the write used to land
+  in the MCP process's own copy, which the running goose never saw. Red first:
+  a new `CadGooseTsanTests` case racing `Config_SaveAll` against
+  `set_config` exited 134 on the race at mcp_handlers.cpp:250; clean after.
+  No other off-thread `g_config` writer exists (grep of the MCP and AI
+  threads). The read half is M1.7.
+- **Profiling scripts** come home from gates_of_heck, where they were
+  canonized while CadGoose2 carried a copy; `analyze_trace.sh` stays a shim to
+  the house suite's generic ranker. `run_trail_test.sh` waited for
+  `/tmp/desktop-goose-mcp.sock` (bound only with MCP on) instead of the command
+  socket, and under `set -e` a failing build or test skipped restoring the
+  hidden apps. The scripts now ask the binary (`CadGoose --socket-path`), the
+  restore runs from the EXIT trap, and the script exits with the test's
+  status; `tests/profiling/test_run_trail_test.sh` drives it on fakes (red
+  first: all three cases failed; removing the trap's restore turns the
+  failed-build case red). The same wrong socket and swallowed statuses were
+  fixed in `hotspot_profile.sh`, `multi_goose_profile.sh`,
+  `run_multi_goose_test.sh` and `run_soak_test.sh`.
+
 ## October 18, 2026 — M1.1-M1.3: settings hold, the save path is race-free, the trail scan is measured
 
 - **M1.1** `Config_LoadAll` forced `audio_enabled = true` on every macOS load

@@ -9,12 +9,12 @@
 extern std::string JsonEscape(const std::string& s);
 extern std::string ExtractArg(const std::string& json, const std::string& key);
 
-// MCP config handlers run on the internal server's background thread. They no
-// longer hop to the main thread: hotkey strings are accessed under the
-// hotkey-cache mutex (Hotkey_Name / Hotkey_SetName) and the bool fields are
-// plain bytes whose race with the main thread is benign. This removes the old
-// dispatch-to-main deadlock that stalled the single-threaded MCP server when no
-// run loop was pumping the main queue.
+// MCP config handlers run on the internal server's background thread. Hotkey
+// strings are accessed under the hotkey-cache mutex (Hotkey_Name /
+// Hotkey_SetName). The bool fields are written only on the main thread:
+// set_config sends a command over the socket, as every mutating tool does
+// (ROADMAP M1.6). Reads of them here (get_config, resources) still race a
+// main-thread write; that half is open in ROADMAP.
 
 // --- Helper: serialize a bool to JSON "true"/"false" ---
 static std::string BoolJson(bool v) { return v ? "true" : "false"; }
@@ -225,32 +225,6 @@ std::string HandleResourcesRead(const std::string& uri) {
     return "{\"contents\":[{\"uri\":\"" + JsonEscape(uri) + "\",\"mimeType\":\"application/json\",\"text\":\"" + JsonEscape(json) + "\"}]}";
 }
 
-static bool SetConfigValue(const std::string& key, const std::string& valueJson) {
-    static const std::unordered_map<std::string, bool*> boolFields = {
-        {"behaviors.fun.ball", &g_config.behaviors.fun.ball},
-        {"behaviors.fun.breadCrumbs", &g_config.behaviors.fun.breadCrumbs},
-        {"behaviors.fun.hats", &g_config.behaviors.fun.hats},
-        {"behaviors.fun.rainbow", &g_config.behaviors.fun.rainbow},
-        {"behaviors.fun.acid", &g_config.behaviors.fun.acid},
-        {"behaviors.fun.anger", &g_config.behaviors.fun.anger},
-        {"behaviors.control.honcker", &g_config.behaviors.control.honcker},
-        {"behaviors.control.jail", &g_config.behaviors.control.jail},
-        {"behaviors.control.portals", &g_config.behaviors.control.portals},
-        {"behaviors.control.drag", &g_config.behaviors.control.drag},
-        {"behaviors.info.nametag", &g_config.behaviors.info.nametag},
-        {"behaviors.info.presence", &g_config.behaviors.info.presence},
-        {"behaviors.info.configGUI", &g_config.behaviors.info.configGUI},
-        {"behaviors.info.visible", &g_config.behaviors.info.visible},
-        {"behaviors.systems.health", &g_config.behaviors.systems.health},
-        {"behaviors.systems.ai", &g_config.behaviors.systems.ai},
-        {"behaviors.systems.pomodoro", &g_config.behaviors.systems.pomodoro},
-    };
-    auto it = boolFields.find(key);
-    if (it == boolFields.end()) return false;
-    *it->second = (valueJson == "true");
-    return true;
-}
-
 std::string MCP_GetOpenAITools() {
     std::string j = "[";
     for (int i = 0; i < kToolCount; i++) {
@@ -304,12 +278,13 @@ std::string ExecuteTool(const std::string& name, const std::string& argsJson) {
         std::string value = ExtractArg(argsJson, "value");
         if (key.empty()) return "error: 'key' argument is required";
         if (value.empty()) return "error: 'value' argument is required";
-        // SetConfigValue flips a plain bool the tick loop polls each frame;
-        // racing that read is benign, so no main-thread hop is needed.
-        if (!SetConfigValue(key, value)) {
-            return "error: unknown config key '" + key + "'";
-        }
-        return "ok: " + key + " set to " + value;
+        // The bool fields belong to the main thread (the tick loop and
+        // Config_SaveAll read them there), so the write goes through the
+        // command socket like every other mutating tool, and the app applies
+        // it on its own thread (ROADMAP M1.6). Writing g_config here was a
+        // data race in the app and, in `--mcp` stdio mode, a write to this
+        // process's copy that the running goose never saw.
+        cmd = "set_config\t" + key + "\t" + value;
     } else if (name == "set_hotkey") {
         std::string hotkey = ExtractArg(argsJson, "hotkey");
         std::string value = ExtractArg(argsJson, "value");

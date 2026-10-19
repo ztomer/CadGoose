@@ -76,6 +76,7 @@ if(APPLE)
         tests/common/test_config_get_set.cpp
         tests/common/test_config_path.cpp
         tests/common/test_config_load_save.cpp
+        tests/common/test_config_startup.cpp
         tests/common/test_config_schema.cpp
         tests/common/test_trail_analysis.cpp
         tests/common/test_config_themes.cpp
@@ -342,36 +343,8 @@ if(APPLE)
              COMMAND CadGooseTests --gtest_filter=${CG_TEST_GTEST_FILTER}
              WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
-    # ThreadSanitizer suite (ROADMAP M1.2): the config sources that more than
-    # one thread touches, compiled with -fsanitize=thread into their own
-    # binary. The main suite links ObjC++ that TSan cannot run under, so this
-    # target carries exactly the sources the race tests reach plus inert link
-    # stubs. Run by scripts/run_tests_tsan.sh (CI and the pre-push gate).
-    add_executable(CadGooseTsanTests
-        tests/tsan/test_config_save_race.cpp
-        tests/tsan/tsan_link_stubs.cpp
-        src/common/config.cpp
-        src/common/config_load.cpp
-        src/common/config_save.cpp
-        src/common/config_string.cpp
-        src/common/config_registry_ai.cpp
-        src/common/config_registry_behaviors.cpp
-        src/common/config_registry_generated.cpp
-        src/common/config_registry_render.cpp
-        src/common/hotkey.cpp
-        src/common/hotkey_cache.cpp
-    )
-    target_include_directories(CadGooseTsanTests PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}/include
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/common
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/platform/macos
-    )
-    target_compile_options(CadGooseTsanTests PRIVATE -fsanitize=thread -fno-omit-frame-pointer -g)
-    target_link_options(CadGooseTsanTests PRIVATE -fsanitize=thread)
-    target_link_libraries(CadGooseTsanTests PRIVATE toml11 GTest::GTest GTest::Main Threads::Threads)
-    add_test(NAME CadGooseTsanTests
-             COMMAND ${CMAKE_COMMAND} -E env TSAN_OPTIONS=halt_on_error=1 $<TARGET_FILE:CadGooseTsanTests>
-             WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+    # ThreadSanitizer suite (ROADMAP M1.2, M1.6): cmake/TestsTsan.cmake.
+    include(cmake/TestsTsan.cmake)
 
     # Regression guard — runs AFTER the suite (DEPENDS) and fails if the run
     # left anything dirty or untracked under tracked config/. Structural gate

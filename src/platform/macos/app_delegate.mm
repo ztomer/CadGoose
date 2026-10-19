@@ -111,7 +111,9 @@ bool Config_IsSystemDarkTheme();
 }
 
 - (void)reloadConfiguration:(id)sender {
-    Config_Init();
+    // Config_Init() is idempotent after the first call, so this menu item
+    // used to reload nothing (M1.5's sibling): re-read config.toml instead.
+    Config_LoadAll();
     DEBUG_LOG("Configuration reloaded");
 }
 
@@ -248,8 +250,7 @@ extern void (*g_updateStatusBarIconFn)();
     g_updateStatusBarIconFn = UpdateStatusBarIcon;
     DEBUG_LOG("App launching...");
 
-    Config_Init();
-    Config_LoadAll();
+    Config_Startup();
     DEBUG_LOG("Config init done");
 #ifndef CG_DISABLE_DEBUG_LOG
     if (g_config.debug.toTerminal) {
