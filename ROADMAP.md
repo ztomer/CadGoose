@@ -10,9 +10,13 @@ the session log that used to live in AGENTS.md: `git show a3353d2:AGENTS.md`.
 
 ## Context (measured 2026-10-12, not copied; gate state 2026-10-14)
 
-- Released as **v1.81** (`a3353d2`, 2026-10-08); the Homebrew cask in the
-  tap points at 1.81. CI green on `b1d6b50` (release + PR check, 2026-10-12);
-  CI does not run the house structural gate, the local pre-push does.
+- Released as **v1.83** (`321a5d0`, 2026-10-19); the Homebrew cask in the
+  tap points at 1.83 (`fd57318`). The tag is lightweight, like v1.80-v1.82.
+  It carried M1.7 (the MCP `get_config` and `resources/read` reads on the
+  owning thread) and the quiet release binary (`--version` prints its one
+  line and nothing else). CI green on the release run `39289049100` (macOS
+  DMG, Linux tar.zst); CI does not run the house structural gate, the local
+  pre-push does.
 - History was flattened on 2026-09-04 (`af63341`, 320 commits). Commit shas
   quoted in docs/CHANGELOG.md from before that date no longer resolve.
 - Every commit since the flatten is hygiene: gates, CI hardening, docs, one MCP
@@ -104,6 +108,13 @@ Open:
   cask `postflight` and docs/HOMEBREW.md. **Blocked** on a paid Apple Developer
   certificate. *Unblocks:* the credential existing in the repo's secrets.
   *Proof:* `spctl -a -vv` accepts the downloaded DMG's app.
+- **Re-check the shipped app after a release.** The cask is what the owner's
+  machine runs, and until 2026-10-19 it ran 1.82 while the tree was already
+  quiet: the fix was in the tree and the installed app was not. The cask bump
+  and the install are the two steps between a landed fix and a shipped one.
+  *Proof:* `brew list --cask --versions cadgoose` names the tag's version, and
+  `/Applications/CadGoose.app/Contents/MacOS/CadGoose --version` writes one
+  line to stdout and nothing to stderr.
 
 ## Phase 2 — Feature-line work (PARKED: D1 ruled A on 2026-10-12)
 

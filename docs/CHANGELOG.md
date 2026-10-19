@@ -1,5 +1,29 @@
 # Changelog
 
+## October 19, 2026 — v1.83 Release: M1.7 on the owning thread, and a binary that prints one line
+
+- **v1.83** is the tag (`321a5d0`, lightweight, like v1.80-v1.82), cut by
+  `scripts/push_release.sh`. The GitHub release carries `CadGoose-v1.83.dmg`
+  and `CadGoose-v1.83-linux.tar.zst`; the Homebrew cask moved to 1.83
+  (`fd57318`) through the tap's own gate, with the digest of the published
+  DMG (`19f46cb04d1f20ab1a8cab04a0a297235c417e4914a0ed0823108bff7df059dd`).
+- It carried **M1.7** (the MCP `get_config` and `resources/read` reads now
+  happen on the main thread, through `AppActions_HandleCommand`) and **the
+  quiet release binary** (the `[DEBUG]` lines the v1.82 build printed on
+  every launch are gone). Both stanzas below carry their own proof.
+- CI green on the release run `39289049100`: the macOS job built the DMG
+  (the quiet-binary gate green on the binary it shipped) and the Linux job
+  built the tarball.
+- **Installed and proven on the owner's machine.** `brew upgrade --cask
+  cadgoose` moved `/Applications/CadGoose.app` from 1.82 to 1.83, and
+  `CadGoose --version` writes 15 bytes to stdout (`CadGoose v1.83\n`), 0 bytes
+  to stderr and exits 0. The 1.82 app it replaced wrote four `[DEBUG]` lines
+  to stderr and the version line to stdout, on every launch.
+- To re-check: the cask's version equals the tag's version, and the
+  installed app's `--version` is one line and nothing else. That check is
+  now a standing item in ROADMAP.md, because the fix was in the tree for a
+  release before it was in the installed app.
+
 ## October 19, 2026 — The release binary is quiet
 
 - `main()` wrote `[DEBUG] main() starting`, every argv entry and the
