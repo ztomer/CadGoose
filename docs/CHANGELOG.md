@@ -1,5 +1,25 @@
 # Changelog
 
+## October 20, 2026 — Every child process names its stdin, and the floor tracks the scan
+
+- **Every process call this repo starts now names where its stdin comes
+  from.** A full scan reads ten calls across the eight gate tools in `tools/`;
+  nine feed their child nothing (`stdin=subprocess.DEVNULL`) and
+  `tools/check_macos_floor.py` feeds the compiler its source through
+  `input=`. There is no allowlist file, so the count of undeclared calls is
+  zero by construction and not by permission.
+- **The floor moved with the tree.** `GOH_SUBPROCESS_STDIN_MIN_CALLS` was 1,
+  from the day the scan read a single call (the test-registration shim). Nine
+  more calls arrived with the later gate tools, and a floor of 1 could not
+  catch a scan that had lost nine tenths of its subject: it would have read
+  as clean. It is 9 now, nine tenths of what the scan reads.
+- **Proved red first.** On a scratch copy of the tracked Python, with every
+  `stdin=`/`input=` removed by the AST, the gate reports all ten calls and
+  exits 1; on the tree as committed it exits 0. Raising the floor to 11 on
+  that same copy turns it red again, naming the floor and the count read.
+- `GOH_SUBPROCESS_STDIN=on` is written out in `.gatesrc` rather than left to
+  the default, so the decision is in this repo's own file.
+
 ## October 19, 2026 — v1.83 Release: M1.7 on the owning thread, and a binary that prints one line
 
 - **v1.83** is the tag (`321a5d0`, lightweight, like v1.80-v1.82), cut by
