@@ -43,6 +43,15 @@ GOH_CI_PARITY_EXEMPT=''
 # escapes; nothing else is allowed.
 GOH_ALLOW='🪿 🍁 ☭'
 
+# Every process call names its stdin (the house stdin gate, `goh
+# subprocess-stdin`). Every one of the ten calls a full scan reads declares
+# it: nine feed their child nothing (`stdin=subprocess.DEVNULL`), and
+# check_macos_floor.py feeds the compiler its source through `input=`. There
+# is no allowlist file. The floor below was 1, from the day the scan read a
+# single call; the tree moved, and a floor that low cannot catch a scan that
+# lost its subject.
+GOH_SUBPROCESS_STDIN=on
+
 # Every scanner's floor (goh v0.27.0, docs/config.md): a full-scope scan that
 # reads less than this has lost its subject and is red, not clean. Nine tenths
 # of what each read on 2026-10-14 (the house rule); lower one with the tree in
@@ -59,4 +68,4 @@ GOH_BARE_PYTHON_MIN_FILES=5           # read 6
 GOH_CHECKOUT_CREDENTIALS_MIN_FILES=2  # read 3
 GOH_MD_LINKS_MIN_LINKS=7              # read 8
 GOH_UNREAPED_SPAWN_MIN_FILES=4        # read 5
-GOH_SUBPROCESS_STDIN_MIN_CALLS=1      # read 1, every one declared
+GOH_SUBPROCESS_STDIN_MIN_CALLS=9      # read 10, every one declared (2026-10-20)
