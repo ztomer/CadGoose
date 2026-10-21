@@ -8,7 +8,7 @@ Rephased 2026-10-12 from every agent session that worked on this repo (see
 *Sources consolidated*). The plan it replaces: `git show a3353d2:docs/PLAN.md`;
 the session log that used to live in AGENTS.md: `git show a3353d2:AGENTS.md`.
 
-## Context (measured 2026-10-12, not copied; gate state 2026-10-14)
+## Context (measured 2026-10-21, not copied; gate state 2026-10-21)
 
 - Released as **v1.83** (`321a5d0`, 2026-10-19); the Homebrew cask in the
   tap points at 1.83 (`fd57318`). The tag is lightweight, like v1.80-v1.82.
@@ -16,16 +16,23 @@ the session log that used to live in AGENTS.md: `git show a3353d2:AGENTS.md`.
   owning thread) and the quiet release binary (`--version` prints its one
   line and nothing else). CI green on the release run `39289049100` (macOS
   DMG, Linux tar.zst); CI does not run the house structural gate, the local
-  pre-push does.
+  pre-push does. Actions are ON, so the run ids here are real: the release run
+  above is the `v1.83` release (green), and the tree's newest runs are
+  `39501628954` (Build & Release Artifacts) and `39501628893` (PR Build
+  Check), both green on 2026-10-20.
 - History was flattened on 2026-09-04 (`af63341`, 320 commits). Commit shas
   quoted in docs/CHANGELOG.md from before that date no longer resolve.
-- Every commit since the flatten is hygiene: gates, CI hardening, docs, one MCP
-  protocol-negotiation change. **No feature work has landed since 2026-09-04**;
-  feature development happens in a separate macOS-only fork (D1, ruled: maintenance line).
-- 1697 `TEST`/`TEST_F`/`TEST_P` cases under `tests/`. Coverage ratchet in CI:
-  P0 95 / P1 26 / total 63, set once in `scripts/check_coverage.sh`, and the
-  whole-binary floor in `scripts/coverage_whole_binary_floor.txt`; the tiers
-  cover every production source (G0.1, 2026-10-16).
+- Every commit since the flatten is hygiene or maintenance, not feature work:
+  gates, CI hardening, docs, one MCP protocol-negotiation change, and the
+  Phase 1 correctness fixes (M1.1-M1.7, 2026-10-18/19). **No feature work has
+  landed since 2026-09-04**; feature development happens in a separate
+  macOS-only fork (D1, ruled: maintenance line).
+- 1765 `TEST`/`TEST_F`/`TEST_P` cases under `tests/` (1258 + 503 + 4; measured
+  2026-10-21 — the same count read 1697 at the 2026-10-12 rephase). Coverage
+  ratchet in CI: P0 95 / P1 26 / total 63, set once in
+  `scripts/check_coverage.sh` (re-read 2026-10-21, unchanged), and the
+  whole-binary floor (65) in `scripts/coverage_whole_binary_floor.txt`; the
+  tiers cover every production source (G0.1, 2026-10-16).
 - The repo is PUBLIC (MIT). Owner ruling 2026-09-04 (`ae819a7`): it must not
   name or depend on the author's private repositories. Keep it that way here.
 
@@ -69,28 +76,22 @@ dir absent, so it copies; both present, so nothing is touched).
 - **W.4** Scanner floors (13 keys, calibrated red): `37ed5f7`
 - **W.5** Stock hooks reinstalled: `6605f91`
 
-## Phase 0b — Gate holes and false claims (S, 1 session)
+## Phase 0b — Gate holes and false claims: closed 2026-10-21
 
 **Goal:** every gate measures what it says it measures, and every written claim
 matches the code. **Exit:** each item's proof is in the tree and has been seen
-to go red once.
+to go red once. Every item in it has landed; the record is
+`docs/CHANGELOG.md`, not here.
 
-- **G0.11 Stale remote branch `origin/unify/harnesses`.** It predates the
-  flatten (no merge base with `main`). Its 2026-08-25 file splits are all on
-  `main`, and its harness wiring was superseded by `75eb43f`. Delete it on the
-  remote; this needs owner approval because it changes the remote.
-- **G0.17 DONE 2026-10-18** (`7e6b66f`): probed first on `macos-26` (26.6.2,
-  run 39172273083): `diskutil image create from` exists there; `diskutil image
-  attach --mountPoint` needs the directory to exist. The Create DMG step uses
-  `diskutil image create from`, the floor check mounts with `diskutil image
-  attach`/`eject`, and `check_macos_floor.py --dmg` read the result green on CI
-  (run 39172989067).
-- **G0.18 DONE 2026-10-18** (`7e6b66f`; homebrew-tap `731d9a1`, `b03dc29`): the
-  in-tree cask is deleted and `check_macos_floor.py` refuses any cask copy;
-  docs/HOMEBREW.md points at the tap, whose gate (`tools/cask_floor.sh`) holds
-  `depends_on macos:` to `cmake/MacOSFloor.cmake` at the shipped tag. The tap's
-  `gate.sh --full` had never run its declared steps; fixed there, and goh's push
-  gate now runs declared `GOH_CI_STEPS` whatever a repo's gate calls.
+- **G0.17** the DMG is made by `diskutil image create from`, and the floor
+  check mounts it and reads it green: `7e6b66f`.
+- **G0.18** the in-tree cask is gone and the tap's own gate holds the tap's
+  copy: `7e6b66f` (homebrew-tap `731d9a1`, `b03dc29`).
+- **G0.11** the stale remote branch `origin/unify/harnesses` is no longer on
+  the remote — `git ls-remote --heads origin` lists only `refs/heads/main`
+  (measured 2026-10-21). It was a remote change, so it carries no commit in
+  this tree; the branch's 2026-08-25 file splits are all on `main`, and its
+  harness wiring was superseded by `75eb43f`.
 
 ## Phase 1 — Maintenance-line correctness (S-M, 1 session)
 
@@ -144,6 +145,27 @@ standing rule meanwhile.
   (`include/cg_renderer.h:132`). Do this only if a profile shows text or
   nametags as hot. The 2026-06-28 profile decision ("stop here: remaining
   self-time is normal CoreGraphics churn") still stands.
+
+---
+
+## Open, and who can move it
+
+What is open in this repo, and the hand each one needs. An agent can move the
+first and the last; the second and the third are the owner's.
+
+- **M1.4 Notarization** — **owner.** A paid Apple Developer certificate in
+  the repo's secrets is the only thing that unblocks it; no commit here moves
+  it.
+- **Re-check the shipped app after a release** — **agent**, on the owner's
+  machine, after each release: bump the cask through the tap's own gate,
+  install it, read `--version`. Done for v1.83 (`321a5d0`); it stands for the
+  next release.
+- **D1.1 Shared settings directory** — **agent**, in Phase 1. The proof is a
+  unit test pinning `ConfigDirPath()` per bundle id, plus a migration test
+  (old dir present and new dir absent, so it copies; both present, so nothing
+  is touched).
+- **Phase 2 (C2.1-C2.4)** — **parked** by D1 (owner ruling, 2026-10-12). It
+  reopens only if the owner reverses that ruling.
 
 ---
 

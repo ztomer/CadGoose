@@ -1,5 +1,26 @@
 # Changelog
 
+## October 21, 2026 — The roadmap is back to truth: three landed rows leave it, its numbers are re-measured
+
+- **Three rows left ROADMAP.md.** G0.17 and G0.18 (`7e6b66f`) were marked
+  DONE there; completed work belongs in this file (AGENTS.md), so they are
+  here now. G0.11 left for a different reason: the stale remote branch
+  `origin/unify/harnesses` is no longer on the remote — `git ls-remote
+  --heads origin` lists only `refs/heads/main`, measured 2026-10-21. It was a
+  remote change, so it carries no commit in this tree.
+- **The numbers were re-measured, not copied.** 1765 `TEST`/`TEST_F`/`TEST_P`
+  cases under `tests/` (the same count read 1697 at the 2026-10-12 rephase).
+  The coverage ratchet is unchanged: P0 95 / P1 26 / total 63 in
+  `scripts/check_coverage.sh`, whole-binary 65 in
+  `scripts/coverage_whole_binary_floor.txt`. v1.83 is still the latest release
+  (`321a5d0`), and Actions is on, so the run ids are real: the release run
+  `39289049100` is green, and the tree's newest runs are `39501628954` (Build
+  & Release Artifacts) and `39501628893` (PR Build Check), 2026-10-20.
+- **What is left says who can move it.** M1.4 is the owner's (a paid Apple
+  Developer certificate); the shipped-app re-check after a release is an
+  agent's, on the owner's machine; D1.1 is an agent's, in Phase 1; Phase 2
+  stays parked unless the owner reverses D1.
+
 ## October 20, 2026 — Every child process names its stdin, and the floor tracks the scan
 
 - **Every process call this repo starts now names where its stdin comes
