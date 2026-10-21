@@ -150,8 +150,9 @@ standing rule meanwhile.
 
 ## Open, and who can move it
 
-What is open in this repo, and the hand each one needs. An agent can move the
-first and the last; the second and the third are the owner's.
+What is open in this repo, and the hand each one needs: two are the owner's
+(one blocked on a certificate, one parked until a ruling is reversed) and two
+are an agent's.
 
 - **M1.4 Notarization** — **owner.** A paid Apple Developer certificate in
   the repo's secrets is the only thing that unblocks it; no commit here moves
