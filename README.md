@@ -66,7 +66,10 @@ ctest --output-on-failure                # CI gate; its filter lives in tests/gt
 
 TOML file, hot-reloadable via command socket `get`/`set`:
 
-- macOS: `~/Library/Application Support/CadGoose/config.toml`
+- macOS: `~/Library/Application Support/com.desktoppad.CadGoose/config.toml`
+  (the app's own directory, named after its bundle id; the older shared
+  `~/Library/Application Support/CadGoose` is migrated into it once, on the
+  first launch)
 - Linux: `$XDG_CONFIG_HOME/desktop-goose/config.toml`
 - Dev override: `./config/config.toml` in working dir
 
@@ -86,7 +89,7 @@ Drop into repo (copied into `.app` bundle by `create_bundle.sh`):
 
 ## Logs / Crashes
 
-`~/Library/Application Support/CadGoose/logs/`
+`~/Library/Application Support/com.desktoppad.CadGoose/logs/`
 - `crash-<ts>.log` — symbolicated backtrace
 - `session-<ts>.log` — stderr capture (headless runs)
 

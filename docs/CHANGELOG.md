@@ -1,5 +1,43 @@
 # Changelog
 
+## October 22, 2026 — The two geese stop sharing one settings directory
+
+- **D1.1 landed: this app reads and writes its own directory.** `ConfigDirPath()`
+  now resolves to `~/Library/Application Support/com.desktoppad.CadGoose`, so
+  the macOS successor fork keeps the shared `.../CadGoose` to itself. The bundle
+  id is written down once, in `include/app_identity.h`; `scripts/create_bundle.sh`
+  reads the Info.plist id from there, and `tools/check_config_dir_isolation.py`
+  (a CI gate and a pre-push step) fails on a hardcoded id, a bare name, a second
+  `Application Support` resolution, or a bundler that stops reading the header.
+- **The shared settings migrate once, and the shared directory stays.** At the
+  first `ConfigDirPath()` of an installed app, `config.toml`, the backups,
+  `themes/` and the text files are copied into a staging directory and renamed
+  into place, so a second process either finds the finished directory or
+  discards its own copy. `logs/` is runtime output and is not copied; `Models/`
+  is 633 MB on the owner's machine (measured 2026-10-22) and is symlinked rather
+  than duplicated. The legacy directory is never modified or removed, because
+  the fork still reads it. A directory that already exists is the "done" marker:
+  both present means nothing is touched.
+- **Proved red first.** With the pre-fix resolution and a no-op migration swapped
+  in, 8 of the 12 new cases fail (`ConfigMigration.*`, built and run); the four
+  "nothing happens" cases pass vacuously, so a second arm replaced the migration
+  with a naive copy-everything version and those four fail (both-present
+  overwritten, second run re-copies, logs copied, weights copied instead of
+  linked). On the real binary with a sandboxed `HOME`, the first launch copied
+  `config.toml` and `themes/`, left `CadGoose/` and its `logs/` intact, and the
+  second launch left a hand-written `mine` in place.
+- **The numbers were re-measured, not copied.** 1777 `TEST`/`TEST_F`/`TEST_P`
+  cases under `tests/` (1270 + 503 + 4; 1765 before this row's 12 cases, 1697 at
+  the 2026-10-12 rephase). The coverage ratchet is unchanged: P0 95 / P1 26 /
+  total 63 in `scripts/check_coverage.sh`, whole-binary 65 in
+  `scripts/coverage_whole_binary_floor.txt` (re-read 2026-10-22). The stdin scan
+  still reads 10 calls with its floor at 9. v1.83 remains the latest release, and
+  its shipped-app re-check stands; no release has landed without one. The newest
+  CI runs at the time of writing were `39585975535` and `39585975876`, both green
+  on 2026-10-21 at `d829b64`.
+- README, AGENTS.md and ROADMAP.md now name the new directory; D1.1 leaves the
+  roadmap (a landed row does not live there).
+
 ## October 21, 2026 — The roadmap is back to truth: three landed rows leave it, its numbers are re-measured
 
 - **Three rows left ROADMAP.md.** G0.17 and G0.18 (`7e6b66f`) were marked

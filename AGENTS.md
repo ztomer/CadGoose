@@ -56,8 +56,10 @@ tools/gate.sh [--staged|--full]             # house gates; --full = the CI copy 
   only**. The test target keeps it, so `test_log.cpp` still runs.
 - **Logs/crashes**: `<ConfigDir>/logs/`. `ConfigDirPath()` prefers
   `./config/config.toml` when it exists, else
-  `~/Library/Application Support/CadGoose`. Crash backtraces go to
-  `crash-<ts>.log`; headless stderr goes to `session-<ts>.log`.
+  `~/Library/Application Support/com.desktoppad.CadGoose` (the bundle id is in
+  `include/app_identity.h`; the older shared `.../CadGoose` is copied into it
+  once, on the first launch). Crash backtraces go to `crash-<ts>.log`; headless
+  stderr goes to `session-<ts>.log`.
 - **Tests in CI** run with the `--gtest_filter` defined once in
   `tests/gtest_ci_filter.txt`; `scripts/run_tests_ci.sh` and `cmake/Tests.cmake`
   consume that file, and `tools/check_gtest_filter_parity.py` fails when a call

@@ -5,6 +5,7 @@
 #include <fstream>
 #include <unistd.h>
 #include "config.h"
+#include "app_identity.h"
 
 namespace fs = std::filesystem;
 
@@ -132,8 +133,11 @@ TEST(ConfigPath, HomeFallbackWhenNoConfigToml) {
     src.home = "/Users/nobody";
     src.cwd = cwd.path;
 #if defined(__APPLE__)
+    // The installed app's own directory, named after its bundle id (D1.1): the
+    // shared ~/Library/Application Support/CadGoose belongs to the macOS
+    // successor fork now.
     EXPECT_EQ(ResolveConfigDir(src),
-              fs::path("/Users/nobody") / "Library" / "Application Support" / "CadGoose");
+              fs::path("/Users/nobody") / "Library" / "Application Support" / CADGOOSE_BUNDLE_ID);
 #else
     EXPECT_EQ(ResolveConfigDir(src), fs::path("/Users/nobody") / ".config" / "desktop-goose");
 #endif

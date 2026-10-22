@@ -12,6 +12,7 @@ if(LINUX)
         tests/common/test_config_startup.cpp
         tests/common/config_link_stubs.cpp
         src/common/config.cpp
+        src/common/config_migration.cpp
         src/common/config_load.cpp
         src/common/config_save.cpp
         src/common/config_string.cpp

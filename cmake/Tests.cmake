@@ -75,6 +75,7 @@ if(APPLE)
         tests/common/test_config_registry.cpp
         tests/common/test_config_get_set.cpp
         tests/common/test_config_path.cpp
+        tests/common/test_config_migration.cpp
         tests/common/test_config_load_save.cpp
         tests/common/test_config_startup.cpp
         tests/common/test_config_schema.cpp
@@ -106,6 +107,7 @@ if(APPLE)
         src/common/behavior.cpp
         src/common/log.cpp
         src/common/config.cpp
+        src/common/config_migration.cpp
         src/common/config_helpers.h
         src/common/config_load.cpp
         src/common/config_registry_generated.cpp

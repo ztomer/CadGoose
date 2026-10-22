@@ -15,6 +15,7 @@ add_executable(CadGooseTsanTests
     src/common/mcp_server.cpp
     src/common/accept_loop.cpp
     src/common/config.cpp
+    src/common/config_migration.cpp
     src/common/config_load.cpp
     src/common/config_save.cpp
     src/common/config_string.cpp

@@ -22,7 +22,8 @@
 #         app.icns          <- icon (from project root or auto-generated)
 #
 # Environment:
-#   BUNDLE_ID   Override bundle identifier (default: com.desktoppad.CadGoose)
+#   BUNDLE_ID   Override bundle identifier (default: the one in
+#               include/app_identity.h)
 #   BUNDLE_NAME Override app display name (default: CadGoose)
 
 set -e
@@ -35,7 +36,16 @@ CONTENTS_DIR="${BUNDLE_DIR}/Contents"
 MACOS_DIR="${CONTENTS_DIR}/MacOS"
 RESOURCES_DIR="${CONTENTS_DIR}/Resources"
 
-BUNDLE_ID="${BUNDLE_ID:-com.desktoppad.CadGoose}"
+# The bundle identifier is written down once, in include/app_identity.h, and
+# read from there: the bundle's Info.plist and the app's own settings
+# directory (ConfigDirPath) must name the same id, or the app ships under one
+# id and keeps its settings under another (ROADMAP D1.1). The extraction is
+# fail-closed: a header this script cannot read stops the build here.
+BUNDLE_ID="${BUNDLE_ID:-$(sed -n 's/^#define CADGOOSE_BUNDLE_ID "\(.*\)"$/\1/p' "${PROJECT_DIR}/include/app_identity.h")}"
+if [ -z "$BUNDLE_ID" ]; then
+    echo "ERROR: no bundle id in include/app_identity.h (CADGOOSE_BUNDLE_ID)" >&2
+    exit 1
+fi
 BUNDLE_NAME="${BUNDLE_NAME:-CadGoose}"
 
 # Version shown in Finder/About. Prefer an explicit BUNDLE_VERSION (set by CI
@@ -67,7 +77,7 @@ for arg in "$@"; do
             echo "  --build   Run cmake + make before bundling"
             echo ""
             echo "Environment variables:"
-            echo "  BUNDLE_ID   Bundle identifier (default: com.desktoppad.CadGoose)"
+            echo "  BUNDLE_ID   Bundle identifier (default: the one in include/app_identity.h)"
             echo "  BUNDLE_NAME App display name (default: CadGoose)"
             exit 0
             ;;

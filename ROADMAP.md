@@ -8,7 +8,7 @@ Rephased 2026-10-12 from every agent session that worked on this repo (see
 *Sources consolidated*). The plan it replaces: `git show a3353d2:docs/PLAN.md`;
 the session log that used to live in AGENTS.md: `git show a3353d2:AGENTS.md`.
 
-## Context (measured 2026-10-21, not copied; gate state 2026-10-21)
+## Context (measured 2026-10-22, not copied; gate state 2026-10-22)
 
 - Released as **v1.83** (`321a5d0`, 2026-10-19); the Homebrew cask in the
   tap points at 1.83 (`fd57318`). The tag is lightweight, like v1.80-v1.82.
@@ -18,8 +18,8 @@ the session log that used to live in AGENTS.md: `git show a3353d2:AGENTS.md`.
   DMG, Linux tar.zst); CI does not run the house structural gate, the local
   pre-push does. Actions are ON, so the run ids here are real: the release run
   above is the `v1.83` release (green), and the tree's newest runs are
-  `39501628954` (Build & Release Artifacts) and `39501628893` (PR Build
-  Check), both green on 2026-10-20.
+  `39585975535` (Build & Release Artifacts) and `39585975876` (PR Build
+  Check), both green on 2026-10-21 at `d829b64`.
 - History was flattened on 2026-09-04 (`af63341`, 320 commits). Commit shas
   quoted in docs/CHANGELOG.md from before that date no longer resolve.
 - Every commit since the flatten is hygiene or maintenance, not feature work:
@@ -27,12 +27,13 @@ the session log that used to live in AGENTS.md: `git show a3353d2:AGENTS.md`.
   Phase 1 correctness fixes (M1.1-M1.7, 2026-10-18/19). **No feature work has
   landed since 2026-09-04**; feature development happens in a separate
   macOS-only fork (D1, ruled: maintenance line).
-- 1765 `TEST`/`TEST_F`/`TEST_P` cases under `tests/` (1258 + 503 + 4; measured
-  2026-10-21 — the same count read 1697 at the 2026-10-12 rephase). Coverage
-  ratchet in CI: P0 95 / P1 26 / total 63, set once in
-  `scripts/check_coverage.sh` (re-read 2026-10-21, unchanged), and the
-  whole-binary floor (65) in `scripts/coverage_whole_binary_floor.txt`; the
-  tiers cover every production source (G0.1, 2026-10-16).
+- 1777 `TEST`/`TEST_F`/`TEST_P` cases under `tests/` (1270 + 503 + 4; measured
+  2026-10-22 — 1765 before D1.1's 12 new cases, and the same count read 1697
+  at the 2026-10-12 rephase). Coverage ratchet in CI: P0 95 / P1 26 / total
+  63, set once in `scripts/check_coverage.sh` (re-read 2026-10-22, unchanged),
+  and the whole-binary floor (65) in
+  `scripts/coverage_whole_binary_floor.txt`; the tiers cover every production
+  source (G0.1, 2026-10-16).
 - The repo is PUBLIC (MIT). Owner ruling 2026-09-04 (`ae819a7`): it must not
   name or depend on the author's private repositories. Keep it that way here.
 
@@ -49,14 +50,6 @@ session per quarter.
 
 Rejected: B (retire — would lose the public and Linux builds) and C (keep
 developing — two goose code bases drifting apart).
-
-**D1.1 Shared settings directory (do in Phase 1).** Both apps read and write
-`~/Library/Application Support/CadGoose` (`ConfigDirPath()` here; the fork
-documents the same path). With both installed they share `config.toml` and
-`themes/`, and the two schemas have diverged. Under A, move this app to its own
-directory with a one-time migration. Proof: a unit test pinning
-`ConfigDirPath()` per bundle id, plus a migration test (old dir present and new
-dir absent, so it copies; both present, so nothing is touched).
 
 ---
 
@@ -150,9 +143,9 @@ standing rule meanwhile.
 
 ## Open, and who can move it
 
-What is open in this repo, and the hand each one needs: two are the owner's
-(one blocked on a certificate, one parked until a ruling is reversed) and two
-are an agent's.
+What is open in this repo, and the hand each one needs: one is the owner's
+(blocked on a certificate), one is an agent's (after each release), and one is
+parked until a ruling is reversed.
 
 - **M1.4 Notarization** — **owner.** A paid Apple Developer certificate in
   the repo's secrets is the only thing that unblocks it; no commit here moves
@@ -161,10 +154,6 @@ are an agent's.
   machine, after each release: bump the cask through the tap's own gate,
   install it, read `--version`. Done for v1.83 (`321a5d0`); it stands for the
   next release.
-- **D1.1 Shared settings directory** — **agent**, in Phase 1. The proof is a
-  unit test pinning `ConfigDirPath()` per bundle id, plus a migration test
-  (old dir present and new dir absent, so it copies; both present, so nothing
-  is touched).
 - **Phase 2 (C2.1-C2.4)** — **parked** by D1 (owner ruling, 2026-10-12). It
   reopens only if the owner reverses that ruling.
 

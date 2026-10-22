@@ -139,7 +139,54 @@ struct ConfigDirSources {
 ConfigDirSources ConfigDirSources_FromEnv(const std::function<const char*(const char*)>& getenvFn,
                                           std::filesystem::path cwd);
 ConfigDirSources ConfigDirSources_FromProcess();
+
+// The settings directory of the app with this bundle id, when it is the
+// INSTALLED app reading its own directory: ~/Library/Application Support/<bundle
+// id> on macOS. Empty on Linux (that path is not bundle-id based) and empty
+// when there is no home directory.
+//
+// The bundle id is a parameter, not a constant baked into the function, so the
+// isolation is a property that can be pinned: two ids, two directories. Two
+// apps that share one directory share one config.toml, and the two schemas
+// have diverged (ROADMAP D1.1).
+std::optional<std::filesystem::path> InstalledConfigDirPath(
+    const ConfigDirSources& src, const std::string& bundleId);
+
+// The directory this app used before it moved: the shared
+// ~/Library/Application Support/CadGoose, which the macOS successor fork also
+// reads and writes. Empty on Linux (there is no shared directory there).
+std::optional<std::filesystem::path> LegacyConfigDirPath(const ConfigDirSources& src);
+
+// The full resolution, for one bundle id. The environment override and the
+// development tree come first (they are not the installed app's business),
+// then the per-bundle-id directory.
+std::filesystem::path ResolveConfigDir(const ConfigDirSources& src,
+                                       const std::string& bundleId);
+// ...for this app's bundle id.
 std::filesystem::path ResolveConfigDir(const ConfigDirSources& src);
+
+// What the one-time migration of the shared directory did.
+enum class ConfigMigrationOutcome {
+    kNothingToMigrate,  // no shared directory, or this app's own already exists
+    kMigrated,          // the shared settings are now in this app's own directory
+    kFailed,            // the copy failed; the app runs on its defaults
+};
+
+// Copy the shared directory's settings into this app's own directory, once.
+//
+// The shared directory is left where it is: the app that still reads it needs
+// it. This app's own directory is created by the copy, so "it already exists"
+// is the marker that says the migration is done, and nothing is touched then.
+ConfigMigrationOutcome MigrateLegacyConfigDir(const std::filesystem::path& legacyDir,
+                                              const std::filesystem::path& newDir);
+
+// Run the migration for the running app, if there is a shared directory to
+// migrate from. Called once per process, at the first resolution of the app's
+// settings directory.
+void MigrateLegacySettings();
+// ...for these sources, so the decision can be tested without touching the
+// process environment (ROADMAP G0.12).
+void MigrateLegacySettings(const ConfigDirSources& src);
 
 // Thread-safe in-process override that wins over every source above; the
 // seam tests use instead of mutating CADGOOSE_CONFIG_DIR mid-suite. Returns

@@ -133,6 +133,8 @@ jobs:
         run: python3 tools/check_platform_policy.py
       - name: Tests bind no fixed port or socket path (G0.3)
         run: python3 tools/check_test_endpoints.py
+      - name: The app's settings directory is its own (D1.1)
+        run: python3 tools/check_config_dir_isolation.py
       - name: CI pins named releases, no moving references (G0.6)
         run: python3 tools/check_ci_pins.py
       - name: Every CI gate also runs in the local pre-push gate (G0.16)

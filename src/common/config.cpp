@@ -2,6 +2,7 @@
 #include "config_registry.h"
 #include "config_helpers.h"
 #include "hotkey_cache.h"
+#include "app_identity.h"
 #include <algorithm>
 #include <cctype>
 #include <cstdlib>
@@ -46,19 +47,42 @@ ConfigDirSources ConfigDirSources_FromProcess() {
 
 // Empty values arrive as nullopt (ConfigDirSources_FromEnv): an empty CADGOOSE_CONFIG_DIR
 // used to resolve to the relative path "", i.e. whatever the cwd was.
-fs::path ResolveConfigDir(const ConfigDirSources& src) {
+std::optional<fs::path> InstalledConfigDirPath(const ConfigDirSources& src,
+                                                const std::string& bundleId) {
+#if defined(__APPLE__)
+    if (src.home) return fs::path(*src.home) / "Library" / "Application Support" / bundleId;
+#else
+    (void)bundleId;  // the Linux path is not bundle-id based
+#endif
+    return std::nullopt;
+}
+
+// The shared directory this app used before it moved, and which the macOS
+// successor fork still reads and writes. Its name is NOT the bundle id: that
+// is the whole point of the move.
+std::optional<fs::path> LegacyConfigDirPath(const ConfigDirSources& src) {
+#if defined(__APPLE__)
+    if (src.home) return fs::path(*src.home) / "Library" / "Application Support" / "CadGoose";
+#endif
+    return std::nullopt;
+}
+
+fs::path ResolveConfigDir(const ConfigDirSources& src, const std::string& bundleId) {
     if (src.configDirEnv) return fs::path(*src.configDirEnv);
     std::error_code ec;
     if (fs::exists(src.cwd / "config" / "config.toml", ec)) {
         return src.cwd / "config";
     }
-#if defined(__APPLE__)
-    if (src.home) return fs::path(*src.home) / "Library" / "Application Support" / "CadGoose";
-#else
+    if (const auto installed = InstalledConfigDirPath(src, bundleId)) return *installed;
+#if !defined(__APPLE__)
     if (src.xdgConfigHome) return fs::path(*src.xdgConfigHome) / "desktop-goose";
     if (src.home) return fs::path(*src.home) / ".config" / "desktop-goose";
 #endif
     return src.cwd;
+}
+
+fs::path ResolveConfigDir(const ConfigDirSources& src) {
+    return ResolveConfigDir(src, CADGOOSE_BUNDLE_ID);
 }
 
 static std::mutex g_configDirOverrideMutex;
@@ -75,6 +99,13 @@ std::filesystem::path ConfigDirPath() {
         std::lock_guard<std::mutex> lock(g_configDirOverrideMutex);
         if (g_configDirOverride) return *g_configDirOverride;
     }
+    // The one-time migration of the shared settings directory runs HERE, at the
+    // first resolution of the app's own directory, so that no path can be
+    // used before it. The crash logger creates <dir>/logs, and a directory that
+    // already exists is a directory the migration must not touch, so a later
+    // call site would be too late (ROADMAP D1.1).
+    static std::once_flag s_migrationOnce;
+    std::call_once(s_migrationOnce, [] { MigrateLegacySettings(); });
     return ResolveConfigDir(ConfigDirSources_FromProcess());
 }
 
