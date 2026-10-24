@@ -69,3 +69,6 @@ GOH_CHECKOUT_CREDENTIALS_MIN_FILES=2  # read 3
 GOH_MD_LINKS_MIN_LINKS=7              # read 8
 GOH_UNREAPED_SPAWN_MIN_FILES=4        # read 5
 GOH_SUBPROCESS_STDIN_MIN_CALLS=9      # read 10, every one declared (2026-10-20)
+GOH_TAP_WRITES_MIN_FILES=52           # read 58 (2026-10-24)
+GOH_MOVING_TAGS_MIN_REFS=1            # read 1 (2026-10-24)
+GOH_BUSY_LOOP_MIN_FILES=35            # read 39 (2026-10-24)

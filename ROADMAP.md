@@ -68,6 +68,9 @@ developing — two goose code bases drifting apart).
   `GOH_CI_STEPS` shim through `gates/python.sh`: `177cba2`
 - **W.4** Scanner floors (13 keys, calibrated red): `37ed5f7`
 - **W.5** Stock hooks reinstalled: `6605f91`
+- **W.6** Floors for the three scanners goh added since (tap writes, moving tags,
+  busy loop); `CMakeLists.txt` (354 lines, `cmake/*.cmake` split) and the tap-token
+  clone URL were already closed (W.2, 2026-10-17 and 2026-08-25): 2026-10-24.
 
 ## Phase 0b — Gate holes and false claims: closed 2026-10-21
 
