@@ -61,7 +61,8 @@ def fail(msg: str) -> int:
 
 def tracked(root: str) -> list[str]:
     out = subprocess.run(
-        ["git", "ls-files"], cwd=root, capture_output=True, text=True, stdin=subprocess.DEVNULL
+        ["git", "ls-files"], cwd=root, capture_output=True, text=True, check=False,
+        stdin=subprocess.DEVNULL,
     )
     if out.returncode != 0:
         return []

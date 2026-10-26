@@ -46,7 +46,7 @@ def main() -> int:
     # check-ignore exits 0 when at least one path is ignored, 1 when none is.
     res = subprocess.run(
         ["git", "check-ignore", "--no-index", "--verbose", *PROBES],
-        cwd=root, capture_output=True, text=True, stdin=subprocess.DEVNULL,
+        cwd=root, capture_output=True, text=True, check=False, stdin=subprocess.DEVNULL,
     )
     if res.returncode not in (0, 1):
         print(f"✗ [new_sources_visible] git check-ignore failed: {res.stderr.strip()}",

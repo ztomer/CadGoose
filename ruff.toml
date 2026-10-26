@@ -1,0 +1,7 @@
+# ruff, for the Python tooling under tools/ (goh G17b). ONE rule, deliberately: PLW1510 --
+# a `subprocess.run` must say what a failing child does (`check=True` stops the caller,
+# `check=False` says the exit code is judged below). Without it a reader cannot tell "the
+# return code is inspected" from "a failure is silently ignored". `ruff check .` is a
+# GOH_CI_STEPS step, so a new call without `check=` is red at push.
+[lint]
+select = ["PLW1510"]
