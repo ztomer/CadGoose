@@ -72,3 +72,7 @@ GOH_SUBPROCESS_STDIN_MIN_CALLS=9      # read 10, every one declared (2026-10-20)
 GOH_TAP_WRITES_MIN_FILES=52           # read 58 (2026-10-24)
 GOH_MOVING_TAGS_MIN_REFS=1            # read 1 (2026-10-24)
 GOH_BUSY_LOOP_MIN_FILES=35            # read 39 (2026-10-24)
+
+# A commit that ADDS a test names, in a `Red-run:` trailer, the mutation that
+# turned that test red (goh red-run, BACKLOG 4.11; owner OW.8, 2026-10-31).
+GOH_RED_RUN=1
