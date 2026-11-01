@@ -10,11 +10,14 @@
 # not run reads exactly like one that passed.
 #
 #   bash scripts/run_tests_linux.sh
+#
+# Seams (tests/profiling/test_run_tests_linux_runtime.sh): CG_HOST_OS names the
+# host (default `uname -s`); DOCKER and COLIMA name the engine and runtime.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
-case "$(uname -s)" in
+case "${CG_HOST_OS:-$(uname -s)}" in
     Linux)
         BUILD_DIR="${CG_LINUX_BUILD_DIR:-build}"
         cd "$ROOT"
@@ -27,13 +30,21 @@ case "$(uname -s)" in
             --no-tests=error < /dev/null
         ;;
     Darwin)
-        if ! docker info > /dev/null 2>&1 < /dev/null; then
-            echo "✗ run_tests_linux.sh: no running Docker engine (start colima); the Linux suite cannot run." >&2
+        # A docker that is down is started (colima) and stopped again only if
+        # goh started it and no other gate or container is on it (goh
+        # lib/container_runtime.sh, GOH.CR1); a host that cannot is red.
+        GOH="${GOH_DIR:-$HOME/Projects/gates_of_heck}"
+        # shellcheck source=/dev/null
+        . "$GOH/lib/container_runtime.sh"
+        trap goh_container_runtime_down EXIT
+        DOCKER="${DOCKER:-docker}"
+        if ! goh_container_runtime_up "cadgoose linux suite"; then
+            echo "✗ run_tests_linux.sh: no Docker engine to run the Linux suite on." >&2
             exit 2
         fi
         IMAGE="cadgoose-linux-ci"
-        docker build --quiet --tag "$IMAGE" --file "$ROOT/Dockerfile" "$ROOT/scripts" > /dev/null < /dev/null
-        docker run --rm --volume "$ROOT:/work:ro" --env CG_LINUX_BUILD_DIR=/tmp/build \
+        "$DOCKER" build --quiet --tag "$IMAGE" --file "$ROOT/Dockerfile" "$ROOT/scripts" > /dev/null < /dev/null
+        "$DOCKER" run --rm --volume "$ROOT:/work:ro" --env CG_LINUX_BUILD_DIR=/tmp/build \
             "$IMAGE" bash /work/scripts/run_tests_linux.sh < /dev/null
         ;;
     *)
