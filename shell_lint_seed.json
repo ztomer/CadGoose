@@ -1,0 +1,14 @@
+{
+  "why": "shellcheck findings below error severity when this repo adopted the ratcheted shell lint, per file#code; a count may only fall (gates_of_heck GOH.SHSEV)",
+  "files": {
+    "run.sh#SC2164": 1,
+    "scripts/check_coverage.sh#SC2034": 1,
+    "scripts/create_bundle.sh#SC2046": 1,
+    "scripts/push_release.sh#SC2034": 1,
+    "scripts/verify_ci.sh#SC2034": 1,
+    "tools/profiling/crash_debug.sh#SC2046": 1,
+    "tools/profiling/mem_watch.sh#SC2046": 1,
+    "tools/profiling/soak_profile.sh#SC2034": 1,
+    "tools/profiling/soak_profile.sh#SC2164": 1
+  }
+}
