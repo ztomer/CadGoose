@@ -28,7 +28,9 @@ RULE = re.compile(r"/tmp/")
 
 
 def strip_c_comments(text: str) -> str:
-    text = re.sub(r"/\*.*?\*/", lambda m: "\n" * m.group(0).count("\n"), text, flags=re.S)
+    text = re.sub(
+        r"/\*.*?\*/", lambda m: "\n" * m.group(0).count("\n"), text, flags=re.S
+    )
     return re.sub(r"(?<!:)//[^\n]*", "", text)
 
 
@@ -39,27 +41,40 @@ def strip_hash_comments(text: str) -> str:
 def main() -> int:
     root = pathlib.Path(__file__).resolve().parent.parent
     files = sorted(
-        p for p in subprocess.run(
+        p
+        for p in subprocess.run(
             ["git", "ls-files", "--cached", "--others", "--exclude-standard", "tests"],
-            cwd=root, capture_output=True, text=True, check=True, stdin=subprocess.DEVNULL,
+            cwd=root,
+            capture_output=True,
+            text=True,
+            check=True,
+            stdin=subprocess.DEVNULL,
         ).stdout.split()
         if pathlib.PurePath(p).suffix in C_SUFFIXES | HASH_SUFFIXES
     )
     if len(files) < MIN_FILES:
-        print(f"✗ [test_tmp_paths] read {len(files)} test sources, floor {MIN_FILES}: "
-              "the scan lost its subject", file=sys.stderr)
+        print(
+            f"✗ [test_tmp_paths] read {len(files)} test sources, floor {MIN_FILES}: "
+            "the scan lost its subject",
+            file=sys.stderr,
+        )
         return 1
     bad = 0
     for rel in files:
         raw = (root / rel).read_text(encoding="utf-8", errors="replace")
         suffix = pathlib.PurePath(rel).suffix
-        text = strip_c_comments(raw) if suffix in C_SUFFIXES else strip_hash_comments(raw)
+        text = (
+            strip_c_comments(raw) if suffix in C_SUFFIXES else strip_hash_comments(raw)
+        )
         for lineno, line in enumerate(text.splitlines(), 1):
             if RULE.search(line):
                 bad += 1
-                print(f"✗ [test_tmp_paths] {rel}:{lineno}: a literal /tmp/ path is shared by "
-                      "every concurrent test copy; use TestScratchPath() (tests/test_scratch.h) "
-                      "or mktemp under ${TMPDIR:-/tmp}", file=sys.stderr)
+                print(
+                    f"✗ [test_tmp_paths] {rel}:{lineno}: a literal /tmp/ path is shared by "
+                    "every concurrent test copy; use TestScratchPath() (tests/test_scratch.h) "
+                    "or mktemp under ${TMPDIR:-/tmp}",
+                    file=sys.stderr,
+                )
     if bad:
         return 1
     print(f"✓ [test_tmp_paths] {len(files)} test sources, no literal /tmp/ path")

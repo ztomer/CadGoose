@@ -22,10 +22,23 @@ DECLARE = re.compile(r"FetchContent_Declare\s*\((.*?)\)", re.S)
 def main() -> int:
     root = pathlib.Path(__file__).resolve().parent.parent
     files = [
-        p for p in subprocess.run(
-            ["git", "ls-files", "--cached", "--others", "--exclude-standard",
-             "CMakeLists.txt", "*.cmake", "*/CMakeLists.txt"],
-            cwd=root, capture_output=True, text=True, check=True, stdin=subprocess.DEVNULL,
+        p
+        for p in subprocess.run(
+            [
+                "git",
+                "ls-files",
+                "--cached",
+                "--others",
+                "--exclude-standard",
+                "CMakeLists.txt",
+                "*.cmake",
+                "*/CMakeLists.txt",
+            ],
+            cwd=root,
+            capture_output=True,
+            text=True,
+            check=True,
+            stdin=subprocess.DEVNULL,
         ).stdout.split()
     ]
     found = 0
@@ -38,15 +51,24 @@ def main() -> int:
             name = body.split()[0] if body.split() else "?"
             if "GIT_REPOSITORY" in body:
                 bad += 1
-                print(f"✗ [fetchcontent] {rel}: {name} is a git clone; fetch the release "
-                      "archive with URL + URL_HASH", file=sys.stderr)
-            elif not re.search(r"\bURL\s+\S", body) or not re.search(r"URL_HASH\s+SHA256=[0-9a-f]{64}", body):
+                print(
+                    f"✗ [fetchcontent] {rel}: {name} is a git clone; fetch the release "
+                    "archive with URL + URL_HASH",
+                    file=sys.stderr,
+                )
+            elif not re.search(r"\bURL\s+\S", body) or not re.search(
+                r"URL_HASH\s+SHA256=[0-9a-f]{64}", body
+            ):
                 bad += 1
-                print(f"✗ [fetchcontent] {rel}: {name} has no URL pinned by URL_HASH SHA256",
-                      file=sys.stderr)
+                print(
+                    f"✗ [fetchcontent] {rel}: {name} has no URL pinned by URL_HASH SHA256",
+                    file=sys.stderr,
+                )
     if found == 0:
-        print("✗ [fetchcontent] no FetchContent_Declare found: the scan lost its subject",
-              file=sys.stderr)
+        print(
+            "✗ [fetchcontent] no FetchContent_Declare found: the scan lost its subject",
+            file=sys.stderr,
+        )
         return 1
     if bad:
         return 1

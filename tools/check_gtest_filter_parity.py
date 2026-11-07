@@ -45,7 +45,21 @@ CONSUMERS = {
 # Prose (.md) is not executable and is allowed to quote the flag, but never
 # a full value — README had its own divergent copy, which was rewritten to
 # cite the source instead.
-SCAN_SUFFIXES = {".sh", ".cmake", ".py", ".cpp", ".cc", ".c", ".h", ".hpp", ".m", ".mm", ".yml", ".yaml", ".toml"}
+SCAN_SUFFIXES = {
+    ".sh",
+    ".cmake",
+    ".py",
+    ".cpp",
+    ".cc",
+    ".c",
+    ".h",
+    ".hpp",
+    ".m",
+    ".mm",
+    ".yml",
+    ".yaml",
+    ".toml",
+}
 SCAN_EXACT = {"CMakeLists.txt"}
 
 # Value-bearing only: RHS with any '$' or '{' interpolation is a variable
@@ -61,7 +75,11 @@ def fail(msg: str) -> int:
 
 def tracked(root: str) -> list[str]:
     out = subprocess.run(
-        ["git", "ls-files"], cwd=root, capture_output=True, text=True, check=False,
+        ["git", "ls-files"],
+        cwd=root,
+        capture_output=True,
+        text=True,
+        check=False,
         stdin=subprocess.DEVNULL,
     )
     if out.returncode != 0:
@@ -82,7 +100,9 @@ def main() -> int:
     # 1. The single source exists and yields a non-empty filter.
     src_path = os.path.join(root, *SOURCE.split("/"))
     if not os.path.isfile(src_path):
-        return fail(f"the filter source {SOURCE} is gone — nothing defines the CI filter.")
+        return fail(
+            f"the filter source {SOURCE} is gone — nothing defines the CI filter."
+        )
     reason_lines, filter_lines = [], []
     for line in open(src_path, encoding="utf-8"):
         line = line.rstrip("\n")
@@ -92,7 +112,9 @@ def main() -> int:
         elif line.strip():
             filter_lines.append(line.strip())
     if not filter_lines:
-        return fail(f"{SOURCE} yields an empty filter (comments only?) — the CI suite would run blindly.")
+        return fail(
+            f"{SOURCE} yields an empty filter (comments only?) — the CI suite would run blindly."
+        )
     if len(filter_lines) > 1:
         return fail(
             f"{SOURCE} carries {len(filter_lines)} filter line(s) — one list, one "
@@ -126,7 +148,9 @@ def main() -> int:
     for target, frags in CONSUMERS.items():
         path = os.path.join(root, *target.split("/"))
         if not os.path.isfile(path):
-            return fail(f"call site {target} is gone — {SOURCE} would have no (or fewer) consumers.")
+            return fail(
+                f"call site {target} is gone — {SOURCE} would have no (or fewer) consumers."
+            )
         text = open(path, encoding="utf-8").read()
         for frag in frags:
             if frag not in text:
@@ -139,7 +163,8 @@ def main() -> int:
     #    (`"$FILTER"`, `${CG_TEST_GTEST_FILTER}`, `"*${suite}*"`) contain '$'
     #    and are excluded by the regex itself.
     scan = sorted(
-        f for f in files
+        f
+        for f in files
         if os.path.splitext(f)[1] in SCAN_SUFFIXES or os.path.basename(f) in SCAN_EXACT
     )
     hardcoded: dict[tuple[str, int], str] = {}
@@ -156,7 +181,9 @@ def main() -> int:
         except OSError:
             continue
     if hardcoded:
-        sites = ", ".join(f"{rel}:{ln}={val!r}" for (rel, ln), val in sorted(hardcoded.items()))
+        sites = ", ".join(
+            f"{rel}:{ln}={val!r}" for (rel, ln), val in sorted(hardcoded.items())
+        )
         return fail(
             f"second hardcoded gtest filter value(s) in tracked code — every "
             f"call site must consume {SOURCE}: {sites}"

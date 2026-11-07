@@ -41,24 +41,35 @@ PROBES = [
 def main() -> int:
     root = pathlib.Path(__file__).resolve().parent.parent
     if not PROBES:
-        print("✗ [new_sources_visible] no probes: the check has lost its subject", file=sys.stderr)
+        print(
+            "✗ [new_sources_visible] no probes: the check has lost its subject",
+            file=sys.stderr,
+        )
         return 1
     # check-ignore exits 0 when at least one path is ignored, 1 when none is.
     res = subprocess.run(
         ["git", "check-ignore", "--no-index", "--verbose", *PROBES],
-        cwd=root, capture_output=True, text=True, check=False, stdin=subprocess.DEVNULL,
+        cwd=root,
+        capture_output=True,
+        text=True,
+        check=False,
+        stdin=subprocess.DEVNULL,
     )
     if res.returncode not in (0, 1):
-        print(f"✗ [new_sources_visible] git check-ignore failed: {res.stderr.strip()}",
-              file=sys.stderr)
+        print(
+            f"✗ [new_sources_visible] git check-ignore failed: {res.stderr.strip()}",
+            file=sys.stderr,
+        )
         return 1
     hidden = [line for line in res.stdout.splitlines() if line.strip()]
     if hidden:
         for line in hidden:
             rule, path = line.split("\t", 1)
-            print(f"✗ [new_sources_visible] a new {path} would be silently untracked "
-                  f"(rule {rule}); ignore generated files by name, never a source kind",
-                  file=sys.stderr)
+            print(
+                f"✗ [new_sources_visible] a new {path} would be silently untracked "
+                f"(rule {rule}); ignore generated files by name, never a source kind",
+                file=sys.stderr,
+            )
         return 1
     print(f"✓ [new_sources_visible] {len(PROBES)} new-source probes, none ignored")
     return 0

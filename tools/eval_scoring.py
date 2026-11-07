@@ -13,10 +13,10 @@ import re
 # (gates_of_heck) polices literal glyphs and, since 2026-09-14, escapes that
 # render as one; a number is neither, and these must keep matching what the
 # model actually emits.
-DUCK = chr(0x1F986)    # duck
-GOOSE = chr(0x1FABF)   # goose
-SKULL = chr(0x1F480)   # skull
-IMP = chr(0x1F608)     # smiling face with horns
+DUCK = chr(0x1F986)  # duck
+GOOSE = chr(0x1FABF)  # goose
+SKULL = chr(0x1F480)  # skull
+IMP = chr(0x1F608)  # smiling face with horns
 
 # ──────────────────────────────────────────────────────────────
 # Prompt builder (mirrors ai_text_meme.mm BuildPrompt())
@@ -34,8 +34,34 @@ EVIL_PERSONALITIES = {
 BEHAVIOR_LISTS = {
     "minimal": ["ball", "honcker"],
     "fun": ["ball", "breadCrumbs", "hats", "rainbow"],
-    "chaos": ["ball", "breadCrumbs", "hats", "rainbow", "acid", "anger", "autumnLeaves", "honcker", "jail", "portals"],
-    "all": ["ball", "breadCrumbs", "hats", "rainbow", "acid", "anger", "autumnLeaves", "honcker", "jail", "portals", "drag", "nametag", "health", "pomodoro"],
+    "chaos": [
+        "ball",
+        "breadCrumbs",
+        "hats",
+        "rainbow",
+        "acid",
+        "anger",
+        "autumnLeaves",
+        "honcker",
+        "jail",
+        "portals",
+    ],
+    "all": [
+        "ball",
+        "breadCrumbs",
+        "hats",
+        "rainbow",
+        "acid",
+        "anger",
+        "autumnLeaves",
+        "honcker",
+        "jail",
+        "portals",
+        "drag",
+        "nametag",
+        "health",
+        "pomodoro",
+    ],
 }
 
 COLOR_MODES = ["light", "dark", "system"]
@@ -51,7 +77,9 @@ def build_text_meme_prompt(
     if seed is None:
         seed = (random.randint(0, 32767) << 16) ^ random.randint(0, 32767)
 
-    personality = EVIL_PERSONALITIES.get(evil_level, f"a goose with evil level {evil_level}")
+    personality = EVIL_PERSONALITIES.get(
+        evil_level, f"a goose with evil level {evil_level}"
+    )
     behavior_str = ", ".join(BEHAVIOR_LISTS.get(behaviors, behaviors.split(",")))
 
     return (
@@ -106,7 +134,16 @@ def score_text_meme(text: str, evil_level: float = 0.4) -> dict:
             reasons.append("has quotes")
         if any(
             m in stripped.lower()
-            for m in ["here is", "here's", "i would", "i'll", "sure,", "okay,", "of course", "let me"]
+            for m in [
+                "here is",
+                "here's",
+                "i would",
+                "i'll",
+                "sure,",
+                "okay,",
+                "of course",
+                "let me",
+            ]
         ):
             format_score -= 25
             reasons.append("conversational filler")
@@ -131,9 +168,24 @@ def score_text_meme(text: str, evil_level: float = 0.4) -> dict:
     # ── Goose persona (0-100) ──
     # Does it feel like a goose wrote it?
     goose_signals = [
-        "honk", "goose", "geese", "honk!", DUCK, GOOSE,
-        "bread", "crumb", "pond", "waddle", "feather", "beak",
-        "hiss", "flap", "nest", "egg", "swan", "duck",
+        "honk",
+        "goose",
+        "geese",
+        "honk!",
+        DUCK,
+        GOOSE,
+        "bread",
+        "crumb",
+        "pond",
+        "waddle",
+        "feather",
+        "beak",
+        "hiss",
+        "flap",
+        "nest",
+        "egg",
+        "swan",
+        "duck",
     ]
     lower = stripped.lower()
     goose_hits = sum(1 for s in goose_signals if s in lower)
@@ -141,7 +193,9 @@ def score_text_meme(text: str, evil_level: float = 0.4) -> dict:
         goose_score = 100
     elif goose_hits == 1:
         goose_score = 75
-    elif any(c in lower for c in ["chaos", "evil", "mischief", "destroy", "wrath", "revenge"]):
+    elif any(
+        c in lower for c in ["chaos", "evil", "mischief", "destroy", "wrath", "revenge"]
+    ):
         goose_score = 60  # evil goose vibes without explicit goose words
     else:
         goose_score = 20
@@ -159,15 +213,30 @@ def score_text_meme(text: str, evil_level: float = 0.4) -> dict:
         humor_score += 5
     if any(
         c in lower
-        for c in ["steal", "attack", "destroy", "chaos", "evil", "wrath", "doom",
-                   "hiss", "menace", "terror", "supreme", "overlord", "dictator"]
+        for c in [
+            "steal",
+            "attack",
+            "destroy",
+            "chaos",
+            "evil",
+            "wrath",
+            "doom",
+            "hiss",
+            "menace",
+            "terror",
+            "supreme",
+            "overlord",
+            "dictator",
+        ]
     ):
         humor_score += 15  # goose grandiosity is funny
     if any(c in lower for c in ["bread", "crumb", "pond", "waddle", "feather"]):
         humor_score += 10  # goose life references
     if re.search(r"[a-z]+\s+\d+\s+[a-z]+", lower):  # e.g. "3 breads stolen"
         humor_score += 5  # specificity is funny
-    if re.search(r"\b(i|my|me)\b", lower) and re.search(r"\b(will|shall|gonna|must|should)\b", lower):
+    if re.search(r"\b(i|my|me)\b", lower) and re.search(
+        r"\b(will|shall|gonna|must|should)\b", lower
+    ):
         humor_score += 5  # declarative goose intent
 
     # Negative signals
@@ -182,11 +251,41 @@ def score_text_meme(text: str, evil_level: float = 0.4) -> dict:
 
     # ── Evil level match (0-100) ──
     # Does the tone match the requested evil level?
-    evil_words_positive = ["chaos", "evil", "destroy", "attack", "wrath", "doom", "menace",
-                           "terror", "supreme", "overlord", "dictator", "vengeance", "reign",
-                           "fear", "dark", "sinister", "malice", "hatred", "curse"]
-    evil_words_negative = ["love", "friend", "happy", "kind", "sweet", "nice", "gentle",
-                           "peace", "hug", "care", "wonderful", "beautiful"]
+    evil_words_positive = [
+        "chaos",
+        "evil",
+        "destroy",
+        "attack",
+        "wrath",
+        "doom",
+        "menace",
+        "terror",
+        "supreme",
+        "overlord",
+        "dictator",
+        "vengeance",
+        "reign",
+        "fear",
+        "dark",
+        "sinister",
+        "malice",
+        "hatred",
+        "curse",
+    ]
+    evil_words_negative = [
+        "love",
+        "friend",
+        "happy",
+        "kind",
+        "sweet",
+        "nice",
+        "gentle",
+        "peace",
+        "hug",
+        "care",
+        "wonderful",
+        "beautiful",
+    ]
 
     evil_pos = sum(1 for w in evil_words_positive if w in lower)
     evil_neg = sum(1 for w in evil_words_negative if w in lower)
@@ -218,7 +317,13 @@ def score_text_meme(text: str, evil_level: float = 0.4) -> dict:
     scores["evil_match"] = evil_match
 
     # ── Overall weighted score ──
-    weights = {"format": 0.20, "brevity": 0.15, "goose_persona": 0.25, "humor": 0.25, "evil_match": 0.15}
+    weights = {
+        "format": 0.20,
+        "brevity": 0.15,
+        "goose_persona": 0.25,
+        "humor": 0.25,
+        "evil_match": 0.15,
+    }
     overall = sum(scores[k] * weights[k] for k in weights)
 
     return {
@@ -245,7 +350,10 @@ def score_chat_response(text: str, user_message: str) -> dict:
     if len(stripped) > 300:
         format_score -= 20
         reasons.append(f"too long ({len(stripped)} chars)")
-    if any(m in lower for m in ["as an ai", "as a language model", "i cannot", "i'm sorry but"]):
+    if any(
+        m in lower
+        for m in ["as an ai", "as a language model", "i cannot", "i'm sorry but"]
+    ):
         format_score -= 40
         reasons.append("AI refusal pattern")
     scores["format"] = max(0, format_score)
@@ -268,7 +376,26 @@ def score_chat_response(text: str, user_message: str) -> dict:
     response_words = set(lower.split())
     overlap = user_words & response_words
     # Remove common words from overlap
-    stop = {"the", "a", "an", "is", "are", "to", "of", "and", "or", "but", "in", "on", "at", "it", "i", "you", "my", "your"}
+    stop = {
+        "the",
+        "a",
+        "an",
+        "is",
+        "are",
+        "to",
+        "of",
+        "and",
+        "or",
+        "but",
+        "in",
+        "on",
+        "at",
+        "it",
+        "i",
+        "you",
+        "my",
+        "your",
+    }
     meaningful_overlap = overlap - stop
     if len(meaningful_overlap) >= 2:
         relevance = 100
@@ -283,9 +410,13 @@ def score_chat_response(text: str, user_message: str) -> dict:
     humor_score = 50
     if any(c in stripped for c in ["!", DUCK, GOOSE, SKULL]):
         humor_score += 10
-    if any(c in lower for c in ["honk", "chaos", "evil", "mischief", "steal", "attack"]):
+    if any(
+        c in lower for c in ["honk", "chaos", "evil", "mischief", "steal", "attack"]
+    ):
         humor_score += 15
-    if re.search(r"\b(i|my|me)\b", lower) and re.search(r"\b(will|shall|gonna|must)\b", lower):
+    if re.search(r"\b(i|my|me)\b", lower) and re.search(
+        r"\b(will|shall|gonna|must)\b", lower
+    ):
         humor_score += 5
     if re.search(r"please|thank you|sorry|apologize|cannot|unable", lower):
         humor_score -= 20
@@ -301,5 +432,3 @@ def score_chat_response(text: str, user_message: str) -> dict:
         "reasons": reasons,
         "text": stripped,
     }
-
-

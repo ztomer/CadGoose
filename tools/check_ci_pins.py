@@ -28,7 +28,10 @@ EXACT = re.compile(r"@(v\d+\.\d+\.\d+|[0-9a-f]{40})$")
 
 def main() -> int:
     root = pathlib.Path(__file__).resolve().parent.parent
-    files = sorted(list((root / ".github").rglob("*.yml")) + list((root / ".github").rglob("*.yaml")))
+    files = sorted(
+        list((root / ".github").rglob("*.yml"))
+        + list((root / ".github").rglob("*.yaml"))
+    )
     seen = 0
     bad = 0
     for f in files:
@@ -41,14 +44,20 @@ def main() -> int:
             seen += 1
             if not EXACT.search(ref):
                 bad += 1
-                print(f"✗ [ci_pins] {rel}: `uses: {ref}` is a moving reference; pin an exact "
-                      "release tag (vX.Y.Z) or a commit sha", file=sys.stderr)
+                print(
+                    f"✗ [ci_pins] {rel}: `uses: {ref}` is a moving reference; pin an exact "
+                    "release tag (vX.Y.Z) or a commit sha",
+                    file=sys.stderr,
+                )
         for m in RUNS_ON.finditer(text):
             label = m.group(1).strip()
             if "latest" in label:
                 bad += 1
-                print(f"✗ [ci_pins] {rel}: `runs-on: {label}` moves under you; name the "
-                      "runner image (e.g. ubuntu-26.04)", file=sys.stderr)
+                print(
+                    f"✗ [ci_pins] {rel}: `runs-on: {label}` moves under you; name the "
+                    "runner image (e.g. ubuntu-26.04)",
+                    file=sys.stderr,
+                )
     if seen == 0:
         print("✗ [ci_pins] read no `uses:`: the scan lost its subject", file=sys.stderr)
         return 1

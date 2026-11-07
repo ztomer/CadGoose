@@ -20,19 +20,29 @@ import sys
 GOH = os.environ.get("GOH_DIR") or os.path.expanduser("~/Projects/gates_of_heck")
 CHECKER = os.path.join(GOH, "checks", "check_tests_registered.py")
 if not os.path.isfile(CHECKER):
-    print(f"✗ check_test_registration: house checker not found at {CHECKER}\n"
-          "  git clone https://github.com/ztomer/gates_of_heck && export GOH_DIR=$PWD/gates_of_heck",
-          file=sys.stderr)
+    print(
+        f"✗ check_test_registration: house checker not found at {CHECKER}\n"
+        "  git clone https://github.com/ztomer/gates_of_heck && export GOH_DIR=$PWD/gates_of_heck",
+        file=sys.stderr,
+    )
     sys.exit(2)
 
 # --min-tests: the population floor (119 test files today). A gate that reports
 # compliance over zero files is the defect check_empty_scope.py exists to catch.
-rc = subprocess.call([
-    sys.executable, CHECKER,
-    "--buildsystem", "cmake",
-    "--tests-dir", "tests",
-    "--makefile", "CMakeLists.txt",
-    "--min-tests", "20",
-], stdin=subprocess.DEVNULL)
+rc = subprocess.call(
+    [
+        sys.executable,
+        CHECKER,
+        "--buildsystem",
+        "cmake",
+        "--tests-dir",
+        "tests",
+        "--makefile",
+        "CMakeLists.txt",
+        "--min-tests",
+        "20",
+    ],
+    stdin=subprocess.DEVNULL,
+)
 if rc != 0:
     sys.exit(rc)

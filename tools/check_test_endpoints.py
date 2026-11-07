@@ -29,32 +29,47 @@ SUFFIXES = {".c", ".cc", ".cpp", ".h", ".hpp", ".m", ".mm"}
 
 RULES = [
     (re.compile(r"\bhtons\s*\(\s*\d"), "a literal port number"),
-    (re.compile(r"\bmcpPort\s*=\s*[1-9]"), "a fixed MCP port (use 0 and MCP_HTTPPort())"),
+    (
+        re.compile(r"\bmcpPort\s*=\s*[1-9]"),
+        "a fixed MCP port (use 0 and MCP_HTTPPort())",
+    ),
     (re.compile(r'"/[^"\n]*\.sock"'), "a fixed socket path (derive one per process)"),
 ]
 
 
 def strip_comments(text: str) -> str:
-    text = re.sub(r"/\*.*?\*/", lambda m: "\n" * m.group(0).count("\n"), text, flags=re.S)
+    text = re.sub(
+        r"/\*.*?\*/", lambda m: "\n" * m.group(0).count("\n"), text, flags=re.S
+    )
     return re.sub(r"//[^\n]*", "", text)
 
 
 def main() -> int:
     root = pathlib.Path(__file__).resolve().parent.parent
     files = sorted(
-        p for p in subprocess.run(
+        p
+        for p in subprocess.run(
             ["git", "ls-files", "--cached", "--others", "--exclude-standard", "tests"],
-            cwd=root, capture_output=True, text=True, check=True, stdin=subprocess.DEVNULL,
+            cwd=root,
+            capture_output=True,
+            text=True,
+            check=True,
+            stdin=subprocess.DEVNULL,
         ).stdout.split()
         if pathlib.PurePath(p).suffix in SUFFIXES
     )
     if len(files) < MIN_FILES:
-        print(f"✗ [test_endpoints] read {len(files)} test sources, floor {MIN_FILES}: "
-              "the scan lost its subject", file=sys.stderr)
+        print(
+            f"✗ [test_endpoints] read {len(files)} test sources, floor {MIN_FILES}: "
+            "the scan lost its subject",
+            file=sys.stderr,
+        )
         return 1
     hits = {}
     for rel in files:
-        text = strip_comments((root / rel).read_text(encoding="utf-8", errors="replace"))
+        text = strip_comments(
+            (root / rel).read_text(encoding="utf-8", errors="replace")
+        )
         for lineno, line in enumerate(text.splitlines(), 1):
             for rule, why in RULES:
                 if rule.search(line):
@@ -64,12 +79,18 @@ def main() -> int:
         if rel in ALLOWED:
             continue
         bad += 1
-        print(f"✗ [test_endpoints] {rel}: {', '.join(found)}: a fixed endpoint collides "
-              "with every other test process and with a running app", file=sys.stderr)
+        print(
+            f"✗ [test_endpoints] {rel}: {', '.join(found)}: a fixed endpoint collides "
+            "with every other test process and with a running app",
+            file=sys.stderr,
+        )
     for rel in sorted(ALLOWED):
         if rel not in hits:
             bad += 1
-            print(f"✗ [test_endpoints] stale allowlist entry {rel}; delete it", file=sys.stderr)
+            print(
+                f"✗ [test_endpoints] stale allowlist entry {rel}; delete it",
+                file=sys.stderr,
+            )
     if bad:
         return 1
     print(f"✓ [test_endpoints] {len(files)} test sources, no fixed port or socket path")

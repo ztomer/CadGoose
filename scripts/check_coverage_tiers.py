@@ -4,6 +4,7 @@
 Reads scripts/coverage_eligible.txt. Every .cpp/.mm under src/ must be either
 listed by a P0/P1 glob or named by an EXCLUDE glob (with a reason in the file).
 """
+
 import fnmatch
 import os
 import sys
@@ -27,6 +28,7 @@ with open(ELIGIBLE) as f:
         full = os.path.join(ROOT, globpat)
         # expand (non-recursive globs as the shell parser does)
         import glob as _glob
+
         for path in _glob.glob(full):
             rel = os.path.relpath(path, ROOT)
             if tier == "EXCLUDE":
@@ -48,7 +50,9 @@ if untiered:
     print("UNTIERED production sources (not in any P0/P1 tier and not EXCLUDED):")
     for p in untiered:
         print(f"  {p}")
-    print(f"\n{len(untiered)} untiered file(s). Add to a tier or EXCLUDE with a reason.")
+    print(
+        f"\n{len(untiered)} untiered file(s). Add to a tier or EXCLUDE with a reason."
+    )
     sys.exit(1)
 
 print(f"OK: all {len(prod)} production sources under src/ are tiered or excluded.")
