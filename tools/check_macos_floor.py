@@ -41,6 +41,14 @@ import subprocess
 import sys
 import tempfile
 
+from macos_floor_claims import (
+    cask_copy_errors,
+    claim_errors,
+    readme_errors,
+    second_source_errors,
+    version,
+)
+
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 FLOOR_FILE = ROOT / "cmake" / "MacOSFloor.cmake"
 README = "README.md"
@@ -49,92 +57,62 @@ TAG = "[macos_floor]"
 # Prose that may name old floors: history, not a claim.
 PROSE_HISTORY = {"docs/CHANGELOG.md", "ROADMAP.md"}
 # The one source, and this file (whose probe plants the very literals it hunts).
-NOT_A_SECOND_SOURCE = {"cmake/MacOSFloor.cmake", "tools/check_macos_floor.py"}
+NOT_A_SECOND_SOURCE = {
+    "cmake/MacOSFloor.cmake",
+    "tools/check_macos_floor.py",
+    "tools/macos_floor_claims.py",
+}
 
-SECOND_SOURCE = [
-    (re.compile(r"CMAKE_OSX_DEPLOYMENT_TARGET[\s=\"']+\d"), "CMAKE_OSX_DEPLOYMENT_TARGET literal"),
-    (re.compile(r"MACOSX_DEPLOYMENT_TARGET\s*=\s*[\"']?\d"), "MACOSX_DEPLOYMENT_TARGET literal"),
-    (re.compile(r"-m(?:macosx|macos)-version-min=\d"), "-mmacosx-version-min literal"),
-    (re.compile(r"apple-macos(?:x)?\d"), "-target triple with a literal macOS version"),
-    (re.compile(r"LSMinimumSystemVersion</key>\s*<string>\s*\d"), "literal LSMinimumSystemVersion"),
-]
-README_ROW = re.compile(r"^\|\s*macOS\s+([\d.]+)\+?\s*\|", re.M)
-OS_CLAIM = re.compile(r"\bmacOS\s+(\d+(?:\.\d+)*)\+")
-# A Homebrew cask definition: the tap's, never a copy here (G0.18).
-CASK_DEF = re.compile(r"^\s*cask\s+[\"']", re.M)
 
 # The planted defects probe_bundles() expects to go red.
 BUNDLE_PLANTS = 6
 
 MACHO_MAGIC = {
-    b"\xcf\xfa\xed\xfe", b"\xce\xfa\xed\xfe", b"\xfe\xed\xfa\xcf", b"\xfe\xed\xfa\xce",
-    b"\xca\xfe\xba\xbe", b"\xca\xfe\xba\xbf",
+    b"\xcf\xfa\xed\xfe",
+    b"\xce\xfa\xed\xfe",
+    b"\xfe\xed\xfa\xcf",
+    b"\xfe\xed\xfa\xce",
+    b"\xca\xfe\xba\xbe",
+    b"\xca\xfe\xba\xbf",
 }
 
 
-def version(text: str) -> tuple[int, ...]:
-    """'26' and '26.0' are one version; trailing zeros are not significant."""
-    parts = [int(p) for p in text.strip().split(".")]
-    while len(parts) > 1 and parts[-1] == 0:
-        parts.pop()
-    return tuple(parts)
-
-
-def run(cmd: list[str], *, cwd: pathlib.Path | None = None,
-        source: str | None = None) -> subprocess.CompletedProcess:
+def run(
+    cmd: list[str], *, cwd: pathlib.Path | None = None, source: str | None = None
+) -> subprocess.CompletedProcess:
     """`source`, when given, is the child's stdin; otherwise it reads nothing."""
     if source is not None:
-        return subprocess.run(cmd, cwd=cwd, input=source, capture_output=True, text=True,
-                              check=False)
-    return subprocess.run(cmd, cwd=cwd, stdin=subprocess.DEVNULL, capture_output=True,
-                          text=True, check=False)
+        return subprocess.run(
+            cmd, cwd=cwd, input=source, capture_output=True, text=True, check=False
+        )
+    return subprocess.run(
+        cmd,
+        cwd=cwd,
+        stdin=subprocess.DEVNULL,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
 
 
 def read_floor() -> str:
     res = run(["cmake", "-P", str(FLOOR_FILE)])
     floor = res.stdout.strip()
     if res.returncode != 0 or not re.fullmatch(r"\d+(?:\.\d+)*", floor):
-        sys.exit(f"✗ {TAG} cmake/MacOSFloor.cmake did not print a floor "
-                 f"(exit {res.returncode}): {res.stdout!r} {res.stderr.strip()}")
+        sys.exit(
+            f"✗ {TAG} cmake/MacOSFloor.cmake did not print a floor "
+            f"(exit {res.returncode}): {res.stdout!r} {res.stderr.strip()}"
+        )
     return floor
 
 
 # ── static: the claims and the one source ──────────────────────────────────
 
-def readme_errors(text: str, floor: str, where: str = README) -> list[str]:
-    rows = README_ROW.findall(text)
-    if len(rows) != 1:
-        return [f"{where}: expected one '| macOS N+ |' platform row, found {len(rows)}"]
-    if version(rows[0]) != version(floor):
-        return [f"{where}: the platform row claims macOS {rows[0]}+, the floor is {floor}"]
-    return []
-
-
-def claim_errors(text: str, floor: str, where: str) -> list[str]:
-    """A feature may need a NEWER macOS than the floor; nothing runs on an older one."""
-    return [f"{where}: claims macOS {m}+, below the {floor} floor"
-            for m in OS_CLAIM.findall(text) if version(m) < version(floor)]
-
-
-def cask_copy_errors(text: str, where: str) -> list[str]:
-    if CASK_DEF.search(text):
-        return [f"{where}: a Homebrew cask in this tree; the cask is ztomer/homebrew-tap's "
-                "Casks/cadgoose.rb, and its gate (tools/cask_floor.sh) holds it to this floor"]
-    return []
-
-
-def second_source_errors(text: str, where: str) -> list[str]:
-    out = []
-    for pattern, what in SECOND_SOURCE:
-        for m in pattern.finditer(text):
-            line = text.count("\n", 0, m.start()) + 1
-            out.append(f"{where}:{line}: {what}: the floor is written only in "
-                       "cmake/MacOSFloor.cmake; derive it")
-    return out
-
 
 def tracked_text_files() -> list[str]:
-    res = run(["git", "ls-files", "--cached", "--others", "--exclude-standard"], cwd=ROOT)
+    res = run(
+        ["git", "ls-files", "--cached", "--others", "--exclude-standard"], cwd=ROOT
+    )
     if res.returncode != 0:
         sys.exit(f"✗ {TAG} git ls-files failed: {res.stderr.strip()}")
     return [p for p in res.stdout.split("\n") if p and not p.startswith("Assets/")]
@@ -162,6 +140,7 @@ def static_errors(floor: str) -> tuple[list[str], int]:
 
 
 # ── built: every Mach-O in the bundle ──────────────────────────────────────
+
 
 def is_macho(path: pathlib.Path) -> bool:
     try:
@@ -200,9 +179,15 @@ def bundle_errors(app: pathlib.Path, floor: str) -> tuple[list[str], int]:
     except (OSError, plistlib.InvalidFileException) as exc:
         return [f"{plist_path}: unreadable ({exc})"], 0
     lsmin = str(plist.get("LSMinimumSystemVersion", ""))
-    if not lsmin or not re.fullmatch(r"\d+(?:\.\d+)*", lsmin) or version(lsmin) != version(floor):
-        errors.append(f"{plist_path}: LSMinimumSystemVersion is {lsmin or 'missing'}, "
-                      f"the floor is {floor}")
+    if (
+        not lsmin
+        or not re.fullmatch(r"\d+(?:\.\d+)*", lsmin)
+        or version(lsmin) != version(floor)
+    ):
+        errors.append(
+            f"{plist_path}: LSMinimumSystemVersion is {lsmin or 'missing'}, "
+            f"the floor is {floor}"
+        )
     exe = app / "Contents" / "MacOS" / str(plist.get("CFBundleExecutable", ""))
 
     machos = 0
@@ -224,8 +209,10 @@ def bundle_errors(app: pathlib.Path, floor: str) -> tuple[list[str], int]:
             elif version(minos) != version(floor):
                 errors.append(f"{rel}: minos {minos}, the floor is {floor}")
     if not saw_exe:
-        errors.append(f"{app.name}: its executable {exe.name or '?'} was not among the "
-                      f"{machos} Mach-O file(s) read: the walk lost its subject")
+        errors.append(
+            f"{app.name}: its executable {exe.name or '?'} was not among the "
+            f"{machos} Mach-O file(s) read: the walk lost its subject"
+        )
     return errors, machos
 
 
@@ -235,11 +222,23 @@ def mounted(dmg: pathlib.Path):
         # diskutil image, not hdiutil: hdiutil attach/detach are deprecated on
         # macOS 27 (G0.17). The mount point must exist on macOS 26 (measured on
         # the macos-26 runner, 26.6.2); TemporaryDirectory made it.
-        res = run(["diskutil", "image", "attach", "--readOnly", "--nobrowse",
-                   "--mountPoint", mnt, str(dmg)])
+        res = run(
+            [
+                "diskutil",
+                "image",
+                "attach",
+                "--readOnly",
+                "--nobrowse",
+                "--mountPoint",
+                mnt,
+                str(dmg),
+            ]
+        )
         if res.returncode != 0:
-            sys.exit(f"✗ {TAG} diskutil image attach {dmg} failed: "
-                     f"{(res.stderr or res.stdout).strip()}")
+            sys.exit(
+                f"✗ {TAG} diskutil image attach {dmg} failed: "
+                f"{(res.stderr or res.stdout).strip()}"
+            )
         try:
             yield pathlib.Path(mnt)
         finally:
@@ -248,6 +247,7 @@ def mounted(dmg: pathlib.Path):
 
 # ── calibration ────────────────────────────────────────────────────────────
 
+
 def probe_bundles(floor: str, below: str, above: str) -> list[str]:
     """The Mach-O half: fixture bundles built by clang and restamped by vtool."""
     failures = []
@@ -255,15 +255,31 @@ def probe_bundles(floor: str, below: str, above: str) -> list[str]:
         work = pathlib.Path(tmp)
 
         def cc(out: pathlib.Path, *extra: str) -> None:
-            res = run(["xcrun", "clang", "-arch", "arm64", f"-mmacosx-version-min={floor}",
-                       *extra, "-x", "c", "-", "-o", str(out)],
-                      source="int f(void){return 0;}\nint main(void){return f();}\n")
+            res = run(
+                [
+                    "xcrun",
+                    "clang",
+                    "-arch",
+                    "arm64",
+                    f"-mmacosx-version-min={floor}",
+                    *extra,
+                    "-x",
+                    "c",
+                    "-",
+                    "-o",
+                    str(out),
+                ],
+                source="int f(void){return 0;}\nint main(void){return f();}\n",
+            )
             if res.returncode != 0:
                 sys.exit(f"✗ {TAG} probe: clang failed: {res.stderr.strip()}")
 
         def restamp(path: pathlib.Path, minos: str | None) -> None:
-            args = (["-remove-build-version", "macos"] if minos is None
-                    else ["-set-build-version", "macos", minos, minos, "-replace"])
+            args = (
+                ["-remove-build-version", "macos"]
+                if minos is None
+                else ["-set-build-version", "macos", minos, minos, "-replace"]
+            )
             res = run(["xcrun", "vtool", *args, "-output", str(path), str(path)])
             if res.returncode != 0:
                 sys.exit(f"✗ {TAG} probe: vtool failed: {res.stderr.strip()}")
@@ -278,10 +294,16 @@ def probe_bundles(floor: str, below: str, above: str) -> list[str]:
             (app / "Contents" / "Frameworks").mkdir()
             (app / "Contents" / "Resources" / "Assets").mkdir(parents=True)
             (app / "Contents" / "MacOS" / "Probe").write_bytes(exe_src.read_bytes())
-            (app / "Contents" / "Frameworks" / "libok.dylib").write_bytes(lib_src.read_bytes())
-            (app / "Contents" / "Resources" / "Assets" / "sound.wav").write_bytes(b"RIFF")
+            (app / "Contents" / "Frameworks" / "libok.dylib").write_bytes(
+                lib_src.read_bytes()
+            )
+            (app / "Contents" / "Resources" / "Assets" / "sound.wav").write_bytes(
+                b"RIFF"
+            )
             with (app / "Contents" / "Info.plist").open("wb") as f:
-                plistlib.dump({"CFBundleExecutable": "Probe", "LSMinimumSystemVersion": lsmin}, f)
+                plistlib.dump(
+                    {"CFBundleExecutable": "Probe", "LSMinimumSystemVersion": lsmin}, f
+                )
             return app
 
         def expect(name: str, app: pathlib.Path, needle: str | None) -> None:
@@ -289,12 +311,16 @@ def probe_bundles(floor: str, below: str, above: str) -> list[str]:
             if needle is None and errors:
                 failures.append(f"probe {name}: the clean fixture went red: {errors}")
             elif needle is not None and not any(needle in e for e in errors):
-                failures.append(f"probe {name}: planted defect stayed green "
-                                f"(wanted an error naming {needle!r}, got {errors})")
+                failures.append(
+                    f"probe {name}: planted defect stayed green "
+                    f"(wanted an error naming {needle!r}, got {errors})"
+                )
 
         expect("clean", fixture("clean"), None)
         app = fixture("old-dylib")
-        (app / "Contents" / "Frameworks" / "libold.dylib").write_bytes(lib_src.read_bytes())
+        (app / "Contents" / "Frameworks" / "libold.dylib").write_bytes(
+            lib_src.read_bytes()
+        )
         restamp(app / "Contents" / "Frameworks" / "libold.dylib", below)
         expect("dylib below the floor", app, f"libold.dylib: minos {below}")
         app = fixture("new-exe")
@@ -308,7 +334,11 @@ def probe_bundles(floor: str, below: str, above: str) -> list[str]:
         app = fixture("unstamped")
         restamp(app / "Contents" / "Frameworks" / "libok.dylib", None)
         expect("no build version", app, "libok.dylib: no LC_BUILD_VERSION")
-        expect("plist below the floor", fixture("plist", lsmin=below), "LSMinimumSystemVersion")
+        expect(
+            "plist below the floor",
+            fixture("plist", lsmin=below),
+            "LSMinimumSystemVersion",
+        )
         app = fixture("no-exe")
         (app / "Contents" / "MacOS" / "Probe").unlink()
         expect("executable missing", app, "lost its subject")
@@ -328,36 +358,69 @@ def probe(floor: str) -> list[str]:
         # otool, and they run wherever a bundle is built (the DMG job, the local
         # pre-push gate). On macOS a missing toolchain is red, not this branch.
         bundle_plants = 0
-        print(f"→ {TAG} probe: the {BUNDLE_PLANTS} Mach-O plants need the Apple toolchain; "
-              "they run in CI's DMG job and the local pre-push gate, not on this host")
+        print(
+            f"→ {TAG} probe: the {BUNDLE_PLANTS} Mach-O plants need the Apple toolchain; "
+            "they run in CI's DMG job and the local pre-push gate, not on this host"
+        )
 
     static_plants = [
         ("README row below", readme_errors(f"| macOS {below}+ | Supported |\n", floor)),
         ("README with no row", readme_errors("macOS only\n", floor)),
-        ("docs claim below", claim_errors(f"needs macOS {below}+ to run", floor, "x.md")),
-        ("a cask copy in the tree", cask_copy_errors('cask "cadgoose" do\nend\n', "x.rb")),
-        ("second source: triple", second_source_errors(f"-target arm64-apple-macos{floor}", "x")),
-        ("second source: plist", second_source_errors(
-            f"<key>LSMinimumSystemVersion</key>\n    <string>{floor}</string>", "x")),
-        ("second source: flag", second_source_errors(f"-DCMAKE_OSX_DEPLOYMENT_TARGET={floor}", "x")),
+        (
+            "docs claim below",
+            claim_errors(f"needs macOS {below}+ to run", floor, "x.md"),
+        ),
+        (
+            "a cask copy in the tree",
+            cask_copy_errors('cask "cadgoose" do\nend\n', "x.rb"),
+        ),
+        (
+            "second source: triple",
+            second_source_errors(f"-target arm64-apple-macos{floor}", "x"),
+        ),
+        (
+            "second source: plist",
+            second_source_errors(
+                f"<key>LSMinimumSystemVersion</key>\n    <string>{floor}</string>", "x"
+            ),
+        ),
+        (
+            "second source: flag",
+            second_source_errors(f"-DCMAKE_OSX_DEPLOYMENT_TARGET={floor}", "x"),
+        ),
     ]
-    failures += [f"probe {name}: planted defect stayed green" for name, errs in static_plants if not errs]
-    clean_static = (readme_errors(f"| macOS {major}+ | Supported |\n", floor)
-                    + claim_errors(f"macOS {major}+ and macOS {above}+", floor, "x.md")
-                    + cask_copy_errors("class Foo < Formula\nend\n", "x.rb")
-                    + second_source_errors("-target arm64-apple-macos${CMAKE_OSX_DEPLOYMENT_TARGET}", "x"))
+    failures += [
+        f"probe {name}: planted defect stayed green"
+        for name, errs in static_plants
+        if not errs
+    ]
+    clean_static = (
+        readme_errors(f"| macOS {major}+ | Supported |\n", floor)
+        + claim_errors(f"macOS {major}+ and macOS {above}+", floor, "x.md")
+        + cask_copy_errors("class Foo < Formula\nend\n", "x.rb")
+        + second_source_errors(
+            "-target arm64-apple-macos${CMAKE_OSX_DEPLOYMENT_TARGET}", "x"
+        )
+    )
     if clean_static:
         failures.append(f"probe: clean static text went red: {clean_static}")
     if not failures:
-        print(f"✓ {TAG} probe: {bundle_plants + len(static_plants)} planted defects each went red, "
-              "the clean fixtures stayed green")
+        print(
+            f"✓ {TAG} probe: {bundle_plants + len(static_plants)} planted defects each went red, "
+            "the clean fixtures stayed green"
+        )
     return failures
 
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n", 1)[0])
-    ap.add_argument("--bundle", type=pathlib.Path, action="append", default=[],
-                    help="a built .app to read (repeatable)")
+    ap.add_argument(
+        "--bundle",
+        type=pathlib.Path,
+        action="append",
+        default=[],
+        help="a built .app to read (repeatable)",
+    )
     ap.add_argument("--dmg", type=pathlib.Path, help="a DMG whose .app(s) to read")
     ap.add_argument("--probe", action="store_true", help="prove the check can go red")
     args = ap.parse_args()
@@ -365,13 +428,17 @@ def main() -> int:
     floor = read_floor()
     errors, scanned = static_errors(floor)
     if scanned < 100:
-        errors.append(f"{TAG} read {scanned} tracked text files, floor 100: the scan lost its subject")
+        errors.append(
+            f"{TAG} read {scanned} tracked text files, floor 100: the scan lost its subject"
+        )
 
     def check(app: pathlib.Path, label: str) -> None:
         errs, machos = bundle_errors(app, floor)
         errors.extend(errs)
         if not errs:
-            print(f"✓ {TAG} {label}: Info.plist and all {machos} Mach-O file(s) say macOS {floor}")
+            print(
+                f"✓ {TAG} {label}: Info.plist and all {machos} Mach-O file(s) say macOS {floor}"
+            )
 
     for app in args.bundle:
         check(app, str(app))
@@ -389,8 +456,10 @@ def main() -> int:
         print(f"✗ {TAG} {e}", file=sys.stderr)
     if errors:
         return 1
-    print(f"✓ {TAG} the floor is macOS {floor}: README and {scanned} tracked files agree, no cask copy, "
-          "and nothing else writes it")
+    print(
+        f"✓ {TAG} the floor is macOS {floor}: README and {scanned} tracked files agree, no cask copy, "
+        "and nothing else writes it"
+    )
     return 0
 
 
