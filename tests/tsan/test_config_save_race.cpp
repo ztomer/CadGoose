@@ -3,6 +3,7 @@
 // with -fsanitize=thread (target CadGooseTsanTests); TSan reports any
 // unsynchronized access as an error and halt_on_error makes it a red exit.
 #include <gtest/gtest.h>
+#include "../test_scratch.h"
 #include <atomic>
 #include <chrono>
 #include <cstdlib>
@@ -32,8 +33,8 @@ class ConfigSaveRace : public ::testing::Test {
 protected:
     void SetUp() override {
         Config_Init();
-        char dirTemplate[] = "/tmp/cadgoose_tsan_XXXXXX";
-        char* dirResult = mkdtemp(dirTemplate);
+        const std::string dirTemplate = TestScratchMkdtemp("tsan");
+        const char* dirResult = dirTemplate.empty() ? nullptr : dirTemplate.c_str();
         ASSERT_NE(dirResult, nullptr);
         m_dir = dirResult;
         m_override.emplace(m_dir);

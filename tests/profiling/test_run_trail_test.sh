@@ -64,7 +64,7 @@ FAKE
 run_case() {
     local name="$1" make_rc="$2" trail_rc="$3" expect="$4"
     local dir rc=0
-    dir="$(mktemp -d /tmp/cgtt.XXXXXX)"
+    dir="$(mktemp -d "${TMPDIR:-/tmp}/cgtt.XXXXXX")"
     make_fakes "$dir"
     : > "$dir/log"
     env -i HOME="$HOME" PATH="$dir/bin:/usr/bin:/bin:/usr/sbin:/sbin" \

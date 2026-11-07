@@ -1,11 +1,20 @@
 #import "trail_detection_infra.h"
+#include "../../test_scratch.h"
+
+// This process's own output directory (CG.TMPRACE): a fixed temp path is
+// shared by every concurrent copy of this test. Lazy, never a static
+// initializer, which runs before the allocator is ready.
+static const std::string& OutDir() {
+    static const std::string dir = TestScratchPath("trail_test_frames");
+    return dir;
+}
 
 int main() {
     fprintf(stderr, "==================================================\n");
     fprintf(stderr, "  Window Trail Detection Test v3 (SCStream)\n");
     fprintf(stderr, "==================================================\n");
 
-    mkdir("/tmp/trail_test_frames", 0755);
+    mkdir(OutDir().c_str(), 0755);
 
     // ---- Step 1: Connect ----
     fprintf(stderr, "\n[1/5] Connecting to CadGoose...\n");
@@ -125,7 +134,7 @@ int main() {
         char path[256];
         const char* label = (i == dropFrame) ? "DROP" :
                             (i < dropFrame) ? "pre" : "post";
-        snprintf(path, sizeof(path), "/tmp/trail_test_frames/%02d_%s.png",
+        snprintf(path, sizeof(path), "%s/%02d_%s.png", OutDir().c_str(),
                  i - dropFrame + 10, label);
         SaveFramePNG(frames[i].pixels.data(), frames[i].width,
                      frames[i].height, path);
@@ -166,7 +175,7 @@ int main() {
             }
         }
         SaveFramePNG(maskRGB.data(), B.width, B.height,
-                     "/tmp/trail_test_frames/trail_mask.png");
+                     (OutDir() + "/trail_mask.png").c_str());
 
         // Save overlay: frame B with trail pixels highlighted
         std::vector<uint8_t> overlay = B.pixels;
@@ -179,7 +188,7 @@ int main() {
             }
         }
         SaveFramePNG(overlay.data(), B.width, B.height,
-                     "/tmp/trail_test_frames/trail_overlay.png");
+                     (OutDir() + "/trail_overlay.png").c_str());
 
         fprintf(stderr, "    trail pixels: %d in %d clusters (peak %d)\n",
                 trailPixels, trailClusters, peakCluster);
@@ -195,13 +204,13 @@ int main() {
     if (trailDetected) {
         fprintf(stderr, "  TRAIL DETECTED: %d pixels in %d clusters (peak %d)\n",
                 trailPixels, trailClusters, peakCluster);
-        fprintf(stderr, "  Output: /tmp/trail_test_frames/\n");
+        fprintf(stderr, "  Output: %s/\n", OutDir().c_str());
         fprintf(stderr, "    trail_mask.png       — trail pixels in red\n");
         fprintf(stderr, "    trail_overlay.png    — frame B with trail overlay\n");
         return 10;
     } else {
         fprintf(stderr, "  No trail pattern detected.\n");
-        fprintf(stderr, "  Output: /tmp/trail_test_frames/\n");
+        fprintf(stderr, "  Output: %s/\n", OutDir().c_str());
         return 0;
     }
 }

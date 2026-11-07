@@ -1,4 +1,13 @@
 #import "soak_capture_infra.h"
+#include "../../test_scratch.h"
+
+// This process's own output directory (CG.TMPRACE): a fixed temp path is
+// shared by every concurrent copy of this test. Lazy, never a static
+// initializer, which runs before the allocator is ready.
+static const std::string& OutDir() {
+    static const std::string dir = TestScratchPath("soak_fetch_test");
+    return dir;
+}
 
 // test_soak_fetch_visibility.mm
 // Soak test: repeatedly fetch test images via MCP, verify visibility via SCStream.
@@ -32,7 +41,7 @@ int main() {
     fprintf(stderr, "  Max cycles: %d\n", kMaxCycles);
     fprintf(stderr, "=======================================================\n");
 
-    mkdir("/tmp/soak_fetch_test", 0755);
+    mkdir(OutDir().c_str(), 0755);
 
     // ---- Connect ----
     fprintf(stderr, "\n[Connect] ");
@@ -159,7 +168,7 @@ int main() {
                 std::lock_guard<std::mutex> lock(g_frameMutex);
 
                 // Byte-order agnostic cyan scanning on all frames
-                FILE* diag = fopen("/tmp/soak_fetch_test/fail_diagnostic.txt", "w");
+                FILE* diag = fopen((OutDir() + "/fail_diagnostic.txt").c_str(), "w");
                 if (diag) {
                     fprintf(diag, "Fail cycle %d: %d frames, %dx%d pixels\n",
                             cycle, totalFrames, totalFrames > 0 ? g_frames[0].width : 0,
@@ -191,7 +200,7 @@ int main() {
                     // Save PNG (assuming BGRA)
                     char path[512];
                     snprintf(path, sizeof(path),
-                             "/tmp/soak_fetch_test/fail_cycle%d_frame%04d_w%d_h%d_bgra%d_rgba%d_argb%d_abgr%d.png",
+                             "%s/fail_cycle%d_frame%04d_w%d_h%d_bgra%d_rgba%d_argb%d_abgr%d.png", OutDir().c_str(),
                              cycle, i, w, h, cntBGRA, cntRGBA, cntARGB, cntABGR);
                     CGColorSpaceRef cs = CGColorSpaceCreateDeviceRGB();
                     CGContextRef ctx = CGBitmapContextCreate(
@@ -225,7 +234,7 @@ int main() {
                 }
                 if (diag) fclose(diag);
             }
-            fprintf(stderr, "  Frames + diagnostic saved to /tmp/soak_fetch_test/\n");
+            fprintf(stderr, "  Frames + diagnostic saved to %s/\n", OutDir().c_str());
 
             // Determine best byte order
             int bestOrder = -1;

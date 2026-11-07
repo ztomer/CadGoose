@@ -8,6 +8,7 @@
 // suite was green.
 
 #include <gtest/gtest.h>
+#include "../test_scratch.h"
 
 #include <cstdio>
 #include <cstdlib>
@@ -68,8 +69,7 @@ protected:
     }
 
     std::string Temp(const char* stem) {
-        m_temps.push_back(std::string("/tmp/cadgoose_") + stem + "_" +
-                          std::to_string(getpid()) + ".log");
+        m_temps.push_back(TestScratchPath(std::string(stem) + ".log"));
         return m_temps.back();
     }
 

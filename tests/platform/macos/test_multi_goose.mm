@@ -61,7 +61,6 @@ static int GetDroppedItemCount(const std::string& status) {
 }
 
 int main() {
-    mkdir("/tmp/multi_goose_test", 0755);
 
     fprintf(stderr, "=======================================================\n");
     fprintf(stderr, "  Multi-Goose Regression Test\n");

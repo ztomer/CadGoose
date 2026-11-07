@@ -1,4 +1,5 @@
 #include "command_socket.h"
+#include "../test_scratch.h"
 #include <mutex>
 
 namespace {
@@ -51,7 +52,7 @@ std::vector<std::vector<std::string>> CommandSocketStub_GetCommands() {
 // --- Stub implementations of command_socket.h ---
 
 std::string CommandSocket_GetPath() {
-    return "/tmp/test-goose.sock";
+    return TestScratchPath("goose.sock");
 }
 
 bool CommandSocket_StartServer(CommandHandler, std::string*) {

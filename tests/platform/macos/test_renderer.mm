@@ -2,10 +2,12 @@
 #import <Cocoa/Cocoa.h>
 #include <cstdio>
 #include <cstdlib>
+#include <string>
+#include "../../test_scratch.h"
 
 static std::string run_tesseract(const char* imagePath) {
-    char cmd[512];
-    snprintf(cmd, sizeof(cmd), "cd /tmp && tesseract %s stdout 2>/dev/null", imagePath);
+    char cmd[1024];
+    snprintf(cmd, sizeof(cmd), "tesseract '%s' stdout 2>/dev/null </dev/null", imagePath);
     FILE* f = popen(cmd, "r");
     if (!f) return "";
     std::string result;
@@ -23,8 +25,15 @@ static std::string run_tesseract(const char* imagePath) {
 // These tests verify text isn't mirrored by OCR'ing the rendered output, which
 // requires the `tesseract` CLI. It isn't on headless CI runners, so skip there
 // rather than fail (run them on a dev machine with `brew install tesseract`).
+// sips names no stdin of its own; give it none. Both paths are this process's.
+static void ConvertTiffToPng(const char* tiff, const char* png) {
+    const std::string cmd = std::string("sips -s format png '") + tiff + "' --out '" + png +
+                            "' >/dev/null 2>&1 </dev/null";
+    (void)system(cmd.c_str());
+}
+
 static bool tesseract_available() {
-    return system("command -v tesseract >/dev/null 2>&1") == 0;
+    return system("command -v tesseract >/dev/null 2>&1 </dev/null") == 0;
 }
 
 // Renders `draw` into a w x h point bitmap at 2x (what lockFocus produced on a
@@ -66,8 +75,10 @@ TEST(Rendering, TextMirroringFix) {
     // "FLIPPED" in Y-flipped context appears mirrored
     // "NORMAL" and "DRAWRECT" in unflipped context appear correct
 
-    const char* outPath = "/tmp/test_text_fix.tiff";
-    const char* outPng  = "/tmp/test_text_fix.png";
+    const std::string outTiff = TestScratchPath("test_text_fix.tiff");
+    const std::string outPngPath = TestScratchPath("test_text_fix.png");
+    const char* outPath = outTiff.c_str();
+    const char* outPng  = outPngPath.c_str();
 
     @autoreleasepool {
         NSBitmapImageRep* rep = RenderBitmap(800, 300, ^{
@@ -97,7 +108,7 @@ TEST(Rendering, TextMirroringFix) {
         [tiff writeToFile:@(outPath) atomically:YES];
     }
 
-    system("cd /tmp && sips -s format png test_text_fix.tiff --out test_text_fix.png > /dev/null 2>&1");
+    ConvertTiffToPng(outPath, outPng);
     std::string ocrResult = run_tesseract(outPng);
 
     // NORMAL and DRAWRECT should be readable, FLIPPED may be garbled
@@ -111,8 +122,10 @@ TEST(Rendering, TextRenderingCorrect) {
     // Solution: DON'T use Y-flip for text rendering. Use manual Y conversion instead.
     // This test verifies that text without Y-flip renders correctly.
 
-    const char* outPath = "/tmp/test_text_render.tiff";
-    const char* outPng  = "/tmp/test_text_render.png";
+    const std::string outTiff = TestScratchPath("test_text_render.tiff");
+    const std::string outPngPath = TestScratchPath("test_text_render.png");
+    const char* outPath = outTiff.c_str();
+    const char* outPng  = outPngPath.c_str();
 
     @autoreleasepool {
         NSBitmapImageRep* rep = RenderBitmap(800, 300, ^{
@@ -134,7 +147,7 @@ TEST(Rendering, TextRenderingCorrect) {
         [tiff writeToFile:@(outPath) atomically:YES];
     }
 
-    system("cd /tmp && sips -s format png test_text_render.tiff --out test_text_render.png > /dev/null 2>&1");
+    ConvertTiffToPng(outPath, outPng);
     std::string ocrResult = run_tesseract(outPng);
 
     bool readable = ocrResult.find("HELLO") != std::string::npos;
@@ -148,8 +161,10 @@ TEST(Rendering, DroppedItemTextNotMirrored) {
     // Regression test: dropped item text notes should render correctly.
     // Fix: DON'T use Y-flip for text, use manual Y conversion.
 
-    const char* outPath = "/tmp/test_note_render.tiff";
-    const char* outPng  = "/tmp/test_note_render.png";
+    const std::string outTiff = TestScratchPath("test_note_render.tiff");
+    const std::string outPngPath = TestScratchPath("test_note_render.png");
+    const char* outPath = outTiff.c_str();
+    const char* outPng  = outPngPath.c_str();
 
     @autoreleasepool {
         NSBitmapImageRep* rep = RenderBitmap(400, 200, ^{
@@ -173,7 +188,7 @@ TEST(Rendering, DroppedItemTextNotMirrored) {
         [tiff writeToFile:@(outPath) atomically:YES];
     }
 
-    system("cd /tmp && sips -s format png test_note_render.tiff --out test_note_render.png > /dev/null 2>&1");
+    ConvertTiffToPng(outPath, outPng);
     std::string ocrResult = run_tesseract(outPng);
 
     bool readable = ocrResult.find("Test") != std::string::npos;

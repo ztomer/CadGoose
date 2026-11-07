@@ -1,4 +1,5 @@
 #include <gtest/gtest.h>
+#include "../test_scratch.h"
 #include <string>
 #include <filesystem>
 #include <cstdlib>
@@ -80,13 +81,13 @@ TEST(ConfigPath, ProcessSourcesMatchTheSuiteSandbox) {
 TEST(ConfigPath, OverrideWinsAndRestores) {
     const fs::path before = ConfigDirPath();
     {
-        ScopedConfigDirOverride guard("/tmp/cadgoose-override-probe");
-        EXPECT_EQ(ConfigDirPath(), fs::path("/tmp/cadgoose-override-probe"));
+        ScopedConfigDirOverride guard(TestScratchPath("override-probe"));
+        EXPECT_EQ(ConfigDirPath(), fs::path(TestScratchPath("override-probe")));
         {
-            ScopedConfigDirOverride inner("/tmp/cadgoose-override-inner");
-            EXPECT_EQ(ConfigDirPath(), fs::path("/tmp/cadgoose-override-inner"));
+            ScopedConfigDirOverride inner(TestScratchPath("override-inner"));
+            EXPECT_EQ(ConfigDirPath(), fs::path(TestScratchPath("override-inner")));
         }
-        EXPECT_EQ(ConfigDirPath(), fs::path("/tmp/cadgoose-override-probe"));
+        EXPECT_EQ(ConfigDirPath(), fs::path(TestScratchPath("override-probe")));
     }
     EXPECT_EQ(ConfigDirPath(), before);
 }

@@ -14,6 +14,7 @@
 #import <CoreMedia/CoreMedia.h>
 #import <ScreenCaptureKit/ScreenCaptureKit.h>
 #include "command_socket.h"
+#include "../../test_scratch.h"
 #include <cstdio>
 #include <string>
 #include <vector>
@@ -166,7 +167,8 @@ static dispatch_semaphore_t g_probeDone = nil;
                 if (ctx) {
                     CGImageRef img = CGBitmapContextCreateImage(ctx);
                     if (img) {
-                        NSString* path = @"/tmp/soak_fetch_test/format_probe.png";
+                        const std::string probe = TestScratchPath("soak_fetch_test/format_probe.png");
+                        NSString* path = [NSString stringWithUTF8String:probe.c_str()];
                         NSURL* url = [NSURL fileURLWithPath:path];
                         CGImageDestinationRef dest = CGImageDestinationCreateWithURL(
                             (__bridge CFURLRef)url, (__bridge CFStringRef)@"public.png", 1, NULL);
@@ -179,7 +181,8 @@ static dispatch_semaphore_t g_probeDone = nil;
                     }
                     CGContextRelease(ctx);
                 }
-                fprintf(stderr, "  [FORMAT] Probe PNG: /tmp/soak_fetch_test/format_probe.png\n");
+                fprintf(stderr, "  [FORMAT] Probe PNG: %s\n",
+                        TestScratchPath("soak_fetch_test/format_probe.png").c_str());
             }
 
             CVPixelBufferUnlockBaseAddress(pb, kCVPixelBufferLock_ReadOnly);

@@ -1,4 +1,5 @@
 #include <gtest/gtest.h>
+#include "../test_scratch.h"
 #include "mcp_server.h"
 #include <cstring>
 #include <sys/socket.h>
@@ -13,14 +14,18 @@
 // A socket path this process owns: the default /tmp/desktop-goose-mcp.sock
 // belongs to a running CadGoose, which these tests used to unlink, and to
 // any concurrent test binary (ROADMAP G0.3). Short, for sun_path's 104 bytes.
-static const std::string kTestSockPath =
-    "/tmp/cadgoose-mcp-test-" + std::to_string(getpid()) + ".sock";
-#define TEST_MCP_SOCK_PATH kTestSockPath.c_str()
+// Lazy, never a static initializer: those run before mimalloc is ready, and
+// a string built there was freed by the other allocator (abort at startup).
+static const std::string& TestSockPath() {
+    static const std::string path = TestScratchPath("mcp.sock");
+    return path;
+}
+#define TEST_MCP_SOCK_PATH TestSockPath().c_str()
 
 class McpServerTest : public ::testing::Test {
 protected:
     void SetUp() override {
-        m_savedPath = MCP_SetInternalSocketPath(kTestSockPath);
+        m_savedPath = MCP_SetInternalSocketPath(TestSockPath());
         unlink(TEST_MCP_SOCK_PATH);
     }
 
@@ -185,13 +190,13 @@ TEST_F(McpServerTest, RequestTooLarge) {
 // Start reports failure, and leaves nothing running, when its socket path
 // cannot be bound.
 TEST_F(McpServerTest, APathTooLongForAUnixSocketIsRefused) {
-    MCP_SetInternalSocketPath(kTestSockPath + std::string(200, 'x'));
+    MCP_SetInternalSocketPath(TestSockPath() + std::string(200, 'x'));
     EXPECT_FALSE(MCP_StartInternalServer());
     EXPECT_FALSE(MCP_IsInternalRunning());
 }
 
 TEST_F(McpServerTest, AMissingDirectoryFailsTheBind) {
-    MCP_SetInternalSocketPath(kTestSockPath + "-no-such-dir/s");
+    MCP_SetInternalSocketPath(TestSockPath() + "-no-such-dir/s");
     EXPECT_FALSE(MCP_StartInternalServer());
     EXPECT_FALSE(MCP_IsInternalRunning());
 }

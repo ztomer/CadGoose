@@ -4,6 +4,7 @@
 #import <CoreVideo/CoreVideo.h>
 #import <ScreenCaptureKit/ScreenCaptureKit.h>
 #include <cstdio>
+#include "../../test_scratch.h"
 #include <vector>
 #include <cstring>
 
@@ -153,7 +154,7 @@ int main() {
             CGImageRef img = CGBitmapContextCreateImage(ctx);
             if (img) {
                 printf("CGImage bitmapInfo: 0x%x\n", (unsigned)CGImageGetBitmapInfo(img));
-                NSURL* url = [NSURL fileURLWithPath:@"/tmp/test_captured_frame.png"];
+                NSURL* url = [NSURL fileURLWithPath:@(TestScratchPath("test_captured_frame.png").c_str())];
                 CGImageDestinationRef dest = CGImageDestinationCreateWithURL(
                     (__bridge CFURLRef)url, (__bridge CFStringRef)@"public.png", 1, NULL);
                 if (dest) {
@@ -165,7 +166,7 @@ int main() {
             }
             CGContextRelease(ctx);
         }
-        printf("PNG saved to /tmp/test_captured_frame.png\n");
+        printf("PNG saved to %s\n", TestScratchPath("test_captured_frame.png").c_str());
     }
     return 0;
 }

@@ -21,10 +21,9 @@ import sys
 
 MIN_FILES = 100  # 130 test sources on 2026-10-17
 
-ALLOWED = {
-    "tests/common/command_socket_stub.cpp": "the stub only returns a path from "
-    "CommandSocket_GetPath(); nothing binds or unlinks it",
-}
+# Empty since CG.TMPRACE: the command-socket stub's path comes from
+# TestScratchPath() now, so no test names a fixed socket path at all.
+ALLOWED: dict[str, str] = {}
 
 SUFFIXES = {".c", ".cc", ".cpp", ".h", ".hpp", ".m", ".mm"}
 

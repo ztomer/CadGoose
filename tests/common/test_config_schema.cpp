@@ -6,6 +6,7 @@
 // written by the old `false` default) is now a versioned migration that runs
 // once per file: the next save stamps the current schema version.
 #include <gtest/gtest.h>
+#include "../test_scratch.h"
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
@@ -23,8 +24,8 @@ class ConfigSchemaTest : public ::testing::Test {
 protected:
     void SetUp() override {
         Config_Init();
-        char dirTemplate[] = "/tmp/cadgoose_schema_XXXXXX";
-        char* dirResult = mkdtemp(dirTemplate);
+        const std::string dirTemplate = TestScratchMkdtemp("schema");
+        const char* dirResult = dirTemplate.empty() ? nullptr : dirTemplate.c_str();
         ASSERT_NE(dirResult, nullptr);
         m_dir = dirResult;
         m_override.emplace(m_dir);

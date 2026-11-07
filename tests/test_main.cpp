@@ -1,4 +1,5 @@
 #include <gtest/gtest.h>
+#include "test_scratch.h"
 #include <cmath>
 #include <algorithm>
 #include <string>
@@ -308,8 +309,10 @@ int main(int argc, char **argv) {
     // One sandbox PER PROCESS: a fixed /tmp/cadgoose-test-config was shared
     // by every concurrent CadGooseTests, which overwrote each other's saves
     // (BehaviorToggles.SaveRoundTrip failed with three running; ROADMAP G0.3).
-    char sandbox[] = "/tmp/cadgoose-test-config-XXXXXX";
-    if (mkdtemp(sandbox) == nullptr) {
+    // It lives in the process's one scratch dir (tests/test_scratch.h).
+    const std::string sandboxDir = TestScratchMkdtemp("config");
+    const char* sandbox = sandboxDir.c_str();
+    if (sandboxDir.empty()) {
         fprintf(stderr, "FATAL: cannot create the test config sandbox\n");
         return 2;
     }
@@ -346,13 +349,14 @@ int main(int argc, char **argv) {
     // ...and from the same shared state, whatever ran before it (G0.13).
     ::testing::UnitTest::GetInstance()->listeners().Append(new GlobalStateRestorer());
     const int rc = Finish(RUN_ALL_TESTS(), *cwdGuard);
-    // A green run leaves nothing behind; a red one keeps its sandbox (and the
-    // session log in it) for the post-mortem.
+    // A green run leaves nothing behind; a red one keeps its scratch dir (the
+    // config sandbox, its session log and every test's output) for the
+    // post-mortem.
     if (rc == 0) {
         std::error_code ec;
-        std::filesystem::remove_all(sandbox, ec);
+        std::filesystem::remove_all(TestScratchDir(), ec);
     } else {
-        printf("test config sandbox kept for inspection: %s\n", sandbox);
+        printf("test scratch dir kept for inspection: %s\n", TestScratchDir().c_str());
     }
     return rc;
 }

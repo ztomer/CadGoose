@@ -1,4 +1,5 @@
 #include <gtest/gtest.h>
+#include "../test_scratch.h"
 #include <string>
 #include <filesystem>
 #include "config.h"
@@ -14,8 +15,8 @@ namespace fs = std::filesystem;
 TEST(ConfigLoadAll, LoadsConfigFile) {
     Config_Init();
 
-    char dirTemplate[] = "/tmp/cadgoose_cfg_XXXXXX";
-    char* dirResult = mkdtemp(dirTemplate);
+    const std::string dirTemplate = TestScratchMkdtemp("cfg");
+    const char* dirResult = dirTemplate.empty() ? nullptr : dirTemplate.c_str();
     ASSERT_NE(dirResult, nullptr);
     std::filesystem::path tmpDir(dirResult);
     // Scoped in-process override, restored on every exit path (an ASSERT
@@ -43,8 +44,8 @@ TEST(ConfigLoadAll, LoadsConfigFile) {
 TEST(ConfigLoadAll, NoConfigFileFallback) {
     Config_Init();
 
-    char dirTemplate[] = "/tmp/cadgoose_empty_XXXXXX";
-    char* dirResult = mkdtemp(dirTemplate);
+    const std::string dirTemplate = TestScratchMkdtemp("empty");
+    const char* dirResult = dirTemplate.empty() ? nullptr : dirTemplate.c_str();
     ASSERT_NE(dirResult, nullptr);
     std::filesystem::path tmpDir(dirResult);
     ScopedConfigDirOverride configDir(tmpDir);
@@ -62,8 +63,8 @@ TEST(ConfigLoadAll, NoConfigFileFallback) {
 TEST(ConfigLoadAll, CorruptConfigFileCatch) {
     Config_Init();
 
-    char dirTemplate[] = "/tmp/cadgoose_corrupt_XXXXXX";
-    char* dirResult = mkdtemp(dirTemplate);
+    const std::string dirTemplate = TestScratchMkdtemp("corrupt");
+    const char* dirResult = dirTemplate.empty() ? nullptr : dirTemplate.c_str();
     ASSERT_NE(dirResult, nullptr);
     std::filesystem::path tmpDir(dirResult);
     ScopedConfigDirOverride configDir(tmpDir);
@@ -230,8 +231,8 @@ TEST(ConfigThemeColors, EmptyName) {
 
 TEST(ConfigSave, GooseNamesArrayWritten) {
 
-    char dirTemplate[] = "/tmp/cadgoose_names_XXXXXX";
-    char* dirResult = mkdtemp(dirTemplate);
+    const std::string dirTemplate = TestScratchMkdtemp("names");
+    const char* dirResult = dirTemplate.empty() ? nullptr : dirTemplate.c_str();
     ASSERT_NE(dirResult, nullptr);
     std::filesystem::path tmpDir(dirResult);
     ScopedConfigDirOverride configDir(tmpDir);
@@ -266,8 +267,8 @@ TEST(ConfigSave, SaveGooseNamesFunction) {
 
 TEST(ConfigSave, SaveGooseNamesWithGoose) {
 
-    char dirTemplate[] = "/tmp/cadgoose_gname_XXXXXX";
-    char* dirResult = mkdtemp(dirTemplate);
+    const std::string dirTemplate = TestScratchMkdtemp("gname");
+    const char* dirResult = dirTemplate.empty() ? nullptr : dirTemplate.c_str();
     ASSERT_NE(dirResult, nullptr);
     std::filesystem::path tmpDir(dirResult);
     ScopedConfigDirOverride configDir(tmpDir);

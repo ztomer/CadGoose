@@ -5,6 +5,7 @@
 // Linux): it saves a value, puts the default back as a fresh process would
 // have it, runs the start path, and reads the saved value back.
 #include <gtest/gtest.h>
+#include "../test_scratch.h"
 #include <cstdlib>
 #include <filesystem>
 #include <optional>
@@ -18,8 +19,8 @@ class ConfigStartup : public ::testing::Test {
 protected:
     void SetUp() override {
         Config_Init();
-        char dirTemplate[] = "/tmp/cadgoose_startup_XXXXXX";
-        char* dirResult = mkdtemp(dirTemplate);
+        const std::string dirTemplate = TestScratchMkdtemp("startup");
+        const char* dirResult = dirTemplate.empty() ? nullptr : dirTemplate.c_str();
         ASSERT_NE(dirResult, nullptr);
         m_dir = dirResult;
         m_override.emplace(m_dir);
