@@ -1,16 +1,15 @@
 {
-  "scripts/check_coverage_tiers.py": 1,
-  "tools/check_ci_pins.py": 2,
-  "tools/check_fetchcontent.py": 2,
-  "tools/check_gtest_filter_parity.py": 8,
+  "tools/check_ci_pins.py": 1,
+  "tools/check_fetchcontent.py": 1,
+  "tools/check_gtest_filter_parity.py": 5,
   "tools/check_macos_floor.py": 6,
   "tools/check_platform_policy.py": 2,
   "tools/check_test_process_state.py": 1,
   "tools/check_test_registration.py": 1,
   "tools/check_test_tmp_paths.py": 2,
-  "tools/eval_goose_ai.py": 12,
-  "tools/eval_report.py": 5,
-  "tools/eval_scoring.py": 4,
-  "tools/generate_config.py": 18,
+  "tools/eval_goose_ai.py": 6,
+  "tools/eval_report.py": 4,
+  "tools/eval_scoring.py": 3,
+  "tools/generate_config.py": 12,
   "tools/macos_floor_claims.py": 1
 }

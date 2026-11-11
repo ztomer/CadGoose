@@ -4,7 +4,6 @@ import json
 import statistics
 import time
 from dataclasses import dataclass
-from typing import Optional
 
 
 @dataclass
@@ -17,7 +16,7 @@ class EvalResult:
     dimensions: dict
     reasons: list[str]
     time: float
-    error: Optional[str] = None
+    error: str | None = None
     tokens: int = 0
 
 
@@ -55,8 +54,10 @@ def print_report(results: list[EvalResult], model: str):
     all_times = [r.time for r in results if r.time > 0]
     errors = [r for r in results if r.error]
 
+    # A fast local server rounds every call to 0.0s; no timed call is not an error.
+    mean_time = statistics.mean(all_times) if all_times else 0.0
     print(
-        f"\n{'Overall':<22} {'':<30} {statistics.mean(all_scores):>6.0f} {statistics.mean(all_times):>5.1f}s"
+        f"\n{'Overall':<22} {'':<30} {statistics.mean(all_scores):>6.0f} {mean_time:>5.1f}s"
     )
     print(f"\nTotal runs: {len(results)}")
     print(f"Errors: {len(errors)}")

@@ -17,9 +17,6 @@ import argparse
 import os
 import sys
 import time
-from typing import Optional
-
-import requests
 
 from eval_report import EvalResult, print_report, save_results
 from eval_scoring import (
@@ -38,12 +35,15 @@ def call_llm(
     endpoint: str,
     model: str,
     messages: list[dict],
-    api_key: Optional[str] = None,
+    api_key: str | None = None,
     temperature: float = 1.2,
     max_tokens: int = 150,
     timeout: int = 120,
 ) -> dict:
     """Call an OpenAI-compatible endpoint. Returns {content, error, time, tokens}."""
+    # Imported here so task selection imports (and tests) without an HTTP client.
+    import requests
+
     url = endpoint.rstrip("/") + "/chat/completions"
     headers = {"Content-Type": "application/json"}
     if api_key:
@@ -173,21 +173,41 @@ CHAT_TASKS = {
 # ──────────────────────────────────────────────────────────────
 
 
+def select_tasks(tasks: list[str]) -> tuple[dict, dict]:
+    """Resolve --tasks into (text meme tasks, chat tasks).
+
+    `text_meme` and `chat` name a whole group; any other entry names one task. An
+    empty list means everything. An entry that matches nothing is an error: a typo
+    must not read as a clean, empty run.
+    """
+    groups = {"text_meme": TEXT_MEME_TASKS, "chat": CHAT_TASKS}
+    known = set(TEXT_MEME_TASKS) | set(CHAT_TASKS) | set(groups)
+    unknown = [t for t in tasks if t not in known]
+    if unknown:
+        sys.exit(
+            f"not a task or group: {', '.join(unknown)}; "
+            f"choose from: {', '.join(sorted(known))}"
+        )
+
+    def pick(group_name: str, group: dict) -> dict:
+        if not tasks or group_name in tasks:
+            return dict(group)
+        return {k: v for k, v in group.items() if k in tasks}
+
+    return pick("text_meme", TEXT_MEME_TASKS), pick("chat", CHAT_TASKS)
+
+
 def run_eval(
     endpoint: str,
     model: str,
-    api_key: Optional[str],
+    api_key: str | None,
     tasks: list[str],
     iterations: int,
-    evil_override: Optional[float],
+    evil_override: float | None,
 ) -> list[EvalResult]:
     results = []
 
-    run_text = "text_meme" in tasks or not tasks
-    run_chat = "chat" in tasks or not tasks
-
-    text_tasks = {k: v for k, v in TEXT_MEME_TASKS.items() if not tasks or k in tasks}
-    chat_tasks = {k: v for k, v in CHAT_TASKS.items() if not tasks or k in tasks}
+    text_tasks, chat_tasks = select_tasks(tasks)
 
     total = (len(text_tasks) + len(chat_tasks)) * iterations
     current = 0

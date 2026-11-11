@@ -71,7 +71,7 @@ def build_text_meme_prompt(
     evil_level: float = 0.4,
     behaviors: str = "fun",
     color_mode: str = "light",
-    seed: Optional[int] = None,
+    seed: int | None = None,
 ) -> str:
     """Build the exact prompt the goose uses for text meme generation."""
     if seed is None:

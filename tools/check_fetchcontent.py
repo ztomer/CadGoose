@@ -21,26 +21,23 @@ DECLARE = re.compile(r"FetchContent_Declare\s*\((.*?)\)", re.S)
 
 def main() -> int:
     root = pathlib.Path(__file__).resolve().parent.parent
-    files = [
-        p
-        for p in subprocess.run(
-            [
-                "git",
-                "ls-files",
-                "--cached",
-                "--others",
-                "--exclude-standard",
-                "CMakeLists.txt",
-                "*.cmake",
-                "*/CMakeLists.txt",
-            ],
-            cwd=root,
-            capture_output=True,
-            text=True,
-            check=True,
-            stdin=subprocess.DEVNULL,
-        ).stdout.split()
-    ]
+    files = subprocess.run(
+        [
+            "git",
+            "ls-files",
+            "--cached",
+            "--others",
+            "--exclude-standard",
+            "CMakeLists.txt",
+            "*.cmake",
+            "*/CMakeLists.txt",
+        ],
+        cwd=root,
+        capture_output=True,
+        text=True,
+        check=True,
+        stdin=subprocess.DEVNULL,
+    ).stdout.split()
     found = 0
     bad = 0
     for rel in files:

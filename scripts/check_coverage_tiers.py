@@ -5,7 +5,6 @@ Reads scripts/coverage_eligible.txt. Every .cpp/.mm under src/ must be either
 listed by a P0/P1 glob or named by an EXCLUDE glob (with a reason in the file).
 """
 
-import fnmatch
 import os
 import sys
 

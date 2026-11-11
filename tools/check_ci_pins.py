@@ -39,7 +39,7 @@ def main() -> int:
         text = f.read_text(encoding="utf-8")
         for m in USES.finditer(text):
             ref = m.group(1).strip("'\"")
-            if ref.startswith("./") or ref.startswith("docker://"):
+            if ref.startswith(("./", "docker://")):
                 continue
             seen += 1
             if not EXACT.search(ref):

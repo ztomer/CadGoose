@@ -9,9 +9,10 @@ Reads config_schema.yaml and generates:
 Usage: python3 tools/generate_config.py tools/config_schema.yaml
 """
 
-import sys
-import yaml
 import os
+import sys
+
+import yaml
 
 
 def snake_to_camel(name):
@@ -46,7 +47,6 @@ def get_struct_path(section_name, field_name):
 
 def generate_registry_entry(field, struct_path, section_name):
     """Generate a single CONFIG_* registry entry."""
-    name = field["name"]
     key = field["key"]
     label = field["label"]
     typ = field["type"]
@@ -79,7 +79,6 @@ def generate_registry_entry(field, struct_path, section_name):
 
 def generate_gui_row(field, struct_path, section_name):
     """Generate a single GUI addRow: call."""
-    name = field["name"]
     key = field["key"]
     label = field["label"]
     typ = field["type"]
@@ -107,7 +106,7 @@ def main():
         sys.exit(1)
 
     schema_path = sys.argv[1]
-    with open(schema_path, "r") as f:
+    with open(schema_path) as f:
         schema = yaml.safe_load(f)
 
     output_dir = os.path.dirname(os.path.dirname(schema_path))
@@ -141,14 +140,14 @@ def main():
         if not fields:
             continue
 
-        registry_lines.append(f"")
+        registry_lines.append("")
         registry_lines.append(f"    // === {section_name} ===")
         for field in fields:
             struct_path = get_struct_path(section_name, field["name"])
             entry = generate_registry_entry(field, struct_path, section_name)
             registry_lines.append(entry)
 
-        gui_lines.append(f"")
+        gui_lines.append("")
         gui_lines.append(f"    // === {section_name} ===")
         for field in fields:
             struct_path = get_struct_path(section_name, field["name"])

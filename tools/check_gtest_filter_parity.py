@@ -104,8 +104,9 @@ def main() -> int:
             f"the filter source {SOURCE} is gone — nothing defines the CI filter."
         )
     reason_lines, filter_lines = [], []
-    for line in open(src_path, encoding="utf-8"):
-        line = line.rstrip("\n")
+    with open(src_path, encoding="utf-8") as src:
+        source_lines = src.read().splitlines()
+    for line in source_lines:
         if line.strip().startswith("#"):
             if line.lstrip("# ").startswith("-"):
                 reason_lines.append(line)
@@ -151,7 +152,8 @@ def main() -> int:
             return fail(
                 f"call site {target} is gone — {SOURCE} would have no (or fewer) consumers."
             )
-        text = open(path, encoding="utf-8").read()
+        with open(path, encoding="utf-8") as fh:
+            text = fh.read()
         for frag in frags:
             if frag not in text:
                 return fail(
