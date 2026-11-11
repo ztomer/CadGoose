@@ -1,0 +1,12 @@
+{
+ "why": "goh changelog-tags (GOH.CHANGELOGALL): the changelog against the v* tags -- this repository's findings, keyed by its root commit, moved here from goh's private store so GitHub CI can read them (GOH.SEEDPRIVATE, EST.CADGOOSESEED). Same ratchet as any tracked seed: at or under its count warns, over it is red, and an entry a full run finds clean is red. Restore the missing `## vX` headings and delete or lower the entry in the same commit: done is an empty list.",
+ "entries": [
+  {
+   "root": "af6334179af5ccd614bfb7a9e52b2b78ab910cfb",
+   "repo": "CadGoose",
+   "path": "docs/CHANGELOG.md",
+   "count": 40,
+   "reason": "unreviewed: 40 finding(s): 40 tag(s) with no heading"
+  }
+ ]
+}
