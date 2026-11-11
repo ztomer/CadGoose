@@ -5,6 +5,8 @@ run_text/run_chat flags and never used them, so a group name matched no task key
 the run silently evaluated nothing.
 
     python3 tests/tools/test_eval_goose_ai.py
+
+goh-unregistered-ok: a Python unittest run by its own CI step, not a CMake target
 """
 
 import contextlib
