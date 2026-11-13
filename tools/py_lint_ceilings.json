@@ -1,7 +1,7 @@
 {
   "tools/check_ci_pins.py": 1,
   "tools/check_fetchcontent.py": 1,
-  "tools/check_gtest_filter_parity.py": 5,
+  "tools/check_gtest_filter_parity.py": 4,
   "tools/check_macos_floor.py": 6,
   "tools/check_platform_policy.py": 2,
   "tools/check_test_process_state.py": 1,

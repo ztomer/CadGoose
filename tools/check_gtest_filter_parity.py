@@ -92,7 +92,7 @@ def main() -> int:
     files = tracked(root)
     if len(files) < MIN_TRACKED_FILES:
         return fail(
-            f"scanned {len(files)} tracked file(s), expected at least "
+            f"tracked files scanned: {len(files)}, expected at least "
             f"{MIN_TRACKED_FILES} — 'compliant' over a tree it cannot see "
             f"is the empty-scope pass this floor exists to refuse."
         )
@@ -118,7 +118,7 @@ def main() -> int:
         )
     if len(filter_lines) > 1:
         return fail(
-            f"{SOURCE} carries {len(filter_lines)} filter line(s) — one list, one "
+            f"{SOURCE} carries {len(filter_lines)} filter lines — one list, one "
             f"line: consumers join lines with ':' and this gtest treats a leading "
             f"'-' as negating every token of the joined list (verified empirically "
             f"2026-10-17, googletest 1.18). Splitting one exclusion onto its own "
@@ -187,14 +187,14 @@ def main() -> int:
             f"{rel}:{ln}={val!r}" for (rel, ln), val in sorted(hardcoded.items())
         )
         return fail(
-            f"second hardcoded gtest filter value(s) in tracked code — every "
+            f"a second hardcoded gtest filter value in tracked code — every "
             f"call site must consume {SOURCE}: {sites}"
         )
 
     print(
         f"→ [gtest_filter_parity] OK — filter defined once in {SOURCE} "
-        f"({len(negatives)} documented exclusion(s): {', '.join(negatives) or 'none'}), "
-        f"{len(CONSUMERS)} call site(s) consume it, {len(scan)} tracked code file(s) scanned."
+        f"(documented exclusions, {len(negatives)}: {', '.join(negatives) or 'none'}), "
+        f"call sites consuming it: {len(CONSUMERS)}, tracked code files scanned: {len(scan)}."
     )
     return 0
 

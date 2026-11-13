@@ -50,7 +50,8 @@ if untiered:
     for p in untiered:
         print(f"  {p}")
     print(
-        f"\n{len(untiered)} untiered file(s). Add to a tier or EXCLUDE with a reason."
+        f"\nUntiered files: {len(untiered)}. "
+        "Add each to a tier or EXCLUDE it with a reason."
     )
     sys.exit(1)
 

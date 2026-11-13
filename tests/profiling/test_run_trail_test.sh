@@ -127,7 +127,7 @@ run_case "a failed build still restores, and exits 97" 1 0 97
 run_relaunch_case
 
 if [ "$FAILURES" -ne 0 ]; then
-    echo "✗ run_trail_test.sh: $FAILURES case(s) failed"
+    echo "✗ run_trail_test.sh: cases failed: $FAILURES"
     exit 1
 fi
 echo "✓ run_trail_test.sh: waits on the binary's socket, restores the desktop on every exit"

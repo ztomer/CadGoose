@@ -111,7 +111,7 @@ def main() -> int:
         return 1
     print(
         f"✓ [test_process_state] {len(files)} test sources, no process-state mutation "
-        f"outside {len(ALLOWED)} allowlisted file(s)"
+        f"outside the allowlisted files ({len(ALLOWED)})"
     )
     return 0
 

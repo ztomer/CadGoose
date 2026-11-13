@@ -211,7 +211,7 @@ def bundle_errors(app: pathlib.Path, floor: str) -> tuple[list[str], int]:
     if not saw_exe:
         errors.append(
             f"{app.name}: its executable {exe.name or '?'} was not among the "
-            f"{machos} Mach-O file(s) read: the walk lost its subject"
+            f"Mach-O files read: {machos}: the walk lost its subject"
         )
     return errors, machos
 
@@ -437,7 +437,7 @@ def main() -> int:
         errors.extend(errs)
         if not errs:
             print(
-                f"✓ {TAG} {label}: Info.plist and all {machos} Mach-O file(s) say macOS {floor}"
+                f"✓ {TAG} {label}: Info.plist and all Mach-O files read ({machos}) say macOS {floor}"
             )
 
     for app in args.bundle:

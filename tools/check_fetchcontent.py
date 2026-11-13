@@ -69,7 +69,7 @@ def main() -> int:
         return 1
     if bad:
         return 1
-    print(f"✓ [fetchcontent] {found} dependency fetch(es), each a hashed archive")
+    print(f"✓ [fetchcontent] dependency fetches: {found}, each a hashed archive")
     return 0
 
 

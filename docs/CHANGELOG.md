@@ -83,7 +83,7 @@
 - `GOH_SUBPROCESS_STDIN=on` is written out in `.gatesrc` rather than left to
   the default, so the decision is in this repo's own file.
 
-## October 19, 2026 — v1.83 Release: M1.7 on the owning thread, and a binary that prints one line
+## v1.83 — October 19, 2026 — Release: M1.7 on the owning thread, and a binary that prints one line
 
 - **v1.83** is the tag (`321a5d0`, lightweight, like v1.80-v1.82), cut by
   `scripts/push_release.sh`. The GitHub release carries `CadGoose-v1.83.dmg`
@@ -192,6 +192,12 @@
   failed-build case red). The same wrong socket and swallowed statuses were
   fixed in `hotspot_profile.sh`, `multi_goose_profile.sh`,
   `run_multi_goose_test.sh` and `run_soak_test.sh`.
+
+## v1.82 — October 19, 2026
+
+- Tagged at `6f33c3e`: test: AcceptLoop counts a client before replying to it
+
+---
 
 ## October 18, 2026 — M1.1-M1.3: settings hold, the save path is race-free, the trail scan is measured
 
@@ -511,6 +517,12 @@
   (was P0 94 / P1 53 / total 85 / 64, which understated scope).
 - Measured: P0 95.22%, P1 26.75%, eligible total 63.93%, whole binary 66.84%.
 
+## v1.81 — October 8, 2026
+
+- Tagged at `cc57723`: docs(changelog): six source links resolve from docs/
+
+---
+
 ## September 21, 2026 — MCP SEP-2575: initialize negotiates protocol version, latest by default
 
 - `initialize` now echoes the client's requested `protocolVersion` when it is a
@@ -524,6 +536,30 @@
 - Docs: `docs/MCP.md` describes the negotiation generically (no version pin to
   rot); the only version strings in the tree are the supported-echo list in
   `mcp_handlers.cpp` and the tests that pin it.
+
+## v1.80 — September 20, 2026
+
+- Tagged at `e1fa2b3`: MCP SEP-2575: negotiate initialize protocol version (echo supported, else latest)
+
+---
+
+## v1.79 — August 25, 2026
+
+- Tagged at `931d15c`: merge: unify/harnesses — profiling shims, registration checker, coverage/local_ci delegation
+
+---
+
+## v1.78 — August 25, 2026
+
+- Tagged at `64fc365`: merge: split all over-cap files under the house 500-line gate
+
+---
+
+## v1.77 — August 22, 2026
+
+- Tagged at `e9783ef`: feat: execute PLAN.md — test-registration gate, dead tests revived, P1 coverage 33.85%→54.44%, held-item sizing fix
+
+---
 
 ## August 22, 2026 — PLAN.md executed: test-registration gate, dead tests revived, P1 coverage 33.85% → 54.44%, held-item sizing fix, bundle verified
 
@@ -594,7 +630,7 @@
   Fixed by deactivating and letting `ActorManager::cleanup()` delete through its
   own bookkeeping.
 
-## August 21, 2026 — v1.76 Release: toml11 dependency refresh
+## v1.76 — August 21, 2026 — Release: toml11 dependency refresh
 
 - **toml11 bumped from a pinned 2025-12-03 commit to the v4.4.0 release tag**
   (31 upstream commits). The pin was a moving-commit snapshot; it now tracks a
@@ -604,7 +640,7 @@
   tests still need a live app instance over its command socket and are
   unaffected by this change (they never start CadGoose themselves).
 
-## July 27, 2026 — v1.75 Release: heap-corruption fixes, working coverage gate, P0 to 95%
+## v1.75 — July 27, 2026 — Release: heap-corruption fixes, working coverage gate, P0 to 95%
 
 ### Memory corruption — the test binary was crashing ~12% of runs, and CI hid it
 - **`run_tests_ci.sh` no longer swallows crashes.** It treated exit 139/134/138 as
@@ -663,6 +699,12 @@
 
 ---
 
+## v1.74 — July 10, 2026
+
+- Tagged at `6fae6ec`: fix: resolve meme visibility issues with CGImageSource and ImageIO
+
+---
+
 ## July 10, 2026 — Angry punch animation & Meme drag-and-drop visibility fix
 
 ### Meme Drag-and-Drop Visibility
@@ -678,6 +720,18 @@
 
 ---
 
+## v1.73 — July 9, 2026
+
+- Tagged at `894a678`: Implement angry punch hand animation & fix meme drag-and-drop visibility
+
+---
+
+## v1.72 — July 8, 2026
+
+- Tagged at `4ce4b4a`: feat: CadGoose --version flag (git-describe at configure time) + tests
+
+---
+
 ## July 8, 2026 — `--version` flag
 
 ### CLI `--version` flag
@@ -685,6 +739,36 @@
 
 ### Verification
 - **1520+ tests, 0 failures**
+
+---
+
+## v1.71 — June 28, 2026
+
+- Tagged at `2896fc1`: fix: make app icon backgrounds transparent beyond the squircle
+
+---
+
+## v1.70 — June 28, 2026
+
+- Tagged at `8c2c83c`: feat: custom menubar & app icons for all modes + stalin goose honk sound logic
+
+---
+
+## v1.69 — June 28, 2026
+
+- Tagged at `a4b3918`: fix: self-heal audio enabled config on macOS + replace honk.png placeholder
+
+---
+
+## v1.68 — June 28, 2026
+
+- Tagged at `7192fcc`: fix: default audio enabled state + live settings sync on macOS
+
+---
+
+## v1.67 — June 28, 2026
+
+- Tagged at `f1bef1d`: fix: Linux build (missing <atomic>) + peeking-test seed
 
 ---
 
@@ -733,7 +817,25 @@ Microstutter root cause found via Instruments Time Profiler: hot-path per-frame 
 
 ---
 
-## June 26, 2026 — v1.63 Release: Preferences layout, AI tab overhaul, detail panel stacked sliders
+## v1.66 — June 26, 2026
+
+- Tagged at `c360a63`: fix: revert to macos-26 runner, guard FoundationLLM_ContextSize for older SDKs
+
+---
+
+## v1.65 — June 26, 2026
+
+- Tagged at `8b342ff`: ci: fix run_tests_ci.sh error capturing with set +e
+
+---
+
+## v1.64 — June 26, 2026
+
+- Tagged at `aa59354`: push_release: capture existing runs to avoid picking up old runs
+
+---
+
+## v1.63 — June 26, 2026 — Release: Preferences layout, AI tab overhaul, detail panel stacked sliders
 
 ### Preferences (Behaviors / Play tabs)
 - **Toggle position**: NSSwitch at native 44×22, right-aligned with 28px padding (`kToggleRightPad`). `listWidth` 544→444, desc label 330→210, detail panel fixed at 182px.
@@ -759,7 +861,7 @@ Microstutter root cause found via Instruments Time Profiler: hot-path per-frame 
 
 ---
 
-## June 23, 2026 — v1.13 Release: Null renderer guard + adversarial review rounds 2-7 fixes
+## v1.13 — June 23, 2026 — Release: Null renderer guard + adversarial review rounds 2-7 fixes
 
 ### What changed this session
 - **Null renderer guard in `Goose::draw()`** (goose.cpp:603):
@@ -781,6 +883,12 @@ Microstutter root cause found via Instruments Time Profiler: hot-path per-frame 
 ### Verification
 - **1468 tests, 0 failures** (30 skipped: 27 AccessibilityGUITest + 3 requires display)
 - No regressions
+
+## v1.12 — June 22, 2026
+
+- Tagged at `c0fc37d`: v1.12 — Adversarial review rounds 2-7: thread safety, cleanup, coverage
+
+---
 
 ## June 22l, 2026 — Adversarial review round 7: Global key monitor data race, shutdown ordering, behavior state leak, 1468/0/30 green
 
@@ -1045,6 +1153,24 @@ Microstutter root cause found via Instruments Time Profiler: hot-path per-frame 
 - **1429 tests, 0 failures** (excluding 4 pre-existing order-dependent: `BehaviorToggles.ToysBehaviorRegistered`, `PortalCleanup.BehaviorHasCleanupFunction`, `StalinHonk.*`)
 - Same baseline preserved — no regressions
 
+## v1.11 — June 14, 2026
+
+- Tagged at `0c22d49`: Reduce settings panel by ~100px; match personality and temperature slider sizes
+
+---
+
+## v1.10 — June 14, 2026
+
+- Tagged at `58fa618`: Remove emojis from AI settings panel
+
+---
+
+## v0.5.3 — June 14, 2026
+
+- Tagged at `d392c3e`: v0.5.3e: Kare-style chat: remove send button, character pin indicators
+
+---
+
 ## June 14, 2026b — Phase 5 final push: breadcrumbs/honcker/pomodoro all ≥95%
 
 ### behavior_breadcrumbs.cpp (88.61% → 100% line coverage)
@@ -1183,6 +1309,30 @@ All remaining uncovered (434 lines total, ~260 testable) require integration inf
 - **CI ctest filter**: Updated to `ctest --output-on-failure -j... -LE "requires_display"` (was raw `ctest` with name-based exclusions).
 - **Final count**: 797 tests pass, 0 failures (with `-LE requires_display`).
 
+## v0.5.2 — May 30, 2026
+
+- Tagged at `916cb8f`: docs: add release verification and Homebrew update guidelines to AGENTS.md
+
+---
+
+## v0.5 — May 30, 2026
+
+- Tagged at `3044eb4`: docs: Recommend official brew tap command in README
+
+---
+
+## v0.4.1 — May 30, 2026
+
+- Tagged at `acc7ec1`: fix ceash
+
+---
+
+## v0.4 — May 30, 2026
+
+- Tagged at `5d7e6e2`: Code-review cleanup: leveled logger, RingBuffer, SolveFeet, CI DRY
+
+---
+
 ## May 30, 2026 — Release hardening: assets, AI chat, CI gate, and safety fixes
 
 ### Thread-Safe Idempotent Configuration & Cocoa ARC Hardening
@@ -1231,6 +1381,18 @@ All remaining uncovered (434 lines total, ~260 testable) require integration inf
 - `run.sh` updated to run the correct executable under `build/CadGoose`.
 - Cleaned up gitignore and removed committed build directories.
 - Updated CI macOS runner to `macos-26` with FoundationModels-SDK verification. Added test gating to CTest (excluding display-dependent window trail tests).
+
+## v0.3 — May 29, 2026
+
+- Tagged at `671fdee`: Skip OCR render tests when tesseract is absent (headless CI)
+
+---
+
+## v0.2.1 — May 28, 2026
+
+- Tagged at `3384781`: ci: run macOS build on macos-26 for FoundationModels SDK
+
+---
 
 ## May 28, 2026 — Fresh-machine bug fixes + release packaging
 
@@ -1692,3 +1854,57 @@ Completed migration of all stationary behavior elements to independent windows:
   - `tests/platform/macos/test_renderer.mm:3` (already imports `<Cocoa/Cocoa.h>` directly)
 - **CMakeLists.txt**: Removed `src/platform/macos/renderer.mm` from both `CadGoose` and `CadGooseTests` target source lists
 - **Verification**: 744 tests pass (no regressions), multi-goose integration test passes 3/3 geese, build zero warnings
+
+## v1.9 — May 14, 2026
+
+- Tagged at `e46b204`: publish alpha
+
+---
+
+## v1.5 — May 13, 2026
+
+- Tagged at `c42edeb`: cleanups #1
+
+---
+
+## v1.4 — May 13, 2026
+
+- Tagged at `08fb721`: MCP
+
+---
+
+## v1.3 — May 13, 2026
+
+- Tagged at `5481128`: Preferences seems complete
+
+---
+
+## v1.2-experimental — May 9, 2026
+
+- Tagged at `968d47b`: Window interations fixed
+
+---
+
+## v1.1 — May 6, 2026
+
+- Tagged at `6dfb671`: Automn leaves
+
+---
+
+## v1.0 — May 5, 2026
+
+- Tagged at `e8e589e`: Fully functional v1.0
+
+---
+
+## v0.2 — May 5, 2026
+
+- Tagged at `495c7d3`: Canada Goose
+
+---
+
+## v0.1 — May 4, 2026
+
+- Tagged at `56c61e6`: audio + menubae
+
+---

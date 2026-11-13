@@ -31,4 +31,4 @@ expect "stderr noise after the version is red" 1 'echo "CadGoose v1.82"; echo "[
 expect "no output is red" 1 'exit 0'
 expect "a nonzero exit is red" 1 'echo "CadGoose v1.82"; exit 3'
 
-[[ $FAILURES -eq 0 ]] || { echo "✗ $FAILURES case(s) failed"; exit 1; }
+[[ $FAILURES -eq 0 ]] || { echo "✗ cases failed: $FAILURES"; exit 1; }
