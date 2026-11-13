@@ -5,9 +5,9 @@
 # PUBLIC repo, so GitHub Actions minutes are free and its runs succeed — the
 # credit exhaustion that killed CI on the private repos never applied. More than
 # that, build_and_release.yml is the RELEASE PIPELINE: it builds the DMG,
-# publishes the release, and scripts/push_release.sh polls for that run before
-# updating the homebrew tap. Disabling it would not tidy anything, it would stop
-# releases working.
+# publishes the release, and scripts/push_release.sh reads that run once (never
+# waits) and updates the homebrew tap once the DMG is attached. Disabling it
+# would not tidy anything, it would stop releases working.
 #
 # So this script is not a replacement for CI. It is the fast pre-push copy of
 # CI's gates, so a red build is found in minutes on this machine instead of

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# push_release.sh — tag a release, wait for CI, bump the Homebrew cask through the tap gate
+# push_release.sh — tag a release, read its CI once (never wait), bump the Homebrew cask through the tap gate
 # Usage: ./scripts/push_release.sh [vX.Y]  (default: bump minor from latest tag)
 
 set -euo pipefail
@@ -7,10 +7,6 @@ set -euo pipefail
 REPO="ztomer/CadGoose"
 TAP_REPO="ztomer/homebrew-tap"
 TAP_FILE="Casks/cadgoose.rb"
-
-# Tunables — no magic numbers in the logic below.
-CI_POLL_ATTEMPTS=60   # max polls while waiting for the release CI run
-CI_POLL_INTERVAL=5     # seconds between CI-run polls
 
 info() { echo "→ $*"; }
 ok()   { echo "✓ $*"; }
@@ -70,9 +66,6 @@ fi
 info "Pushing tag to origin"
 git push origin "$VERSION"
 
-# Capture existing release runs before creating/triggering a new one
-EXISTING_RUNS=$(gh run list --repo "$REPO" --event release --limit 10 --json databaseId --jq '[.[].databaseId] | join(",")' 2>/dev/null || echo "")
-
 # Create GitHub release if it does not exist
 if gh release view "$VERSION" --repo "$REPO" >/dev/null 2>&1; then
     info "GitHub release $VERSION already exists."
@@ -81,33 +74,30 @@ else
     gh release create "$VERSION" --title "$VERSION" --notes "Release $VERSION" --repo "$REPO"
 fi
 
-# 4. Wait for CI
-info "Waiting for CI to complete..."
-RUN_ID=""
-for i in $(seq 1 "$CI_POLL_ATTEMPTS"); do
-    LATEST_RUN_ID=$(gh run list --repo "$REPO" --event release --limit 10 --json databaseId,headBranch --jq "[.[] | select(.headBranch==\"$VERSION\") | .databaseId] | max" 2>/dev/null || true)
-    if [[ "$LATEST_RUN_ID" == "null" ]]; then
-        LATEST_RUN_ID=""
-    fi
-    if [[ -n "$LATEST_RUN_ID" ]]; then
-        if [[ ",$EXISTING_RUNS," != *",$LATEST_RUN_ID,"* ]]; then
-            RUN_ID="$LATEST_RUN_ID"
-            break
-        fi
-    fi
-    sleep "$CI_POLL_INTERVAL"
-done
-
-[[ -n "$RUN_ID" ]] || err "Could not find CI run for release $VERSION"
-
-info "Monitoring run $RUN_ID"
-gh run watch "$RUN_ID" --repo "$REPO"
-
-# 5. Check conclusion
-CONCLUSION=$(gh run view "$RUN_ID" --repo "$REPO" --json conclusion --jq '.conclusion')
-[[ "$CONCLUSION" == "success" ]] || err "CI failed with: $CONCLUSION"
-
-ok "CI passed"
+# 4. Read the release CI ONCE, never wait on it (EST.CIWAIT, the rule of goh
+#    GOH.CIWAIT). Hosted CI is advisory (owner 2026-11-11): the gate it re-runs
+#    already passed at the pre-push hook. What the cask needs is the DMG this
+#    run attaches, so: a red run refuses; the DMG attached bumps the cask; a run
+#    still building (or not started) stops here with the release published and
+#    the cask untouched -- every step above is idempotent, so re-running this
+#    script with the same version once the DMG is attached finishes the job.
+DMG_NAME="CadGoose-$VERSION.dmg"
+RUN_LINE=$(gh run list --repo "$REPO" --event release --limit 20 \
+    --json databaseId,headBranch,status,conclusion,url \
+    --jq "[.[] | select(.headBranch==\"$VERSION\")] | max_by(.databaseId) // empty | [.status, (.conclusion // \"\"), .url] | @tsv" \
+    2>/dev/null) || err "gh run list could not read the release CI for $VERSION"
+IFS=$'\t' read -r RUN_STATUS RUN_CONCLUSION RUN_URL <<< "${RUN_LINE:-}" || true
+if [[ "${RUN_STATUS:-}" == "completed" && "${RUN_CONCLUSION:-}" != "success" ]]; then
+    err "release CI for $VERSION is ${RUN_CONCLUSION:-unknown} ($RUN_URL) -- cask not bumped"
+fi
+ASSETS=$(gh release view "$VERSION" --repo "$REPO" --json assets --jq '.assets[].name' 2>/dev/null) \
+    || err "gh release view could not read the assets of $VERSION"
+if ! grep -qxF "$DMG_NAME" <<< "$ASSETS"; then
+    info "Release $VERSION is published; its CI (${RUN_STATUS:-not started}${RUN_URL:+ -- $RUN_URL}) has not attached $DMG_NAME yet."
+    info "Not waiting (hosted CI is advisory). Cask NOT bumped: re-run ./scripts/push_release.sh $VERSION once the DMG is attached."
+    exit 0
+fi
+ok "$DMG_NAME is attached to $VERSION"
 
 # 6. Bump the Homebrew cask through the tap's OWN gate (homebrew-tap T2.1,
 #    goh 6.8). tap_bump.sh hashes the DMG CI just attached, rewrites version
