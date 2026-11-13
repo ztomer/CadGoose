@@ -288,11 +288,13 @@ echo "Size:    $(du -sh "${BUNDLE_DIR}" | cut -f1)"
 echo "Plist:   ${CONTENTS_DIR}/Info.plist"
 echo ""
 
-# Offer to open (only in interactive terminal)
-if [ -t 0 ] && command -v open &>/dev/null; then
+# Offer to open (only in interactive terminal). `goh launch-app` starts the app with
+# launchd's login environment, not this shell's (a bare `open` hands it ours; GOH.CLEANOPEN).
+GOH_BIN="${GOH_DIR:-$HOME/Projects/gates_of_heck}/bin/goh"
+if [ -t 0 ] && [ -x "$GOH_BIN" ]; then
     read -p "Open the app? (y/N) " -n 1 -r REPLY
     echo
     if [[ $REPLY =~ ^[Yy]$ ]]; then
-        open "$BUNDLE_DIR"
+        "$GOH_BIN" launch-app "$BUNDLE_DIR"
     fi
 fi

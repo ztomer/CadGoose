@@ -88,9 +88,43 @@ run_case() {
     rm -rf "$dir"
 }
 
+# The relaunch into Ghostty must go through `goh launch-app`, never a bare `open`: an app
+# started by `open` carries this shell's environment (a ship's GOH_DIR and GOH_SHIP_ITEM
+# reached every app it started; GOH.CLEANOPEN). A fake goh records its argv; a fake `open`
+# on PATH records any bare use and fails.
+run_relaunch_case() {
+    local dir rc=0
+    dir="$(mktemp -d "${TMPDIR:-/tmp}/cgtt.XXXXXX")"
+    make_fakes "$dir"
+    : > "$dir/log"
+    mkdir -p "$dir/goh/bin"
+    printf '#!/bin/sh\necho "goh $*" >> "$FAKE_LOG"\n' > "$dir/goh/bin/goh"
+    printf '#!/bin/sh\necho "BARE-OPEN $*" >> "$FAKE_LOG"\nexit 1\n' > "$dir/bin/open"
+    chmod +x "$dir/goh/bin/goh" "$dir/bin/open"
+    env -i HOME="$HOME" PATH="$dir/bin:/usr/bin:/bin:/usr/sbin:/sbin" \
+        TERM_PROGRAM=Apple_Terminal SHELL=/usr/bin/true TMPDIR="$dir/tmp" GOH_DIR="$dir/goh" \
+        CG_PROFILE_ROOT="$dir/root" FAKE_LOG="$dir/log" FAKE_SOCK="$dir/cmd.sock" \
+        bash "$SCRIPT" > "$dir/out" 2>&1 < /dev/null || rc=$?
+
+    local problems=()
+    [ "$rc" -eq 0 ] || problems+=("exit $rc, want 0")
+    grep -q "^BARE-OPEN" "$dir/log" && problems+=("a bare open launched Ghostty")
+    grep -qx "goh launch-app --new Ghostty -- -e $dir/root/tools/profiling/run_trail_test.sh" "$dir/log" \
+        || problems+=("goh launch-app was not asked for a new Ghostty running this script")
+    if [ "${#problems[@]}" -eq 0 ]; then
+        echo "✓ the Ghostty relaunch goes through goh launch-app"
+    else
+        echo "✗ the Ghostty relaunch: ${problems[*]}"
+        sed 's/^/    | /' "$dir/log" | tail -n 15
+        FAILURES=$((FAILURES + 1))
+    fi
+    rm -rf "$dir"
+}
+
 run_case "clean run restores the desktop and exits 0" 0 0 0
 run_case "a trail (test exit 10) still restores, and exits 10" 0 10 10
 run_case "a failed build still restores, and exits 97" 1 0 97
+run_relaunch_case
 
 if [ "$FAILURES" -ne 0 ]; then
     echo "✗ run_trail_test.sh: $FAILURES case(s) failed"

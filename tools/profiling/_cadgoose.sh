@@ -25,3 +25,11 @@ cg_root() {
 cg_socket_path() {
     "$1" --socket-path < /dev/null
 }
+
+# Start an app with launchd's login environment, never this shell's: `goh launch-app`
+# (`open` hands the app the caller's environment, a ship's GOH_DIR and GOH_SHIP_ITEM
+# included, and the app outlives the script; GOH.CLEANOPEN, `goh bare-open` gates it).
+# Arguments are `goh launch-app`'s: [--background|--new|--wait] TARGET [-- ARGS...].
+cg_launch_app() {
+    "${GOH_DIR:-$HOME/Projects/gates_of_heck}/bin/goh" launch-app "$@"
+}

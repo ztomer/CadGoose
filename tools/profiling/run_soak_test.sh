@@ -70,7 +70,7 @@ fi
 if [ "$IS_GHOSTTY" -eq 0 ]; then
     touch "$RETRYFILE"
     echo "Launching in Ghostty (needs Screen Recording permission)..."
-    open -na Ghostty --args -e "$ROOT/tools/profiling/run_soak_test.sh"
+    cg_launch_app --new Ghostty -- -e "$ROOT/tools/profiling/run_soak_test.sh"
     exit 0
 fi
 

@@ -82,7 +82,7 @@ fi
 if [ "$IS_GHOSTTY" -eq 0 ]; then
     touch "$RETRYFILE"
     echo "Launching in Ghostty (needs Screen Recording permission)..."
-    open -na Ghostty --args -e "$PROJ/tools/profiling/run_trail_test.sh"
+    cg_launch_app --new Ghostty -- -e "$PROJ/tools/profiling/run_trail_test.sh"
     exit 0
 fi
 

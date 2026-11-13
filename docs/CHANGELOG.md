@@ -1,5 +1,9 @@
 # Changelog
 
+## November 13, 2026 — Apps start with launchd's login environment
+
+- **No script starts an app with a bare `open` (EST.BAREOPEN).** `scripts/create_bundle.sh` ("Open the app?") and the Ghostty relaunch in `tools/profiling/run_soak_test.sh` and `run_trail_test.sh` (through `cg_launch_app` in `_cadgoose.sh`) use `goh launch-app`: a bare `open` hands the app the caller's environment, a ship's `GOH_DIR` and `GOH_SHIP_ITEM` among it, and the app outlives the script. Same app, same arguments (`--new Ghostty -- -e SCRIPT`). `goh bare-open` finds no site here; `tests/profiling/test_run_trail_test.sh` pins the relaunch.
+
 ## October 22, 2026 — The two geese stop sharing one settings directory
 
 - **D1.1 landed: this app reads and writes its own directory.** `ConfigDirPath()`
