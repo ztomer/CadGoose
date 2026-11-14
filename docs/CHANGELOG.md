@@ -1,5 +1,9 @@
 # Changelog
 
+## November 14, 2026 — Wire goh ship release kit wrapper (CG1.SHIPKIT)
+
+- **Added `scripts/ship_release.sh` and `GOH_SHIP_*` wiring in `.gatesrc`.** Declared `GOH_SHIP_RELEASE`, `GOH_SHIP_PREFLIGHT`, `GOH_SHIP_CHANGELOG=kit`, and `GOH_SHIP_RELEASE_PUSHES=1`, plus `tests/tools/test_ship_release.py` covering preflight, 2-part tag resolution (`v1.83` ahead of legacy `v0.5.3`), rejection of stale `v0.5.3`-derived bumps, `docs/CHANGELOG.md` cutting, and `EST.CIWAIT` compliance. `scripts/ship_release.sh` delegates tagging/cask bumping to `scripts/push_release.sh` once explicitly released.
+
 ## November 13, 2026 — Apps start with launchd's login environment
 
 - **No script starts an app with a bare `open` (EST.BAREOPEN).** `scripts/create_bundle.sh` ("Open the app?") and the Ghostty relaunch in `tools/profiling/run_soak_test.sh` and `run_trail_test.sh` (through `cg_launch_app` in `_cadgoose.sh`) use `goh launch-app`: a bare `open` hands the app the caller's environment, a ship's `GOH_DIR` and `GOH_SHIP_ITEM` among it, and the app outlives the script. Same app, same arguments (`--new Ghostty -- -e SCRIPT`). `goh bare-open` finds no site here; `tests/profiling/test_run_trail_test.sh` pins the relaunch.
