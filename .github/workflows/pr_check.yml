@@ -15,8 +15,11 @@ jobs:
       # checkout leaves the job token in git config (http.<host>.extraheader),
       # readable by every later step and refused by the gates_of_heck structural
       # gate's no-credential-in-git-config check (2026-10-08).
+      # fetch-depth: 0 fetches every tag: goh changelog-tags (in the structural layer) judges the
+      # changelog against them, and on a shallow, tagless clone it prints NOT JUDGED (GOH.WFPIN).
       - uses: actions/checkout@v7.0.1
         with:
+          fetch-depth: 0
           persist-credentials: false
       # The house gate suite is a public repo; CI and forks fetch it rather than
       # carrying copies (copies drift, and the copy is what the gate then means).
