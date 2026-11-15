@@ -1,0 +1,159 @@
+{
+  "why": "goh tui-marks (GOH.TUIMARKS, 2026-11-15): a shell echo/printf or Python print whose text opens with a Kare mark, where tui/lib.sh / tui.lib print it. Keyed by root commit; judged from 2026-11-23 (crate::grace). At or under its count warns; over it, unseeded, or stale is red. Done is an empty list.",
+  "entries": [
+    {
+      "root": "af6334179af5ccd614bfb7a9e52b2b78ab910cfb",
+      "repo": "CadGoose",
+      "path": "scripts/check_coverage.sh",
+      "count": 1,
+      "reason": "unreviewed: hand-rolled TUI mark at line(s) 189; print through tui/lib.sh or tui.lib (GOH.TUIMARKS seed, 2026-11-15)"
+    },
+    {
+      "root": "af6334179af5ccd614bfb7a9e52b2b78ab910cfb",
+      "repo": "CadGoose",
+      "path": "scripts/check_quiet_version.sh",
+      "count": 5,
+      "reason": "unreviewed: hand-rolled TUI mark at line(s) 25, 31, 40, 46, 51; print through tui/lib.sh or tui.lib (GOH.TUIMARKS seed, 2026-11-15)"
+    },
+    {
+      "root": "af6334179af5ccd614bfb7a9e52b2b78ab910cfb",
+      "repo": "CadGoose",
+      "path": "scripts/push_release.sh",
+      "count": 3,
+      "reason": "unreviewed: hand-rolled TUI mark at line(s) 11, 12, 13; print through tui/lib.sh or tui.lib (GOH.TUIMARKS seed, 2026-11-15)"
+    },
+    {
+      "root": "af6334179af5ccd614bfb7a9e52b2b78ab910cfb",
+      "repo": "CadGoose",
+      "path": "scripts/run_tests_concurrent.sh",
+      "count": 2,
+      "reason": "unreviewed: hand-rolled TUI mark at line(s) 32, 37; print through tui/lib.sh or tui.lib (GOH.TUIMARKS seed, 2026-11-15)"
+    },
+    {
+      "root": "af6334179af5ccd614bfb7a9e52b2b78ab910cfb",
+      "repo": "CadGoose",
+      "path": "scripts/run_tests_linux.sh",
+      "count": 2,
+      "reason": "unreviewed: hand-rolled TUI mark at line(s) 42, 51; print through tui/lib.sh or tui.lib (GOH.TUIMARKS seed, 2026-11-15)"
+    },
+    {
+      "root": "af6334179af5ccd614bfb7a9e52b2b78ab910cfb",
+      "repo": "CadGoose",
+      "path": "scripts/run_tests_shuffled.sh",
+      "count": 4,
+      "reason": "unreviewed: hand-rolled TUI mark at line(s) 21, 25, 29, 32; print through tui/lib.sh or tui.lib (GOH.TUIMARKS seed, 2026-11-15)"
+    },
+    {
+      "root": "af6334179af5ccd614bfb7a9e52b2b78ab910cfb",
+      "repo": "CadGoose",
+      "path": "tests/profiling/test_check_quiet_version.sh",
+      "count": 3,
+      "reason": "unreviewed: hand-rolled TUI mark at line(s) 22, 24, 34; print through tui/lib.sh or tui.lib (GOH.TUIMARKS seed, 2026-11-15)"
+    },
+    {
+      "root": "af6334179af5ccd614bfb7a9e52b2b78ab910cfb",
+      "repo": "CadGoose",
+      "path": "tests/profiling/test_run_tests_linux_runtime.sh",
+      "count": 1,
+      "reason": "unreviewed: hand-rolled TUI mark at line(s) 41; print through tui/lib.sh or tui.lib (GOH.TUIMARKS seed, 2026-11-15)"
+    },
+    {
+      "root": "af6334179af5ccd614bfb7a9e52b2b78ab910cfb",
+      "repo": "CadGoose",
+      "path": "tests/profiling/test_run_trail_test.sh",
+      "count": 6,
+      "reason": "unreviewed: hand-rolled TUI mark at line(s) 82, 84, 115, 117, 130, 133; print through tui/lib.sh or tui.lib (GOH.TUIMARKS seed, 2026-11-15)"
+    },
+    {
+      "root": "af6334179af5ccd614bfb7a9e52b2b78ab910cfb",
+      "repo": "CadGoose",
+      "path": "tools/check_ci_pins.py",
+      "count": 2,
+      "reason": "unreviewed: hand-rolled TUI mark at line(s) 62, 66; print through tui/lib.sh or tui.lib (GOH.TUIMARKS seed, 2026-11-15)"
+    },
+    {
+      "root": "af6334179af5ccd614bfb7a9e52b2b78ab910cfb",
+      "repo": "CadGoose",
+      "path": "tools/check_config_dir_isolation.py",
+      "count": 1,
+      "reason": "unreviewed: hand-rolled TUI mark at line(s) 50; print through tui/lib.sh or tui.lib (GOH.TUIMARKS seed, 2026-11-15)"
+    },
+    {
+      "root": "af6334179af5ccd614bfb7a9e52b2b78ab910cfb",
+      "repo": "CadGoose",
+      "path": "tools/check_fetchcontent.py",
+      "count": 1,
+      "reason": "unreviewed: hand-rolled TUI mark at line(s) 72; print through tui/lib.sh or tui.lib (GOH.TUIMARKS seed, 2026-11-15)"
+    },
+    {
+      "root": "af6334179af5ccd614bfb7a9e52b2b78ab910cfb",
+      "repo": "CadGoose",
+      "path": "tools/check_gtest_filter_parity.py",
+      "count": 1,
+      "reason": "unreviewed: hand-rolled TUI mark at line(s) 72; print through tui/lib.sh or tui.lib (GOH.TUIMARKS seed, 2026-11-15)"
+    },
+    {
+      "root": "af6334179af5ccd614bfb7a9e52b2b78ab910cfb",
+      "repo": "CadGoose",
+      "path": "tools/check_macos_floor.py",
+      "count": 1,
+      "reason": "unreviewed: hand-rolled TUI mark at line(s) 456; print through tui/lib.sh or tui.lib (GOH.TUIMARKS seed, 2026-11-15)"
+    },
+    {
+      "root": "af6334179af5ccd614bfb7a9e52b2b78ab910cfb",
+      "repo": "CadGoose",
+      "path": "tools/check_new_sources_visible.py",
+      "count": 1,
+      "reason": "unreviewed: hand-rolled TUI mark at line(s) 74; print through tui/lib.sh or tui.lib (GOH.TUIMARKS seed, 2026-11-15)"
+    },
+    {
+      "root": "af6334179af5ccd614bfb7a9e52b2b78ab910cfb",
+      "repo": "CadGoose",
+      "path": "tools/check_test_endpoints.py",
+      "count": 1,
+      "reason": "unreviewed: hand-rolled TUI mark at line(s) 96; print through tui/lib.sh or tui.lib (GOH.TUIMARKS seed, 2026-11-15)"
+    },
+    {
+      "root": "af6334179af5ccd614bfb7a9e52b2b78ab910cfb",
+      "repo": "CadGoose",
+      "path": "tools/check_test_tmp_paths.py",
+      "count": 1,
+      "reason": "unreviewed: hand-rolled TUI mark at line(s) 80; print through tui/lib.sh or tui.lib (GOH.TUIMARKS seed, 2026-11-15)"
+    },
+    {
+      "root": "af6334179af5ccd614bfb7a9e52b2b78ab910cfb",
+      "repo": "CadGoose",
+      "path": "tools/gate.sh",
+      "count": 1,
+      "reason": "unreviewed: 1 site found by the grace-over sweep on 2026-11-15; fix or keep (GOH.GRACEEND seed, `goh tui-marks` lists them)"
+    },
+    {
+      "root": "af6334179af5ccd614bfb7a9e52b2b78ab910cfb",
+      "repo": "CadGoose",
+      "path": "tools/local_ci.sh",
+      "count": 1,
+      "reason": "unreviewed: hand-rolled TUI mark at line(s) 33; print through tui/lib.sh or tui.lib (GOH.TUIMARKS seed, 2026-11-15)"
+    },
+    {
+      "root": "af6334179af5ccd614bfb7a9e52b2b78ab910cfb",
+      "repo": "CadGoose",
+      "path": "tools/profiling/analyze_trace.sh",
+      "count": 1,
+      "reason": "unreviewed: hand-rolled TUI mark at line(s) 7; print through tui/lib.sh or tui.lib (GOH.TUIMARKS seed, 2026-11-15)"
+    },
+    {
+      "root": "af6334179af5ccd614bfb7a9e52b2b78ab910cfb",
+      "repo": "CadGoose",
+      "path": "tools/profiling/run_multi_goose_test.sh",
+      "count": 2,
+      "reason": "unreviewed: hand-rolled TUI mark at line(s) 81, 83; print through tui/lib.sh or tui.lib (GOH.TUIMARKS seed, 2026-11-15)"
+    },
+    {
+      "root": "af6334179af5ccd614bfb7a9e52b2b78ab910cfb",
+      "repo": "CadGoose",
+      "path": "tools/profiling/run_trail_test.sh",
+      "count": 4,
+      "reason": "unreviewed: hand-rolled TUI mark at line(s) 261, 265, 270, 276; print through tui/lib.sh or tui.lib (GOH.TUIMARKS seed, 2026-11-15)"
+    }
+  ]
+}

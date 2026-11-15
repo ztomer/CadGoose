@@ -1,0 +1,12 @@
+{
+  "why": "goh layer-parity (GOH.LAYERPARITY, 2026-11-15): a language goh's commit gate lints with no goh push layer. Keyed by root commit; path tools/gate.sh:<lang>; judged from 2026-11-23 (crate::grace). Seeded warns; unseeded or stale is red. Done is an empty list.",
+  "entries": [
+    {
+      "root": "af6334179af5ccd614bfb7a9e52b2b78ab910cfb",
+      "repo": "CadGoose",
+      "path": "tools/gate.sh:swift",
+      "count": 1,
+      "reason": "unreviewed: 2 tracked swift files are linted at commit and no goh push layer judges them whole; add it to tools/gate.sh --full (GOH.LAYERPARITY seed, 2026-11-15)"
+    }
+  ]
+}

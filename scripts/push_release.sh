@@ -52,7 +52,7 @@ SHORT_VERSION="${VERSION#v}"
 info "Releasing $VERSION"
 
 # 2. Ensure clean working tree
-git diff --quiet || err "Working tree not clean. Commit or stash changes first."
+GIT_OPTIONAL_LOCKS=0 git diff --quiet || err "Working tree not clean. Commit or stash changes first."
 git diff --cached --quiet || err "Staged changes present. Commit first."
 
 # 3. Tag and push

@@ -85,7 +85,7 @@ info "Latest version tag resolved: ${LATEST_TAG}; target: v${V}"
 BRANCH=$(git rev-parse --abbrev-ref HEAD)
 [ "$BRANCH" = "main" ] || die "ship_release.sh: must run on branch main (currently on $BRANCH)"
 
-if ! git diff --quiet || ! git diff --cached --quiet; then
+if ! GIT_OPTIONAL_LOCKS=0 git diff --quiet || ! git diff --cached --quiet; then
   die "ship_release.sh: working tree has uncommitted changes"
 fi
 
@@ -235,7 +235,7 @@ PY
     ;;
 esac
 
-if ! git diff --quiet -- "$CHANGELOG_FILE"; then
+if ! GIT_OPTIONAL_LOCKS=0 git diff --quiet -- "$CHANGELOG_FILE"; then
   git add "$CHANGELOG_FILE"
   MSG="chore(release): version ${V}"
   if [ -n "$SUMMARY" ]; then
