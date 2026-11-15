@@ -1,4 +1,4 @@
-FROM ubuntu:26.04
+FROM ubuntu:resolute-20261105.1
 
 # The same apt list CI's Linux jobs install (scripts/linux_apt_packages.txt),
 # so the local Linux suite (scripts/run_tests_linux.sh, built with
